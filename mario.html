@@ -27,154 +27,169 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   min-height: 100vh;
   overflow: hidden;
   user-select: none;
-  touch-action: none;
+  touch-action: none; /* 모바일 기기 더블탭 확대 방지 */
 }
 
 /* ===== SCREENS ===== */
-.screen { display:none; width:900px; flex-direction:column; }
-.screen.active { display:flex; }
+.screen { display:none; width:100%; height:100%; }
+.screen.active { display:flex; flex-direction:column; align-items:center; }
+
+/* ===== SHAKE ANIMATION ===== */
+@keyframes shake {
+  0% { transform: translate(2px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(0px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(2px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(2px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+.shake { animation: shake 0.4s; animation-iteration-count: 1; }
 
 /* ===== TITLE SCREEN ===== */
 #titleScreen {
-  height: 460px;
-  background: linear-gradient(180deg, #1a0a5e 0%, #5060c8 40%, #7090e0 60%, #5c3d1e 80%, #3d2610 100%);
-  align-items: center;
   justify-content: center;
+  background: linear-gradient(180deg, #1a0a5e 0%, #5060c8 40%, #7090e0 60%, #5c3d1e 80%, #3d2610 100%);
   position: relative;
-  overflow: hidden;
-  border-radius: 16px;
 }
 #titleScreen::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0; right: 0;
-  height: 22%;
+  content: ''; position: absolute; bottom: 20%; left: 0; right: 0; height: 22%;
   background: repeating-linear-gradient(90deg, #8B5E3C 0px, #8B5E3C 16px, #C84B11 16px, #C84B11 32px);
   border-top: 4px solid #FFD89B;
 }
-.title-content { position: relative; z-index:10; text-align: center; }
-.game-title { font-size: 3.5em; color: #FFD700; text-shadow: 4px 4px 0 #C84B11, 6px 6px 0 #8B3000; letter-spacing: 2px; margin-bottom: 5px; animation: titleFloat 2s ease-in-out infinite; }
+.title-content { position: relative; z-index:10; text-align: center; padding: 20px; }
+.game-title { font-size: 4.8em; color: #FFD700; text-shadow: 4px 4px 0 #C84B11, 6px 6px 0 #8B3000; letter-spacing: 2px; margin-bottom: 12px; animation: titleFloat 2s ease-in-out infinite; }
 @keyframes titleFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-.game-subtitle { font-size: 1.5em; color: #fff; text-shadow: 2px 2px 0 #000; margin-bottom: 25px; }
-.pixel-mario-title { font-size: 4.5em; margin-bottom: 5px; animation: spin 3s linear infinite; display: inline-block; }
+.game-subtitle { font-size: 1.95em; color: #fff; text-shadow: 2px 2px 0 #000; margin-bottom: 40px; }
+.pixel-mario-title { font-size: 7.5em; margin-bottom: 15px; animation: spin 3s linear infinite; display: inline-block; }
 @keyframes spin { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
 
 /* ===== SETUP SCREEN ===== */
-#setupScreen {
-  height: 460px;
-  background: linear-gradient(180deg, #5060c8 0%, #7090e0 60%, #5c3d1e 85%, #3d2610 100%);
-  align-items: center;
-  justify-content: center;
-  padding: 15px;
-  border-radius: 16px;
-}
-.setup-box { background: rgba(0,0,0,0.85); border: 4px solid #FFD700; border-radius: 16px; padding: 20px; width: 100%; max-width: 750px; }
-.setup-title { font-size: 1.8em; color: #FFD700; text-align: center; text-shadow: var(--text-shadow); margin-bottom: 12px; }
-.form-group { margin-bottom: 12px; }
-.form-label { font-size: 1.1em; color: #fff; display: block; margin-bottom: 4px; text-shadow: var(--text-shadow); }
-.form-input { width: 100%; padding: 8px 12px; font-family: 'Jua', sans-serif; font-size: 1.1em; background: #111; border: 3px solid #FFD700; border-radius: 8px; color: #fff; outline: none; }
+#setupScreen { justify-content: center; background: linear-gradient(180deg, #5060c8 0%, #7090e0 60%, #5c3d1e 85%, #3d2610 100%); padding: 20px; }
+.setup-box { background: rgba(0,0,0,0.85); border: 4px solid #FFD700; border-radius: 16px; padding: 30px; width: 100%; max-width: 800px; box-shadow: 0 0 30px rgba(255,215,0,0.4); max-height: 95vh; overflow-y: auto; }
+.setup-title { font-size: 2.5em; color: #FFD700; text-align: center; text-shadow: var(--text-shadow); margin-bottom: 25px; }
+.form-group { margin-bottom: 20px; }
+.form-label { font-size: 1.4em; color: #fff; display: block; margin-bottom: 10px; text-shadow: var(--text-shadow); }
+.form-input { width: 100%; padding: 12px 15px; font-family: 'Jua', sans-serif; font-size: 1.4em; background: #111; border: 4px solid #FFD700; border-radius: 8px; color: #fff; outline: none; }
+.form-input:focus { border-color: #FFA500; box-shadow: 0 0 10px rgba(255,165,0,0.5); }
 
-.difficulty-btns { display: flex; gap: 10px; }
-.diff-btn { flex: 1; padding: 8px; font-family: 'Jua', sans-serif; font-size: 1.1em; border: 3px solid #555; border-radius: 12px; cursor: pointer; background: #222; color: #aaa; }
+.difficulty-btns { display: flex; gap: 15px; }
+.diff-btn { flex: 1; padding: 15px 10px; font-family: 'Jua', sans-serif; font-size: 1.3em; border: 4px solid #555; border-radius: 12px; cursor: pointer; background: #222; color: #aaa; transition: all 0.2s; }
 .diff-btn.selected-하 { background: #2E8B00; border-color: #5CFF00; color: #fff; }
 .diff-btn.selected-중 { background: #B87D00; border-color: #FFD700; color: #fff; }
 .diff-btn.selected-상 { background: #AA0000; border-color: #FF4444; color: #fff; }
 
-.character-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 100px; overflow-y: auto; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 8px; }
-.char-card { background: #1a1a2e; border: 2px solid #444; border-radius: 6px; padding: 4px 2px; cursor: pointer; text-align: center; }
-.char-card.selected { border-color: #FFD700; background: #2a2a0a; }
-.char-emoji { font-size: 1.5em; display: block; }
-.char-name { font-size: 0.7em; color: #ccc; margin-top: 2px; display: none; }
+.character-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-height: 250px; overflow-y: auto; padding: 6px; }
+.char-card { background: #1a1a2e; border: 3px solid #444; border-radius: 12px; padding: 8px 4px; cursor: pointer; text-align: center; transition: all 0.2s; }
+.char-card:hover { border-color: #FFD700; transform: scale(1.05); }
+.char-card.selected { border-color: #FFD700; background: #2a2a0a; box-shadow: 0 0 12px rgba(255,215,0,0.5); }
+.char-emoji { font-size: 2.5em; display: block; }
+.char-name { font-size: 0.9em; color: #ccc; margin-top: 5px; }
 
-.start-btn {
-  width: 100%; padding: 12px; font-family: 'Jua', sans-serif; font-size: 1.5em; background: var(--mario-red); border: 3px solid #FF8888; border-radius: 12px; color: #fff; cursor: pointer; text-shadow: 2px 2px 0 #800; box-shadow: 0 4px 0 #800; margin-top: 10px;
+.start-btn { width: 100%; padding: 20px; font-family: 'Jua', sans-serif; font-size: 2em; background: var(--mario-red); border: 5px solid #FF8888; border-radius: 15px; color: #fff; cursor: pointer; text-shadow: 2px 2px 0 #800; transition: all 0.2s; margin-top: 20px; box-shadow: 0 8px 0 #800; }
+.start-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #800; }
+
+/* ===== GAME SCREEN (플렉스 자동 반응형 레이아웃 도입) ===== */
+#gameScreen { padding: 10px; box-sizing: border-box; }
+.game-wrapper {
+  width: 100%;
+  max-width: 960px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin: 0 auto;
 }
-.start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #800; }
 
-/* ===== GAME SCREEN ===== */
-#gameScreen { width: 900px; height: auto; display: none; }
-#gameScreen.active { display: flex; }
-
-#hud { background: var(--hud-bg); border: 3px solid #FFD700; border-radius: 14px; padding: 8px 16px; display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 8px; }
-.hud-item { display: flex; align-items: center; gap: 6px; color: #fff; font-size: 1.1em; text-shadow: var(--text-shadow); }
-.hud-icon { font-size: 1.3em; }
+/* HUD */
+#hud { background: var(--hud-bg); border: 3px solid #FFD700; border-radius: 12px; padding: 10px 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px; }
+.hud-item { display: flex; align-items: center; gap: 6px; color: #fff; font-size: 1.2em; text-shadow: var(--text-shadow); }
+.hud-icon { font-size: 1.5em; }
 .health-bar { display: flex; gap: 3px; }
-.health-pip { width: 14px; height: 14px; background: #E52521; border: 2px solid #fff; border-radius: 3px; }
+.health-pip { width: 16px; height: 16px; background: #E52521; border: 2px solid #fff; border-radius: 3px; transition: background 0.3s; }
 .health-pip.empty { background: #333; }
-.map-indicator { margin-left: auto; font-size: 1.1em; color: #FFD700; }
+.map-indicator { margin-left: auto; font-size: 1.2em; color: #FFD700; }
 
-/* 🌟 상위 index.html의 가상 콘솔 박스 안에서 왜곡 없이 정확히 안착되는 가속용 고정형 캔버스 규격 */
+/* 캔버스가 부모 박스에 맞춰 종횡비를 유지하며 자동으로 꽉 차게 조절됨 */
 #gameCanvas {
-  display: block;
-  width: 900px !important;
-  height: 460px !important;
-  border-radius: 14px;
-  border: 3px solid #333;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 900 / 460;
   background: #6B8CFF;
+  border-radius: 12px;
+  border: 4px solid #333;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: block;
 }
 
+.game-tips { background: rgba(0,0,0,0.85); color: #FFF; padding: 10px 15px; border-radius: 12px; border: 2px solid #FFD700; text-align: left; font-size: 1em; line-height: 1.5; margin-top: 10px; }
+.game-tips .highlight { color: #FFD700; font-weight: bold; }
+
+/* 터치 컨트롤 패드 */
 #mobileControls {
   display: flex;
   width: 100%;
-  margin-top: 10px;
   justify-content: space-between;
   align-items: center;
-  padding: 0 10px;
+  padding: 15px 20px;
+  margin-top: auto; /* 남는 세로 여백을 밀어내어 맨 아래로 이동 */
 }
-.touch-btn {
-  background: rgba(255,255,255,0.22);
-  border: 3px solid rgba(255,255,255,0.4);
-  border-radius: 50%;
-  width: 75px;
-  height: 75px;
-  font-size: 2.2em;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.touch-btn { background: rgba(255,255,255,0.15); border: 4px solid rgba(255,255,255,0.4); border-radius: 50%; width: 85px; height: 85px; font-size: 2.2em; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.touch-btn:active { background: rgba(255,255,255,0.4); }
+.touch-left-group { display: flex; gap: 20px; }
+
+/* PC(마우스) 환경일 때는 모바일 버튼 및 팁 숨김 처리 */
+@media (pointer: fine) {
+  #mobileControls { display: none !important; }
 }
-.touch-left-group { display: flex; gap: 25px; }
+@media (max-width: 800px) {
+  .game-tips { display: none; } /* 화면이 작은 스마트폰에서는 팁을 가려서 쾌적하게 유지 */
+}
 
 /* ===== QUESTION MODAL ===== */
-#questionModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; }
+#questionModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; }
 #questionModal.show { display: flex; }
-.question-box { background: #1a0030; border: 5px solid #FFD700; border-radius: 18px; padding: 20px; width: 90%; max-width: 650px; text-align: center; }
-.q-header { font-size: 1.1em; color: #aaa; margin-bottom: 5px; }
-.q-char { font-size: 2.5em; margin-bottom: 5px; }
-.q-text { font-size: 1.4em; color: #fff; margin-bottom: 15px; line-height: 1.4; text-shadow: var(--text-shadow); }
-.q-options { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.q-option { padding: 12px; font-family: 'Jua', sans-serif; font-size: 1.2em; background: #222; border: 2px solid #555; border-radius: 10px; color: #fff; cursor: pointer; text-align: left; padding-left: 15px; }
-.q-option.correct { background: #1a5c1a !important; border-color: #5CFF00 !important; }
+.question-box { background: #1a0030; border: 6px solid #FFD700; border-radius: 20px; padding: 30px; width: 95%; max-width: 700px; text-align: center; box-shadow: 0 0 50px rgba(255,215,0,0.6); animation: popIn 0.3s ease; max-height: 90vh; overflow-y: auto; }
+@keyframes popIn { from{transform:scale(0.8); opacity:0;} to{transform:scale(1); opacity:1;} }
+.q-header { font-size: 1.3em; color: #aaa; margin-bottom: 10px; }
+.q-char { font-size: 3em; margin-bottom: 10px; }
+.q-text { font-size: 1.6em; color: #fff; margin-bottom: 20px; line-height: 1.5; text-shadow: var(--text-shadow); word-break: keep-all; }
+.q-options { display: flex; flex-direction: column; gap: 10px; } /* 모바일 오터치 방지를 위해 세로 1열 배치 */
+.q-option { padding: 15px; font-family: 'Jua', sans-serif; font-size: 1.4em; background: #222; border: 4px solid #555; border-radius: 12px; color: #fff; cursor: pointer; text-align: left; transition: all 0.2s; }
+.q-option:hover { background: #333; border-color: #FFD700; transform: scale(1.02); }
+.q-option:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.q-option.correct { background: #1a5c1a !important; border-color: #5CFF00 !important; opacity: 1; }
 .q-option.wrong { background: #5c1a1a !important; border-color: #FF4444 !important; }
-.q-feedback { margin-top: 10px; font-size: 1.2em; min-height: 35px; }
-.q-next-btn { margin-top: 10px; padding: 12px 30px; font-family: 'Jua', sans-serif; font-size: 1.2em; background: #E52521; border: 3px solid #FF8888; border-radius: 10px; color: #fff; cursor: pointer; display: none; }
+.q-feedback { margin-top: 15px; font-size: 1.4em; min-height: 50px; }
+.q-next-btn { margin-top: 15px; padding: 15px 30px; font-family: 'Jua', sans-serif; font-size: 1.5em; background: #E52521; border: 4px solid #FF8888; border-radius: 12px; color: #fff; cursor: pointer; display: none; box-shadow: 0 5px 0 #800; }
+.q-next-btn:active { transform: translateY(3px); box-shadow: none; }
 
 /* ===== RESULT SCREEN ===== */
-#resultScreen { min-height: 100vh; background: linear-gradient(180deg, #1a0a5e 0%, #5060c8 50%, #5c3d1e 85%, #3d2610 100%); align-items: center; justify-content: center; padding: 15px; border-radius: 16px;}
-.result-box { background: rgba(0,0,0,0.85); border: 5px solid #FFD700; border-radius: 16px; padding: 20px; text-align: center; max-width: 550px; width: 100%; }
-.result-title { font-size: 2.5em; color: #FFD700; text-shadow: 2px 2px 0 #C84B11; margin-bottom: 5px; }
-.result-char { font-size: 3.5em; }
-.result-stats { margin: 15px 0; }
-.stat-row { display:flex; justify-content:space-between; color:#fff; font-size:1.2em; padding:8px 0; border-bottom:1px solid #444; }
+#resultScreen { justify-content: center; background: linear-gradient(180deg, #1a0a5e 0%, #5060c8 50%, #5c3d1e 85%, #3d2610 100%); padding: 20px; }
+.result-box { background: rgba(0,0,0,0.85); border: 6px solid #FFD700; border-radius: 20px; padding: 30px; text-align: center; max-width: 600px; width: 100%; box-shadow: 0 0 50px rgba(255,215,0,0.4); max-height: 90vh; overflow-y: auto; }
+.result-title { font-size: 3em; color: #FFD700; text-shadow: 3px 3px 0 #C84B11; margin-bottom: 10px; }
+.result-stats { margin: 20px 0; }
+.stat-row { display:flex; justify-content:space-between; color:#fff; font-size:1.4em; padding:10px 0; border-bottom:1px solid #444; }
 .stat-val { color: #FFD700; }
-.result-grade { font-size: 1.6em; margin: 10px 0; padding: 8px; border-radius: 10px; }
-.retry-btn { padding: 12px 24px; font-family: 'Jua', sans-serif; font-size: 1.3em; background: var(--mario-red); border: 3px solid #FF8888; border-radius: 10px; color: #fff; cursor: pointer; margin: 5px; box-shadow: 0 3px 0 #800; }
+.result-grade { font-size: 2.5em; margin: 20px 0; padding: 10px; border-radius: 12px; }
+.retry-btn { padding: 15px 25px; font-family: 'Jua', sans-serif; font-size: 1.5em; background: var(--mario-red); border: 4px solid #FF8888; border-radius: 12px; color: #fff; cursor: pointer; margin: 5px; box-shadow: 0 5px 0 #800; }
 
 /* Loading overlay */
-#loadingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; gap: 15px; }
+#loadingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; align-items: center; justify-content: center; flex-direction: column; gap: 20px; }
 #loadingOverlay.show { display: flex; }
-.loading-text { color: #FFD700; font-size: 1.8em; text-shadow: var(--text-shadow); }
-.loading-bar-wrap { width: 260px; height: 18px; border: 3px solid #FFD700; border-radius: 10px; overflow: hidden; background: #111; }
-.loading-bar { height: 100%; background: #FFD700; width: 0%; }
-.loading-icon { font-size: 2.5em; animation: spin 1s linear infinite; }
+.loading-text { color: #FFD700; font-size: 2em; text-shadow: var(--text-shadow); }
+.loading-bar-wrap { width: 300px; height: 20px; border: 4px solid #FFD700; border-radius: 10px; background: #111; }
+.loading-bar { height: 100%; background: #FFD700; width: 0%; transition: width 0.3s; border-radius: 6px; }
+.loading-icon { font-size: 4em; animation: spin 1s linear infinite; }
 
-.float-text { position: absolute; font-family: 'Jua', sans-serif; font-size: 1.3em; pointer-events: none; z-index: 999; animation: floatUp 1.2s ease forwards; text-shadow: 2px 2px 0 #000; }
+.float-text { position: absolute; font-family: 'Jua', sans-serif; font-size: 1.5em; pointer-events: none; z-index: 150; animation: floatUp 1.2s ease forwards; text-shadow: 2px 2px 0 #000; }
 @keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-60px)} }
 </style>
 </head>
@@ -189,7 +204,7 @@ body {
     <div class="pixel-mario-title">🍄</div>
     <div class="game-title">마리오 수학 왕국</div>
     <div class="game-subtitle">5학년 분수 대모험 🌟</div>
-    <div style="color:#aee;font-size:1.2em;margin-bottom:25px;text-shadow:var(--text-shadow)">약분 · 통분 · 분수와 소수 크기비교</div>
+    <div style="color:#aee;font-size:1.4em;margin-bottom:30px;text-shadow:var(--text-shadow)">약분 · 통분 · 분수와 소수 크기비교</div>
     <button class="start-btn" onclick="goToSetup()" style="max-width:300px;margin:0 auto;display:block">🎮 게임 시작!</button>
   </div>
 </div>
@@ -204,9 +219,9 @@ body {
     <div class="form-group">
       <label class="form-label">🎯 난이도 선택</label>
       <div class="difficulty-btns">
-        <button class="diff-btn" data-diff="하" onclick="selectDiff('하')">하</button>
-        <button class="diff-btn" data-diff="중" onclick="selectDiff('중')">중</button>
-        <button class="diff-btn" data-diff="상" onclick="selectDiff('상')">상</button>
+        <button class="diff-btn" data-diff="하" onclick="selectDiff('하')">하 (기초)</button>
+        <button class="diff-btn" data-diff="중" onclick="selectDiff('중')">중 (표준)</button>
+        <button class="diff-btn" data-diff="상" onclick="selectDiff('상')">상 (심화)</button>
       </div>
     </div>
     <div class="form-group">
@@ -218,23 +233,31 @@ body {
 </div>
 
 <div id="gameScreen" class="screen">
-  <div id="hud">
-    <div class="hud-item"><span class="hud-icon">❤️</span><div class="health-bar" id="healthBar"></div></div>
-    <div class="hud-item"><span class="hud-icon">⭐</span><span id="scoreDisplay">0</span></div>
-    <div class="hud-item"><span class="hud-icon">🪙</span><span id="coinDisplay">0</span></div>
-    <div class="hud-item" id="playerNameHud" style="color:#FFD700; font-weight:bold;"></div>
-    <div class="hud-item" onclick="toggleBGM()" style="cursor:pointer; background:#333; padding:2px 8px; border-radius:8px; border:1px solid #555;" id="bgmToggleBtn">🔊 음악 켜짐</div>
-    <div class="map-indicator" id="mapIndicator">맵 1/20</div>
-  </div>
-  
-  <canvas id="gameCanvas" width="900" height="460"></canvas>
-  
-  <div id="mobileControls">
-    <div class="touch-left-group">
-      <div class="touch-btn" id="btnLeft">◀</div>
-      <div class="touch-btn" id="btnRight">▶</div>
+  <div class="game-wrapper">
+    <div id="hud">
+      <div class="hud-item"><span class="hud-icon">❤️</span><div class="health-bar" id="healthBar"></div></div>
+      <div class="hud-item"><span class="hud-icon">⭐</span><span id="scoreDisplay">0</span></div>
+      <div class="hud-item"><span class="hud-icon">🪙</span><span id="coinDisplay">0</span></div>
+      <div class="hud-item" id="playerNameHud" style="color:#FFD700; font-weight:bold;"></div>
+      <div class="hud-item" onclick="toggleBGM()" style="cursor:pointer; margin-left:10px; background:#333; padding:4px 10px; border-radius:8px; border:1px solid #555;" id="bgmToggleBtn">🔊 음악 켜짐</div>
+      <div class="map-indicator" id="mapIndicator">맵 1/20</div>
     </div>
-    <div class="touch-btn" id="btnJump">▲</div>
+    
+    <canvas id="gameCanvas" width="900" height="460"></canvas>
+    
+    <div class="game-tips">
+      <div style="color:#FFD700; font-size:1.1em; margin-bottom:5px; font-weight:bold;">🎮 플레이 팁</div>
+      🪙 코인 먹으면 <span class="highlight">+30점</span> &amp; 체력 회복 | ❓ 박스를 치면 코인이나 몬스터 등장!<br>
+      💥 몬스터를 밟으면 <span class="highlight">+50점</span> | 🎯 깃발에 도착해 수학 문제를 맞히면 <span class="highlight">+100점!</span>
+    </div>
+
+    <div id="mobileControls">
+      <div class="touch-left-group">
+        <div class="touch-btn" id="btnLeft">◀</div>
+        <div class="touch-btn" id="btnRight">▶</div>
+      </div>
+      <div class="touch-btn" id="btnJump">▲</div>
+    </div>
   </div>
 </div>
 
@@ -252,8 +275,8 @@ body {
 <div id="resultScreen" class="screen">
   <div class="result-box">
     <div class="result-title">🎉 모험 완료!</div>
-    <canvas id="endingCanvas" width="200" height="200" style="margin: 0 auto; display: block;"></canvas>
-    <div style="color:#fff;font-size:1.4em;margin-bottom:10px; font-weight:bold;" id="resultName"></div>
+    <canvas id="endingCanvas" width="250" height="250" style="margin: 0 auto; display: block;"></canvas>
+    <div style="color:#fff;font-size:1.6em;margin-bottom:15px; font-weight:bold;" id="resultName"></div>
     <div class="result-grade" id="resultGrade"></div>
     <div class="result-stats" id="resultStats"></div>
     <button class="retry-btn" onclick="goToSetup()">🔄 다시 도전!</button>
@@ -268,6 +291,9 @@ body {
 </div>
 
 <script>
+// ============================================================
+//  GAME STATE
+// ============================================================
 const CHARACTERS = [
   {name:'마리오',emoji:'🔴'}, {name:'루이지',emoji:'🟢'}, {name:'피치공주',emoji:'👸'},
   {name:'쿠파',emoji:'🐢'}, {name:'요시',emoji:'🦕'}, {name:'토드',emoji:'🍄'},
@@ -287,7 +313,12 @@ const PLAYER_H = 32;
 const MONSTER_W = 30;
 const MONSTER_H = 30;
 
-let state = { screen: 'title', nickname: '', difficulty: '중', character: CHARACTERS[0], score: 0, coins: 0, health: 100, maxHealth: 100, currentMap: 0, questions: [], answeredCount: 0, gameRunning: false, startTime: null, endTime: null };
+let state = {
+  screen: 'title', nickname: '', difficulty: '중', character: CHARACTERS[0],
+  score: 0, coins: 0, health: 100, maxHealth: 100, currentMap: 0, questions: [], answeredCount: 0,
+  gameRunning: false, startTime: null, endTime: null     
+};
+
 let levelSnapshot = { score: 0, coins: 0, health: 100, maxHealth: 100 };
 let bgmPlaying = true;
 const bgmAudio = document.getElementById('bgm');
@@ -300,7 +331,7 @@ const frameDelay = 1000 / FPS;
 function toggleBGM() {
   const btn = document.getElementById('bgmToggleBtn');
   if (bgmPlaying) { bgmAudio.pause(); bgmPlaying = false; btn.textContent = '🔈 음악 꺼짐'; } 
-  else { bgmAudio.play().catch(e=>console.log(e)); bgmPlaying = true; btn.textContent = '🔊 음악 켜짐'; }
+  else { bgmAudio.play().catch(e=>{}); bgmPlaying = true; btn.textContent = '🔊 음악 켜짐'; }
 }
 
 function showScreen(id) {
@@ -317,12 +348,8 @@ function buildCharGrid() {
   CHARACTERS.forEach((c, i) => {
     const div = document.createElement('div');
     div.className = 'char-card' + (i===0?' selected':'');
-    div.innerHTML = `<span class="char-emoji">${c.emoji}</span>`;
-    div.onclick = () => {
-      document.querySelectorAll('.char-card').forEach(x=>x.classList.remove('selected'));
-      div.classList.add('selected');
-      state.character = c;
-    };
+    div.innerHTML = `<span class="char-emoji">${c.emoji}</span><span class="char-name">${c.name}</span>`;
+    div.onclick = () => { document.querySelectorAll('.char-card').forEach(x=>x.classList.remove('selected')); div.classList.add('selected'); state.character = c; };
     grid.appendChild(div);
   });
   state.character = CHARACTERS[0];
@@ -330,51 +357,52 @@ function buildCharGrid() {
 
 function selectDiff(d) {
   state.difficulty = d;
-  document.querySelectorAll('.diff-btn').forEach(b=>{
-    b.className = 'diff-btn';
-    if (b.dataset.diff === d) b.classList.add('selected-'+d);
-  });
+  document.querySelectorAll('.diff-btn').forEach(b=>{ b.className = 'diff-btn'; if (b.dataset.diff === d) b.classList.add('selected-'+d); });
 }
 
 async function startGame() {
   const nick = document.getElementById('nicknameInput').value.trim();
   if (!nick) { alert('닉네임을 입력해주세요!'); return; }
-  if(bgmPlaying) bgmAudio.play().catch(e=>console.log(e));
+  if (!state.difficulty) { alert('난이도를 선택해주세요!'); return; }
+  if(bgmPlaying) bgmAudio.play().catch(e=>{});
 
   state.nickname = nick; state.score = 0; state.coins = 0; state.health = 100; state.maxHealth = 100; state.currentMap = 0; state.answeredCount = 0;
   state.startTime = Date.now(); state.endTime = null;
   levelSnapshot = { score: state.score, coins: state.coins, health: state.health, maxHealth: state.maxHealth };
 
   showLoading(true);
-  state.questions = getFallbackQuestions(state.difficulty);
+  try { state.questions = getFallbackQuestions(state.difficulty); } catch(e) {}
   showLoading(false);
 
   showScreen('gameScreen');
   initGame();
 }
 
+// ============================================================
+//  AI QUESTION GENERATION 
+// ============================================================
 function getFallbackQuestions(diff) {
   const all = {
     '하': [
-      {q:"6/8을 기약분수로 나타내면?",options:["1/4","3/4","2/3","3/8"],answer:1,explain:"6과 8의 최대공약수는 2. 6÷2=3, 8÷2=4 → 3/4", tip:"분자와 분모를 최대공약수로 나누어 보세요."},
+      {q:"6/8을 기약분수로 나타내면?",options:["1/4","3/4","2/3","3/8"],answer:1,explain:"6과 8의 최대공약수는 2. 6÷2=3, 8÷2=4 → 3/4", tip:"분자와 분모를 가장 큰 공약수(최대공약수)로 나누어 보세요."},
       {q:"4/6을 기약분수로 나타내면?",options:["1/3","2/3","3/4","1/2"],answer:1,explain:"4와 6의 최대공약수는 2. 4÷2=2, 6÷2=3 → 2/3", tip:"4와 6을 공통으로 나눌 수 있는 수 중 가장 큰 수를 생각해보세요."},
-      {q:"1/2와 1/4 중 어느 것이 더 크나요?",options:["1/4","같다","1/2","알 수 없다"],answer:2,explain:"1/2=2/4 > 1/4", tip:"분모를 같게 만들어서 분자의 크기를 비교해 보세요."},
+      {q:"1/2와 1/4 중 어느 것이 더 크나요?",options:["1/4","같다","1/2","알 수 없다"],answer:2,explain:"1/2=2/4 > 1/4", tip:"피자를 2조각 낸 것 중 1개와 4조각 낸 것 중 1개를 상상해 보세요."},
       {q:"1/3과 1/5를 통분하면 공통분모는?",options:["3","5","10","15"],answer:3,explain:"3과 5의 최소공배수는 15", tip:"3의 배수이면서 5의 배수인 수 중 가장 작은 수를 찾아보세요."},
-      {q:"0.5와 1/2 중 어느 것이 더 크나요?",options:["0.5","1/2","같다","알 수 없다"],answer:2,explain:"0.5=5/10=1/2로 크기가 같습니다.", tip:"0.5를 분수로 고친 뒤 비교해 보세요."}
+      {q:"0.5와 1/2 중 어느 것이 더 크나요?",options:["0.5","1/2","같다","알 수 없다"],answer:2,explain:"0.5=5/10=1/2로 같다", tip:"0.5를 분수로 고치면 5/10이고, 이를 약분하면 어떻게 될까요?"}
     ],
     '중': [
-      {q:"18/24를 기약분수로 나타내면?",options:["1/2","2/3","3/4","5/8"],answer:2,explain:"18과 24의 최대공약수는 6. 18÷6=3, 24÷6=4 → 3/4", tip:"18과 24를 동시에 나눌 수 있는 가장 큰 수를 찾아 나누어 보세요."},
-      {q:"2/3와 5/6 중 어느 것이 더 크나요?",options:["2/3","같다","5/6","알 수 없다"],answer:2,explain:"2/3=4/6, 5/6 → 5/6이 크다", tip:"두 분수의 분모를 6으로 통분한 다음 비교해 보세요."},
+      {q:"18/24를 기약분수로 나타내면?",options:["1/2","2/3","3/4","5/8"],answer:2,explain:"18과 24의 최대공약수는 6. 18÷6=3, 24÷6=4 → 3/4", tip:"18과 24를 동시에 나눌 수 있는 가장 큰 수를 찾아 분모와 분자를 나누어 보세요."},
+      {q:"2/3와 5/6 중 어느 것이 더 크나요?",options:["2/3","같다","5/6","알 수 없다"],answer:2,explain:"2/3=4/6, 5/6 → 5/6이 크다", tip:"두 분수의 분모를 6으로 통분한 다음, 분자의 크기를 비교해 보세요."},
       {q:"3/4, 5/6, 7/12을 통분할 때 공통분모는?",options:["12","24","36","48"],answer:0,explain:"4, 6, 12의 최소공배수는 12", tip:"4, 6, 12 세 수의 공배수 중 가장 작은 수를 구해보세요."},
       {q:"0.7과 3/4 중 어느 것이 더 크나요?",options:["0.7","3/4","같다","알 수 없다"],answer:1,explain:"3/4=0.75 > 0.7", tip:"3/4를 소수로 바꾸거나, 0.7을 분수로 바꾸어 비교해 보세요."},
-      {q:"30/42를 기약분수로 나타내면?",options:["5/7","3/7","5/6","2/7"],answer:0,explain:"30과 42의 최대공약수는 6. 30÷6=5, 42÷6=7 → 5/7", tip:"30과 42를 최대공약수인 6으로 나누어 보세요."}
+      {q:"30/42를 기약분수로 나타내면?",options:["5/7","3/7","5/6","2/7"],answer:0,explain:"30과 42의 최대공약수는 6. 30÷6=5, 42÷6=7 → 5/7", tip:"30과 42는 둘 다 6의 배수입니다. 6으로 나누어 보세요."}
     ],
     '상': [
-      {q:"72/108을 기약분수로 나타내면?",options:["1/3","2/3","3/5","5/8"],answer:1,explain:"최대공약수 36: 72÷36=2, 108÷36=3 → 2/3", tip:"숫자가 클 때는 작은 공약수(2나 3)로 여러 번 나누어가며 구해도 됩니다."},
+      {q:"72/108을 기약분수로 나타내면?",options:["1/3","2/3","3/5","5/8"],answer:1,explain:"최대공약수 36: 72÷36=2, 108÷36=3 → 2/3", tip:"숫자가 클 때는 작은 공약수(2나 3)로 여러 번 나누어보며 기약분수를 찾아도 됩니다."},
       {q:"2/3, 3/4, 5/6, 7/12을 통분할 때 공통분모는?",options:["12","24","36","48"],answer:0,explain:"3, 4, 6, 12의 최소공배수는 12", tip:"가장 큰 분모인 12가 3, 4, 6의 배수인지 확인해 보세요."},
-      {q:"0.375, 3/8, 5/12 중 가장 큰 것은?",options:["0.375","3/8","5/12","모두 같다"],answer:2,explain:"0.375=3/8, 5/12=10/24, 3/8=9/24 → 5/12", tip:"0.375를 분수로 나타내면 3/8입니다. 3/8과 5/12를 통분하여 비교해 보세요."},
-      {q:"사과 전체의 2/5가 120개일 때 전체 사과 수는?",options:["240개","300개","360개","400개"],answer:1,explain:"전체 × 2/5 = 120 → 전체 = 120 × 5/2 = 300", tip:"전체의 1/5이 몇 개인지 구한 다음 5배를 해보세요."},
-      {q:"세 분수 3/5, 7/10, 9/15 중 크기가 같은 것끼리 묶으면?",options:["3/5=7/10","7/10=9/15","3/5=9/15","모두 다르다"],answer:2,explain:"3/5=9/15=0.6, 7/10=0.7", tip:"분수들을 모두 기약분수나 소수로 나타내어 비교해 보세요."}
+      {q:"0.375, 3/8, 5/12 중 가장 큰 것은?",options:["0.375","3/8","5/12","모두 같다"],answer:2,explain:"0.375=3/8, 5/12≈0.4167 → 5/12", tip:"0.375를 분수로 나타내면 3/8입니다. 3/8과 5/12를 통분하여 비교해 보세요."},
+      {q:"사과 전체의 2/5가 120개일 때 전체 사과 수는?",options:["240개","300개","360개","400개"],answer:1,explain:"전체 × 2/5 = 120 → 전체 = 120 × 5/2 = 300", tip:"전체의 1/5가 몇 개인지 먼저 구한 다음, 5배를 해보세요."},
+      {q:"세 분수 3/5, 7/10, 9/15 중 크기가 같은 것끼리 묶으면?",options:["3/5=7/10","7/10=9/15","3/5=9/15","모두 다르다"],answer:2,explain:"3/5=9/15=0.6, 7/10=0.7", tip:"분수들을 모두 기약분수로 나타내어 비교해 보세요."}
     ]
   };
   let arr = all[diff] || all['중'];
@@ -384,13 +412,8 @@ function getFallbackQuestions(diff) {
 
 function showLoading(show) {
   const el = document.getElementById('loadingOverlay');
-  if (show) {
-    el.classList.add('show'); let pct = 0;
-    window._loadInterval = setInterval(()=>{ pct = Math.min(pct + Math.random()*8, 90); document.getElementById('loadingBar').style.width = pct+'%'; }, 200);
-  } else {
-    clearInterval(window._loadInterval); document.getElementById('loadingBar').style.width = '100%';
-    setTimeout(()=>el.classList.remove('show'), 400);
-  }
+  if (show) { el.classList.add('show'); let pct = 0; window._loadInterval = setInterval(()=>{ pct = Math.min(pct + Math.random()*8, 90); document.getElementById('loadingBar').style.width = pct+'%'; }, 200); } 
+  else { clearInterval(window._loadInterval); document.getElementById('loadingBar').style.width = '100%'; setTimeout(()=>el.classList.remove('show'), 400); }
 }
 
 const canvas = document.getElementById('gameCanvas');
@@ -400,54 +423,45 @@ let keys = { justJump: false };
 let animFrame;
 
 function makeRng(seed) {
-  let a = seed;
-  return function() { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  let a = seed; return function() { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
 
 function initGame() {
-  document.onkeydown = e => {
-    if (['Space','ArrowUp','KeyW'].includes(e.code)) { if (!keys[e.code]) keys.justJump = true; }
-    keys[e.code] = true;
-    if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown'].includes(e.code)) e.preventDefault();
-  };
+  const pName = document.getElementById('playerNameHud');
+  if(pName) pName.textContent = `[ ${state.nickname} ]`;
+  
+  loadMap(state.currentMap);
+
+  document.onkeydown = e => { if (['Space','ArrowUp','KeyW'].includes(e.code)) { if (!keys[e.code]) keys.justJump = true; } keys[e.code] = true; if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown'].includes(e.code)) e.preventDefault(); };
   document.onkeyup = e => { keys[e.code] = false; };
   setupTouchControls();
+
   lastTime = 0; state.gameRunning = true; updateHUD();
   cancelAnimationFrame(animFrame); animFrame = requestAnimationFrame(gameLoop);
 }
 
 function loadMap(idx) {
-  const rng = makeRng(idx * 7771 + 42);
-  mapData = generateMapWithRng(idx, rng);
+  const rng = makeRng(idx * 7771 + 42); mapData = generateMapWithRng(idx, rng);
   player = { x: 60, y: GROUND_Y - PLAYER_H, vx: 0, vy: 0, grounded: true, jumps: 0, facingRight: true, animFrame: 0, animTimer: 0, reachedFlag: false, dead: false };
   camera = { x: 0 }; monsterCooldown = 0;
-  document.getElementById('mapIndicator').textContent = `맵 ${idx+1}/20`;
+  const mapInd = document.getElementById('mapIndicator'); if(mapInd) mapInd.textContent = `맵 ${idx+1}/20`;
   updateHUD();
 }
 
 function generateMapWithRng(mapIndex, rng) {
   const mapWidth = 3000 + mapIndex * 150; 
-  const themes = [
-    {sky:'#5C94FC',groundTop:'#5CBA3C',groundFill:'#C84B11'},
-    {sky:'#1a1a4a',groundTop:'#4a3a20',groundFill:'#2a1a10'},
-    {sky:'#204880',groundTop:'#506030',groundFill:'#303820'},
-    {sky:'#401060',groundTop:'#503020',groundFill:'#301800'},
-    {sky:'#0a2040',groundTop:'#205010',groundFill:'#103008'},
-  ];
+  const themes = [ {sky:'#5C94FC',groundTop:'#5CBA3C',groundFill:'#C84B11'}, {sky:'#1a1a4a',groundTop:'#4a3a20',groundFill:'#2a1a10'}, {sky:'#204880',groundTop:'#506030',groundFill:'#303820'}, {sky:'#401060',groundTop:'#503020',groundFill:'#301800'}, {sky:'#0a2040',groundTop:'#205010',groundFill:'#103008'} ];
   const theme = themes[mapIndex % themes.length];
   const gaps = [], plats = [], mons = [], cns = [];
   const startX = 400, endX = mapWidth - 500, playWidth = endX - startX;
 
   const numGaps = 3 + Math.floor(rng() * 3); const gapSeg = playWidth / numGaps;
   for (let i = 0; i < numGaps; i++) {
-    let isWide = rng() < 0.4;
-    let gw = isWide ? (140 + Math.floor(rng() * 30)) : (80 + Math.floor(rng() * 40));
-    let gx = startX + i * gapSeg + 50 + rng() * (gapSeg - gw - 100);
-    gaps.push({x: gx, w: gw});
+    let isWide = rng() < 0.4; let gw = isWide ? (140 + Math.floor(rng() * 30)) : (80 + Math.floor(rng() * 40));
+    let gx = startX + i * gapSeg + 50 + rng() * (gapSeg - gw - 100); gaps.push({x: gx, w: gw});
   }
 
-  const numMons = 6 + Math.floor(rng() * 4); const monSeg = playWidth / numMons;
-  const monTypes = ['goomba', 'koopa', 'boo', 'spiny'];
+  const numMons = 6 + Math.floor(rng() * 4); const monSeg = playWidth / numMons; const monTypes = ['goomba', 'koopa', 'boo', 'spiny'];
   for (let i = 0; i < numMons; i++) {
     let mx = startX + i * monSeg + 50 + rng() * (monSeg - 100);
     let overlapGap = gaps.find(g => mx + MONSTER_W + 30 > g.x && mx - 30 < g.x + g.w);
@@ -471,16 +485,16 @@ function generateMapWithRng(mapIndex, rng) {
       let platLen = 1 + Math.floor(rng() * 4); let py = GROUND_Y - 70 - Math.floor(rng() * 20);
       let hasQ = (platLen >= 2 && qBlockCount < 3 && rng() < 0.6); let qIdx = hasQ ? Math.floor(rng() * platLen) : -1; if (hasQ) qBlockCount++;
       for (let i=0; i<platLen; i++) plats.push({x: px + i*TILE, y: py, w: TILE, h: TILE, type: (i===qIdx)?'qblock':'brick', isHit:false});
-    } else if (chunkType === 1) {
+    } else if (chunkType === 1) { 
       let platLen = 2 + Math.floor(rng() * 2); let py = GROUND_Y - 140 - Math.floor(rng() * 20);
       let hasQ = (platLen >= 2 && qBlockCount < 3 && rng() < 0.6); let qIdx = hasQ ? Math.floor(rng() * platLen) : -1; if (hasQ) qBlockCount++;
       for (let i=0; i<platLen; i++) plats.push({x: px + i*TILE, y: py, w: TILE, h: TILE, type: (i===qIdx)?'qblock':'stone', isHit:false});
-    } else if (chunkType === 2) {
+    } else if (chunkType === 2) { 
       let py1 = GROUND_Y - 60; let py2 = GROUND_Y - 110;
-      plats.push({x: px, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false}); plats.push({x: px + TILE, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false});
-      plats.push({x: px + TILE*3, y: py2, w: TILE, h: TILE, type: 'stone', isHit:false}); plats.push({x: px + TILE*4, y: py2, w: TILE, h: TILE, type: 'stone', isHit:false});
-    } else if (chunkType === 3) {
-      let py1 = GROUND_Y - 70; let py2 = GROUND_Y - 130; let hasQ = (qBlockCount < 3 && rng() < 0.6); if (hasQ) qBlockCount++;
+      plats.push({x: px, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false}); plats.push({x: px + TILE, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false}); plats.push({x: px + TILE*3, y: py2, w: TILE, h: TILE, type: 'stone', isHit:false}); plats.push({x: px + TILE*4, y: py2, w: TILE, h: TILE, type: 'stone', isHit:false});
+    } else if (chunkType === 3) { 
+      let py1 = GROUND_Y - 70; let py2 = GROUND_Y - 130;
+      let hasQ = (qBlockCount < 3 && rng() < 0.6); if (hasQ) qBlockCount++;
       for (let i=0; i<3; i++) plats.push({x: px + i*TILE, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false});
       for (let i=0; i<3; i++) plats.push({x: px + i*TILE, y: py2, w: TILE, h: TILE, type: (i===1 && hasQ)?'qblock':'stone', isHit:false});
     }
@@ -561,7 +575,7 @@ function update() {
 function playerHurt(dmg, isFall) {
   if (monsterCooldown > 0 && !isFall) return; 
   state.health = Math.max(0, state.health - dmg); monsterCooldown = 60; showFloatText(`-${dmg}HP 💥`, player.x - camera.x, player.y - 20, '#FF4444'); updateHUD();
-  const gameScreen = document.getElementById('gameScreen'); gameScreen.classList.remove('shake'); void gameScreen.offsetWidth; gameScreen.classList.add('shake');
+  const gameWrapper = document.querySelector('.game-wrapper'); if(gameWrapper) { gameWrapper.classList.remove('shake'); void gameWrapper.offsetWidth; gameWrapper.classList.add('shake'); }
 
   if (state.health <= 0) {
     state.gameRunning = false;
@@ -621,8 +635,7 @@ function drawPlatform(p, cx) {
   const colors = { brick: {top:'#C84B11',mid:'#A03808',line:'rgba(0,0,0,0.4)'}, qblock: {top:'#FBD000',mid:'#C89000',line:'rgba(0,0,0,0.3)'}, used: {top:'#C88553',mid:'#8B5A2B',line:'rgba(0,0,0,0.5)'}, stone: {top:'#888',mid:'#555',line:'rgba(0,0,0,0.4)'} };
   const c = colors[p.type] || colors.brick;
   ctx.fillStyle = c.top; ctx.fillRect(px, p.y, p.w, p.h); ctx.fillStyle = c.mid; ctx.fillRect(px, p.y+p.h-8, p.w, 8);
-  ctx.fillStyle = c.line;
-  for (let i=0; i<p.w; i+=TILE) { ctx.fillRect(px+i, p.y, 2, p.h); ctx.fillRect(px+i, p.y, TILE, 2); ctx.fillRect(px+i, p.y+p.h-2, TILE, 2); }
+  ctx.fillStyle = c.line; for (let i=0; i<p.w; i+=TILE) { ctx.fillRect(px+i, p.y, 2, p.h); ctx.fillRect(px+i, p.y, TILE, 2); ctx.fillRect(px+i, p.y+p.h-2, TILE, 2); }
   if (p.type === 'qblock') { const bob = Math.sin(Date.now()*0.005)*2; ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Jua'; ctx.textAlign = 'center'; ctx.fillText('?', px+p.w/2, p.y+p.h-8 + bob); } 
   else if (p.type === 'used') { ctx.fillStyle = '#444'; for (let i=0; i<p.w; i+=TILE) { ctx.fillRect(px+i+4, p.y+4, 4, 4); ctx.fillRect(px+i+TILE-8, p.y+p.h-8, 4, 4); } }
 }
@@ -721,10 +734,14 @@ function showFloatText(text, x, y, color) {
 }
 
 function updateHUD() {
-  document.getElementById('scoreDisplay').textContent = state.score.toLocaleString(); document.getElementById('coinDisplay').textContent = state.coins;
-  const bar = document.getElementById('healthBar'); bar.innerHTML = '';
-  const pips = Math.ceil(state.maxHealth / 10); const filledPips = Math.ceil(state.health / 10);
-  for (let i=0; i<pips; i++) { const pip = document.createElement('div'); pip.className = 'health-pip' + (i < filledPips ? '' : ' empty'); bar.appendChild(pip); }
+  const sd = document.getElementById('scoreDisplay'); if(sd) sd.textContent = state.score.toLocaleString();
+  const cd = document.getElementById('coinDisplay'); if(cd) cd.textContent = state.coins;
+  const bar = document.getElementById('healthBar');
+  if(bar) {
+    bar.innerHTML = '';
+    const pips = Math.ceil(state.maxHealth / 10); const filledPips = Math.ceil(state.health / 10);
+    for (let i=0; i<pips; i++) { const pip = document.createElement('div'); pip.className = 'health-pip' + (i < filledPips ? '' : ' empty'); bar.appendChild(pip); }
+  }
 }
 
 function showQuestion() {
@@ -751,7 +768,7 @@ function answerQuestion(idx, q) {
   } else {
     btns[idx].disabled = true; btns[idx].classList.add('wrong');
     const tipMsg = q.tip || "문제를 다시 한번 꼼꼼하게 읽어보세요!";
-    document.getElementById('qFeedback').innerHTML = `<span style="color:#FF4444">❌ 틀렸어요! 다시 골라보세요.</span><br><span style="color:#FFD700; font-size:0.9em;">💡 힌트: ${tipMsg}</span>`;
+    document.getElementById('qFeedback').innerHTML = `<span style="color:#FF4444">❌ 아쉽지만 틀렸어요! 다시 골라보세요.</span><br><span style="color:#FFD700; font-size:0.9em;">💡 힌트: ${tipMsg}</span>`;
   }
 }
 
@@ -767,10 +784,7 @@ function showResult() {
   document.getElementById('resultName').textContent = `${state.nickname} 모험가`;
   const pct = Math.round(state.answeredCount / 20 * 100);
   let grade, color;
-  if (pct >= 90) { grade = '🏆 완벽한 수학 왕!'; color = '#FFD700'; }
-  else if (pct >= 70) { grade = '⭐ 훌륭한 수학자!'; color = '#5CFF00'; }
-  else if (pct >= 50) { grade = '👍 조금만 더 노력해봐요!'; color = '#FFA500'; }
-  else { grade = '📚 기초부터 다시 단단하게 다져봐요!'; color = '#FF6666'; }
+  if (pct >= 90) { grade = '🏆 완벽한 수학 왕!'; color = '#FFD700'; } else if (pct >= 70) { grade = '⭐ 훌륭한 수학자!'; color = '#5CFF00'; } else if (pct >= 50) { grade = '👍 조금만 더 노력하면 완벽해질 거예요!'; color = '#FFA500'; } else { grade = '📚 기초부터 다시 단단하게 다져봐요!'; color = '#FF6666'; }
 
   const totalSecs = Math.floor((state.endTime - state.startTime) / 1000); const m = Math.floor(totalSecs / 60); const s = totalSecs % 60; const timeStr = m > 0 ? `${m}분 ${s}초` : `${s}초`;
   document.getElementById('resultStats').innerHTML = `
@@ -779,6 +793,7 @@ function showResult() {
     <div class="stat-row"><span>총 점수</span><span class="stat-val">${state.score.toLocaleString()}점</span></div>
     <div class="stat-row"><span>수집한 코인</span><span class="stat-val">${state.coins}개 🪙</span></div>
     <div class="stat-row"><span>걸린 시간</span><span class="stat-val">${timeStr} ⏱️</span></div>
+    <div class="stat-row"><span>선택 난이도</span><span class="stat-val">${state.difficulty}</span></div>
   `;
   const gradeEl = document.getElementById('resultGrade'); gradeEl.textContent = grade; gradeEl.style.color = color; gradeEl.style.background = 'rgba(0,0,0,0.4)';
   showScreen('resultScreen'); animateEnding(); 
@@ -788,33 +803,28 @@ function animateEnding() {
   const eCanvas = document.getElementById('endingCanvas'); if(!eCanvas) return; const eCtx = eCanvas.getContext('2d');
   const time = Date.now() * 0.008; const jumpY = Math.abs(Math.sin(time)) * 30; 
   eCtx.clearRect(0, 0, eCanvas.width, eCanvas.height);
-  for(let i=0; i<6; i++) { eCtx.fillStyle = ['#FFD700', '#FF4444', '#5CFF00', '#6B8CFF', '#FFA500', '#FF66FF'][i]; const sx = 100 + Math.cos(time + i) * 60; const sy = 100 + Math.sin(time + i) * 60; eCtx.beginPath(); eCtx.arc(sx, sy, 4, 0, Math.PI*2); eCtx.fill(); }
-  eCtx.save(); eCtx.translate(100, 150 - jumpY); eCtx.scale(2, 2); eCtx.translate(-PLAYER_W/2, -PLAYER_H);
-  const charName = state.character.name; const w = PLAYER_W, h = PLAYER_H;
+  for(let i=0; i<6; i++) { eCtx.fillStyle = ['#FFD700', '#FF4444', '#5CFF00', '#6B8CFF', '#FFA500', '#FF66FF'][i]; const sx = 125 + Math.cos(time + i) * 60; const sy = 125 + Math.sin(time + i) * 60; eCtx.beginPath(); eCtx.arc(sx, sy, 5, 0, Math.PI*2); eCtx.fill(); }
+  eCtx.save(); eCtx.translate(125, 180 - jumpY); eCtx.scale(2.5, 2.5); eCtx.translate(-PLAYER_W/2, -PLAYER_H);
+  const charName = state.character.name; const w = PLAYER_W; const h = PLAYER_H;
 
   if (charName === '마리오' || charName === '루이지') {
     const isLuigi = (charName === '루이지'); const mainColor = isLuigi ? '#2E8B00' : '#E52521'; const overColor = isLuigi ? '#0033AA' : '#0044BB'; const skinColor = '#FFCC99'; const shoeColor = '#663300';
     eCtx.fillStyle = skinColor; eCtx.fillRect(w*0.2, h*0.2, w*0.6, h*0.4); eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.1, h*0.1, w*0.7, h*0.15); eCtx.fillRect(w*0.3, h*0.05, w*0.5, h*0.05); 
-    eCtx.fillStyle = '#000'; eCtx.fillRect(w*0.6, h*0.25, w*0.1, h*0.1); eCtx.fillRect(w*0.6, h*0.4, w*0.3, h*0.1);
-    eCtx.fillStyle = skinColor; eCtx.fillRect(w*0.8, h*0.3, w*0.15, h*0.1); eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.2, h*0.55 - 2, w*0.6, h*0.35);
-    eCtx.fillStyle = overColor; eCtx.fillRect(w*0.3, h*0.7 - 2, w*0.4, h*0.2); eCtx.fillRect(w*0.2, h*0.85 - 2, w*0.2, h*0.1); eCtx.fillRect(w*0.6, h*0.85 - 2, w*0.2, h*0.1);
+    eCtx.fillStyle = '#000'; eCtx.fillRect(w*0.6, h*0.25, w*0.1, h*0.1); eCtx.fillRect(w*0.6, h*0.4, w*0.3, h*0.1); eCtx.fillStyle = skinColor; eCtx.fillRect(w*0.8, h*0.3, w*0.15, h*0.1);
+    eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.2, h*0.55 - 2, w*0.6, h*0.35); eCtx.fillStyle = overColor; eCtx.fillRect(w*0.3, h*0.7 - 2, w*0.4, h*0.2); eCtx.fillRect(w*0.2, h*0.85 - 2, w*0.2, h*0.1); eCtx.fillRect(w*0.6, h*0.85 - 2, w*0.2, h*0.1);
     eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.1, h*0.6 - 10, w*0.2, h*0.2); eCtx.fillStyle = '#FFF'; eCtx.fillRect(w*0.05, h*0.8 - 14, w*0.2, h*0.1); 
     eCtx.fillStyle = shoeColor; eCtx.fillRect(w*0.1, h*0.95 - 4, w*0.3, h*0.1); eCtx.fillRect(w*0.6, h*0.95 - 2, w*0.3, h*0.1);
   } else { const e = state.character.emoji; eCtx.font = `${h}px sans-serif`; eCtx.textAlign = 'left'; eCtx.scale(1, 1.15); eCtx.fillText(e, 0, h/1.15); }
-  eCtx.restore();
-  window.endingAnimFrame = requestAnimationFrame(animateEnding);
+  eCtx.restore(); window.endingAnimFrame = requestAnimationFrame(animateEnding);
 }
 
 function setupTouchControls() {
   window.touchLeft = false; window.touchRight = false; window.touchJump = false; window.touchJumpJust = false;
   const btnL = document.getElementById('btnLeft'); const btnR = document.getElementById('btnRight'); const btnJ = document.getElementById('btnJump');
-
-  btnL.addEventListener('touchstart', e=>{e.preventDefault(); window.touchLeft=true;}, {passive:false});
-  btnL.addEventListener('touchend', e=>{e.preventDefault(); window.touchLeft=false;}, {passive:false});
-  btnR.addEventListener('touchstart', e=>{e.preventDefault(); window.touchRight=true;}, {passive:false});
-  btnR.addEventListener('touchend', e=>{e.preventDefault(); window.touchRight=false;}, {passive:false});
-  btnJ.addEventListener('touchstart', e=>{ e.preventDefault(); window.touchJump=true; window.touchJumpJust=true; }, {passive:false});
-  btnJ.addEventListener('touchend', e=>{ e.preventDefault(); window.touchJump=false; }, {passive:false});
+  if(!btnL || !btnR || !btnJ) return;
+  btnL.addEventListener('touchstart', e=>{e.preventDefault(); window.touchLeft=true;}, {passive:false}); btnL.addEventListener('touchend', e=>{e.preventDefault(); window.touchLeft=false;}, {passive:false});
+  btnR.addEventListener('touchstart', e=>{e.preventDefault(); window.touchRight=true;}, {passive:false}); btnR.addEventListener('touchend', e=>{e.preventDefault(); window.touchRight=false;}, {passive:false});
+  btnJ.addEventListener('touchstart', e=>{ e.preventDefault(); window.touchJump=true; window.touchJumpJust=true; }, {passive:false}); btnJ.addEventListener('touchend', e=>{ e.preventDefault(); window.touchJump=false; }, {passive:false});
 }
 
 buildCharGrid();
