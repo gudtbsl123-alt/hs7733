@@ -1,824 +1,571 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-<title>🍄 마리오 수학 왕국 - 5학년 분수 대모험</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Jua&family=DotGothic16&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no" />
+  <title>✨에듀테크 게임 저장소✨</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-:root {
-  --sky: #6B8CFF;
-  --ground-top: #8B5E3C;
-  --ground-fill: #5C3D1E;
-  --brick-red: #C84B11;
-  --coin-gold: #FFD700;
-  --mario-red: #E52521;
-  --star-yellow: #FBDA00;
-  --text-shadow: 2px 2px 0 #000;
-  --hud-bg: rgba(0,0,20,0.85);
-}
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Pretendard', sans-serif;
+    }
 
-* { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: #f8fafc;
+      background: linear-gradient(-45deg, #071a52, #0f3460, #1b1b7a, #533483, #7c3aed, #c026d3, #ea580c);
+      background-size: 400% 400%;
+      animation: gradientMove 15s ease infinite;
+      position: relative;
+    }
 
-body {
-  font-family: 'Jua', sans-serif;
-  background: #1a0030;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-  overflow: hidden;
-  user-select: none;
-  touch-action: none;
-}
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-/* ===== SCREENS ===== */
-.screen { display:none; width:900px; flex-direction:column; }
-.screen.active { display:flex; }
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-/* ===== TITLE SCREEN ===== */
-#titleScreen {
-  height: 460px;
-  background: linear-gradient(180deg, #1a0a5e 0%, #5060c8 40%, #7090e0 60%, #5c3d1e 80%, #3d2610 100%);
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-}
-#titleScreen::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0; right: 0;
-  height: 22%;
-  background: repeating-linear-gradient(90deg, #8B5E3C 0px, #8B5E3C 16px, #C84B11 16px, #C84B11 32px);
-  border-top: 4px solid #FFD89B;
-}
-.title-content { position: relative; z-index:10; text-align: center; }
-.game-title { font-size: 3.5em; color: #FFD700; text-shadow: 4px 4px 0 #C84B11, 6px 6px 0 #8B3000; letter-spacing: 2px; margin-bottom: 5px; animation: titleFloat 2s ease-in-out infinite; }
-@keyframes titleFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-.game-subtitle { font-size: 1.5em; color: #fff; text-shadow: 2px 2px 0 #000; margin-bottom: 25px; }
-.pixel-mario-title { font-size: 4.5em; margin-bottom: 5px; animation: spin 3s linear infinite; display: inline-block; }
-@keyframes spin { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 80px 20px;
+      position: relative;
+      z-index: 1;
+    }
 
-/* ===== SETUP SCREEN ===== */
-#setupScreen {
-  height: 460px;
-  background: linear-gradient(180deg, #5060c8 0%, #7090e0 60%, #5c3d1e 85%, #3d2610 100%);
-  align-items: center;
-  justify-content: center;
-  padding: 15px;
-  border-radius: 16px;
-}
-.setup-box { background: rgba(0,0,0,0.85); border: 4px solid #FFD700; border-radius: 16px; padding: 20px; width: 100%; max-width: 750px; }
-.setup-title { font-size: 1.8em; color: #FFD700; text-align: center; text-shadow: var(--text-shadow); margin-bottom: 12px; }
-.form-group { margin-bottom: 12px; }
-.form-label { font-size: 1.1em; color: #fff; display: block; margin-bottom: 4px; text-shadow: var(--text-shadow); }
-.form-input { width: 100%; padding: 8px 12px; font-family: 'Jua', sans-serif; font-size: 1.1em; background: #111; border: 3px solid #FFD700; border-radius: 8px; color: #fff; outline: none; }
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
 
-.difficulty-btns { display: flex; gap: 10px; }
-.diff-btn { flex: 1; padding: 8px; font-family: 'Jua', sans-serif; font-size: 1.1em; border: 3px solid #555; border-radius: 12px; cursor: pointer; background: #222; color: #aaa; }
-.diff-btn.selected-하 { background: #2E8B00; border-color: #5CFF00; color: #fff; }
-.diff-btn.selected-중 { background: #B87D00; border-color: #FFD700; color: #fff; }
-.diff-btn.selected-상 { background: #AA0000; border-color: #FF4444; color: #fff; }
+    .admin-trigger {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 20px;
+      border-radius: 30px;
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 24px;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
 
-.character-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 100px; overflow-y: auto; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 8px; }
-.char-card { background: #1a1a2e; border: 2px solid #444; border-radius: 6px; padding: 4px 2px; cursor: pointer; text-align: center; }
-.char-card.selected { border-color: #FFD700; background: #2a2a0a; }
-.char-emoji { font-size: 1.5em; display: block; }
-.char-name { font-size: 0.7em; color: #ccc; margin-top: 2px; display: none; }
+    .admin-trigger:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
 
-.start-btn {
-  width: 100%; padding: 12px; font-family: 'Jua', sans-serif; font-size: 1.5em; background: var(--mario-red); border: 3px solid #FF8888; border-radius: 12px; color: #fff; cursor: pointer; text-shadow: 2px 2px 0 #800; box-shadow: 0 4px 0 #800; margin-top: 10px;
-}
-.start-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #800; }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+      background: linear-gradient(to right, #ffffff, #f1f5f9, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
 
-/* ===== GAME SCREEN ===== */
-#gameScreen { width: 900px; height: auto; display: none; }
-#gameScreen.active { display: flex; }
+    .hero p {
+      font-size: 18px;
+      color: #cbd5e1;
+      font-weight: 400;
+      margin-bottom: 24px;
+    }
 
-#hud { background: var(--hud-bg); border: 3px solid #FFD700; border-radius: 14px; padding: 8px 16px; display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 8px; }
-.hud-item { display: flex; align-items: center; gap: 6px; color: #fff; font-size: 1.1em; text-shadow: var(--text-shadow); }
-.hud-icon { font-size: 1.3em; }
-.health-bar { display: flex; gap: 3px; }
-.health-pip { width: 14px; height: 14px; background: #E52521; border: 2px solid #fff; border-radius: 3px; }
-.health-pip.empty { background: #333; }
-.map-indicator { margin-left: auto; font-size: 1.1em; color: #FFD700; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 110, 0, 0.15);
+      border: 1px solid rgba(255, 110, 0, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #ffedd5;
+      font-weight: 600;
+    }
 
-/* 🌟 상위 index.html의 가상 콘솔 박스 안에서 왜곡 없이 정확히 안착되는 가속용 고정형 캔버스 규격 */
-#gameCanvas {
-  display: block;
-  width: 900px !important;
-  height: 460px !important;
-  border-radius: 14px;
-  border: 3px solid #333;
-  background: #6B8CFF;
-}
+    .category-filter {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
 
-#mobileControls {
-  display: flex;
-  width: 100%;
-  margin-top: 10px;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10px;
-}
-.touch-btn {
-  background: rgba(255,255,255,0.22);
-  border: 3px solid rgba(255,255,255,0.4);
-  border-radius: 50%;
-  width: 75px;
-  height: 75px;
-  font-size: 2.2em;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.touch-left-group { display: flex; gap: 25px; }
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 24px;
+      border-radius: 12px;
+      color: #cbd5e1;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* ===== QUESTION MODAL ===== */
-#questionModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; }
-#questionModal.show { display: flex; }
-.question-box { background: #1a0030; border: 5px solid #FFD700; border-radius: 18px; padding: 20px; width: 90%; max-width: 650px; text-align: center; }
-.q-header { font-size: 1.1em; color: #aaa; margin-bottom: 5px; }
-.q-char { font-size: 2.5em; margin-bottom: 5px; }
-.q-text { font-size: 1.4em; color: #fff; margin-bottom: 15px; line-height: 1.4; text-shadow: var(--text-shadow); }
-.q-options { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.q-option { padding: 12px; font-family: 'Jua', sans-serif; font-size: 1.2em; background: #222; border: 2px solid #555; border-radius: 10px; color: #fff; cursor: pointer; text-align: left; padding-left: 15px; }
-.q-option.correct { background: #1a5c1a !important; border-color: #5CFF00 !important; }
-.q-option.wrong { background: #5c1a1a !important; border-color: #FF4444 !important; }
-.q-feedback { margin-top: 10px; font-size: 1.2em; min-height: 35px; }
-.q-next-btn { margin-top: 10px; padding: 12px 30px; font-family: 'Jua', sans-serif; font-size: 1.2em; background: #E52521; border: 3px solid #FF8888; border-radius: 10px; color: #fff; cursor: pointer; display: none; }
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
 
-/* ===== RESULT SCREEN ===== */
-#resultScreen { min-height: 100vh; background: linear-gradient(180deg, #1a0a5e 0%, #5060c8 50%, #5c3d1e 85%, #3d2610 100%); align-items: center; justify-content: center; padding: 15px; border-radius: 16px;}
-.result-box { background: rgba(0,0,0,0.85); border: 5px solid #FFD700; border-radius: 16px; padding: 20px; text-align: center; max-width: 550px; width: 100%; }
-.result-title { font-size: 2.5em; color: #FFD700; text-shadow: 2px 2px 0 #C84B11; margin-bottom: 5px; }
-.result-char { font-size: 3.5em; }
-.result-stats { margin: 15px 0; }
-.stat-row { display:flex; justify-content:space-between; color:#fff; font-size:1.2em; padding:8px 0; border-bottom:1px solid #444; }
-.stat-val { color: #FFD700; }
-.result-grade { font-size: 1.6em; margin: 10px 0; padding: 8px; border-radius: 10px; }
-.retry-btn { padding: 12px 24px; font-family: 'Jua', sans-serif; font-size: 1.3em; background: var(--mario-red); border: 3px solid #FF8888; border-radius: 10px; color: #fff; cursor: pointer; margin: 5px; box-shadow: 0 3px 0 #800; }
+    .filter-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: #ffffff;
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
+    }
 
-/* Loading overlay */
-#loadingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; flex-direction: column; gap: 15px; }
-#loadingOverlay.show { display: flex; }
-.loading-text { color: #FFD700; font-size: 1.8em; text-shadow: var(--text-shadow); }
-.loading-bar-wrap { width: 260px; height: 18px; border: 3px solid #FFD700; border-radius: 10px; overflow: hidden; background: #111; }
-.loading-bar { height: 100%; background: #FFD700; width: 0%; }
-.loading-icon { font-size: 2.5em; animation: spin 1s linear infinite; }
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
 
-.float-text { position: absolute; font-family: 'Jua', sans-serif; font-size: 1.3em; pointer-events: none; z-index: 999; animation: floatUp 1.2s ease forwards; text-shadow: 2px 2px 0 #000; }
-@keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-60px)} }
-</style>
+    .game-card {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .game-icon {
+      font-size: 36px;
+      background: rgba(255, 255, 255, 0.08);
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+    }
+
+    .game-category {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .game-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    .game-desc {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      flex-grow: 1;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 10px;
+      z-index: 2;
+    }
+
+    .launch-btn {
+      flex-grow: 1;
+      background: #ffffff;
+      color: #0f172a;
+      text-align: center;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+    }
+
+    .launch-btn:hover { background: #f1f5f9; }
+
+    .card-del-btn {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      padding: 0 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       🌟 [근본 해결 코어] 유니버설 반응형 자동 매칭 실시간 가상 실행기 프레임
+       ============================================================ */
+    .game-master-overlay {
+      position: fixed;
+      inset: 0;
+      background: #09090b;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      touch-action: none;
+    }
+
+    /* 반응형 크기 유지를 위한 컨테이너 */
+    .game-console-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 마스터 가상 콘솔 본체 */
+    .game-console-box {
+      position: relative;
+      width: 960px;  /* 표준 가로 가상 베이스 해상도 */
+      height: 690px; /* 표준 세로 가상 베이스 해상도 */
+      background: #151518;
+      border: 4px solid #ffd700;
+      border-radius: 20px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      transform-origin: center center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      transition: width 0.2s, height 0.2s;
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+      margin-bottom: 8px;
+      width: 100%;
+    }
+
+    .console-title { font-size: 16px; font-weight: 800; color: #ffd700; }
+    
+    .console-close-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+      transition: background 0.2s;
+    }
+    .console-close-btn:hover { background: #dc2626; }
+
+    /* 모듈 임베딩 프레임 */
+    .game-frame-iframe {
+      width: 100%;
+      flex: 1;
+      border: none;
+      background: #000;
+      border-radius: 8px;
+    }
+
+    /* 📱 기기 화면 종횡비에 따른 특수 미디어 쿼리 패치 */
+    @media (max-width: 600px) or (max-aspect-ratio: 13/19) {
+      /* 스마트폰 세로형 비율 감지 시, 가상 캔버스를 900x1200 규격 모바일 전 전용 장치로 가변 변경 */
+      .game-console-box {
+        width: 900px;
+        height: 1300px; /* 모바일 기기 화면 비율에 맞추어 레이아웃 가로세로 대대적 확장 */
+        padding: 20px;
+      }
+      .console-title { font-size: 28px; }
+      .console-close-btn { padding: 12px 24px; font-size: 22px; border-radius: 14px; }
+    }
+
+    /* 모달 기본 오픈 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #1e1b4b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 36px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; color: #ffffff; }
+
+    .modal-btn-group { display: flex; gap: 12px; margin-top: 28px; }
+    .modal-btn { flex-grow: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; }
+    .modal-btn.primary { background: #ffffff; color: #0f172a; }
+    .modal-btn.secondary { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
+  </style>
 </head>
 <body>
 
-<audio id="bgm" loop preload="auto">
-  <source src="https://ia800504.us.archive.org/33/items/SuperMarioBros.ThemeMusic/SuperMarioBros.mp3" type="audio/mpeg">
-</audio>
+  <div class="container">
+    <header>
+      <button class="admin-trigger" onclick="checkAdminPassword()">⚙️ 관리자 설정</button>
+      <div class="hero">
+        <h1>Play. Learn. Enjoy! ✨</h1>
+        <p>재미있게 배우고, 스스로 성장하는 우리 반!</p>
+        <div class="badge">⭐ 다양한 주제의 게임으로 즐겁게 학습해요!</div>
+      </div>
+    </header>
 
-<div id="titleScreen" class="screen active">
-  <div class="title-content">
-    <div class="pixel-mario-title">🍄</div>
-    <div class="game-title">마리오 수학 왕국</div>
-    <div class="game-subtitle">5학년 분수 대모험 🌟</div>
-    <div style="color:#aee;font-size:1.2em;margin-bottom:25px;text-shadow:var(--text-shadow)">약분 · 통분 · 분수와 소수 크기비교</div>
-    <button class="start-btn" onclick="goToSetup()" style="max-width:300px;margin:0 auto;display:block">🎮 게임 시작!</button>
+    <main>
+      <div class="category-filter">
+        <button class="filter-btn active" onclick="filterCategory('전체', this)">🎮 전체 목록</button>
+        <button class="filter-btn" onclick="filterCategory('수학', this)">🔢 수학 대모험</button>
+        <button class="filter-btn" onclick="filterCategory('연산', this)">⚡ 초고속 연산</button>
+        <button class="filter-btn" onclick="filterCategory('분수', this)">🍕 분수 마스터</button>
+        <button class="filter-btn" onclick="filterCategory('사회', this)">🌍 사회 탐험</button>
+        <button class="filter-btn" onclick="filterCategory('과학', this)">🧪 과학 실험실</button>
+      </div>
+
+      <div class="games-grid" id="gamesGrid"></div>
+    </main>
   </div>
-</div>
 
-<div id="setupScreen" class="screen">
-  <div class="setup-box">
-    <div class="setup-title">🌟 모험가 등록 🌟</div>
-    <div class="form-group">
-      <label class="form-label">👤 닉네임을 입력하세요</label>
-      <input type="text" id="nicknameInput" class="form-input" placeholder="예: ㅇㅇ초 수학왕" maxlength="12">
-    </div>
-    <div class="form-group">
-      <label class="form-label">🎯 난이도 선택</label>
-      <div class="difficulty-btns">
-        <button class="diff-btn" data-diff="하" onclick="selectDiff('하')">하</button>
-        <button class="diff-btn" data-diff="중" onclick="selectDiff('중')">중</button>
-        <button class="diff-btn" data-diff="상" onclick="selectDiff('상')">상</button>
+  <div id="passwordModal" class="modal-overlay">
+    <div class="modal-box">
+      <h2>🔒 관리자 인증</h2>
+      <p>시스템 제어를 위해 패스워드를 입력하세요.</p>
+      <div class="form-group">
+        <input type="password" id="adminPasswordInput" placeholder="비밀번호를 입력하세요..." onkeyup="if(event.key==='Enter') verifyPassword()">
+      </div>
+      <div class="modal-btn-group">
+        <button class="modal-btn primary" onclick="verifyPassword()">인증하기</button>
+        <button class="modal-btn secondary" onclick="closeModal('passwordModal')">취소</button>
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">🎭 캐릭터 선택</label>
-      <div class="character-grid" id="characterGrid"></div>
+  </div>
+
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-box">
+      <h2 id="modalTitle">➕ 새 에듀테크 모듈 등록</h2>
+      <input type="hidden" id="gameId">
+      <div class="form-group"><label>게임 타이틀</label><input type="text" id="gameTitleInput"></div>
+      <div class="form-group"><label>대표 이모지</label><input type="text" id="gameIconInput"></div>
+      <div class="form-group">
+        <label>교과 카테고리</label>
+        <select id="gameCategorySelect">
+          <option value="수학">수학</option><option value="연산">연산</option><option value="분수">분수</option><option value="사회">사회</option><option value="과학">과학</option>
+        </select>
+      </div>
+      <div class="form-group"><label>요약 가이드</label><textarea id="gameDescInput" rows="2"></textarea></div>
+      <div class="form-group"><label>로컬 파일 주소 (.html)</label><input type="text" id="gameUrlInput" placeholder="mario.html"></div>
+      <div class="modal-btn-group">
+        <button class="modal-btn primary" onclick="saveGameCard()">디렉터리 저장 배포</button>
+        <button class="modal-btn secondary" onclick="closeAdminModal()">작업 취소</button>
+      </div>
     </div>
-    <button class="start-btn" onclick="startGame()">🚀 모험 출발!</button>
   </div>
-</div>
 
-<div id="gameScreen" class="screen">
-  <div id="hud">
-    <div class="hud-item"><span class="hud-icon">❤️</span><div class="health-bar" id="healthBar"></div></div>
-    <div class="hud-item"><span class="hud-icon">⭐</span><span id="scoreDisplay">0</span></div>
-    <div class="hud-item"><span class="hud-icon">🪙</span><span id="coinDisplay">0</span></div>
-    <div class="hud-item" id="playerNameHud" style="color:#FFD700; font-weight:bold;"></div>
-    <div class="hud-item" onclick="toggleBGM()" style="cursor:pointer; background:#333; padding:2px 8px; border-radius:8px; border:1px solid #555;" id="bgmToggleBtn">🔊 음악 켜짐</div>
-    <div class="map-indicator" id="mapIndicator">맵 1/20</div>
+  <div id="gameMasterConsole" class="game-master-overlay">
+      <div class="game-console-wrapper">
+          <div class="game-console-box" id="gameConsoleBox">
+              <div class="console-header">
+                  <span class="console-title" id="consoleGameTitle">🎮 에듀테크 가상 플레이어</span>
+                  <button class="console-close-btn" onclick="shutdownConsole()">게임 종료 ✖</button>
+              </div>
+              <iframe src="" class="game-frame-iframe" id="gameMasterIframe"></iframe>
+          </div>
+      </div>
   </div>
-  
-  <canvas id="gameCanvas" width="900" height="460"></canvas>
-  
-  <div id="mobileControls">
-    <div class="touch-left-group">
-      <div class="touch-btn" id="btnLeft">◀</div>
-      <div class="touch-btn" id="btnRight">▶</div>
-    </div>
-    <div class="touch-btn" id="btnJump">▲</div>
-  </div>
-</div>
 
-<div id="questionModal">
-  <div class="question-box">
-    <div class="q-header" id="qHeader">문제 1/20</div>
-    <div class="q-char" id="qChar">🍄</div>
-    <div class="q-text" id="qText"></div>
-    <div class="q-options" id="qOptions"></div>
-    <div class="q-feedback" id="qFeedback"></div>
-    <button class="q-next-btn" id="qNextBtn" onclick="nextLevel()">다음 맵으로! ▶</button>
-  </div>
-</div>
+  <script>
+    let isAdminAuthenticated = false;
+    let selectedCategory = "전체";
 
-<div id="resultScreen" class="screen">
-  <div class="result-box">
-    <div class="result-title">🎉 모험 완료!</div>
-    <canvas id="endingCanvas" width="200" height="200" style="margin: 0 auto; display: block;"></canvas>
-    <div style="color:#fff;font-size:1.4em;margin-bottom:10px; font-weight:bold;" id="resultName"></div>
-    <div class="result-grade" id="resultGrade"></div>
-    <div class="result-stats" id="resultStats"></div>
-    <button class="retry-btn" onclick="goToSetup()">🔄 다시 도전!</button>
-    <button class="retry-btn" onclick="goToTitle()" style="background:#1B69B2;border-color:#88aaff">🏠 처음으로</button>
-  </div>
-</div>
+    const initialGames = [
+      { id: 1, icon: "🪙", title: "분수 월드", desc: "점프하며 분수 문제를 해결하는 RPG 스타일 학습 게임!", category: "분수", url: "./mario.html" },
+      { id: 2, icon: "➗", title: "약분 챌린지", desc: "빠르게 약분하며 최고 점수에 도전하는 스피드 게임!", category: "연산", url: "./airplane.html" },
+      { id: 3, icon: "🚀", title: "우주 수학 탐험", desc: "행성을 여행하며 다양한 수학 미션을 해결하세요!", category: "수학", url: "./airplane.html" },
+      { id: 4, icon: "🍕", title: "분수 피자 만들기", desc: "피자를 나누며 자연스럽게 분수 개념을 익혀보세요.", category: "분수", url: "./mario.html" },
+      { id: 5, icon: "🌦️", title: "날씨 탐험대", desc: "계절과 기후를 배우며 퀴즈를 배우는 유익한 교과 게임!", category: "사회", url: "./mario.html" },
+      { id: 6, icon: "🧪", title: "과학 실험실", desc: "재미있는 실험과 문제를 해결하며 과학 개념 정복!", category: "과학", url: "./mario.html" },
+      { id: 7, icon: "🍄", title: "마리오 분수 구출대작전", desc: "쿠파에게 납치된 피치 공주를 구하기 위해 약분과 통분 문제를 해결하세요!", category: "수학", url: "./mario.html" }
+    ];
 
-<div id="loadingOverlay">
-  <div class="loading-icon">⚙️</div>
-  <div class="loading-text">AI가 문제를 만들고 있어요...</div>
-  <div class="loading-bar-wrap"><div class="loading-bar" id="loadingBar"></div></div>
-</div>
+    let currentGames = [];
 
-<script>
-const CHARACTERS = [
-  {name:'마리오',emoji:'🔴'}, {name:'루이지',emoji:'🟢'}, {name:'피치공주',emoji:'👸'},
-  {name:'쿠파',emoji:'🐢'}, {name:'요시',emoji:'🦕'}, {name:'토드',emoji:'🍄'},
-  {name:'로젤리나',emoji:'🌟'}, {name:'동키콩',emoji:'🦍'}, {name:'와리오',emoji:'💛'},
-  {name:'와루이지',emoji:'🟣'}, {name:'데이지공주',emoji:'🌼'}, {name:'키노피오',emoji:'🏃'},
-  {name:'버섯',emoji:'🍄'}, {name:'구르미',emoji:'☁️'}, {name:'쿠파쥬니어',emoji:'🐊'},
-  {name:'봄바',emoji:'💣'}, {name:'부끄부끄',emoji:'👻'}, {name:'락크투',emoji:'🌀'},
-  {name:'불꽃마리오',emoji:'🔥'}, {name:'별마리오',emoji:'⭐'},
-];
-
-const TILE = 32;
-const CANVAS_W = 900;
-const CANVAS_H = 460;
-const GROUND_Y = CANVAS_H - 80;
-const PLAYER_W = 28;
-const PLAYER_H = 32;
-const MONSTER_W = 30;
-const MONSTER_H = 30;
-
-let state = { screen: 'title', nickname: '', difficulty: '중', character: CHARACTERS[0], score: 0, coins: 0, health: 100, maxHealth: 100, currentMap: 0, questions: [], answeredCount: 0, gameRunning: false, startTime: null, endTime: null };
-let levelSnapshot = { score: 0, coins: 0, health: 100, maxHealth: 100 };
-let bgmPlaying = true;
-const bgmAudio = document.getElementById('bgm');
-bgmAudio.volume = 0.3;
-let monsterCooldown = 0; 
-let lastTime = 0;
-const FPS = 60;
-const frameDelay = 1000 / FPS;
-
-function toggleBGM() {
-  const btn = document.getElementById('bgmToggleBtn');
-  if (bgmPlaying) { bgmAudio.pause(); bgmPlaying = false; btn.textContent = '🔈 음악 꺼짐'; } 
-  else { bgmAudio.play().catch(e=>console.log(e)); bgmPlaying = true; btn.textContent = '🔊 음악 켜짐'; }
-}
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function goToTitle() { bgmAudio.pause(); bgmAudio.currentTime = 0; cancelAnimationFrame(window.endingAnimFrame); showScreen('titleScreen'); }
-function goToSetup() { buildCharGrid(); showScreen('setupScreen'); }
-
-function buildCharGrid() {
-  const grid = document.getElementById('characterGrid');
-  grid.innerHTML = '';
-  CHARACTERS.forEach((c, i) => {
-    const div = document.createElement('div');
-    div.className = 'char-card' + (i===0?' selected':'');
-    div.innerHTML = `<span class="char-emoji">${c.emoji}</span>`;
-    div.onclick = () => {
-      document.querySelectorAll('.char-card').forEach(x=>x.classList.remove('selected'));
-      div.classList.add('selected');
-      state.character = c;
-    };
-    grid.appendChild(div);
-  });
-  state.character = CHARACTERS[0];
-}
-
-function selectDiff(d) {
-  state.difficulty = d;
-  document.querySelectorAll('.diff-btn').forEach(b=>{
-    b.className = 'diff-btn';
-    if (b.dataset.diff === d) b.classList.add('selected-'+d);
-  });
-}
-
-async function startGame() {
-  const nick = document.getElementById('nicknameInput').value.trim();
-  if (!nick) { alert('닉네임을 입력해주세요!'); return; }
-  if(bgmPlaying) bgmAudio.play().catch(e=>console.log(e));
-
-  state.nickname = nick; state.score = 0; state.coins = 0; state.health = 100; state.maxHealth = 100; state.currentMap = 0; state.answeredCount = 0;
-  state.startTime = Date.now(); state.endTime = null;
-  levelSnapshot = { score: state.score, coins: state.coins, health: state.health, maxHealth: state.maxHealth };
-
-  showLoading(true);
-  state.questions = getFallbackQuestions(state.difficulty);
-  showLoading(false);
-
-  showScreen('gameScreen');
-  initGame();
-}
-
-function getFallbackQuestions(diff) {
-  const all = {
-    '하': [
-      {q:"6/8을 기약분수로 나타내면?",options:["1/4","3/4","2/3","3/8"],answer:1,explain:"6과 8의 최대공약수는 2. 6÷2=3, 8÷2=4 → 3/4", tip:"분자와 분모를 최대공약수로 나누어 보세요."},
-      {q:"4/6을 기약분수로 나타내면?",options:["1/3","2/3","3/4","1/2"],answer:1,explain:"4와 6의 최대공약수는 2. 4÷2=2, 6÷2=3 → 2/3", tip:"4와 6을 공통으로 나눌 수 있는 수 중 가장 큰 수를 생각해보세요."},
-      {q:"1/2와 1/4 중 어느 것이 더 크나요?",options:["1/4","같다","1/2","알 수 없다"],answer:2,explain:"1/2=2/4 > 1/4", tip:"분모를 같게 만들어서 분자의 크기를 비교해 보세요."},
-      {q:"1/3과 1/5를 통분하면 공통분모는?",options:["3","5","10","15"],answer:3,explain:"3과 5의 최소공배수는 15", tip:"3의 배수이면서 5의 배수인 수 중 가장 작은 수를 찾아보세요."},
-      {q:"0.5와 1/2 중 어느 것이 더 크나요?",options:["0.5","1/2","같다","알 수 없다"],answer:2,explain:"0.5=5/10=1/2로 크기가 같습니다.", tip:"0.5를 분수로 고친 뒤 비교해 보세요."}
-    ],
-    '중': [
-      {q:"18/24를 기약분수로 나타내면?",options:["1/2","2/3","3/4","5/8"],answer:2,explain:"18과 24의 최대공약수는 6. 18÷6=3, 24÷6=4 → 3/4", tip:"18과 24를 동시에 나눌 수 있는 가장 큰 수를 찾아 나누어 보세요."},
-      {q:"2/3와 5/6 중 어느 것이 더 크나요?",options:["2/3","같다","5/6","알 수 없다"],answer:2,explain:"2/3=4/6, 5/6 → 5/6이 크다", tip:"두 분수의 분모를 6으로 통분한 다음 비교해 보세요."},
-      {q:"3/4, 5/6, 7/12을 통분할 때 공통분모는?",options:["12","24","36","48"],answer:0,explain:"4, 6, 12의 최소공배수는 12", tip:"4, 6, 12 세 수의 공배수 중 가장 작은 수를 구해보세요."},
-      {q:"0.7과 3/4 중 어느 것이 더 크나요?",options:["0.7","3/4","같다","알 수 없다"],answer:1,explain:"3/4=0.75 > 0.7", tip:"3/4를 소수로 바꾸거나, 0.7을 분수로 바꾸어 비교해 보세요."},
-      {q:"30/42를 기약분수로 나타내면?",options:["5/7","3/7","5/6","2/7"],answer:0,explain:"30과 42의 최대공약수는 6. 30÷6=5, 42÷6=7 → 5/7", tip:"30과 42를 최대공약수인 6으로 나누어 보세요."}
-    ],
-    '상': [
-      {q:"72/108을 기약분수로 나타내면?",options:["1/3","2/3","3/5","5/8"],answer:1,explain:"최대공약수 36: 72÷36=2, 108÷36=3 → 2/3", tip:"숫자가 클 때는 작은 공약수(2나 3)로 여러 번 나누어가며 구해도 됩니다."},
-      {q:"2/3, 3/4, 5/6, 7/12을 통분할 때 공통분모는?",options:["12","24","36","48"],answer:0,explain:"3, 4, 6, 12의 최소공배수는 12", tip:"가장 큰 분모인 12가 3, 4, 6의 배수인지 확인해 보세요."},
-      {q:"0.375, 3/8, 5/12 중 가장 큰 것은?",options:["0.375","3/8","5/12","모두 같다"],answer:2,explain:"0.375=3/8, 5/12=10/24, 3/8=9/24 → 5/12", tip:"0.375를 분수로 나타내면 3/8입니다. 3/8과 5/12를 통분하여 비교해 보세요."},
-      {q:"사과 전체의 2/5가 120개일 때 전체 사과 수는?",options:["240개","300개","360개","400개"],answer:1,explain:"전체 × 2/5 = 120 → 전체 = 120 × 5/2 = 300", tip:"전체의 1/5이 몇 개인지 구한 다음 5배를 해보세요."},
-      {q:"세 분수 3/5, 7/10, 9/15 중 크기가 같은 것끼리 묶으면?",options:["3/5=7/10","7/10=9/15","3/5=9/15","모두 다르다"],answer:2,explain:"3/5=9/15=0.6, 7/10=0.7", tip:"분수들을 모두 기약분수나 소수로 나타내어 비교해 보세요."}
-    ]
-  };
-  let arr = all[diff] || all['중'];
-  while(arr.length < 20) { arr = arr.concat(arr); }
-  return arr.slice(0, 20);
-}
-
-function showLoading(show) {
-  const el = document.getElementById('loadingOverlay');
-  if (show) {
-    el.classList.add('show'); let pct = 0;
-    window._loadInterval = setInterval(()=>{ pct = Math.min(pct + Math.random()*8, 90); document.getElementById('loadingBar').style.width = pct+'%'; }, 200);
-  } else {
-    clearInterval(window._loadInterval); document.getElementById('loadingBar').style.width = '100%';
-    setTimeout(()=>el.classList.remove('show'), 400);
-  }
-}
-
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-let player, mapData, camera;
-let keys = { justJump: false };
-let animFrame;
-
-function makeRng(seed) {
-  let a = seed;
-  return function() { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-}
-
-function initGame() {
-  document.onkeydown = e => {
-    if (['Space','ArrowUp','KeyW'].includes(e.code)) { if (!keys[e.code]) keys.justJump = true; }
-    keys[e.code] = true;
-    if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown'].includes(e.code)) e.preventDefault();
-  };
-  document.onkeyup = e => { keys[e.code] = false; };
-  setupTouchControls();
-  lastTime = 0; state.gameRunning = true; updateHUD();
-  cancelAnimationFrame(animFrame); animFrame = requestAnimationFrame(gameLoop);
-}
-
-function loadMap(idx) {
-  const rng = makeRng(idx * 7771 + 42);
-  mapData = generateMapWithRng(idx, rng);
-  player = { x: 60, y: GROUND_Y - PLAYER_H, vx: 0, vy: 0, grounded: true, jumps: 0, facingRight: true, animFrame: 0, animTimer: 0, reachedFlag: false, dead: false };
-  camera = { x: 0 }; monsterCooldown = 0;
-  document.getElementById('mapIndicator').textContent = `맵 ${idx+1}/20`;
-  updateHUD();
-}
-
-function generateMapWithRng(mapIndex, rng) {
-  const mapWidth = 3000 + mapIndex * 150; 
-  const themes = [
-    {sky:'#5C94FC',groundTop:'#5CBA3C',groundFill:'#C84B11'},
-    {sky:'#1a1a4a',groundTop:'#4a3a20',groundFill:'#2a1a10'},
-    {sky:'#204880',groundTop:'#506030',groundFill:'#303820'},
-    {sky:'#401060',groundTop:'#503020',groundFill:'#301800'},
-    {sky:'#0a2040',groundTop:'#205010',groundFill:'#103008'},
-  ];
-  const theme = themes[mapIndex % themes.length];
-  const gaps = [], plats = [], mons = [], cns = [];
-  const startX = 400, endX = mapWidth - 500, playWidth = endX - startX;
-
-  const numGaps = 3 + Math.floor(rng() * 3); const gapSeg = playWidth / numGaps;
-  for (let i = 0; i < numGaps; i++) {
-    let isWide = rng() < 0.4;
-    let gw = isWide ? (140 + Math.floor(rng() * 30)) : (80 + Math.floor(rng() * 40));
-    let gx = startX + i * gapSeg + 50 + rng() * (gapSeg - gw - 100);
-    gaps.push({x: gx, w: gw});
-  }
-
-  const numMons = 6 + Math.floor(rng() * 4); const monSeg = playWidth / numMons;
-  const monTypes = ['goomba', 'koopa', 'boo', 'spiny'];
-  for (let i = 0; i < numMons; i++) {
-    let mx = startX + i * monSeg + 50 + rng() * (monSeg - 100);
-    let overlapGap = gaps.find(g => mx + MONSTER_W + 30 > g.x && mx - 30 < g.x + g.w);
-    if (overlapGap) { mx = (rng() < 0.5) ? (overlapGap.x - MONSTER_W - 40) : (overlapGap.x + overlapGap.w + 40); }
-    mons.push({ x: mx, y: GROUND_Y - MONSTER_H, w: MONSTER_W, h: MONSTER_H, vx: (rng() < 0.5 ? -1 : 1) * 0.96, vy: 0, grounded: true, type: monTypes[Math.floor(rng() * monTypes.length)], startX: mx, patrolDist: 60 + Math.floor(rng() * 40), dir: 1, dead: false });
-  }
-
-  const numCoins = 2 + Math.floor(rng() * 2); const coinSeg = playWidth / numCoins;
-  for (let i = 0; i < numCoins; i++) {
-    let cx = startX + i * coinSeg + 50 + rng() * (coinSeg - 100); let cy = GROUND_Y - 60 - Math.floor(rng() * 60);
-    let overGap = gaps.some(g => cx + 22 > g.x && cx < g.x + g.w); if (overGap) cy = GROUND_Y - 140;
-    cns.push({x: cx, y: cy, w: 22, h: 22, collected: false, anim: rng() * 10});
-  }
-
-  let qBlockCount = 0; let px = startX;
-  while (px < endX) {
-    let overlapGap = gaps.find(g => px + TILE*4 > g.x - 20 && px < g.x + g.w + 20);
-    if (overlapGap) { px = overlapGap.x + overlapGap.w + 50; continue; }
-    let chunkType = Math.floor(rng() * 4);
-    if (chunkType === 0) { 
-      let platLen = 1 + Math.floor(rng() * 4); let py = GROUND_Y - 70 - Math.floor(rng() * 20);
-      let hasQ = (platLen >= 2 && qBlockCount < 3 && rng() < 0.6); let qIdx = hasQ ? Math.floor(rng() * platLen) : -1; if (hasQ) qBlockCount++;
-      for (let i=0; i<platLen; i++) plats.push({x: px + i*TILE, y: py, w: TILE, h: TILE, type: (i===qIdx)?'qblock':'brick', isHit:false});
-    } else if (chunkType === 1) {
-      let platLen = 2 + Math.floor(rng() * 2); let py = GROUND_Y - 140 - Math.floor(rng() * 20);
-      let hasQ = (platLen >= 2 && qBlockCount < 3 && rng() < 0.6); let qIdx = hasQ ? Math.floor(rng() * platLen) : -1; if (hasQ) qBlockCount++;
-      for (let i=0; i<platLen; i++) plats.push({x: px + i*TILE, y: py, w: TILE, h: TILE, type: (i===qIdx)?'qblock':'stone', isHit:false});
-    } else if (chunkType === 2) {
-      let py1 = GROUND_Y - 60; let py2 = GROUND_Y - 110;
-      plats.push({x: px, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false}); plats.push({x: px + TILE, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false});
-      plats.push({x: px + TILE*3, y: py2, w: TILE, h: TILE, type: 'stone', isHit:false}); plats.push({x: px + TILE*4, y: py2, w: TILE, h: TILE, type: 'stone', isHit:false});
-    } else if (chunkType === 3) {
-      let py1 = GROUND_Y - 70; let py2 = GROUND_Y - 130; let hasQ = (qBlockCount < 3 && rng() < 0.6); if (hasQ) qBlockCount++;
-      for (let i=0; i<3; i++) plats.push({x: px + i*TILE, y: py1, w: TILE, h: TILE, type: 'brick', isHit:false});
-      for (let i=0; i<3; i++) plats.push({x: px + i*TILE, y: py2, w: TILE, h: TILE, type: (i===1 && hasQ)?'qblock':'stone', isHit:false});
-    }
-    px += 200 + Math.floor(rng() * 200);
-  }
-  return {mapWidth, theme, plats, gaps, monsters:mons, coins:cns, flagX:mapWidth-150};
-}
-
-function gameLoop(timestamp) {
-  if (!state.gameRunning) return;
-  animFrame = requestAnimationFrame(gameLoop);
-  if (!lastTime) lastTime = timestamp; const dt = timestamp - lastTime;
-  if (dt >= frameDelay) { lastTime = timestamp - (dt % frameDelay); update(); render(); }
-}
-
-function update() {
-  if (!player || player.dead || player.reachedFlag) return;
-  const speed = 2.8; const jumpForce = -8.4; const gravity = 0.36;    
-
-  if (keys['ArrowLeft'] || keys['KeyA'] || window.touchLeft) { player.vx = -speed; player.facingRight = false; } 
-  else if (keys['ArrowRight'] || keys['KeyD'] || window.touchRight) { player.vx = speed; player.facingRight = true; } 
-  else { player.vx *= 0.7; }
-
-  const jumpJustPressed = keys.justJump || window.touchJumpJust;
-  if (jumpJustPressed) {
-    if (player.grounded) { player.vy = jumpForce; player.grounded = false; player.jumps = 1; } 
-    else if (player.jumps === 1) { player.vy = jumpForce * 0.9; player.jumps = 2; showFloatText('💨', player.x - camera.x, player.y + 20, '#FFF'); }
-  }
-  keys.justJump = false; window.touchJumpJust = false;
-
-  player.vy += gravity; player.x += player.vx; player.y += player.vy;
-  player.animTimer++; if (player.animTimer > 8) { player.animTimer = 0; player.animFrame = (player.animFrame+1)%4; }
-  if (player.x < 0) { player.x = 0; player.vx = 0; }
-  player.grounded = false;
-
-  const groundTop = GROUND_Y;
-  const inGap = mapData.gaps.some(g => player.x + PLAYER_W/2 > g.x && player.x + PLAYER_W/2 < g.x+g.w);
-  if (!inGap && player.y + PLAYER_H >= groundTop && player.vy > 0) { player.y = groundTop - PLAYER_H; player.vy = 0; player.grounded = true; player.jumps = 0; }
-  if (player.y > CANVAS_H + 50) { playerHurt(30, true); }
-
-  for (const p of mapData.plats) {
-    if (player.x + PLAYER_W > p.x && player.x < p.x + p.w && player.y + PLAYER_H > p.y && player.y + PLAYER_H < p.y + p.h + Math.abs(player.vy) + 4 && player.vy >= 0) { player.y = p.y - PLAYER_H; player.vy = 0; player.grounded = true; player.jumps = 0; }
-    if (player.x + PLAYER_W > p.x + 4 && player.x < p.x + p.w - 4 && player.y < p.y + p.h && player.y > p.y && player.vy < 0) {
-      player.vy = 0; player.y = p.y + p.h;
-      if (p.type === 'qblock' && !p.isHit) {
-        p.isHit = true; p.type = 'used';
-        if (Math.random() < 0.5) {
-          mapData.coins.push({x: p.x + p.w/2 - 11, y: p.y - 40, w: 22, h: 22, collected: false, anim: 0}); showFloatText('⭐', p.x - camera.x + p.w/2, p.y - 20, '#FFD700');
+    window.addEventListener('DOMContentLoaded', () => {
+      const stored = localStorage.getItem('edutech_games');
+      if (stored) {
+        let parsedGames = JSON.parse(stored);
+        if (parsedGames.length !== initialGames.length || !parsedGames.some(g => g.id === 7)) {
+          currentGames = [...initialGames];
+          localStorage.setItem('edutech_games', JSON.stringify(currentGames));
         } else {
-          const monTypes = ['goomba', 'koopa', 'boo', 'spiny'];
-          mapData.monsters.push({ x: p.x + p.w/2 - MONSTER_W/2, y: p.y - MONSTER_H, w: MONSTER_W, h: MONSTER_H, vx: (Math.random()<0.5?-1:1)*1.2, vy: -4, grounded: false, type: monTypes[Math.floor(Math.random() * monTypes.length)], startX: p.x, patrolDist: 80, dir: 1, dead: false });
+          currentGames = parsedGames;
         }
+      } else {
+        currentGames = [...initialGames];
+        localStorage.setItem('edutech_games', JSON.stringify(currentGames));
       }
+      renderGamesGrid();
+    });
+
+    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function closeAdminModal() { closeModal('adminModal'); }
+
+    function checkAdminPassword() { if(isAdminAuthenticated) openAdminForm(); else { document.getElementById('adminPasswordInput').value = ""; showModal('passwordModal'); } }
+    function verifyPassword() { const pw = document.getElementById('adminPasswordInput').value; if(pw === "1234") { isAdminAuthenticated = true; closeModal('passwordModal'); openAdminForm(); } else { alert("❌ 인증 거부"); } }
+
+    function filterCategory(category, btnElement) { selectedCategory = category; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); btnElement.classList.add('active'); renderGamesGrid(); }
+
+    function renderGamesGrid() {
+      const grid = document.getElementById('gamesGrid');
+      grid.innerHTML = "";
+      const filtered = currentGames.filter(g => selectedCategory === "전체" || g.category === selectedCategory);
+
+      filtered.forEach(game => {
+        const card = document.createElement('div');
+        card.className = "game-card";
+        let actionHtml = `<button onclick="bootUpGameConsole('${game.url}', '${game.title}')" class="launch-btn">🚀 학습 시작하기</button>`;
+        
+        if(isAdminAuthenticated) {
+          actionHtml = `
+            <button class="card-del-btn" onclick="openAdminForm(${game.id})">수정</button>
+            <button onclick="bootUpGameConsole('${game.url}', '${game.title}')" class="launch-btn">🚀 테스트 실행</button>
+            <button class="card-del-btn" style="background:rgba(239,68,68,0.2); color:#f87171;" onclick="deleteGameCard(${game.id})">삭제</button>
+          `;
+        }
+
+        card.innerHTML = `<div class="card-top"><div class="game-icon">${game.icon || '🎮'}</div><div class="game-category">${game.category}</div></div><h2 class="game-title">${game.title}</h2><p class="game-desc">${game.desc}</p><div class="action-group">${actionHtml}</div>`;
+        grid.appendChild(card);
+      });
     }
-  }
 
-  if (monsterCooldown > 0) monsterCooldown--; 
-  for (let i=0; i<mapData.monsters.length; i++) {
-    const m = mapData.monsters[i]; if (m.dead) continue;
-    if (!m.grounded) { m.vy += gravity; m.y += m.vy; if (m.y + m.h >= groundTop) { m.y = groundTop - m.h; m.vy = 0; m.grounded = true; } }
-    m.x += m.vx * m.dir; if (Math.abs(m.x - m.startX) > m.patrolDist) m.dir *= -1;
-
-    if (monsterCooldown === 0 && player.x + PLAYER_W - 4 > m.x && player.x + 4 < m.x + m.w && player.y + PLAYER_H > m.y + 4 && player.y < m.y + m.h) {
-      if (player.vy > 0 && player.y + PLAYER_H < m.y + (m.h * 0.7)) { m.dead = true; player.vy = -7.2; player.grounded = false; player.jumps = 1; state.score += 50; showFloatText('+50', m.x - camera.x, m.y - 10, '#FFF'); updateHUD(); } 
-      else { playerHurt(20, false); }
+    // ============================================================
+    // 🌟 [하이브리드 엔진 핵심 스크립트] 
+    // 어떤 기기의 화면 비율이든 실시간으로 실측하여 정밀 스케일링하는 코어 함수
+    // ============================================================
+    function bootUpGameConsole(url, title) {
+      document.getElementById('consoleGameTitle').innerText = `🎮 플레이 중: ${title}`;
+      const iframe = document.getElementById('gameMasterIframe');
+      iframe.src = url;
+      
+      document.getElementById('gameMasterConsole').style.display = 'flex';
+      resizeConsoleLayout(); 
+      window.addEventListener('resize', resizeConsoleLayout);
     }
-  }
 
-  for (const c of mapData.coins) {
-    if (!c.collected && player.x + PLAYER_W > c.x && player.x < c.x + c.w && player.y + PLAYER_H > c.y && player.y < c.y + c.h) { c.collected = true; state.score += 30; state.coins += 1; state.health = Math.min(state.health + 10, state.maxHealth); showFloatText('+30점', player.x - camera.x, player.y - 10, '#FFD700'); updateHUD(); }
-    c.anim = (c.anim||0) + 0.12; 
-  }
-
-  if (!player.reachedFlag && player.x + PLAYER_W > mapData.flagX) { player.reachedFlag = true; setTimeout(() => showQuestion(), 600); }
-  const targetCamX = player.x - CANVAS_W * 0.35; camera.x += (targetCamX - camera.x) * 0.1; camera.x = Math.max(0, Math.min(camera.x, mapData.mapWidth - CANVAS_W));
-}
-
-function playerHurt(dmg, isFall) {
-  if (monsterCooldown > 0 && !isFall) return; 
-  state.health = Math.max(0, state.health - dmg); monsterCooldown = 60; showFloatText(`-${dmg}HP 💥`, player.x - camera.x, player.y - 20, '#FF4444'); updateHUD();
-  const gameScreen = document.getElementById('gameScreen'); gameScreen.classList.remove('shake'); void gameScreen.offsetWidth; gameScreen.classList.add('shake');
-
-  if (state.health <= 0) {
-    state.gameRunning = false;
-    setTimeout(() => {
-      alert(`💔 체력이 모두 소진되었습니다!\n현재 스테이지(${state.currentMap + 1}번 맵)의 처음 상태로 부활합니다.`);
-      state.score = levelSnapshot.score; state.coins = levelSnapshot.coins; state.health = levelSnapshot.health; state.maxHealth = levelSnapshot.maxHealth;
-      loadMap(state.currentMap); lastTime = 0; state.gameRunning = true; animFrame = requestAnimationFrame(gameLoop); 
-    }, 500); 
-  }
-}
-
-function render() {
-  if (!mapData || !player) return; const cx = Math.floor(camera.x);
-  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-  ctx.fillStyle = mapData.theme.sky; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-  drawBackground(cx); drawGround(cx);
-  for (const p of mapData.plats) drawPlatform(p, cx);
-  for (const c of mapData.coins) { if (!c.collected) drawCoin(c, cx); }
-  drawFlag(cx); for (const m of mapData.monsters) { if (!m.dead) drawMonster(m, cx); }
-  drawPlayer(cx);
-}
-
-function drawBackground(cx) {
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  const clouds = [{x:200,y:60,r:30},{x:400,y:40,r:25},{x:700,y:70,r:35},{x:1100,y:50,r:28},{x:1500,y:65,r:32},{x:1900,y:45,r:26},{x:2300,y:60,r:30},{x:2700,y:40,r:35},{x:3100,y:55,r:28}];
-  for (const cloud of clouds) {
-    const cx2 = cloud.x - cx*0.5; if (cx2 < -80 || cx2 > CANVAS_W+80) continue;
-    ctx.beginPath(); ctx.ellipse(cx2, cloud.y, cloud.r, cloud.r*0.6, 0, 0, Math.PI*2); ctx.ellipse(cx2-cloud.r*0.7, cloud.y+4, cloud.r*0.7, cloud.r*0.5, 0, 0, Math.PI*2); ctx.ellipse(cx2+cloud.r*0.7, cloud.y+4, cloud.r*0.7, cloud.r*0.5, 0, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.fillStyle = '#228B22';
-  const bushes = [ {x:150,r:25}, {x:550,r:30}, {x:950,r:20}, {x:1450,r:35}, {x:2050,r:25} ];
-  for(const b of bushes) {
-    const bx = b.x - cx*0.7; if(bx < -80 || bx > CANVAS_W+80) continue;
-    ctx.beginPath(); ctx.ellipse(bx, GROUND_Y, b.r, b.r*0.8, 0, Math.PI, 0); ctx.ellipse(bx-b.r*0.6, GROUND_Y, b.r*0.7, b.r*0.6, 0, Math.PI, 0); ctx.ellipse(bx+b.r*0.6, GROUND_Y, b.r*0.7, b.r*0.6, 0, Math.PI, 0); ctx.fill();
-  }
-  ctx.fillStyle = 'rgba(100,180,60,0.3)';
-  const hills = [{x:300,r:90},{x:800,r:110},{x:1300,r:80},{x:1800,r:100}];
-  for (const h of hills) { const hx = h.x - cx*0.8; if (hx < -120 || hx > CANVAS_W+120) continue; ctx.beginPath(); ctx.ellipse(hx, GROUND_Y, h.r, h.r*0.5, 0, Math.PI, 0); ctx.fill(); }
-}
-
-function drawGround(cx) {
-  const groundY = GROUND_Y; const groundH = CANVAS_H - groundY;
-  ctx.fillStyle = mapData.theme.groundFill || '#C84B11'; ctx.fillRect(0, groundY, CANVAS_W, groundH);
-  for (const g of mapData.gaps) { const gx = g.x - cx; if (gx+g.w > 0 && gx < CANVAS_W) { ctx.fillStyle = mapData.theme.sky; ctx.fillRect(gx, groundY, g.w, groundH); } }
-  const tileW = TILE; const startTile = Math.floor(cx/tileW); const endTile = startTile + Math.ceil(CANVAS_W/tileW) + 1;
-  for (let t=startTile; t<=endTile; t++) {
-    const tx = t*tileW - cx; const tWorldX = t*tileW; const inGap = mapData.gaps.some(g=>tWorldX>=g.x && tWorldX<g.x+g.w);
-    if (!inGap) {
-      ctx.fillStyle = '#FFAA55'; ctx.fillRect(tx, groundY, tileW, groundH); ctx.fillStyle = '#C84B11'; ctx.fillRect(tx+2, groundY+2, tileW-4, groundH-4);
-      ctx.fillStyle = mapData.theme.groundTop || '#5CBA3C'; ctx.fillRect(tx, groundY, tileW, 10); ctx.fillStyle = '#7CFA5C'; ctx.fillRect(tx, groundY, tileW, 3);
+    function shutdownConsole() {
+      document.getElementById('gameMasterIframe').src = ""; 
+      document.getElementById('gameMasterConsole').style.display = 'none';
+      window.removeEventListener('resize', resizeConsoleLayout);
     }
-  }
-}
 
-function drawPlatform(p, cx) {
-  const px = p.x - cx; if (px+p.w < 0 || px > CANVAS_W) return;
-  const colors = { brick: {top:'#C84B11',mid:'#A03808',line:'rgba(0,0,0,0.4)'}, qblock: {top:'#FBD000',mid:'#C89000',line:'rgba(0,0,0,0.3)'}, used: {top:'#C88553',mid:'#8B5A2B',line:'rgba(0,0,0,0.5)'}, stone: {top:'#888',mid:'#555',line:'rgba(0,0,0,0.4)'} };
-  const c = colors[p.type] || colors.brick;
-  ctx.fillStyle = c.top; ctx.fillRect(px, p.y, p.w, p.h); ctx.fillStyle = c.mid; ctx.fillRect(px, p.y+p.h-8, p.w, 8);
-  ctx.fillStyle = c.line;
-  for (let i=0; i<p.w; i+=TILE) { ctx.fillRect(px+i, p.y, 2, p.h); ctx.fillRect(px+i, p.y, TILE, 2); ctx.fillRect(px+i, p.y+p.h-2, TILE, 2); }
-  if (p.type === 'qblock') { const bob = Math.sin(Date.now()*0.005)*2; ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Jua'; ctx.textAlign = 'center'; ctx.fillText('?', px+p.w/2, p.y+p.h-8 + bob); } 
-  else if (p.type === 'used') { ctx.fillStyle = '#444'; for (let i=0; i<p.w; i+=TILE) { ctx.fillRect(px+i+4, p.y+4, 4, 4); ctx.fillRect(px+i+TILE-8, p.y+p.h-8, 4, 4); } }
-}
+    function resizeConsoleLayout() {
+      const box = document.getElementById('gameConsoleBox');
+      if (!box || document.getElementById('gameMasterConsole').style.display === 'none') return;
 
-function drawCoin(c, cx) {
-  const coinX = c.x - cx; if (coinX < -30 || coinX > CANVAS_W+30) return;
-  const bob = Math.sin(c.anim)*4; const r = 10; const cy = c.y + bob;
-  ctx.beginPath(); ctx.arc(coinX+r, cy+r, r+4, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,215,0,0.3)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(coinX+r, cy+r, r, 0, Math.PI*2); ctx.fillStyle = '#FFD700'; ctx.fill();
-  ctx.beginPath(); ctx.arc(coinX+r, cy+r, r*0.6, 0, Math.PI*2); ctx.fillStyle = '#FFA500'; ctx.fill();
-  ctx.font = 'bold 10px Jua'; ctx.fillStyle = '#C87800'; ctx.textAlign = 'center'; ctx.fillText('C', coinX+r, cy+r+4);
-}
+      // 1. 기기 브라우저가 스마트폰(세로형) 비율인지, 태블릿/PC(가로형) 비율인지 실시간 감지
+      const isMobilePortrait = window.innerWidth < 600 || (window.innerHeight / window.innerWidth) > 1.35;
+      
+      // 2. 비율 조건에 맞는 가상 베이스 디자인 규격 할당
+      const designWidth = isMobilePortrait ? 900 : 960;
+      const designHeight = isMobilePortrait ? 1300 : 690;
 
-function drawFlag(cx) {
-  const fx = mapData.flagX - cx; if (fx < -40 || fx > CANVAS_W+40) return;
-  ctx.fillStyle = '#888'; ctx.fillRect(fx-2, GROUND_Y-140, 6, 140); ctx.fillStyle = '#aaa'; ctx.fillRect(fx, GROUND_Y-140, 2, 140);
-  ctx.fillStyle = '#E52521'; ctx.beginPath(); ctx.moveTo(fx+4, GROUND_Y-140); ctx.lineTo(fx+36, GROUND_Y-128); ctx.lineTo(fx+4, GROUND_Y-116); ctx.fill();
-  ctx.fillStyle = '#FFD700'; ctx.fillRect(fx-10, GROUND_Y-6, 24, 8);
-}
+      // 3. 기기의 가용 상하좌우 마진 패딩 제외 영역 실측
+      const availableWidth = window.innerWidth - 12;
+      const availableHeight = window.innerHeight - 12;
 
-function drawMonster(m, cx) {
-  const mx = m.x - cx; if (mx+m.w < -20 || mx > CANVAS_W+20) return; const facing = m.vx * m.dir < 0;
-  ctx.save();
-  if (facing) { ctx.translate(mx + m.w, m.y); ctx.scale(-1, 1); ctx.translate(-m.w*0.5, 0); } else { ctx.translate(mx, m.y); }
-  if (m.type === 'koopa') drawKoopa(m.w, m.h); else if (m.type === 'boo') drawBoo(m.w, m.h); else if (m.type === 'spiny') drawSpiny(m.w, m.h); else drawGoomba(m.w, m.h); 
-  ctx.restore();
-}
+      // 4. 어떤 기기든 한 화면에 가두는 스케일 비율 계산
+      const scale = Math.min(availableWidth / designWidth, availableHeight / designHeight);
 
-function drawGoomba(w, h) {
-  ctx.fillStyle = '#8B4513'; ctx.beginPath(); ctx.ellipse(w/2, h*0.65, w*0.48, h*0.38, 0, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#5C2D00'; ctx.beginPath(); ctx.arc(w/2, h*0.35, w*0.45, Math.PI, 0, false); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.fillRect(w*0.18, h*0.42, w*0.2, h*0.18); ctx.fillRect(w*0.62, h*0.42, w*0.2, h*0.18);
-  ctx.fillStyle = '#000'; ctx.fillRect(w*0.22, h*0.46, w*0.12, h*0.12); ctx.fillRect(w*0.66, h*0.46, w*0.12, h*0.12);
-  ctx.fillStyle = '#3a1500'; ctx.fillRect(w*0.1, h*0.88, w*0.28, h*0.12); ctx.fillRect(w*0.62, h*0.88, w*0.28, h*0.12);
-}
+      // 5. 실시간 CSS 변환 행렬 적용 (태블릿은 완만하게, 스마트폰은 컴팩트하게)
+      box.style.transform = `scale(${scale})`;
+    }
 
-function drawKoopa(w, h) {
-  ctx.fillStyle = '#3EA80A'; ctx.beginPath(); ctx.ellipse(w/2, h*0.55, w*0.42, h*0.42, 0, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#2a8000'; ctx.beginPath(); ctx.ellipse(w/2, h*0.55, w*0.28, h*0.28, 0, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#5CCC00'; ctx.beginPath(); ctx.arc(w*0.72, h*0.22, h*0.2, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(w*0.78, h*0.18, h*0.07, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(w*0.80, h*0.18, h*0.04, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#5CCC00'; ctx.fillRect(w*0.1, h*0.82, w*0.22, h*0.16); ctx.fillRect(w*0.68, h*0.82, w*0.22, h*0.16);
-}
+    function saveGameCard() {
+      const id = document.getElementById('gameId').value;
+      const title = document.getElementById('gameTitleInput').value.trim();
+      const icon = document.getElementById('gameIconInput').value.trim();
+      const category = document.getElementById('gameCategorySelect').value;
+      const desc = document.getElementById('gameDescInput').value.trim();
+      const url = document.getElementById('gameUrlInput').value.trim();
 
-function drawBoo(w, h) {
-  ctx.fillStyle = 'rgba(240,240,255,0.9)'; ctx.beginPath(); ctx.arc(w/2, h*0.4, w*0.45, Math.PI, 0); ctx.lineTo(w*0.95, h*0.85); ctx.lineTo(w*0.78, h*0.72); ctx.lineTo(w*0.6, h*0.88); ctx.lineTo(w*0.5, h*0.72); ctx.lineTo(w*0.4, h*0.88); ctx.lineTo(w*0.22, h*0.72); ctx.lineTo(w*0.05, h*0.85); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(w*0.35, h*0.38, w*0.09, 0, Math.PI*2); ctx.arc(w*0.65, h*0.38, w*0.09, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#E52521'; ctx.beginPath(); ctx.arc(w*0.35, h*0.38, w*0.04, 0, Math.PI*2); ctx.arc(w*0.65, h*0.38, w*0.04, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(w/2, h*0.6, w*0.22, 0, Math.PI); ctx.fill();
-}
+      if(!title || !icon || !desc || !url) { alert("⚠️ 빈칸을 채워주세요."); return; }
 
-function drawSpiny(w, h) {
-  ctx.fillStyle = '#CC2200'; ctx.beginPath(); ctx.arc(w/2, h*0.6, w*0.42, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#FF4444'; const spineAngles = [0, 45, 90, 135, 180];
-  for (const ang of spineAngles) { const rad = Math.PI + ang * Math.PI/180; const bx = w/2 + Math.cos(rad)*w*0.38; const by = h*0.6 + Math.sin(rad)*h*0.35; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx+Math.cos(rad)*w*0.2, by+Math.sin(rad)*h*0.2); ctx.lineTo(bx+Math.cos(rad+0.3)*w*0.1, by+Math.sin(rad+0.3)*h*0.1); ctx.fill(); }
-  ctx.fillStyle = '#fff'; ctx.fillRect(w*0.25, h*0.45, w*0.18, h*0.14); ctx.fillRect(w*0.57, h*0.45, w*0.18, h*0.14);
-  ctx.fillStyle = '#000'; ctx.fillRect(w*0.3, h*0.48, w*0.1, h*0.08); ctx.fillRect(w*0.6, h*0.48, w*0.1, h*0.08);
-  ctx.fillStyle = '#882200'; ctx.fillRect(w*0.2, h*0.9, w*0.22, h*0.1); ctx.fillRect(w*0.58, h*0.9, w*0.22, h*0.1);
-}
+      if(id) {
+        const targetIdx = currentGames.findIndex(g => g.id === parseInt(id));
+        if(targetIdx > -1) { currentGames[targetIdx].title = title; currentGames[targetIdx].icon = icon; currentGames[targetIdx].desc = desc; currentGames[targetIdx].category = category; currentGames[targetIdx].url = url; }
+      } else {
+        const newId = currentGames.length > 0 ? Math.max(...currentGames.map(g => g.id)) + 1 : 1;
+        currentGames.push({ id: newId, icon: icon, title: title, desc: desc, category: category, url: url });
+      }
+      localStorage.setItem('edutech_games', JSON.stringify(currentGames));
+      alert("💾 저장 완료!"); closeModal('adminModal'); renderGamesGrid();
+    }
 
-function drawPlayer(cx) {
-  if (!player) return; const px = player.x - cx; const py = player.y;
-  ctx.save();
-  if (monsterCooldown > 0 && Math.floor(Date.now() / 100) % 2 === 0) ctx.globalAlpha = 0.4;
-  if (!player.facingRight) { ctx.translate(px + PLAYER_W, py); ctx.scale(-1, 1); } else { ctx.translate(px, py); }
-  const walking = Math.abs(player.vx) > 0.5 && player.grounded; const jumping = !player.grounded; const w = PLAYER_W, h = PLAYER_H;
-  const charName = state.character.name;
-
-  if (charName === '마리오' || charName === '루이지') {
-    const isLuigi = (charName === '루이지'); const mainColor = isLuigi ? '#2E8B00' : '#E52521'; const overColor = isLuigi ? '#0033AA' : '#0044BB'; const skinColor = '#FFCC99'; const shoeColor = '#663300';
-    const bob = walking ? Math.sin(player.animFrame * 1.5) * 2 : 0; const jumpOffset = jumping ? -2 : 0;
-    ctx.fillStyle = skinColor; ctx.fillRect(w*0.2, h*0.2 + bob, w*0.6, h*0.4); ctx.fillStyle = mainColor; ctx.fillRect(w*0.1, h*0.1 + bob, w*0.7, h*0.15); ctx.fillRect(w*0.3, h*0.05 + bob, w*0.5, h*0.05); 
-    ctx.fillStyle = '#000'; ctx.fillRect(w*0.6, h*0.25 + bob, w*0.1, h*0.1); ctx.fillRect(w*0.6, h*0.4 + bob, w*0.3, h*0.1);
-    ctx.fillStyle = skinColor; ctx.fillRect(w*0.8, h*0.3 + bob, w*0.15, h*0.1); ctx.fillStyle = mainColor; ctx.fillRect(w*0.2, h*0.55 + jumpOffset, w*0.6, h*0.35);
-    ctx.fillStyle = overColor; ctx.fillRect(w*0.3, h*0.7 + jumpOffset, w*0.4, h*0.2); ctx.fillRect(w*0.2, h*0.85 + jumpOffset, w*0.2, h*0.1); ctx.fillRect(w*0.6, h*0.85 + jumpOffset, w*0.2, h*0.1);
-    const armWobble = walking ? Math.sin(player.animFrame)*3 : (jumping ? -4 : 0); ctx.fillStyle = mainColor; ctx.fillRect(w*0.1, h*0.6 + armWobble, w*0.2, h*0.2); ctx.fillStyle = '#FFF'; ctx.fillRect(w*0.05, h*0.8 + armWobble, w*0.2, h*0.1); 
-    ctx.fillStyle = shoeColor; const leg1 = walking ? Math.sin(player.animFrame)*3 : (jumping ? -2 : 0); const leg2 = walking ? -Math.sin(player.animFrame)*3 : (jumping ? -4 : 0); ctx.fillRect(w*0.1, h*0.95 + leg1, w*0.3, h*0.1); ctx.fillRect(w*0.6, h*0.95 + leg2, w*0.3, h*0.1);
-  } else {
-    const e = state.character.emoji; const wobble = walking ? Math.sin(player.animFrame * 0.8) * 2 : 0; const squish = jumping ? 1.15 : 1;
-    ctx.font = `${PLAYER_H}px sans-serif`; ctx.textAlign = 'left'; ctx.scale(1, squish); ctx.fillText(e, 0, PLAYER_H/squish - wobble);
-  }
-  ctx.restore();
-  ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(player.x - cx + PLAYER_W/2, GROUND_Y + 2, PLAYER_W*0.5, 4, 0, 0, Math.PI*2); ctx.fill();
-
-  if (state.nickname) {
-    const nickY = player.y - 12; const nickX = player.x - cx + PLAYER_W/2;
-    ctx.font = 'bold 12px Jua'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText(state.nickname, nickX, nickY); ctx.fillStyle = '#FFF'; ctx.fillText(state.nickname, nickX, nickY);
-  }
-}
-
-function showFloatText(text, x, y, color) {
-  const gameEl = document.getElementById('gameScreen'); const div = document.createElement('div'); div.className = 'float-text';
-  div.style.left = (x + gameEl.offsetLeft) + 'px'; div.style.top = (y + gameEl.offsetTop + 45) + 'px'; div.style.color = color; div.textContent = text;
-  document.body.appendChild(div); setTimeout(() => div.remove(), 1200);
-}
-
-function updateHUD() {
-  document.getElementById('scoreDisplay').textContent = state.score.toLocaleString(); document.getElementById('coinDisplay').textContent = state.coins;
-  const bar = document.getElementById('healthBar'); bar.innerHTML = '';
-  const pips = Math.ceil(state.maxHealth / 10); const filledPips = Math.ceil(state.health / 10);
-  for (let i=0; i<pips; i++) { const pip = document.createElement('div'); pip.className = 'health-pip' + (i < filledPips ? '' : ' empty'); bar.appendChild(pip); }
-}
-
-function showQuestion() {
-  cancelAnimationFrame(animFrame); state.gameRunning = false;
-  const q = state.questions[state.currentMap];
-  document.getElementById('qHeader').textContent = `문제 ${state.currentMap+1}/20 · 난이도: ${state.difficulty}`;
-  document.getElementById('qChar').textContent = state.character.emoji; document.getElementById('qText').textContent = q.q;
-  document.getElementById('qFeedback').innerHTML = ''; document.getElementById('qNextBtn').style.display = 'none';
-  const optDiv = document.getElementById('qOptions'); optDiv.innerHTML = '';
-  q.options.forEach((opt, idx) => {
-    const btn = document.createElement('button'); btn.className = 'q-option'; btn.textContent = `${['①','②','③','④'][idx]} ${opt}`;
-    btn.onclick = () => answerQuestion(idx, q); optDiv.appendChild(btn);
-  });
-  document.getElementById('questionModal').classList.add('show');
-}
-
-function answerQuestion(idx, q) {
-  const btns = document.querySelectorAll('.q-option'); const correct = (idx === q.answer);
-  if (correct) {
-    btns.forEach(b => b.disabled = true); btns[idx].classList.add('correct');
-    state.score += 100; state.answeredCount++;
-    document.getElementById('qFeedback').innerHTML = `<span style="color:#5CFF00">🎉 정답! +100점!</span><br><small style="color:#aaa">${q.explain}</small>`;
-    updateHUD(); document.getElementById('qNextBtn').style.display = 'inline-block';
-  } else {
-    btns[idx].disabled = true; btns[idx].classList.add('wrong');
-    const tipMsg = q.tip || "문제를 다시 한번 꼼꼼하게 읽어보세요!";
-    document.getElementById('qFeedback').innerHTML = `<span style="color:#FF4444">❌ 틀렸어요! 다시 골라보세요.</span><br><span style="color:#FFD700; font-size:0.9em;">💡 힌트: ${tipMsg}</span>`;
-  }
-}
-
-function nextLevel() {
-  document.getElementById('questionModal').classList.remove('show'); state.currentMap++;
-  if (state.currentMap >= 20) { state.endTime = Date.now(); showResult(); return; }
-  levelSnapshot = { score: state.score, coins: state.coins, health: state.health, maxHealth: state.maxHealth };
-  loadMap(state.currentMap); lastTime = 0; state.gameRunning = true; animFrame = requestAnimationFrame(gameLoop);
-}
-
-function showResult() {
-  cancelAnimationFrame(animFrame); cancelAnimationFrame(window.endingAnimFrame); state.gameRunning = false;
-  document.getElementById('resultName').textContent = `${state.nickname} 모험가`;
-  const pct = Math.round(state.answeredCount / 20 * 100);
-  let grade, color;
-  if (pct >= 90) { grade = '🏆 완벽한 수학 왕!'; color = '#FFD700'; }
-  else if (pct >= 70) { grade = '⭐ 훌륭한 수학자!'; color = '#5CFF00'; }
-  else if (pct >= 50) { grade = '👍 조금만 더 노력해봐요!'; color = '#FFA500'; }
-  else { grade = '📚 기초부터 다시 단단하게 다져봐요!'; color = '#FF6666'; }
-
-  const totalSecs = Math.floor((state.endTime - state.startTime) / 1000); const m = Math.floor(totalSecs / 60); const s = totalSecs % 60; const timeStr = m > 0 ? `${m}분 ${s}초` : `${s}초`;
-  document.getElementById('resultStats').innerHTML = `
-    <div class="stat-row"><span>맞힌 문제</span><span class="stat-val">${state.answeredCount} / 20</span></div>
-    <div class="stat-row"><span>정답률</span><span class="stat-val">${pct}%</span></div>
-    <div class="stat-row"><span>총 점수</span><span class="stat-val">${state.score.toLocaleString()}점</span></div>
-    <div class="stat-row"><span>수집한 코인</span><span class="stat-val">${state.coins}개 🪙</span></div>
-    <div class="stat-row"><span>걸린 시간</span><span class="stat-val">${timeStr} ⏱️</span></div>
-  `;
-  const gradeEl = document.getElementById('resultGrade'); gradeEl.textContent = grade; gradeEl.style.color = color; gradeEl.style.background = 'rgba(0,0,0,0.4)';
-  showScreen('resultScreen'); animateEnding(); 
-}
-
-function animateEnding() {
-  const eCanvas = document.getElementById('endingCanvas'); if(!eCanvas) return; const eCtx = eCanvas.getContext('2d');
-  const time = Date.now() * 0.008; const jumpY = Math.abs(Math.sin(time)) * 30; 
-  eCtx.clearRect(0, 0, eCanvas.width, eCanvas.height);
-  for(let i=0; i<6; i++) { eCtx.fillStyle = ['#FFD700', '#FF4444', '#5CFF00', '#6B8CFF', '#FFA500', '#FF66FF'][i]; const sx = 100 + Math.cos(time + i) * 60; const sy = 100 + Math.sin(time + i) * 60; eCtx.beginPath(); eCtx.arc(sx, sy, 4, 0, Math.PI*2); eCtx.fill(); }
-  eCtx.save(); eCtx.translate(100, 150 - jumpY); eCtx.scale(2, 2); eCtx.translate(-PLAYER_W/2, -PLAYER_H);
-  const charName = state.character.name; const w = PLAYER_W, h = PLAYER_H;
-
-  if (charName === '마리오' || charName === '루이지') {
-    const isLuigi = (charName === '루이지'); const mainColor = isLuigi ? '#2E8B00' : '#E52521'; const overColor = isLuigi ? '#0033AA' : '#0044BB'; const skinColor = '#FFCC99'; const shoeColor = '#663300';
-    eCtx.fillStyle = skinColor; eCtx.fillRect(w*0.2, h*0.2, w*0.6, h*0.4); eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.1, h*0.1, w*0.7, h*0.15); eCtx.fillRect(w*0.3, h*0.05, w*0.5, h*0.05); 
-    eCtx.fillStyle = '#000'; eCtx.fillRect(w*0.6, h*0.25, w*0.1, h*0.1); eCtx.fillRect(w*0.6, h*0.4, w*0.3, h*0.1);
-    eCtx.fillStyle = skinColor; eCtx.fillRect(w*0.8, h*0.3, w*0.15, h*0.1); eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.2, h*0.55 - 2, w*0.6, h*0.35);
-    eCtx.fillStyle = overColor; eCtx.fillRect(w*0.3, h*0.7 - 2, w*0.4, h*0.2); eCtx.fillRect(w*0.2, h*0.85 - 2, w*0.2, h*0.1); eCtx.fillRect(w*0.6, h*0.85 - 2, w*0.2, h*0.1);
-    eCtx.fillStyle = mainColor; eCtx.fillRect(w*0.1, h*0.6 - 10, w*0.2, h*0.2); eCtx.fillStyle = '#FFF'; eCtx.fillRect(w*0.05, h*0.8 - 14, w*0.2, h*0.1); 
-    eCtx.fillStyle = shoeColor; eCtx.fillRect(w*0.1, h*0.95 - 4, w*0.3, h*0.1); eCtx.fillRect(w*0.6, h*0.95 - 2, w*0.3, h*0.1);
-  } else { const e = state.character.emoji; eCtx.font = `${h}px sans-serif`; eCtx.textAlign = 'left'; eCtx.scale(1, 1.15); eCtx.fillText(e, 0, h/1.15); }
-  eCtx.restore();
-  window.endingAnimFrame = requestAnimationFrame(animateEnding);
-}
-
-function setupTouchControls() {
-  window.touchLeft = false; window.touchRight = false; window.touchJump = false; window.touchJumpJust = false;
-  const btnL = document.getElementById('btnLeft'); const btnR = document.getElementById('btnRight'); const btnJ = document.getElementById('btnJump');
-
-  btnL.addEventListener('touchstart', e=>{e.preventDefault(); window.touchLeft=true;}, {passive:false});
-  btnL.addEventListener('touchend', e=>{e.preventDefault(); window.touchLeft=false;}, {passive:false});
-  btnR.addEventListener('touchstart', e=>{e.preventDefault(); window.touchRight=true;}, {passive:false});
-  btnR.addEventListener('touchend', e=>{e.preventDefault(); window.touchRight=false;}, {passive:false});
-  btnJ.addEventListener('touchstart', e=>{ e.preventDefault(); window.touchJump=true; window.touchJumpJust=true; }, {passive:false});
-  btnJ.addEventListener('touchend', e=>{ e.preventDefault(); window.touchJump=false; }, {passive:false});
-}
-
-buildCharGrid();
-selectDiff('중');
-</script>
+    function deleteGameCard(id) { if(confirm("🗑 파기할까요?")) { currentGames = currentGames.filter(g => g.id !== id); localStorage.setItem('edutech_games', JSON.stringify(currentGames)); renderGamesGrid(); } }
+  </script>
 </body>
 </html>
