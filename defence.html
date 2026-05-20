@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
     <title>5학년 수학: 우주 디펜스 - 약분과 통분 마스터</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
@@ -225,11 +225,11 @@
         .fraction span { display: block; padding: 2px 5px; }
         .fraction span:first-child { border-bottom: 2px solid currentColor; }
 
-        /* 오버레이 및 셋업 */
+        /* 오버레이 창 고정 팝업화 수술 */
         .overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -246,14 +246,14 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: 8px;
-            max-height: 180px;
+            max-height: 140px;
             overflow-y: auto;
             background: rgba(0,0,0,0.3);
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 15px;
         }
-        .char-btn { font-size: 30px; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; transition: 0.2s;}
+        .char-btn { font-size: 30px; padding: 5px; border: 2px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; transition: 0.2s;}
         .char-btn:hover { background: rgba(74, 42, 133, 0.8); transform: scale(1.1); }
         .char-btn.selected { border-color: var(--accent-pink); background: var(--primary-purple); transform: scale(1.1); }
 
@@ -264,18 +264,38 @@
         .diff-med { background-color: #FF9800; border: 2px solid #FFB74D;}
         .diff-high { background-color: #E91E63; border: 2px solid #F06292;}
 
-        /* 모바일 및 태블릿 반응형 레이아웃 */
+        /* 📱 모바일 디스플레이 특수 반응형 격리 패치 */
         @media (max-width: 800px) {
-            body { overflow-y: auto; height: auto; }
-            .main-content { flex-direction: column; height: auto; }
-            .game-area { flex: none; width: 100%; height: 50vh; min-height: 350px; }
-            .side-panel { flex: none; width: 100%; min-width: 100%; }
-            .top-bar { height: auto; flex-direction: column; gap: 8px; padding-bottom: 5px; }
-            .stats-group, .controls-group { justify-content: center; width: 100%; }
-            .setup-container { padding: 15px; max-height: 80vh; overflow-y: auto; }
-            #game-overlay h1 { font-size: 32px !important; margin-bottom: 5px !important; }
-            .character-grid { grid-template-columns: repeat(5, 1fr); }
-            .slider-panel { width: 90%; bottom: 10px; }
+            body { padding: 8px; gap: 8px; height: 100vh; overflow: hidden; }
+            .top-bar { height: auto; flex-direction: column; gap: 4px; }
+            .stats-group, .controls-group { justify-content: center; width: 100%; gap: 4px; }
+            .badge { padding: 3px 10px; font-size: 11px; }
+            .badge span { font-size: 13px; }
+            
+            .main-content { flex-direction: column; gap: 8px; height: calc(100vh - 85px); }
+            .game-area { height: 42vh; flex: none; }
+            .side-panel { height: 48vh; flex: none; min-width: 100%; gap: 8px; }
+            .box { padding: 12px; }
+            .question-text { font-size: 18px; margin-bottom: 12px; min-height: auto; }
+            .option-btn { padding: 10px 15px; font-size: 16px; border-radius: 8px; }
+            
+            .slider-panel { width: 90%; bottom: 10px; padding: 5px 15px; }
+            
+            /* 난이도 모달창을 브라우저 화면 전체에 고정(Fixed)하여 강제 노출 */
+            .overlay {
+                position: fixed;
+                top: 0; left: 0; width: 100vw; height: 100vh;
+                z-index: 9999;
+            }
+            .setup-container {
+                padding: 12px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            #game-overlay h1 { font-size: 28px !important; }
+            .character-grid { grid-template-columns: repeat(5, 1fr); max-height: 100px; }
+            .char-btn { font-size: 24px; }
+            .diff-btn { padding: 10px; font-size: 16px; }
         }
     </style>
 </head>
@@ -354,7 +374,7 @@
                 <div id="question-text" class="question-text">난이도를 선택하고 게임을 시작해주세요.</div>
                 <div id="options-container" class="options-list"></div>
             </div>
-            <div class="box" style="font-size:15px; color:#ccc; line-height:1.7;">
+            <div class="box" style="font-size:15px; color:#ccc; line-height:1.7; display:none;">
                 <h3 style="color:var(--accent-cyan); margin-bottom:10px; font-size:18px;">게임 가이드</h3>
                 <ul style="padding-left:20px; margin:0;">
                     <li><span class="highlight">승리 조건: 정답 15개 또는 몬스터 55마리 처치!</span></li>
