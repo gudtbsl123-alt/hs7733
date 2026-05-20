@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no" />
   <title>✨에듀테크 게임 저장소✨</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,14 +20,7 @@
       min-height: 100vh;
       overflow-x: hidden;
       color: #f8fafc;
-      background: linear-gradient(-45deg,
-      #071a52,
-      #0f3460,
-      #1b1b7a,
-      #533483,
-      #7c3aed,
-      #c026d3,
-      #ea580c);
+      background: linear-gradient(-45deg, #071a52, #0f3460, #1b1b7a, #533483, #7c3aed, #c026d3, #ea580c);
       background-size: 400% 400%;
       animation: gradientMove 15s ease infinite;
       position: relative;
@@ -169,23 +162,10 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     }
 
-    .game-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
-      opacity: 0;
-      transition: opacity 0.35s ease;
-    }
-
     .game-card:hover {
       transform: translateY(-6px);
       border-color: rgba(255, 255, 255, 0.2);
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    }
-
-    .game-card:hover::before {
-      opacity: 1;
     }
 
     .card-top {
@@ -204,7 +184,6 @@
       align-items: center;
       justify-content: center;
       border-radius: 18px;
-      box-shadow: inset 0 2px 8px rgba(255,255,255,0.05);
     }
 
     .game-category {
@@ -214,7 +193,6 @@
       font-size: 12px;
       font-weight: 700;
       color: #e2e8f0;
-      letter-spacing: 0.5px;
     }
 
     .game-title {
@@ -248,15 +226,11 @@
       font-weight: 700;
       font-size: 15px;
       text-decoration: none;
-      transition: all 0.2s ease;
+      cursor: pointer;
       box-shadow: 0 4px 12px rgba(255,255,255,0.1);
     }
 
-    .launch-btn:hover {
-      background: #f1f5f9;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 15px rgba(255,255,255,0.15);
-    }
+    .launch-btn:hover { background: #f1f5f9; }
 
     .card-del-btn {
       background: rgba(239, 68, 68, 0.15);
@@ -266,40 +240,104 @@
       border-radius: 14px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.2s ease;
     }
 
-    .card-del-btn:hover {
-      background: rgba(239, 68, 68, 0.3);
-      color: #ffffff;
+    /* ============================================================
+       🌟 [근본 해결 코어] 유니버설 반응형 자동 매칭 실시간 가상 실행기 프레임
+       ============================================================ */
+    .game-master-overlay {
+      position: fixed;
+      inset: 0;
+      background: #09090b;
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      touch-action: none;
     }
 
-    footer {
-      text-align: center;
-      margin-top: 80px;
-      padding-top: 40px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    /* 반응형 크기 유지를 위한 컨테이너 */
+    .game-console-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
     }
 
-    footer h2 {
-      font-size: 16px;
-      color: #94a3b8;
+    /* 마스터 가상 콘솔 본체 */
+    .game-console-box {
+      position: relative;
+      width: 960px;  /* 표준 가로 가상 베이스 해상도 */
+      height: 690px; /* 표준 세로 가상 베이스 해상도 */
+      background: #151518;
+      border: 4px solid #ffd700;
+      border-radius: 20px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      transform-origin: center center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      transition: width 0.2s, height 0.2s;
+    }
+
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
       margin-bottom: 8px;
+      width: 100%;
     }
 
-    footer p {
-      font-size: 13px;
-      color: #64748b;
-      line-height: 1.5;
+    .console-title { font-size: 16px; font-weight: 800; color: #ffd700; }
+    
+    .console-close-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+      transition: background 0.2s;
+    }
+    .console-close-btn:hover { background: #dc2626; }
+
+    /* 모듈 임베딩 프레임 */
+    .game-frame-iframe {
+      width: 100%;
+      flex: 1;
+      border: none;
+      background: #000;
+      border-radius: 8px;
     }
 
-    /* 모달 기본 스타일 */
+    /* 📱 기기 화면 종횡비에 따른 특수 미디어 쿼리 패치 */
+    @media (max-width: 600px) or (max-aspect-ratio: 13/19) {
+      /* 스마트폰 세로형 비율 감지 시, 가상 캔버스를 900x1200 규격 모바일 전 전용 장치로 가변 변경 */
+      .game-console-box {
+        width: 900px;
+        height: 1300px; /* 모바일 기기 화면 비율에 맞추어 레이아웃 가로세로 대대적 확장 */
+        padding: 20px;
+      }
+      .console-title { font-size: 28px; }
+      .console-close-btn { padding: 12px 24px; font-size: 22px; border-radius: 14px; }
+    }
+
+    /* 모달 기본 오픈 스타일 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -314,144 +352,16 @@
       padding: 36px;
       width: 100%;
       max-width: 520px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    .modal-box h2 {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: #ffffff;
-    }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; color: #ffffff; }
 
-    .modal-box p {
-      font-size: 14px;
-      color: #94a3b8;
-      margin-bottom: 24px;
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #cbd5e1;
-      margin-bottom: 8px;
-    }
-
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: #ffffff;
-      font-size: 14px;
-      transition: all 0.2s ease;
-    }
-
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-      outline: none;
-      border-color: rgba(255,255,255,0.4);
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .modal-btn-group {
-      display: flex;
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .modal-btn {
-      flex-grow: 1;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s ease;
-    }
-
-    .modal-btn.primary {
-      background: #ffffff;
-      color: #0f172a;
-    }
-
-    .modal-btn.primary:hover {
-      background: #f1f5f9;
-    }
-
-    .modal-btn.secondary {
-      background: rgba(255, 255, 255, 0.1);
-      color: #cbd5e1;
-    }
-
-    .modal-btn.secondary:hover {
-      background: rgba(255, 255, 255, 0.15);
-      color: #ffffff;
-    }
-
-    /* 우주수학 탐험 게임 모드 선택 팝업 추가 스타일 */
-    #gameSelectModal .modal-box {
-        max-width: 480px;
-        background: #0f0518;
-        border: 1px solid #3d206e;
-        text-align: center;
-    }
-    #gameSelectModal .modal-btn-group {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 20px;
-    }
-    .modal-mode-btn {
-        display: flex;
-        align-items: center;
-        background: #1a0b2e;
-        border: 1px solid #3d206e;
-        border-radius: 16px;
-        padding: 16px;
-        color: #e0d8f0;
-        text-decoration: none;
-        text-align: left;
-        transition: all 0.2s ease;
-    }
-    .modal-mode-btn:hover {
-        background: #2d134d;
-        border-color: #d94fd5;
-        transform: translateY(-2px);
-    }
-    .modal-mode-btn .icon {
-        font-size: 32px;
-        margin-right: 16px;
-    }
-    .modal-mode-btn h3 {
-        font-size: 16px;
-        font-weight: 700;
-        margin-bottom: 4px;
-        color: #ffffff;
-    }
-    .modal-mode-btn span {
-        font-size: 12px;
-        color: #a594c0;
-        line-height: 1.4;
-    }
-    .close-modal-btn {
-        margin-top: 20px;
-        background: transparent;
-        border: none;
-        color: #a594c0;
-        font-size: 14px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-    .close-modal-btn:hover {
-        color: #ffffff;
-    }
+    .modal-btn-group { display: flex; gap: 12px; margin-top: 28px; }
+    .modal-btn { flex-grow: 1; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; border: none; }
+    .modal-btn.primary { background: #ffffff; color: #0f172a; }
+    .modal-btn.secondary { background: rgba(255, 255, 255, 0.1); color: #cbd5e1; }
   </style>
 </head>
 <body>
@@ -462,9 +372,7 @@
       <div class="hero">
         <h1>Play. Learn. Enjoy! ✨</h1>
         <p>재미있게 배우고, 스스로 성장하는 우리 반!</p>
-        <div class="badge">
-          ⭐ 다양한 주제의 게임으로 즐겁게 학습해요!
-        </div>
+        <div class="badge">⭐ 다양한 주제의 게임으로 즐겁게 학습해요!</div>
       </div>
     </header>
 
@@ -478,23 +386,14 @@
         <button class="filter-btn" onclick="filterCategory('과학', this)">🧪 과학 실험실</button>
       </div>
 
-      <div class="games-grid" id="gamesGrid">
-        </div>
+      <div class="games-grid" id="gamesGrid"></div>
     </main>
-
-    <footer>
-      <h2>💡 Teacher's EduTech Hub</h2>
-      <p>
-        모든 게임은 학생들의 즐거운 학습을 위해 제작되었습니다.<br>
-        GitHub Pages와 연결하여 전국의 선생님들과 쉽게 공유해보세요!
-      </p>
-    </footer>
   </div>
 
   <div id="passwordModal" class="modal-overlay">
     <div class="modal-box">
       <h2>🔒 관리자 인증</h2>
-      <p>에듀테크 가상 파일 브라우저 시스템 제어를 위해 패스워드를 입력하세요.</p>
+      <p>시스템 제어를 위해 패스워드를 입력하세요.</p>
       <div class="form-group">
         <input type="password" id="adminPasswordInput" placeholder="비밀번호를 입력하세요..." onkeyup="if(event.key==='Enter') verifyPassword()">
       </div>
@@ -508,41 +407,17 @@
   <div id="adminModal" class="modal-overlay">
     <div class="modal-box">
       <h2 id="modalTitle">➕ 새 에듀테크 모듈 등록</h2>
-      <p>시스템 디렉터리에 주입할 게임 인덱스 구조 데이터를 구성합니다.</p>
-      
       <input type="hidden" id="gameId">
-
+      <div class="form-group"><label>게임 타이틀</label><input type="text" id="gameTitleInput"></div>
+      <div class="form-group"><label>대표 이모지</label><input type="text" id="gameIconInput"></div>
       <div class="form-group">
-        <label for="gameTitleInput">게임 타이틀</label>
-        <input type="text" id="gameTitleInput" placeholder="예: 분수 배틀 게임">
-      </div>
-
-      <div class="form-group">
-        <label for="gameIconInput">대표 이모지 아이콘</label>
-        <input type="text" id="gameIconInput" placeholder="예: 🎮, 🚀, 🧪">
-      </div>
-
-      <div class="form-group">
-        <label for="gameCategorySelect">교과 카테고리 디렉터리</label>
+        <label>교과 카테고리</label>
         <select id="gameCategorySelect">
-          <option value="수학">수학</option>
-          <option value="연산">연산</option>
-          <option value="분수">분수</option>
-          <option value="사회">사회</option>
-          <option value="과학">과학</option>
+          <option value="수학">수학</option><option value="연산">연산</option><option value="분수">분수</option><option value="사회">사회</option><option value="과학">과학</option>
         </select>
       </div>
-
-      <div class="form-group">
-        <label for="gameDescInput">상세 가이드 스펙 명세 (요약)</label>
-        <textarea id="gameDescInput" rows="3" placeholder="학생들에게 보여줄 게임 설명을 적어주세요."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="gameUrlInput">연결용 로컬 파일 주소 (.html)</label>
-        <input type="text" id="gameUrlInput" placeholder="예: mario.html">
-      </div>
-
+      <div class="form-group"><label>요약 가이드</label><textarea id="gameDescInput" rows="2"></textarea></div>
+      <div class="form-group"><label>로컬 파일 주소 (.html)</label><input type="text" id="gameUrlInput" placeholder="mario.html"></div>
       <div class="modal-btn-group">
         <button class="modal-btn primary" onclick="saveGameCard()">디렉터리 저장 배포</button>
         <button class="modal-btn secondary" onclick="closeAdminModal()">작업 취소</button>
@@ -550,62 +425,38 @@
     </div>
   </div>
 
-  <div id="gameSelectModal" class="modal-overlay">
-    <div class="modal-box">
-      <h2>🚀 우주 수학 탐험</h2>
-      <p>어떤 방식으로 우주를 방어할까요? 모드를 선택하세요!</p>
-      
-      <div class="modal-btn-group">
-        <a href="./airplane.html" class="modal-mode-btn">
-          <div class="icon">🛸</div>
-          <div>
-            <h3>비행 조종 모드</h3>
-            <span>우주선을 직접 상하좌우로 움직이며 적을 요격하세요!</span>
+  <div id="gameMasterConsole" class="game-master-overlay">
+      <div class="game-console-wrapper">
+          <div class="game-console-box" id="gameConsoleBox">
+              <div class="console-header">
+                  <span class="console-title" id="consoleGameTitle">🎮 에듀테크 가상 플레이어</span>
+                  <button class="console-close-btn" onclick="shutdownConsole()">게임 종료 ✖</button>
+              </div>
+              <iframe src="" class="game-frame-iframe" id="gameMasterIframe"></iframe>
           </div>
-        </a>
-
-        <a href="./defence.html" class="modal-mode-btn">
-          <div class="icon">🎯</div>
-          <div>
-            <h3>기지 방어 모드</h3>
-            <span>가운데 기지에서 포탑의 각도를 돌려가며 적을 막아내세요!</span>
-          </div>
-        </a>
       </div>
-
-      <button class="close-modal-btn" onclick="closeGameModal()">닫기 ✖</button>
-    </div>
   </div>
 
   <script>
-    // 전역 관리자 플래그
     let isAdminAuthenticated = false;
     let selectedCategory = "전체";
 
-    // 🌟 기본 고정 탑재 게임 리스트 (mario.html을 여기에 영구 주입했습니다)
     const initialGames = [
-      { id: 1, icon: "🪙", title: "분수 월드", desc: "점프하며 분수 문제를 해결하는 RPG 스타일 학습 게임!", category: "분수", url: "#", isModal: false },
-      { id: 2, icon: "➗", title: "약분 챌린지", desc: "빠르게 약분하며 최고 점수에 도전하는 스피드 게임!", category: "연산", url: "#", isModal: false },
-      { id: 3, icon: "🚀", title: "우주 수학 탐험", desc: "행성을 여행하며 다양한 수학 미션을 해결하세요!", category: "수학", url: "#", isModal: true },
-      { id: 4, icon: "🍕", title: "분수 피자 만들기", desc: "피자를 나누며 자연스럽게 분수 개념을 익혀보세요.", category: "분수", url: "#", isModal: false },
-      { id: 5, icon: "🌦️", title: "날씨 탐험대", desc: "계절과 기후를 배우며 퀴즈를 해결하는 사회 게임!", category: "사회", url: "#", isModal: false },
-      { id: 6, icon: "🧪", title: "과학 실험실", desc: "재미있는 실험과 문제를 해결하며 과학 개념 정복!", category: "과학", url: "#", isModal: false },
-      { id: 7, icon: "🍄", title: "마리오 분수 구출대작전", desc: "쿠파에게 납치된 피치 공주를 구하기 위해 약분과 통분 문제를 해결하세요!", category: "수학", url: "./mario.html", isModal: false }
+      { id: 1, icon: "🪙", title: "분수 월드", desc: "점프하며 분수 문제를 해결하는 RPG 스타일 학습 게임!", category: "분수", url: "./mario.html" },
+      { id: 2, icon: "➗", title: "약분 챌린지", desc: "빠르게 약분하며 최고 점수에 도전하는 스피드 게임!", category: "연산", url: "./airplane.html" },
+      { id: 3, icon: "🚀", title: "우주 수학 탐험", desc: "행성을 여행하며 다양한 수학 미션을 해결하세요!", category: "수학", url: "./airplane.html" },
+      { id: 4, icon: "🍕", title: "분수 피자 만들기", desc: "피자를 나누며 자연스럽게 분수 개념을 익혀보세요.", category: "분수", url: "./mario.html" },
+      { id: 5, icon: "🌦️", title: "날씨 탐험대", desc: "계절과 기후를 배우며 퀴즈를 배우는 유익한 교과 게임!", category: "사회", url: "./mario.html" },
+      { id: 6, icon: "🧪", title: "과학 실험실", desc: "재미있는 실험과 문제를 해결하며 과학 개념 정복!", category: "과학", url: "./mario.html" },
+      { id: 7, icon: "🍄", title: "마리오 분수 구출대작전", desc: "쿠파에게 납치된 피치 공주를 구하기 위해 약분과 통분 문제를 해결하세요!", category: "수학", url: "./mario.html" }
     ];
 
-    // 현재 사용 중인 카드 데이터 세트 관리
     let currentGames = [];
 
-    // 초기 로드 프로세스
-// 🛠️ 기존 로드 프로세스를 이 코드로 완전히 대체하여 덮어쓰기 하세요.
     window.addEventListener('DOMContentLoaded', () => {
       const stored = localStorage.getItem('edutech_games');
-      
       if (stored) {
         let parsedGames = JSON.parse(stored);
-        
-        // [원천 해결 패치] 기본 탑재 리스트(initialGames)의 개수나 내용이 바뀌었다면
-        // 브라우저의 옛날 기억을 강제로 무시하고 최신 데이터 세트로 덮어씁니다.
         if (parsedGames.length !== initialGames.length || !parsedGames.some(g => g.id === 7)) {
           currentGames = [...initialGames];
           localStorage.setItem('edutech_games', JSON.stringify(currentGames));
@@ -619,116 +470,80 @@
       renderGamesGrid();
     });
 
-    // 팝업 컨트롤 제어 유틸
     function showModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function checkAdminPassword() {
-      if(isAdminAuthenticated) {
-        openAdminForm();
-      } else {
-        document.getElementById('adminPasswordInput').value = "";
-        showModal('passwordModal');
-      }
-    }
-
-    function verifyPassword() {
-      const pw = document.getElementById('adminPasswordInput').value;
-      if(pw === "1234") { // 시스템 접근 비밀번호 기본 정의
-        isAdminAuthenticated = true;
-        closeModal('passwordModal');
-        openAdminForm();
-      } else {
-        alert("❌ 패스워드가 올바르지 않습니다. 시스템 접근이 거부되었습니다.");
-      }
-    }
-
-    function openAdminForm(gameId = null) {
-      document.getElementById('gameId').value = gameId || "";
-      if(gameId) {
-        document.getElementById('modalTitle').innerText = "⚙️ 에듀테크 모듈 명세 수정";
-        const game = currentGames.find(g => g.id === gameId);
-        if(game) {
-          document.getElementById('gameTitleInput').value = game.title;
-          document.getElementById('gameIconInput').value = game.icon;
-          document.getElementById('gameCategorySelect').value = game.category;
-          document.getElementById('gameDescInput').value = game.desc;
-          document.getElementById('gameUrlInput').value = game.url;
-        }
-      } else {
-        document.getElementById('modalTitle').innerText = "➕ 새 에듀테크 모듈 등록";
-        document.getElementById('gameTitleInput').value = "";
-        document.getElementById('gameIconInput').value = "🎮";
-        document.getElementById('gameCategorySelect').value = "수학";
-        document.getElementById('gameDescInput').value = "";
-        document.getElementById('gameUrlInput').value = "";
-      }
-      showModal('adminModal');
-    }
-
     function closeAdminModal() { closeModal('adminModal'); }
 
-    function openGameModal(event) {
-      event.preventDefault();
-      showModal('gameSelectModal');
-    }
+    function checkAdminPassword() { if(isAdminAuthenticated) openAdminForm(); else { document.getElementById('adminPasswordInput').value = ""; showModal('passwordModal'); } }
+    function verifyPassword() { const pw = document.getElementById('adminPasswordInput').value; if(pw === "1234") { isAdminAuthenticated = true; closeModal('passwordModal'); openAdminForm(); } else { alert("❌ 인증 거부"); } }
 
-    function closeGameModal() { closeModal('gameSelectModal'); }
+    function filterCategory(category, btnElement) { selectedCategory = category; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); btnElement.classList.add('active'); renderGamesGrid(); }
 
-    // 카테고리 필터링 정렬
-    function filterCategory(category, btnElement) {
-      selectedCategory = category;
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      btnElement.classList.add('active');
-      renderGamesGrid();
-    }
-
-    // 그리드 렌더링 엔진
     function renderGamesGrid() {
       const grid = document.getElementById('gamesGrid');
       grid.innerHTML = "";
-
       const filtered = currentGames.filter(g => selectedCategory === "전체" || g.category === selectedCategory);
-
-      if(filtered.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:60px 20px; color:#64748b; font-weight:600;">📁 해당 교과 카테고리에 등록 배포된 에듀테크 모듈이 없습니다.</div>`;
-        return;
-      }
 
       filtered.forEach(game => {
         const card = document.createElement('div');
         card.className = "game-card";
-
-        // 모달 연결 분기 혹은 하이퍼링크 분기 지정
-        const clickEvent = game.isModal ? `onclick="openGameModal(event)"` : "";
-        const targetUrl = game.isModal ? "#" : game.url;
-
-        let actionHtml = `<a href="${targetUrl}" ${clickEvent} class="launch-btn">🚀 학습 시작하기</a>`;
+        let actionHtml = `<button onclick="bootUpGameConsole('${game.url}', '${game.title}')" class="launch-btn">🚀 학습 시작하기</button>`;
         
         if(isAdminAuthenticated) {
           actionHtml = `
             <button class="card-del-btn" onclick="openAdminForm(${game.id})">수정</button>
-            <a href="${targetUrl}" ${clickEvent} class="launch-btn">🚀 테스트 실행</a>
+            <button onclick="bootUpGameConsole('${game.url}', '${game.title}')" class="launch-btn">🚀 테스트 실행</button>
             <button class="card-del-btn" style="background:rgba(239,68,68,0.2); color:#f87171;" onclick="deleteGameCard(${game.id})">삭제</button>
           `;
         }
 
-        card.innerHTML = `
-          <div class="card-top">
-            <div class="game-icon">${game.icon || '🎮'}</div>
-            <div class="game-category">${game.category}</div>
-          </div>
-          <h2 class="game-title">${game.title}</h2>
-          <p class="game-desc">${game.desc}</p>
-          <div class="action-group">
-            ${actionHtml}
-          </div>
-        `;
+        card.innerHTML = `<div class="card-top"><div class="game-icon">${game.icon || '🎮'}</div><div class="game-category">${game.category}</div></div><h2 class="game-title">${game.title}</h2><p class="game-desc">${game.desc}</p><div class="action-group">${actionHtml}</div>`;
         grid.appendChild(card);
       });
     }
 
-    // 데이터 저장 프로세스
+    // ============================================================
+    // 🌟 [하이브리드 엔진 핵심 스크립트] 
+    // 어떤 기기의 화면 비율이든 실시간으로 실측하여 정밀 스케일링하는 코어 함수
+    // ============================================================
+    function bootUpGameConsole(url, title) {
+      document.getElementById('consoleGameTitle').innerText = `🎮 플레이 중: ${title}`;
+      const iframe = document.getElementById('gameMasterIframe');
+      iframe.src = url;
+      
+      document.getElementById('gameMasterConsole').style.display = 'flex';
+      resizeConsoleLayout(); 
+      window.addEventListener('resize', resizeConsoleLayout);
+    }
+
+    function shutdownConsole() {
+      document.getElementById('gameMasterIframe').src = ""; 
+      document.getElementById('gameMasterConsole').style.display = 'none';
+      window.removeEventListener('resize', resizeConsoleLayout);
+    }
+
+    function resizeConsoleLayout() {
+      const box = document.getElementById('gameConsoleBox');
+      if (!box || document.getElementById('gameMasterConsole').style.display === 'none') return;
+
+      // 1. 기기 브라우저가 스마트폰(세로형) 비율인지, 태블릿/PC(가로형) 비율인지 실시간 감지
+      const isMobilePortrait = window.innerWidth < 600 || (window.innerHeight / window.innerWidth) > 1.35;
+      
+      // 2. 비율 조건에 맞는 가상 베이스 디자인 규격 할당
+      const designWidth = isMobilePortrait ? 900 : 960;
+      const designHeight = isMobilePortrait ? 1300 : 690;
+
+      // 3. 기기의 가용 상하좌우 마진 패딩 제외 영역 실측
+      const availableWidth = window.innerWidth - 12;
+      const availableHeight = window.innerHeight - 12;
+
+      // 4. 어떤 기기든 한 화면에 가두는 스케일 비율 계산
+      const scale = Math.min(availableWidth / designWidth, availableHeight / designHeight);
+
+      // 5. 실시간 CSS 변환 행렬 적용 (태블릿은 완만하게, 스마트폰은 컴팩트하게)
+      box.style.transform = `scale(${scale})`;
+    }
+
     function saveGameCard() {
       const id = document.getElementById('gameId').value;
       const title = document.getElementById('gameTitleInput').value.trim();
@@ -737,46 +552,20 @@
       const desc = document.getElementById('gameDescInput').value.trim();
       const url = document.getElementById('gameUrlInput').value.trim();
 
-      if(!title || !icon || !desc || !url) {
-        alert("⚠️ 빈칸 없이 모든 파일 양식 및 코드를 주입한 뒤 보관해주세요.");
-        return;
-      }
+      if(!title || !icon || !desc || !url) { alert("⚠️ 빈칸을 채워주세요."); return; }
 
       if(id) {
         const targetIdx = currentGames.findIndex(g => g.id === parseInt(id));
-        if(targetIdx > -1) {
-          currentGames[targetIdx].title = title;
-          currentGames[targetIdx].icon = icon;
-          currentGames[targetIdx].desc = desc;
-          currentGames[targetIdx].category = category;
-          currentGames[targetIdx].url = url;
-        }
+        if(targetIdx > -1) { currentGames[targetIdx].title = title; currentGames[targetIdx].icon = icon; currentGames[targetIdx].desc = desc; currentGames[targetIdx].category = category; currentGames[targetIdx].url = url; }
       } else {
         const newId = currentGames.length > 0 ? Math.max(...currentGames.map(g => g.id)) + 1 : 1;
-        currentGames.push({
-          id: newId,
-          icon: icon,
-          title: title,
-          desc: desc,
-          category: category,
-          url: url,
-          isModal: false
-        });
+        currentGames.push({ id: newId, icon: icon, title: title, desc: desc, category: category, url: url });
       }
-
       localStorage.setItem('edutech_games', JSON.stringify(currentGames));
-      alert("💾 가상 파일 브라우저 배포 시스템 저장 완료!");
-      closeAdminModal();
-      renderGamesGrid();
+      alert("💾 저장 완료!"); closeModal('adminModal'); renderGamesGrid();
     }
 
-    function deleteGameCard(id) {
-      if(confirm("🗑 정말 해당 에듀테크 게임 모듈을 저장소 디렉터리에서 완전히 격리 파기할까요?")) {
-        currentGames = currentGames.filter(g => g.id !== id);
-        localStorage.setItem('edutech_games', JSON.stringify(currentGames));
-        renderGamesGrid();
-      }
-    }
+    function deleteGameCard(id) { if(confirm("🗑 파기할까요?")) { currentGames = currentGames.filter(g => g.id !== id); localStorage.setItem('edutech_games', JSON.stringify(currentGames)); renderGamesGrid(); } }
   </script>
 </body>
 </html>
