@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>문학 스타디움 페널티 챌린지</title>
+  <style>
+    :root {
+      --panel: rgba(9, 20, 28, 0.82);
+      --line: rgba(255, 255, 255, 0.18);
+      --text: #f7fbff;
+      --muted: #b8c8d9;
+      --accent: #ffdf4d;
+      --accent2: #28d4ff;
+      --danger: #ff4d6d;
+      --good: #39ff88;
+      --grass: #1d7a39;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-family: "Segoe UI", "Noto Sans KR", system-ui, sans-serif;
+      background: #051014;
+      touch-action: none;
+    }
+
+    body {
+      display: grid;
+      place-items: stretch;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background: #06151b;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: clamp(10px, 2vw, 20px);
+      gap: 10px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
+      align-items: start;
+      gap: 10px;
+    }
+
+    .scorebox,
+    .kickerbox,
+    .prompt,
+    .powerbox,
+    .mobile-pad,
+    .roster-strip {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 45px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(14px);
+    }
+
+    .scorebox {
+      min-height: 72px;
+      padding: 12px 14px;
+      border-radius: 8px;
+    }
+
+    .scorebox strong,
+    .kickerbox strong {
+      display: block;
+      font-size: clamp(16px, 2.2vw, 24px);
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .scorebox span,
+    .kickerbox span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: clamp(12px, 1.4vw, 14px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .broadcast {
+      align-self: start;
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 30, 66, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 10px 28px rgba(255, 30, 66, 0.24);
+      font-size: clamp(11px, 1.7vw, 13px);
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+      animation: pulse 1.1s infinite;
+    }
+
+    .kickerbox {
+      justify-self: end;
+      min-height: 72px;
+      min-width: min(38vw, 360px);
+      padding: 12px 14px;
+      border-radius: 8px;
+      text-align: right;
+    }
+
+    .center-stage {
+      display: grid;
+      place-items: center;
+      align-content: center;
+      min-height: 0;
+    }
+
+    .screen {
+      pointer-events: auto;
+      width: min(92vw, 880px);
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(12, 30, 39, 0.94), rgba(5, 14, 20, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 30px 100px rgba(0, 0, 0, 0.55);
+      padding: clamp(18px, 4vw, 34px);
+    }
+
+    .screen h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 6vw, 62px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .screen p {
+      color: #d8e5f0;
+      font-size: clamp(14px, 2.2vw, 18px);
+      line-height: 1.55;
+      margin: 0 0 18px;
+    }
+
+    .nickname-row {
+      display: grid;
+      grid-template-columns: 1fr 140px auto;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    input,
+    select,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 48px;
+      color: #06151b;
+      background: #f7fbff;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-weight: 800;
+      outline: none;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #06151b 50%), linear-gradient(135deg, #06151b 50%, transparent 50%);
+      background-position: calc(100% - 18px) 21px, calc(100% - 12px) 21px;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: #06151b;
+      background: linear-gradient(180deg, #fff17a, #ffbf2f);
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(255, 204, 44, 0.22);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .ghost-button {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.09);
+      box-shadow: none;
+    }
+
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+      gap: 8px;
+      margin: 14px 0 4px;
+    }
+
+    .player-card {
+      min-height: 92px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.22), transparent 34%),
+        rgba(255, 255, 255, 0.07);
+      cursor: pointer;
+    }
+
+    .player-card.selected {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 2px rgba(255, 223, 77, 0.34);
+    }
+
+    .player-face {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 7px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffd0a6, #9c5f30);
+      border: 2px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: #07131d;
+      font-weight: 1000;
+      font-size: 13px;
+    }
+
+    .player-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .player-card b {
+      display: block;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .prompt {
+      pointer-events: auto;
+      width: min(96vw, 1120px);
+      border-radius: 8px;
+      padding: clamp(18px, 3.2vw, 34px);
+      align-self: center;
+    }
+
+    .prompt.hidden,
+    .screen.hidden,
+    .mobile-pad.hidden,
+    .powerbox.hidden,
+    .roster-strip.hidden {
+      display: none;
+    }
+
+    .question-kicker {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: clamp(15px, 2vw, 22px);
+      font-weight: 800;
+      margin-bottom: clamp(14px, 2.4vw, 24px);
+    }
+
+    .question-text {
+      font-size: clamp(40px, 6.5vw, 76px);
+      line-height: 1.18;
+      font-weight: 900;
+      margin-bottom: clamp(22px, 3.4vw, 38px);
+      color: #ffffff;
+      text-shadow: 0 5px 22px rgba(0, 0, 0, 0.34);
+    }
+
+    .math-line {
+      display: inline;
+    }
+
+    .mixed {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.14em;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .fraction {
+      display: inline-grid;
+      grid-template-rows: auto 0 auto;
+      align-items: center;
+      justify-items: center;
+      min-width: 0.9em;
+      margin: 0 0.12em;
+      vertical-align: middle;
+      line-height: 1;
+      transform: translateY(-0.04em);
+    }
+
+    .fraction .top,
+    .fraction .bottom {
+      display: block;
+      padding: 0 0.16em;
+      font-size: 0.78em;
+      line-height: 0.9;
+      font-weight: 1000;
+    }
+
+    .fraction .bar {
+      display: block;
+      width: 100%;
+      min-width: 0.82em;
+      height: 0.095em;
+      margin: 0.1em 0;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .answers .fraction .top,
+    .answers .fraction .bottom {
+      font-size: 0.84em;
+    }
+
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(12px, 2vw, 18px);
+    }
+
+    .answers button {
+      min-height: clamp(86px, 11vh, 124px);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.14);
+      box-shadow: none;
+      text-align: center;
+      padding: 12px 18px;
+      font-size: clamp(32px, 4.8vw, 56px);
+      line-height: 1.1;
+      font-weight: 1000;
+      display: grid;
+      place-items: center;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .answers button.correct {
+      background: rgba(57, 255, 136, 0.26);
+      border-color: rgba(57, 255, 136, 0.76);
+    }
+
+    .answers button.wrong {
+      background: rgba(255, 77, 109, 0.26);
+      border-color: rgba(255, 77, 109, 0.76);
+    }
+
+    .lower {
+      display: grid;
+      grid-template-columns: minmax(180px, 320px) 1fr minmax(180px, 320px);
+      align-items: end;
+      gap: 10px;
+    }
+
+    .powerbox {
+      pointer-events: none;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .power-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .power-track {
+      height: 16px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .power-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #28d4ff, #39ff88 58%, #ffdf4d 78%, #ff4d6d);
+      box-shadow: 0 0 18px rgba(255, 223, 77, 0.48);
+    }
+
+    .roster-strip {
+      justify-self: center;
+      width: min(94vw, 560px);
+      border-radius: 8px;
+      padding: 9px 10px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mobile-pad {
+      pointer-events: auto;
+      justify-self: end;
+      display: grid;
+      grid-template-columns: 58px 58px 88px;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .mobile-pad button {
+      min-width: 0;
+      min-height: 58px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+      font-size: 22px;
+    }
+
+    .mobile-pad .shoot {
+      color: #06151b;
+      background: linear-gradient(180deg, #fff17a, #ffbf2f);
+      font-size: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 48%;
+      transform: translate(-50%, -50%) scale(0.98);
+      width: min(86vw, 620px);
+      pointer-events: none;
+      text-align: center;
+      font-size: clamp(32px, 8vw, 76px);
+      line-height: 1;
+      font-weight: 1000;
+      text-shadow: 0 8px 28px rgba(0, 0, 0, 0.76);
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .toast small {
+      display: block;
+      margin-top: 8px;
+      font-size: clamp(14px, 2.6vw, 20px);
+      color: #e8f2fb;
+      line-height: 1.4;
+    }
+
+    .tip-modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 7, 10, 0.58);
+      pointer-events: auto;
+      z-index: 5;
+    }
+
+    .tip-modal.hidden {
+      display: none;
+    }
+
+    .tip-card {
+      width: min(92vw, 520px);
+      padding: clamp(18px, 4vw, 26px);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(14, 35, 45, 0.98), rgba(4, 13, 19, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 30px 100px rgba(0, 0, 0, 0.6);
+    }
+
+    .tip-card h2 {
+      margin: 0 0 8px;
+      font-size: clamp(22px, 4vw, 34px);
+      letter-spacing: 0;
+    }
+
+    .tip-card p {
+      margin: 0 0 16px;
+      color: #d8e5f0;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .tip-card button {
+      width: 100%;
+    }
+
+    @keyframes pulse {
+      to {
+        box-shadow: 0 0 0 9px rgba(255, 255, 255, 0);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hud {
+        padding: 8px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .broadcast {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        justify-self: center;
+      }
+
+      .scorebox {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .kickerbox {
+        grid-column: 2;
+        grid-row: 2;
+        min-width: 0;
+      }
+
+      .scorebox,
+      .kickerbox {
+        min-height: 62px;
+        padding: 10px;
+      }
+
+      .nickname-row {
+        grid-template-columns: 1fr;
+      }
+
+      .answers {
+        grid-template-columns: 1fr;
+      }
+
+      .prompt {
+        width: min(96vw, 680px);
+        padding: 14px;
+      }
+
+      .question-kicker {
+        font-size: 14px;
+        flex-wrap: wrap;
+      }
+
+      .question-text {
+        font-size: clamp(34px, 10vw, 52px);
+        margin-bottom: 18px;
+      }
+
+      .answers button {
+        min-height: 78px;
+        font-size: clamp(30px, 9vw, 46px);
+      }
+
+      .lower {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-pad {
+        justify-self: stretch;
+        grid-template-columns: 1fr 1fr 1.4fr;
+      }
+
+      .roster-strip {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div class="hud">
+    <div class="topbar">
+      <div class="scorebox">
+        <strong id="scoreName">문학 스타디움</strong>
+        <span id="scoreMeta">닉네임을 입력하고 도전을 시작하세요</span>
+      </div>
+      <div class="broadcast"><i class="live-dot"></i> LIVE PENALTY CAM</div>
+      <div class="kickerbox">
+        <strong id="kickerName">대기 중</strong>
+        <span id="kickerMeta">22명 랜덤 키커 라인업</span>
+      </div>
+    </div>
+
+    <div class="center-stage">
+      <section class="screen" id="startScreen">
+        <h1>문학 스타디움<br />페널티 챌린지</h1>
+        <p>
+          초등 5학년 문제를 맞히면 슛 기회가 열립니다. 키커 22명은 매번 랜덤 순서로 등장하고,
+          오답을 낸 키커는 아쉬워하며 퇴장합니다. 방향을 잡고 D키를 길게 눌러 파워를 모으세요.
+        </p>
+        <div class="nickname-row">
+          <input id="nickname" maxlength="12" placeholder="전광판에 표시할 닉네임" autocomplete="off" />
+          <select id="difficulty" aria-label="문제 난이도">
+            <option value="low">하</option>
+            <option value="mid" selected>중</option>
+            <option value="high">상</option>
+          </select>
+          <button id="startBtn">입장하기</button>
+        </div>
+        <p style="margin-top:18px;margin-bottom:8px;font-weight:900;color:#fff;">응원 선수 카드 선택</p>
+        <div class="player-grid" id="favoriteGrid"></div>
+      </section>
+
+      <section class="prompt hidden" id="questionPanel">
+        <div class="question-kicker">
+          <span id="questionRound">ROUND 1 / 22</span>
+          <span id="questionSubject">수학</span>
+        </div>
+        <div class="question-text" id="questionText">문제</div>
+        <div class="answers" id="answers"></div>
+      </section>
+    </div>
+
+    <div class="lower">
+      <div class="powerbox hidden" id="powerBox">
+        <div class="power-label">
+          <span>D키 또는 슛 버튼 길게 누르기</span>
+          <span id="powerText">0%</span>
+        </div>
+        <div class="power-track"><div class="power-fill" id="powerFill"></div></div>
+      </div>
+      <div class="roster-strip hidden" id="rosterStrip">다음 키커 대기 중</div>
+      <div class="mobile-pad hidden" id="mobilePad">
+        <button id="leftBtn" aria-label="왼쪽 이동">◀</button>
+        <button id="rightBtn" aria-label="오른쪽 이동">▶</button>
+        <button class="shoot" id="shootBtn">슛</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="tip-modal hidden" id="tipModal">
+    <div class="tip-card">
+      <h2>다시 생각해 보기</h2>
+      <p id="tipText">분모가 같으면 분자끼리 계산해 보세요.</p>
+      <button id="tipClose">문제로 돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const startScreen = document.getElementById("startScreen");
+      const questionPanel = document.getElementById("questionPanel");
+      const favoriteGrid = document.getElementById("favoriteGrid");
+      const nicknameInput = document.getElementById("nickname");
+      const difficultySelect = document.getElementById("difficulty");
+      const startBtn = document.getElementById("startBtn");
+      const scoreName = document.getElementById("scoreName");
+      const scoreMeta = document.getElementById("scoreMeta");
+      const kickerName = document.getElementById("kickerName");
+      const kickerMeta = document.getElementById("kickerMeta");
+      const questionRound = document.getElementById("questionRound");
+      const questionSubject = document.getElementById("questionSubject");
+      const questionText = document.getElementById("questionText");
+      const answers = document.getElementById("answers");
+      const powerBox = document.getElementById("powerBox");
+      const powerFill = document.getElementById("powerFill");
+      const powerText = document.getElementById("powerText");
+      const mobilePad = document.getElementById("mobilePad");
+      const leftBtn = document.getElementById("leftBtn");
+      const rightBtn = document.getElementById("rightBtn");
+      const shootBtn = document.getElementById("shootBtn");
+      const rosterStrip = document.getElementById("rosterStrip");
+      const toast = document.getElementById("toast");
+      const tipModal = document.getElementById("tipModal");
+      const tipText = document.getElementById("tipText");
+      const tipClose = document.getElementById("tipClose");
+
+      const players = [
+        ["손흥민", "대한민국", "#e53935"], ["박지성", "대한민국", "#0d47a1"], ["차범근", "대한민국", "#fdd835"],
+        ["리오넬 메시", "아르헨티나", "#64b5f6"], ["크리스티아누 호날두", "포르투갈", "#2e7d32"],
+        ["킬리안 음바페", "프랑스", "#1e40af"], ["네이마르", "브라질", "#fdd835"], ["엘링 홀란", "노르웨이", "#81d4fa"],
+        ["케빈 더브라위너", "벨기에", "#ff8a65"], ["모하메드 살라", "이집트", "#c62828"], ["루카 모드리치", "크로아티아", "#f5f5f5"],
+        ["로베르트 레반도프스키", "폴란드", "#ef5350"], ["해리 케인", "잉글랜드", "#fafafa"], ["비니시우스 주니어", "브라질", "#fff176"],
+        ["주드 벨링엄", "잉글랜드", "#5d4037"], ["앙투안 그리즈만", "프랑스", "#ec407a"], ["안드레스 이니에스타", "스페인", "#b71c1c"],
+        ["사비 에르난데스", "스페인", "#1565c0"], ["지네딘 지단", "프랑스", "#eeeeee"], ["호나우지뉴", "브라질", "#ffeb3b"],
+        ["디디에 드로그바", "코트디부아르", "#ff9800"], ["잔루이지 부폰", "이탈리아", "#43a047"]
+      ].map((p, index) => ({ name: p[0], country: p[1], color: p[2], photo: p[3] || "", id: index }));
+
+      const baseQuestions = [
+        q("수학", "3.6 + 2.45 = ?", "6.05", ["5.95", "6.05", "6.15", "5.85"]),
+        q("수학", "48 ÷ 6 + 7 × 3 = ?", "29", ["27", "29", "31", "35"]),
+        q("수학", "1/2 + 1/4 = ?", "3/4", ["2/6", "3/4", "1/6", "2/4"]),
+        q("수학", "가로 8cm, 세로 5cm 직사각형의 넓이는?", "40㎠", ["13㎠", "26㎠", "40㎠", "80㎠"]),
+        q("수학", "2.5 × 4 = ?", "10", ["8", "9", "10", "12"]),
+        q("수학", "75의 20%는?", "15", ["10", "12", "15", "20"]),
+        q("수학", "9와 12의 최소공배수는?", "36", ["21", "24", "36", "108"]),
+        q("수학", "소수 0.08은 분수로?", "8/100", ["8/10", "8/100", "80/10", "1/8"]),
+        q("국어", "글쓴이의 생각이나 주장을 뒷받침하는 내용을 무엇이라고 할까요?", "근거", ["제목", "근거", "띄어쓰기", "장면"]),
+        q("국어", "문장 끝에 감탄을 나타낼 때 주로 쓰는 문장 부호는?", "느낌표", ["쉼표", "마침표", "느낌표", "따옴표"]),
+        q("국어", "'발이 넓다'의 뜻으로 알맞은 것은?", "아는 사람이 많다", ["빨리 달린다", "신발이 크다", "아는 사람이 많다", "길을 잃었다"]),
+        q("국어", "시에서 반복되는 소리나 말이 주는 느낌은?", "운율", ["차례", "운율", "설명", "문단"]),
+        q("사회", "우리나라 국회의 중요한 역할은?", "법을 만든다", ["날씨를 정한다", "법을 만든다", "축구팀을 뽑는다", "강 이름을 바꾼다"]),
+        q("사회", "인천은 어느 바다와 가까운 도시일까요?", "서해", ["동해", "남해", "서해", "북해"]),
+        q("사회", "지도에서 실제 거리를 줄여 나타낸 비율은?", "축척", ["범례", "축척", "방위", "기호"]),
+        q("사회", "조선 시대 백성을 가르치기 위해 만든 글자는?", "훈민정음", ["팔만대장경", "훈민정음", "삼국사기", "직지"]),
+        q("과학", "식물이 양분을 만들 때 필요한 것은?", "햇빛", ["소금", "햇빛", "플라스틱", "모래만"]),
+        q("과학", "물체를 아래로 끌어당기는 힘은?", "중력", ["마찰력", "중력", "탄성력", "자기력"]),
+        q("과학", "전기가 잘 통하는 물질은?", "구리", ["고무", "나무", "구리", "유리"]),
+        q("과학", "달이 스스로 빛을 내는 천체인가요?", "아니요", ["예", "아니요", "항상 예", "낮에만 예"]),
+        q("영어", "'도서관'을 영어로?", "library", ["station", "library", "market", "kitchen"]),
+        q("영어", "'나는 축구를 좋아한다'는?", "I like soccer.", ["I like soccer.", "You are soccer.", "He has soccer.", "We is soccer."]),
+        q("영어", "'yesterday'의 뜻은?", "어제", ["오늘", "내일", "어제", "주말"]),
+        q("영어", "'fifth grade'는 몇 학년?", "5학년", ["3학년", "4학년", "5학년", "6학년"])
+      ];
+
+      let W = 0;
+      let H = 0;
+      let DPR = 1;
+      let t = 0;
+      let nickname = "";
+      let favorite = players[0];
+      let lineup = [];
+      let generatedQuestions = [];
+      let selectedDifficulty = "mid";
+      let round = 0;
+      let goals = 0;
+      let attempts = 0;
+      let state = "start";
+      let current = null;
+      let currentQuestion = null;
+      let aim = 0;
+      let power = 0;
+      let charging = false;
+      let keys = new Set();
+      let shot = null;
+      let fireworks = [];
+      let confetti = [];
+      let grassWave = 0;
+      let cameraShake = 0;
+      let slowMo = 1;
+      let replayTimer = 0;
+      let answerLocked = false;
+      let audio = null;
+      let crowdLevel = 0.15;
+
+      function q(subject, text, correct, options, tip) {
+        return { subject, text, correct, options: shuffle(options.slice()), tip };
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (ch) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;"
+        }[ch]));
+      }
+
+      function renderMath(value) {
+        return `<span class="math-line">${String(value).split(/(\d+\s+\d+\/\d+|\d+\/\d+)/g).map((part) => {
+          if (/^\d+\s+\d+\/\d+$/.test(part)) {
+            const [whole, frac] = part.split(/\s+/);
+            const [top, bottom] = frac.split("/");
+            return `<span class="mixed"><span>${whole}</span>${fractionHtml(top, bottom)}</span>`;
+          }
+          if (/^\d+\/\d+$/.test(part)) {
+            const [top, bottom] = part.split("/");
+            return fractionHtml(top, bottom);
+          }
+          return escapeHtml(part);
+        }).join("")}</span>`;
+      }
+
+      function fractionHtml(top, bottom) {
+        return `<span class="fraction" aria-label="${bottom}분의 ${top}"><span class="top">${top}</span><span class="bar"></span><span class="bottom">${bottom}</span></span>`;
+      }
+
+      function gcd(a, b) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (b) [a, b] = [b, a % b];
+        return a || 1;
+      }
+
+      function simplify(num, den) {
+        const g = gcd(num, den);
+        return [num / g, den / g];
+      }
+
+      function fractionText(num, den) {
+        if (num === 0) return "0";
+        const whole = Math.floor(num / den);
+        const rest = num % den;
+        if (rest === 0) return String(whole);
+        const [n, d] = simplify(rest, den);
+        return whole > 0 ? `${whole} ${n}/${d}` : `${n}/${d}`;
+      }
+
+      function rawFraction(num, den) {
+        return `${num}/${den}`;
+      }
+
+      function mixedText(whole, num, den) {
+        return num === 0 ? String(whole) : `${whole} ${num}/${den}`;
+      }
+
+      function wrongOptions(correct, den, mode) {
+        const set = new Set([correct]);
+        let guard = 0;
+        while (set.size < 4 && guard < 80) {
+          guard++;
+          const offset = [-3, -2, -1, 1, 2, 3, 4][Math.floor(Math.random() * 7)];
+          const wholeBump = Math.random() < 0.22 ? den : 0;
+          const guessNum = Math.max(1, parseFractionValue(correct, den) + offset + wholeBump);
+          set.add(fractionText(guessNum, den));
+        }
+        if (mode === "borrow") set.add("계산할 수 없음");
+        return shuffle(Array.from(set).slice(0, 4));
+      }
+
+      function parseFractionValue(text, fallbackDen) {
+        const parts = String(text).split(" ");
+        if (parts.length === 2) {
+          const [n, d] = parts[1].split("/").map(Number);
+          return Number(parts[0]) * d + n;
+        }
+        if (String(text).includes("/")) {
+          const [n, d] = String(text).split("/").map(Number);
+          return Math.round((n / d) * fallbackDen);
+        }
+        return Number(text) * fallbackDen;
+      }
+
+      function makeQuestion(kind, level, story) {
+        const sameDen = level === "low" || Math.random() < 0.48;
+        const denA = [4, 5, 6, 8, 10, 12][Math.floor(Math.random() * (level === "high" ? 6 : 4))];
+        const denB = sameDen ? denA : [3, 4, 5, 6, 8, 10, 12].filter((d) => d !== denA)[Math.floor(Math.random() * 6)];
+        const lcm = denA * denB / gcd(denA, denB);
+        const wholeA = level === "low" ? 0 : Math.floor(Math.random() * (level === "high" ? 3 : 2));
+        const wholeB = level === "high" ? Math.floor(Math.random() * 3) : Math.floor(Math.random() * 2);
+        let a = wholeA * denA + 1 + Math.floor(Math.random() * (denA - 1));
+        let b = wholeB * denB + 1 + Math.floor(Math.random() * (denB - 1));
+        const op = kind || (Math.random() < 0.52 ? "+" : "-");
+        if (op === "-" && a / denA < b / denB) {
+          a = Math.ceil((b / denB) * denA) + 1 + Math.floor(Math.random() * denA);
+        }
+        const aL = a * (lcm / denA);
+        const bL = b * (lcm / denB);
+        const answerNum = op === "+" ? aL + bL : aL - bL;
+        const correct = fractionText(answerNum, lcm);
+        const left = wholeA ? fractionText(a, denA) : rawFraction(a, denA);
+        const right = wholeB ? fractionText(b, denB) : rawFraction(b, denB);
+        const text = story
+          ? storyText(left, right, op)
+          : `${left} ${op} ${right} = ?`;
+        const tip = sameDen
+          ? "분모가 같으면 분모는 그대로 두고 분자끼리만 계산해 보세요. 대분수는 자연수 부분과 분수 부분을 나누어 생각하면 좋아요."
+          : "분모가 다르면 먼저 두 분모의 공배수로 통분하세요. 통분한 뒤 분자끼리 계산하고 마지막에 약분합니다.";
+        return q("5학년 1학기 분수의 덧셈과 뺄셈", text, correct, wrongOptions(correct, lcm, op === "-" ? "borrow" : ""), tip);
+      }
+
+      function storyText(left, right, op) {
+        const addStories = [
+          `민준이는 물을 ${left}L 마시고, 연습 후 ${right}L를 더 마셨습니다. 모두 몇 L를 마셨을까요?`,
+          `지아는 리본 ${left}m와 ${right}m를 이어 붙였습니다. 리본의 전체 길이는 몇 m일까요?`,
+          `축구장 페인트를 오전에 ${left}통, 오후에 ${right}통 사용했습니다. 모두 몇 통을 썼을까요?`
+        ];
+        const subStories = [
+          `수빈이는 주스 ${left}L 중에서 ${right}L를 마셨습니다. 남은 주스는 몇 L일까요?`,
+          `끈 ${left}m에서 ${right}m를 잘라 썼습니다. 남은 길이는 몇 m일까요?`,
+          `훈련 시간 ${left}시간 중 패스 연습을 ${right}시간 했습니다. 나머지 시간은 몇 시간일까요?`
+        ];
+        const list = op === "+" ? addStories : subStories;
+        return list[Math.floor(Math.random() * list.length)];
+      }
+
+      function generateQuestions(level) {
+        const storyCount = level === "low" ? 3 : level === "mid" ? 5 : 7;
+        const questions = [];
+        for (let i = 0; i < 22; i++) {
+          const story = i < storyCount;
+          const kind = i % 3 === 0 ? "-" : i % 3 === 1 ? "+" : "";
+          questions.push(makeQuestion(kind, level, story));
+        }
+        return shuffle(questions);
+      }
+
+      function shuffle(items) {
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+      }
+
+      function clamp(v, a, b) {
+        return Math.max(a, Math.min(b, v));
+      }
+
+      function lerp(a, b, p) {
+        return a + (b - a) * p;
+      }
+
+      function resize() {
+        DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        W = Math.floor(window.innerWidth);
+        H = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(W * DPR);
+        canvas.height = Math.floor(H * DPR);
+        canvas.style.width = W + "px";
+        canvas.style.height = H + "px";
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+
+      function setupCards() {
+        favoriteGrid.innerHTML = "";
+        players.forEach((player) => {
+          const card = document.createElement("div");
+          card.className = "player-card" + (player === favorite ? " selected" : "");
+          const face = player.photo
+            ? `<div class="player-face"><img src="${player.photo}" alt="${player.name}" referrerpolicy="no-referrer" onerror="this.remove();this.parentElement.textContent='${player.name.slice(0, 1)}';" /></div>`
+            : `<div class="player-face" style="background:linear-gradient(145deg,#ffd7b8,${player.color})">${player.name.slice(0, 1)}</div>`;
+          card.innerHTML = `${face}<b>${player.name}</b><small>${player.country}</small>`;
+          card.addEventListener("click", () => {
+            favorite = player;
+            document.querySelectorAll(".player-card").forEach((el) => el.classList.remove("selected"));
+            card.classList.add("selected");
+            playBlip(540, 0.05);
+          });
+          favoriteGrid.appendChild(card);
+        });
+      }
+
+      function startGame() {
+        initAudio();
+        nickname = (nicknameInput.value || "문학 에이스").trim().slice(0, 12);
+        selectedDifficulty = difficultySelect.value;
+        generatedQuestions = generateQuestions(selectedDifficulty);
+        lineup = shuffle(players.slice());
+        round = 0;
+        goals = 0;
+        attempts = 0;
+        power = 0;
+        aim = 0;
+        state = "question";
+        startScreen.classList.add("hidden");
+        mobilePad.classList.remove("hidden");
+        rosterStrip.classList.remove("hidden");
+        scoreName.textContent = nickname;
+        const label = selectedDifficulty === "low" ? "하" : selectedDifficulty === "mid" ? "중" : "상";
+        showToast("킥오프!", `${favorite.name} 카드 응원 | 난이도 ${label}`);
+        whistle();
+        startCrowd();
+        nextQuestion();
+      }
+
+      function nextQuestion() {
+        if (round >= lineup.length) {
+          finishGame();
+          return;
+        }
+        current = lineup[round];
+        currentQuestion = generatedQuestions[round] || makeQuestion("", selectedDifficulty, false);
+        answerLocked = false;
+        state = "question";
+        power = 0;
+        aim = 0;
+        charging = false;
+        shot = null;
+        updateHud();
+        questionPanel.classList.remove("hidden");
+        powerBox.classList.add("hidden");
+        questionRound.textContent = `ROUND ${round + 1} / ${lineup.length}`;
+        questionSubject.textContent = currentQuestion.subject;
+        questionText.innerHTML = renderMath(currentQuestion.text);
+        answers.innerHTML = "";
+        currentQuestion.options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.dataset.option = option;
+          btn.innerHTML = renderMath(option);
+          btn.addEventListener("click", () => chooseAnswer(btn, option));
+          answers.appendChild(btn);
+        });
+      }
+
+      function chooseAnswer(button, option) {
+        if (answerLocked) return;
+        answerLocked = true;
+        const ok = option === currentQuestion.correct;
+        if (!ok) {
+          button.classList.add("wrong");
+          boo();
+          showTip(currentQuestion.tip || "분모를 먼저 확인하고, 분모가 다르면 통분한 뒤 계산해 보세요.");
+          setTimeout(() => {
+            button.classList.remove("wrong");
+            answerLocked = false;
+          }, 450);
+          return;
+        }
+
+        Array.from(answers.children).forEach((btn) => {
+          if (btn.dataset.option === currentQuestion.correct) btn.classList.add("correct");
+        });
+        button.classList.add("correct");
+        playBlip(880, 0.1);
+        setTimeout(() => {
+          state = "aim";
+          questionPanel.classList.add("hidden");
+          powerBox.classList.remove("hidden");
+          showToast("찬스!", "좌우로 위치를 잡고 D키를 길게 누르세요");
+          updateHud();
+        }, 650);
+      }
+
+      function updateHud() {
+        scoreMeta.textContent = `성공 ${goals} | 시도 ${attempts} | 남은 키커 ${Math.max(0, players.length - round)}`;
+        kickerName.textContent = current ? current.name : "경기 종료";
+        kickerMeta.textContent = current ? `${current.country} | ${round + 1}번째 키커` : "최종 결과 확인";
+        const upcoming = lineup.slice(round + 1, round + 5).map((p) => p.name).join(" · ");
+        rosterStrip.textContent = upcoming ? `다음 키커: ${upcoming}` : "마지막 키커입니다";
+      }
+
+      function shoot() {
+        if (state !== "aim") return;
+        charging = false;
+        state = "shot";
+        attempts++;
+        whistle();
+        const saved = Math.random() < 0.35;
+        const goal = !saved;
+        const x0 = W / 2 + aim * W * 0.23;
+        const y0 = H * 0.79;
+        const goalX = W / 2 + aim * W * 0.19 + (Math.random() - 0.5) * 34;
+        const targetY = H * 0.29 + (100 - power) * 0.35;
+        const saveDive = clamp(aim || (Math.random() < 0.5 ? -0.7 : 0.7), -1, 1);
+        const saveType = Math.random() < 0.52 ? "catch" : "parry";
+        shot = {
+          x0, y0,
+          x: x0,
+          y: y0,
+          targetX: saved ? W / 2 + saveDive * W * 0.17 : goalX,
+          targetY: saved ? H * 0.39 : targetY,
+          p: 0,
+          power,
+          aim,
+          goal,
+          saved,
+          saveType,
+          keeperX: W / 2,
+          keeperDive: saved ? saveDive : clamp(aim + (Math.random() - 0.5) * 0.8, -1, 1),
+          done: false
+        };
+        cameraShake = 9;
+        powerBox.classList.add("hidden");
+        showToast("슈우우웃!", "공이 골문을 향해 날아갑니다");
+      }
+
+      function resolveShot() {
+        if (!shot || shot.done) return;
+        shot.done = true;
+        if (shot.goal) {
+          goals++;
+          state = "goal";
+          cameraShake = 16;
+          crowdLevel = 0.72;
+          netBlast();
+          goalSound();
+          spawnFireworks();
+          showToast("GOAL!", `${current.name} 환상적인 마무리`);
+        } else {
+          state = "replay";
+          slowMo = 0.36;
+          replayTimer = 0;
+          cameraShake = 5;
+          keeperSaveSound(shot.saveType);
+          const reason = shot.saveType === "catch" ? "골키퍼가 공을 꽉 잡았습니다!" : "골키퍼가 양손으로 튕겨냈습니다!";
+          showToast("실패", `슬로우 모션 리플레이: ${reason}`);
+        }
+        updateHud();
+        setTimeout(() => {
+          slowMo = 1;
+          crowdLevel = 0.22;
+          round++;
+          nextQuestion();
+        }, shot.goal ? 2600 : 3300);
+      }
+
+      function finishGame() {
+        state = "finished";
+        questionPanel.classList.add("hidden");
+        powerBox.classList.add("hidden");
+        mobilePad.classList.add("hidden");
+        rosterStrip.classList.add("hidden");
+        kickerName.textContent = "경기 종료";
+        kickerMeta.textContent = "22명 키커 챌린지 완료";
+        scoreMeta.textContent = `최종 성공 ${goals} / 시도 ${attempts}`;
+        showToast("최종 결과", `${nickname} ${goals}골 성공! 다시 입장하면 새 랜덤 순서가 시작됩니다`);
+        startScreen.classList.remove("hidden");
+        startScreen.querySelector("h1").innerHTML = `최종 ${goals}골<br />다시 도전`;
+        startScreen.querySelector("p").textContent = "문제와 키커 순서가 다시 섞입니다. 이번에는 더 침착하게 골망을 흔들어 보세요.";
+        startBtn.textContent = "새 경기 시작";
+      }
+
+      function update(dt) {
+        t += dt * slowMo;
+        grassWave += dt;
+
+        if (state === "aim") {
+          const left = keys.has("ArrowLeft") || keys.has("left");
+          const right = keys.has("ArrowRight") || keys.has("right");
+          if (left) aim -= dt * 1.35;
+          if (right) aim += dt * 1.35;
+          aim = clamp(aim, -1, 1);
+          if (charging) {
+            power = clamp(power + dt * 58, 0, 100);
+          } else {
+            power = Math.max(0, power - dt * 8);
+          }
+          powerFill.style.width = `${power}%`;
+          powerText.textContent = `${Math.round(power)}%`;
+        }
+
+        if (shot && state === "shot") {
+          shot.p += dt * (0.72 + shot.power / 125);
+          const p = clamp(shot.p, 0, 1);
+          const arc = Math.sin(p * Math.PI) * (85 + shot.power * 0.45);
+          shot.x = lerp(shot.x0, shot.targetX, p);
+          shot.y = lerp(shot.y0, shot.targetY, p) - arc;
+          shot.keeperX = lerp(W / 2, W / 2 + shot.keeperDive * W * 0.19, clamp(p * 1.35, 0, 1));
+          if (p >= 1) resolveShot();
+        }
+
+        if (state === "replay") replayTimer += dt;
+        fireworks.forEach((f) => {
+          f.life -= dt;
+          f.x += f.vx * dt;
+          f.y += f.vy * dt;
+          f.vy += 90 * dt;
+        });
+        fireworks = fireworks.filter((f) => f.life > 0);
+        confetti.forEach((c) => {
+          c.life -= dt;
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+          c.rot += c.vr * dt;
+          c.vy += 45 * dt;
+        });
+        confetti = confetti.filter((c) => c.life > 0);
+        cameraShake *= Math.pow(0.03, dt);
+      }
+
+      function draw() {
+        const shakeX = (Math.random() - 0.5) * cameraShake;
+        const shakeY = (Math.random() - 0.5) * cameraShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+        drawSky();
+        drawStadium();
+        drawCrowd();
+        drawPitch();
+        drawGoal();
+        drawKeeper();
+        drawPlayer();
+        drawBall();
+        drawEffects();
+        drawVignette();
+        ctx.restore();
+      }
+
+      function drawSky() {
+        const g = ctx.createLinearGradient(0, 0, 0, H * 0.55);
+        g.addColorStop(0, "#07131d");
+        g.addColorStop(0.45, "#0e3340");
+        g.addColorStop(1, "#18474b");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+        for (let i = 0; i < 7; i++) {
+          const x = W * (0.1 + i * 0.14);
+          const y = H * 0.08 + Math.sin(t * 0.7 + i) * 3;
+          const rg = ctx.createRadialGradient(x, y, 5, x, y, W * 0.12);
+          rg.addColorStop(0, "rgba(255,255,225,0.46)");
+          rg.addColorStop(1, "rgba(255,255,225,0)");
+          ctx.fillStyle = rg;
+          ctx.fillRect(x - W * 0.14, y - W * 0.14, W * 0.28, W * 0.28);
+        }
+      }
+
+      function drawStadium() {
+        const top = H * 0.16;
+        const standH = H * 0.24;
+        ctx.fillStyle = "#263741";
+        ctx.beginPath();
+        ctx.moveTo(0, top + standH);
+        ctx.quadraticCurveTo(W / 2, top - H * 0.08, W, top + standH);
+        ctx.lineTo(W, H * 0.5);
+        ctx.lineTo(0, H * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        for (let i = 0; i < 9; i++) {
+          const y = top + i * (standH / 8);
+          ctx.fillStyle = i % 2 ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.16)";
+          ctx.fillRect(0, y, W, standH / 9);
+        }
+
+        ctx.fillStyle = "rgba(9,18,24,0.76)";
+        ctx.fillRect(W * 0.31, H * 0.08, W * 0.38, H * 0.085);
+        ctx.strokeStyle = "rgba(255,255,255,0.32)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(W * 0.31, H * 0.08, W * 0.38, H * 0.085);
+        ctx.fillStyle = "#e9fbff";
+        ctx.font = `900 ${clamp(W * 0.023, 18, 31)}px 'Noto Sans KR', 'Malgun Gothic', Segoe UI, sans-serif`;
+        ctx.textAlign = "center";
+        drawSpacedText("인천문학경기장", W / 2, H * 0.119, clamp(W * 0.006, 3, 8));
+        ctx.fillStyle = "#ffdf4d";
+        ctx.font = `800 ${clamp(W * 0.015, 12, 18)}px Segoe UI, sans-serif`;
+        ctx.fillText(`${nickname || "문학 에이스"}   ${goals} GOALS   ${attempts} SHOTS`, W / 2, H * 0.148);
+      }
+
+      function drawCrowd() {
+        const rows = 8;
+        const cols = Math.ceil(W / 18);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = c * 18 + (r % 2) * 9;
+            const y = H * 0.19 + r * H * 0.026 + Math.sin(t * (2 + crowdLevel * 4) + c * 0.7 + r) * (1 + crowdLevel * 3);
+            const hue = (c * 31 + r * 17) % 360;
+            ctx.fillStyle = `hsla(${hue},75%,${48 + r * 2}%,0.84)`;
+            ctx.fillRect(x, y, 8, 10);
+          }
+        }
+      }
+
+      function drawSpacedText(text, x, y, spacing) {
+        const chars = Array.from(text);
+        const widths = chars.map((ch) => ctx.measureText(ch).width);
+        const total = widths.reduce((sum, width) => sum + width, 0) + spacing * (chars.length - 1);
+        let cursor = x - total / 2;
+        chars.forEach((ch, index) => {
+          ctx.fillText(ch, cursor + widths[index] / 2, y);
+          cursor += widths[index] + spacing;
+        });
+      }
+
+      function drawPitch() {
+        const horizon = H * 0.42;
+        const g = ctx.createLinearGradient(0, horizon, 0, H);
+        g.addColorStop(0, "#2f9a48");
+        g.addColorStop(1, "#0f4d2b");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(0, horizon);
+        ctx.lineTo(W, horizon);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        for (let i = 0; i < 13; i++) {
+          const x1 = W / 2 + (i - 6.5) * W * 0.065;
+          const x2 = W / 2 + (i - 6.5) * W * 0.18;
+          ctx.fillStyle = i % 2 ? "rgba(255,255,255,0.035)" : "rgba(0,0,0,0.055)";
+          ctx.beginPath();
+          ctx.moveTo(x1, horizon);
+          ctx.lineTo(x1 + W * 0.06, horizon);
+          ctx.lineTo(x2 + W * 0.18, H);
+          ctx.lineTo(x2, H);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.strokeStyle = "rgba(255,255,255,0.68)";
+        ctx.lineWidth = Math.max(2, W * 0.004);
+        ctx.beginPath();
+        ctx.ellipse(W / 2, H * 0.82, W * 0.31, H * 0.105, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(W / 2, H * 0.79, 5, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.86)";
+        ctx.fill();
+
+        for (let i = 0; i < 90; i++) {
+          const x = (i * 73) % W;
+          const y = H * 0.45 + ((i * 41) % Math.floor(H * 0.52));
+          const len = 6 + (i % 5);
+          ctx.strokeStyle = `rgba(210,255,210,${0.1 + (i % 4) * 0.035})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.quadraticCurveTo(x + Math.sin(grassWave * 3 + i) * 2, y - len * 0.55, x + 1, y - len);
+          ctx.stroke();
+        }
+      }
+
+      function drawGoal() {
+        const gx = W / 2;
+        const gy = H * 0.29;
+        const gw = W * 0.42;
+        const gh = H * 0.2;
+        const left = gx - gw / 2;
+        const right = gx + gw / 2;
+        const bottom = gy + gh;
+        ctx.save();
+        ctx.lineWidth = Math.max(4, W * 0.006);
+        ctx.strokeStyle = "#f8fbff";
+        ctx.shadowColor = "rgba(255,255,255,0.5)";
+        ctx.shadowBlur = 8;
+        ctx.strokeRect(left, gy, gw, gh);
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "rgba(255,255,255,0.28)";
+        ctx.lineWidth = 1;
+        const netWave = state === "goal" ? Math.sin(t * 18) * 5 : 0;
+        for (let i = 1; i < 10; i++) {
+          const x = left + (gw / 10) * i + netWave * Math.sin(i);
+          ctx.beginPath();
+          ctx.moveTo(x, gy);
+          ctx.lineTo(x + netWave, bottom);
+          ctx.stroke();
+        }
+        for (let i = 1; i < 7; i++) {
+          const y = gy + (gh / 7) * i + netWave * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(left, y);
+          ctx.lineTo(right, y + netWave * 0.3);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawKeeper() {
+        const saveActive = shot && (state === "shot" || state === "replay") && shot.saved;
+        const gx = shot && (state === "shot" || state === "replay") ? shot.keeperX : W / 2 + Math.sin(t * 1.8) * W * 0.035;
+        const gy = H * 0.43;
+        const dive = shot && (state === "shot" || state === "replay") ? shot.keeperDive * clamp(shot.p * 1.6, 0, 1) : 0;
+        const catchPose = saveActive && shot.saveType === "catch" && shot.p > 0.72;
+        const parryPose = saveActive && shot.saveType === "parry" && shot.p > 0.72;
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(dive * 0.45);
+        ctx.fillStyle = "#ff7a1a";
+        roundRect(-18, -42, 36, 52, 8);
+        ctx.fill();
+        ctx.fillStyle = "#ffd2a8";
+        ctx.beginPath();
+        ctx.arc(0, -55, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1b1b1b";
+        ctx.fillRect(-11, -69, 22, 8);
+        ctx.strokeStyle = "#ffb300";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(-15, -28);
+        ctx.lineTo(catchPose ? -10 : -50 - dive * 18, catchPose ? -54 : -38 - Math.abs(dive) * 22);
+        ctx.moveTo(15, -28);
+        ctx.lineTo(catchPose ? 10 : 50 - dive * 18, catchPose ? -54 : -38 + Math.abs(dive) * 22);
+        ctx.stroke();
+        if (catchPose || parryPose) {
+          ctx.fillStyle = "rgba(255,255,255,0.94)";
+          ctx.beginPath();
+          ctx.arc(catchPose ? -10 : -46, catchPose ? -54 : -42, 8, 0, Math.PI * 2);
+          ctx.arc(catchPose ? 10 : 46, catchPose ? -54 : -42, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffdf4d";
+          ctx.font = `900 ${clamp(W * 0.016, 15, 24)}px Segoe UI`;
+          ctx.textAlign = "center";
+          ctx.fillText(catchPose ? "CATCH!" : "PARRY!", 0, -98);
+        }
+        ctx.strokeStyle = "#263238";
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(-8, 8);
+        ctx.lineTo(-22, 46);
+        ctx.moveTo(8, 8);
+        ctx.lineTo(22, 46);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,0.88)";
+        ctx.font = `900 ${clamp(W * 0.011, 10, 14)}px Segoe UI`;
+        ctx.textAlign = "center";
+        ctx.fillText("SUPER SAVE", 0, -83);
+        ctx.restore();
+      }
+
+      function drawPlayer() {
+        if (!current) return;
+        let px = W / 2 + aim * W * 0.23;
+        let py = H * 0.82;
+        let leaving = 0;
+        if (state === "exit") {
+          leaving = Math.min(1, (t % 2));
+          px += leaving * W * 0.28;
+          py += Math.sin(leaving * Math.PI) * 12;
+        }
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.fillStyle = "rgba(0,0,0,0.28)";
+        ctx.beginPath();
+        ctx.ellipse(0, 42, 36, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = current.color;
+        roundRect(-21, -52, 42, 58, 9);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `900 ${clamp(W * 0.012, 11, 15)}px Segoe UI`;
+        ctx.textAlign = "center";
+        ctx.fillText(String(current.id + 7).slice(-2), 0, -18);
+        ctx.fillStyle = "#ffd4ad";
+        ctx.beginPath();
+        ctx.arc(0, -68, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#2b1b12";
+        ctx.beginPath();
+        ctx.ellipse(0, -78, 14, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#13232a";
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(-9, 2);
+        ctx.lineTo(-24, 45);
+        ctx.moveTo(9, 2);
+        const kick = state === "shot" ? -28 : 24;
+        ctx.lineTo(24, kick);
+        ctx.stroke();
+        ctx.strokeStyle = current.color;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(-20, -34);
+        ctx.lineTo(-42, -12 + Math.sin(t * 6) * 4);
+        ctx.moveTo(20, -34);
+        ctx.lineTo(42, -12 - Math.sin(t * 6) * 4);
+        ctx.stroke();
+        ctx.restore();
+
+        if (state === "aim") {
+          ctx.save();
+          ctx.strokeStyle = power >= 80 ? "rgba(255,77,109,0.72)" : "rgba(255,223,77,0.68)";
+          ctx.lineWidth = 3;
+          ctx.setLineDash([8, 7]);
+          ctx.beginPath();
+          ctx.moveTo(px, H * 0.77);
+          ctx.quadraticCurveTo(W / 2 + aim * W * 0.1, H * 0.56, W / 2 + aim * W * 0.19, H * 0.35);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+      }
+
+      function drawBall() {
+        let bx = W / 2 + aim * W * 0.23;
+        let by = H * 0.79;
+        let r = clamp(W * 0.018, 13, 22);
+        if (shot && (state === "shot" || state === "goal" || state === "replay")) {
+          bx = shot.x;
+          by = shot.y;
+          if (shot.saved && shot.p > 0.78) {
+            if (shot.saveType === "catch") {
+              bx = shot.keeperX;
+              by = H * 0.375;
+            } else {
+              const deflect = clamp((shot.p - 0.78) / 0.22, 0, 1);
+              bx = shot.keeperX + shot.keeperDive * W * 0.18 * deflect;
+              by = H * 0.38 - H * 0.08 * deflect;
+            }
+          }
+          r = lerp(clamp(W * 0.018, 13, 22), clamp(W * 0.009, 7, 13), clamp(shot.p, 0, 1));
+          ctx.strokeStyle = "rgba(255,255,255,0.42)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(shot.x0, shot.y0);
+          ctx.quadraticCurveTo((shot.x0 + bx) / 2, Math.min(shot.y0, by) - 90, bx, by);
+          ctx.stroke();
+        }
+        ctx.save();
+        ctx.translate(bx, by);
+        ctx.rotate(t * 7);
+        ctx.fillStyle = "#f7f7f7";
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#111";
+        ctx.lineWidth = Math.max(1, r * 0.12);
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.5, -r * 0.2);
+        ctx.lineTo(0, -r * 0.58);
+        ctx.lineTo(r * 0.5, -r * 0.2);
+        ctx.lineTo(r * 0.32, r * 0.42);
+        ctx.lineTo(-r * 0.32, r * 0.42);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawEffects() {
+        fireworks.forEach((f) => {
+          ctx.globalAlpha = clamp(f.life, 0, 1);
+          ctx.fillStyle = f.color;
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        });
+        confetti.forEach((c) => {
+          ctx.save();
+          ctx.globalAlpha = clamp(c.life, 0, 1);
+          ctx.translate(c.x, c.y);
+          ctx.rotate(c.rot);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-4, -2, 8, 4);
+          ctx.restore();
+        });
+        if (state === "replay") {
+          ctx.fillStyle = "rgba(255,255,255,0.12)";
+          ctx.font = `900 ${clamp(W * 0.04, 28, 62)}px Segoe UI`;
+          ctx.textAlign = "center";
+          ctx.fillText("SLOW MOTION REPLAY", W / 2, H * 0.24);
+        }
+      }
+
+      function drawVignette() {
+        const g = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.1, W / 2, H * 0.5, Math.max(W, H) * 0.7);
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(1, "rgba(0,0,0,0.46)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      function spawnFireworks() {
+        const colors = ["#ffdf4d", "#39ff88", "#28d4ff", "#ff4d6d", "#ffffff"];
+        for (let burst = 0; burst < 5; burst++) {
+          const ox = W * (0.18 + Math.random() * 0.64);
+          const oy = H * (0.12 + Math.random() * 0.24);
+          for (let i = 0; i < 34; i++) {
+            const a = (Math.PI * 2 * i) / 34;
+            const sp = 60 + Math.random() * 170;
+            fireworks.push({
+              x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+              life: 0.8 + Math.random() * 0.7, size: 2 + Math.random() * 4,
+              color: colors[(i + burst) % colors.length]
+            });
+          }
+        }
+        for (let i = 0; i < 90; i++) {
+          confetti.push({
+            x: Math.random() * W, y: -20 - Math.random() * H * 0.18,
+            vx: -40 + Math.random() * 80, vy: 80 + Math.random() * 180,
+            rot: Math.random() * 6.28, vr: -8 + Math.random() * 16,
+            life: 2 + Math.random() * 1.5,
+            color: colors[i % colors.length]
+          });
+        }
+      }
+
+      function netBlast() {
+        for (let i = 0; i < 26; i++) {
+          fireworks.push({
+            x: W / 2 + (Math.random() - 0.5) * W * 0.34,
+            y: H * 0.35 + Math.random() * H * 0.12,
+            vx: (Math.random() - 0.5) * 140,
+            vy: -40 + Math.random() * 80,
+            life: 0.45 + Math.random() * 0.45,
+            size: 1.5 + Math.random() * 3,
+            color: "rgba(255,255,255,0.9)"
+          });
+        }
+      }
+
+      function showToast(main, sub) {
+        toast.innerHTML = `${main}<small>${sub || ""}</small>`;
+        toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("show"), 1400);
+      }
+
+      function showTip(text) {
+        tipText.textContent = text;
+        tipModal.classList.remove("hidden");
+      }
+
+      function initAudio() {
+        if (audio) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        audio = new AC();
+      }
+
+      function tone(freq, duration, type, gainValue) {
+        if (!audio) return;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = type || "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(gainValue || 0.08, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.start();
+        osc.stop(audio.currentTime + duration);
+      }
+
+      function playBlip(freq, dur) {
+        tone(freq, dur, "triangle", 0.06);
+      }
+
+      function whistle() {
+        tone(1400, 0.12, "sine", 0.08);
+        setTimeout(() => tone(1720, 0.14, "sine", 0.06), 70);
+      }
+
+      function goalSound() {
+        [330, 440, 660, 880].forEach((f, i) => setTimeout(() => tone(f, 0.2, "square", 0.055), i * 90));
+      }
+
+      function keeperSaveSound(type) {
+        if (type === "catch") {
+          tone(72, 0.12, "square", 0.09);
+          setTimeout(() => tone(118, 0.16, "triangle", 0.05), 60);
+        } else {
+          tone(180, 0.08, "sawtooth", 0.07);
+          setTimeout(() => tone(95, 0.18, "square", 0.055), 80);
+        }
+      }
+
+      function boo() {
+        tone(120, 0.35, "sawtooth", 0.04);
+        setTimeout(() => tone(95, 0.3, "sawtooth", 0.035), 140);
+      }
+
+      function startCrowd() {
+        if (!audio || startCrowd.started) return;
+        startCrowd.started = true;
+        const bufferSize = 2 * audio.sampleRate;
+        const buffer = audio.createBuffer(1, bufferSize, audio.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = audio.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+        const filter = audio.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.value = 420;
+        filter.Q.value = 0.7;
+        const gain = audio.createGain();
+        gain.gain.value = 0.015;
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audio.destination);
+        noise.start();
+        setInterval(() => {
+          if (!audio) return;
+          gain.gain.setTargetAtTime(0.012 + crowdLevel * 0.05, audio.currentTime, 0.4);
+        }, 300);
+      }
+
+      function loop(now) {
+        const dt = Math.min(0.033, ((now - loop.last) || 16) / 1000);
+        loop.last = now;
+        update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function downKey(key) {
+        if (key === "ArrowLeft") keys.add("ArrowLeft");
+        if (key === "ArrowRight") keys.add("ArrowRight");
+        if ((key === "d" || key === "D") && state === "aim") charging = true;
+      }
+
+      function upKey(key) {
+        if (key === "ArrowLeft") keys.delete("ArrowLeft");
+        if (key === "ArrowRight") keys.delete("ArrowRight");
+        if ((key === "d" || key === "D") && state === "aim") shoot();
+      }
+
+      function bindHold(button, keyName, onRelease) {
+        const start = (e) => {
+          e.preventDefault();
+          if (keyName === "shoot") charging = true;
+          else keys.add(keyName);
+        };
+        const end = (e) => {
+          e.preventDefault();
+          if (keyName === "shoot") {
+            if (onRelease) onRelease();
+          } else {
+            keys.delete(keyName);
+          }
+        };
+        button.addEventListener("pointerdown", start);
+        button.addEventListener("pointerup", end);
+        button.addEventListener("pointercancel", end);
+        button.addEventListener("pointerleave", end);
+      }
+
+      window.addEventListener("resize", resize);
+      window.addEventListener("keydown", (e) => {
+        if (["ArrowLeft", "ArrowRight", " ", "d", "D"].includes(e.key)) e.preventDefault();
+        downKey(e.key);
+      });
+      window.addEventListener("keyup", (e) => upKey(e.key));
+      startBtn.addEventListener("click", startGame);
+      tipClose.addEventListener("click", () => {
+        tipModal.classList.add("hidden");
+      });
+      nicknameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") startGame();
+      });
+      bindHold(leftBtn, "left");
+      bindHold(rightBtn, "right");
+      bindHold(shootBtn, "shoot", shoot);
+
+      setupCards();
+      resize();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
