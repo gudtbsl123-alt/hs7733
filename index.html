@@ -228,6 +228,7 @@
       text-decoration: none;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+      border: none;
     }
 
     .launch-btn:hover { background: #f1f5f9; }
@@ -243,96 +244,63 @@
     }
 
     /* ============================================================
-       🌟 [근본 해결 코어] 유니버설 반응형 자동 매칭 실시간 가상 실행기 프레임
+       🌟 [근본 해결 코어] 완벽하게 기기 해상도를 복제하는 게임 실행기 프레임
        ============================================================ */
     .game-master-overlay {
       position: fixed;
       inset: 0;
-      background: #09090b;
+      background: #000000; /* 몰입형 풀블랙 배경 */
       z-index: 99999;
-      display: none;
-      flex-direction: column;
+      display: none; /* 플렉스로 제어 */
       align-items: center;
       justify-content: center;
-      padding: 0;
+      overflow: hidden;
       touch-action: none;
     }
 
-    /* 반응형 크기 유지를 위한 컨테이너 */
-    .game-console-wrapper {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
+    /* 플로팅 닫기 버튼 (항상 우측 상단 고정, 스케일링 영향 받지 않음) */
+    .floating-close-btn {
+      position: absolute;
+      top: env(safe-area-inset-top, 15px);
+      right: env(safe-area-inset-right, 15px);
+      z-index: 100000;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.7);
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s;
     }
+    .floating-close-btn:active { transform: scale(0.95); }
 
     /* 마스터 가상 콘솔 본체 */
     .game-console-box {
-      position: relative;
-      width: 960px;  /* 표준 가로 가상 베이스 해상도 */
-      height: 690px; /* 표준 세로 가상 베이스 해상도 */
-      background: #151518;
-      border: 4px solid #ffd700;
-      border-radius: 20px;
-      padding: 12px;
+      position: absolute; /* 동적 스크립트에 의해 제어됨 */
+      margin: 0;
+      padding: 0;
+      border: none;
       display: flex;
       flex-direction: column;
-      transform-origin: center center;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-      transition: width 0.2s, height 0.2s;
+      background: #000;
+      /* 크기와 transform은 자바스크립트가 실시간 기기 비율로 계산하여 주입 */
     }
-
-    .console-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 8px;
-      border-bottom: 2px solid rgba(255,255,255,0.1);
-      margin-bottom: 8px;
-      width: 100%;
-    }
-
-    .console-title { font-size: 16px; font-weight: 800; color: #ffd700; }
-    
-    .console-close-btn {
-      background: #ef4444;
-      color: white;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 10px;
-      font-weight: 800;
-      font-size: 14px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
-      transition: background 0.2s;
-    }
-    .console-close-btn:hover { background: #dc2626; }
 
     /* 모듈 임베딩 프레임 */
     .game-frame-iframe {
       width: 100%;
+      height: 100%;
       flex: 1;
       border: none;
-      background: #000;
-      border-radius: 8px;
+      display: block;
+      background: #111;
     }
 
-    /* 📱 기기 화면 종횡비에 따른 특수 미디어 쿼리 패치 */
-    @media (max-width: 600px) or (max-aspect-ratio: 13/19) {
-      /* 스마트폰 세로형 비율 감지 시, 가상 캔버스를 900x1200 규격 모바일 전 전용 장치로 가변 변경 */
-      .game-console-box {
-        width: 900px;
-        height: 1300px; /* 모바일 기기 화면 비율에 맞추어 레이아웃 가로세로 대대적 확장 */
-        padding: 20px;
-      }
-      .console-title { font-size: 28px; }
-      .console-close-btn { padding: 12px 24px; font-size: 22px; border-radius: 14px; }
-    }
-
-    /* 모달 기본 오픈 스타일 */
+    /* 관리자 팝업 모달 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -352,8 +320,10 @@
       padding: 36px;
       width: 100%;
       max-width: 520px;
+      color: white;
     }
 
+    .modal-box h2 { font-size: 24px; margin-bottom: 10px; }
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px; }
     .form-group input, .form-group select, .form-group textarea { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; color: #ffffff; }
@@ -393,7 +363,7 @@
   <div id="passwordModal" class="modal-overlay">
     <div class="modal-box">
       <h2>🔒 관리자 인증</h2>
-      <p>시스템 제어를 위해 패스워드를 입력하세요.</p>
+      <p style="color:#aaa; margin-bottom: 20px;">시스템 제어를 위해 패스워드를 입력하세요.</p>
       <div class="form-group">
         <input type="password" id="adminPasswordInput" placeholder="비밀번호를 입력하세요..." onkeyup="if(event.key==='Enter') verifyPassword()">
       </div>
@@ -426,14 +396,9 @@
   </div>
 
   <div id="gameMasterConsole" class="game-master-overlay">
-      <div class="game-console-wrapper">
-          <div class="game-console-box" id="gameConsoleBox">
-              <div class="console-header">
-                  <span class="console-title" id="consoleGameTitle">🎮 에듀테크 가상 플레이어</span>
-                  <button class="console-close-btn" onclick="shutdownConsole()">게임 종료 ✖</button>
-              </div>
-              <iframe src="" class="game-frame-iframe" id="gameMasterIframe"></iframe>
-          </div>
+      <button class="floating-close-btn" onclick="shutdownConsole()">✖ 닫기</button>
+      <div class="game-console-box" id="gameConsoleBox">
+          <iframe src="" class="game-frame-iframe" id="gameMasterIframe"></iframe>
       </div>
   </div>
 
@@ -441,6 +406,7 @@
     let isAdminAuthenticated = false;
     let selectedCategory = "전체";
 
+    // 기본 게임 리스트 스펙
     const initialGames = [
       { id: 1, icon: "🪙", title: "분수 월드", desc: "점프하며 분수 문제를 해결하는 RPG 스타일 학습 게임!", category: "분수", url: "./mario.html" },
       { id: 2, icon: "➗", title: "약분 챌린지", desc: "빠르게 약분하며 최고 점수에 도전하는 스피드 게임!", category: "연산", url: "./airplane.html" },
@@ -475,7 +441,7 @@
     function closeAdminModal() { closeModal('adminModal'); }
 
     function checkAdminPassword() { if(isAdminAuthenticated) openAdminForm(); else { document.getElementById('adminPasswordInput').value = ""; showModal('passwordModal'); } }
-    function verifyPassword() { const pw = document.getElementById('adminPasswordInput').value; if(pw === "1234") { isAdminAuthenticated = true; closeModal('passwordModal'); openAdminForm(); } else { alert("❌ 인증 거부"); } }
+    function verifyPassword() { const pw = document.getElementById('adminPasswordInput').value; if(pw === "gudtns12") { isAdminAuthenticated = true; closeModal('passwordModal'); openAdminForm(); } else { alert("❌ 인증 거부: 암호가 틀렸습니다."); } }
 
     function filterCategory(category, btnElement) { selectedCategory = category; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active')); btnElement.classList.add('active'); renderGamesGrid(); }
 
@@ -487,12 +453,12 @@
       filtered.forEach(game => {
         const card = document.createElement('div');
         card.className = "game-card";
-        let actionHtml = `<button onclick="bootUpGameConsole('${game.url}', '${game.title}')" class="launch-btn">🚀 학습 시작하기</button>`;
+        let actionHtml = `<button onclick="bootUpGameConsole('${game.url}')" class="launch-btn">🚀 학습 시작하기</button>`;
         
         if(isAdminAuthenticated) {
           actionHtml = `
             <button class="card-del-btn" onclick="openAdminForm(${game.id})">수정</button>
-            <button onclick="bootUpGameConsole('${game.url}', '${game.title}')" class="launch-btn">🚀 테스트 실행</button>
+            <button onclick="bootUpGameConsole('${game.url}')" class="launch-btn">🚀 게임 실행</button>
             <button class="card-del-btn" style="background:rgba(239,68,68,0.2); color:#f87171;" onclick="deleteGameCard(${game.id})">삭제</button>
           `;
         }
@@ -503,15 +469,15 @@
     }
 
     // ============================================================
-    // 🌟 [하이브리드 엔진 핵심 스크립트] 
-    // 어떤 기기의 화면 비율이든 실시간으로 실측하여 정밀 스케일링하는 코어 함수
+    // 🌟 [핵심] 완벽한 비율 유지를 보장하는 가상 스케일링 엔진
     // ============================================================
-    function bootUpGameConsole(url, title) {
-      document.getElementById('consoleGameTitle').innerText = `🎮 플레이 중: ${title}`;
+    function bootUpGameConsole(url) {
       const iframe = document.getElementById('gameMasterIframe');
       iframe.src = url;
       
-      document.getElementById('gameMasterConsole').style.display = 'flex';
+      const overlay = document.getElementById('gameMasterConsole');
+      overlay.style.display = 'flex';
+      
       resizeConsoleLayout(); 
       window.addEventListener('resize', resizeConsoleLayout);
     }
@@ -523,25 +489,74 @@
     }
 
     function resizeConsoleLayout() {
+      const overlay = document.getElementById('gameMasterConsole');
       const box = document.getElementById('gameConsoleBox');
-      if (!box || document.getElementById('gameMasterConsole').style.display === 'none') return;
+      if (!box || overlay.style.display === 'none') return;
 
-      // 1. 기기 브라우저가 스마트폰(세로형) 비율인지, 태블릿/PC(가로형) 비율인지 실시간 감지
-      const isMobilePortrait = window.innerWidth < 600 || (window.innerHeight / window.innerWidth) > 1.35;
-      
-      // 2. 비율 조건에 맞는 가상 베이스 디자인 규격 할당
-      const designWidth = isMobilePortrait ? 900 : 960;
-      const designHeight = isMobilePortrait ? 1300 : 690;
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
 
-      // 3. 기기의 가용 상하좌우 마진 패딩 제외 영역 실측
-      const availableWidth = window.innerWidth - 12;
-      const availableHeight = window.innerHeight - 12;
+      // [1] 스마트폰 (세로 모드) - 종횡비를 복사하여 꽉 찬 화면 구현
+      if (screenH > screenW) {
+        const baseWidth = 900; // 내부 게임이 인식할 가로 해상도 강제 고정
+        const baseHeight = baseWidth * (screenH / screenW); // 실제 기기의 세로 비율에 맞춰 가상 세로 길이 창출
+        
+        box.style.width = baseWidth + 'px';
+        box.style.height = baseHeight + 'px';
+        box.style.borderRadius = '0px';
+        box.style.border = 'none';
 
-      // 4. 어떤 기기든 한 화면에 가두는 스케일 비율 계산
-      const scale = Math.min(availableWidth / designWidth, availableHeight / designHeight);
+        const scale = screenW / baseWidth;
+        box.style.transform = `scale(${scale})`;
+        
+        // 여백이나 어긋남 없이 좌상단에 정확히 자석처럼 부착
+        box.style.position = 'absolute';
+        box.style.top = '0px';
+        box.style.left = '0px';
+        box.style.transformOrigin = 'top left';
+      } 
+      // [2] PC / 태블릿 (가로 모드) - 콘솔 디자인 유지하며 중앙 안착
+      else {
+        const availW = screenW - 40;
+        const availH = screenH - 40;
 
-      // 5. 실시간 CSS 변환 행렬 적용 (태블릿은 완만하게, 스마트폰은 컴팩트하게)
-      box.style.transform = `scale(${scale})`;
+        const designWidth = 960;
+        const designHeight = 650;
+
+        const scale = Math.min(availW / designWidth, availH / designHeight);
+
+        box.style.width = designWidth + 'px';
+        box.style.height = designHeight + 'px';
+        box.style.borderRadius = '24px';
+        box.style.border = '4px solid #ffd700';
+
+        box.style.transform = `scale(${scale})`;
+        
+        // 정중앙 정렬
+        box.style.position = 'relative';
+        box.style.top = 'auto';
+        box.style.left = 'auto';
+        box.style.transformOrigin = 'center center';
+      }
+    }
+
+    function openAdminForm(gameId = null) {
+      document.getElementById('gameId').value = gameId || "";
+      if(gameId) {
+        document.getElementById('modalTitle').innerText = "⚙️ 에듀테크 모듈 명세 수정";
+        const game = currentGames.find(g => g.id === gameId);
+        if(game) {
+          document.getElementById('gameTitleInput').value = game.title;
+          document.getElementById('gameIconInput').value = game.icon;
+          document.getElementById('gameCategorySelect').value = game.category;
+          document.getElementById('gameDescInput').value = game.desc;
+          document.getElementById('gameUrlInput').value = game.url;
+        }
+      } else {
+        document.getElementById('modalTitle').innerText = "➕ 새 에듀테크 모듈 등록";
+        document.getElementById('gameTitleInput').value = ""; document.getElementById('gameIconInput').value = "🎮"; document.getElementById('gameDescInput').value = ""; document.getElementById('gameUrlInput').value = "";
+      }
+      showModal('adminModal');
     }
 
     function saveGameCard() {
