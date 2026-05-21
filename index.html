@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>✨에듀테크 게임 저장소✨</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
     }
 
     body {
-      min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
       color: #f8fafc;
       background: linear-gradient(-45deg, #071a52, #0f3460, #1b1b7a, #533483, #7c3aed, #c026d3, #ea580c);
@@ -291,14 +291,15 @@
     }
 
     /* 모듈 임베딩 프레임 */
-    .game-frame-iframe {
-      width: 100%;
-      height: 100%;
-      flex: 1;
-      border: none;
-      display: block;
-      background: #111;
-    }
+   .game-frame-iframe {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  border: none;
+  display: block;
+  background: #111;
+  overflow: hidden;
+}
 
     /* 관리자 팝업 모달 */
     .modal-overlay {
