@@ -405,9 +405,52 @@
     let selectedCategory = "전체";
 
     // 기본 게임 리스트 스펙
-    const initialGames = [
-      { id: 3, icon: "🚀", title: "우주 수학 탐험", desc: "행성을 여행하며 다양한 수학 미션을 해결하세요!", category: "수학", url: "./airplane.html" },
-      { id: 7, icon: "🍁", title: "바람의 나라 분수 모험", desc: "분수의 덧셈과 뺄셈 문제를 해결하며 바람의 나라 세계를 탐험하세요!", category: "수학", url: "./baram.html" }    ];
+  const initialGames = [
+  {
+    id: 3,
+    icon: "🚀",
+    title: "우주 수학 탐험 (약분, 통분, 기약분수)",
+    desc: "행성을 여행하며 약분, 통분, 기약분수 문제를 해결하세요!",
+    category: "수학",
+    url: "#space-math-menu"
+  },
+
+  {
+    id: 4,
+    icon: "✈️",
+    title: "에어플레인 수학 탐험",
+    desc: "비행기를 조종하며 수학 미션을 해결하세요!",
+    category: "수학",
+    url: "./airplane.html"
+  },
+
+  {
+    id: 5,
+    icon: "🛡️",
+    title: "디펜스 수학 탐험",
+    desc: "적을 막아내며 수학 문제를 해결하세요!",
+    category: "수학",
+    url: "./defence.html"
+  },
+
+  {
+    id: 7,
+    icon: "🍁",
+    title: "수학의 나라 (분수의 덧셈과 뺄셈)",
+    desc: "분수의 덧셈과 뺄셈 문제를 해결하며 모험을 떠나세요!",
+    category: "수학",
+    url: "./baram.html"
+  },
+
+  {
+    id: 8,
+    icon: "🍄",
+    title: "마리오 분수 구출대작전",
+    desc: "약분과 통분 문제를 해결하며 피치공주를 구하세요!",
+    category: "수학",
+    url: "./mario.html"
+  }
+];
 
     let currentGames = [];
 
@@ -445,7 +488,16 @@
       filtered.forEach(game => {
         const card = document.createElement('div');
         card.className = "game-card";
-        let actionHtml = `<button onclick="bootUpGameConsole('${game.url}')" class="launch-btn">🚀 학습 시작하기</button>`;
+       let actionHtml = "";
+
+if (game.url === "#space-math-menu") {
+  actionHtml = `
+    <button onclick="bootUpGameConsole('./airplane.html')" class="launch-btn">✈️ Airplane</button>
+    <button onclick="bootUpGameConsole('./defence.html')" class="launch-btn">🛡️ Defence</button>
+  `;
+} else {
+  actionHtml = `<button onclick="bootUpGameConsole('${game.url}')" class="launch-btn">🚀 학습 시작하기</button>`;
+}
         
         if(isAdminAuthenticated) {
           actionHtml = `
