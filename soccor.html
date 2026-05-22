@@ -1693,29 +1693,8 @@
       }
 
       function startCrowd() {
-        if (!audio || startCrowd.started) return;
-        startCrowd.started = true;
-        const bufferSize = 2 * audio.sampleRate;
-        const buffer = audio.createBuffer(1, bufferSize, audio.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = audio.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = true;
-        const filter = audio.createBiquadFilter();
-        filter.type = "bandpass";
-        filter.frequency.value = 420;
-        filter.Q.value = 0.7;
-        const gain = audio.createGain();
-        gain.gain.value = 0.015;
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(audio.destination);
-        noise.start();
-        setInterval(() => {
-          if (!audio) return;
-          gain.gain.setTargetAtTime(0.012 + crowdLevel * 0.05, audio.currentTime, 0.4);
-        }, 300);
+        // 관중 소리 비활성화
+        return;
       }
 
       function loop(now) {
@@ -1782,3 +1761,8 @@
   </script>
 </body>
 </html>
+}
+내가 첨부한 파일 중에 사회 1단원 이라고 된 파일에 문제들 있잖아. 그거를 soccor 게임에 문제만 바꿔끼워줘.
+그리고 60문제 너무 많으니까 20문제로 간추려줘.
+난이도는 상, 중, 하 문제 섞이게 알아서 해주고.
+나머지 코드는 그대로 둬.
