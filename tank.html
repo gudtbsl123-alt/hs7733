@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CYBER TANK: GEOGRAPHY WARS</title>
+  <style>
+    :root {
+      --bg: #050510;
+      --neon-blue: #00f3ff;
+      --neon-red: #ff003c;
+      --neon-green: #39ff14;
+      --neon-yellow: #fffb00;
+      --neon-purple: #b700ff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; }
+    
+    body {
+      background-color: var(--bg);
+      color: #fff;
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #gameCanvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    #tensionOverlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, transparent 40%, rgba(255, 0, 0, 0.4) 100%);
+      opacity: 0;
+      z-index: 2;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #tensionOverlay.active { animation: pulseAlert 1s infinite alternate; }
+    @keyframes pulseAlert { 0% { opacity: 0.3; } 100% { opacity: 0.7; } }
+
+    #flashOverlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #ffffff;
+      opacity: 0;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    #uiLayer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 3; display: flex; flex-direction: column; justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .hud {
+      display: flex; justify-content: space-between; padding: 15px 20px;
+      font-weight: 900; font-size: 1.2rem; text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+    .hp-bar-container {
+      width: 40%; height: 20px; background: rgba(255,255,255,0.1);
+      border: 2px solid #fff; border-radius: 10px; overflow: hidden; position: relative;
+    }
+    .hp-fill { height: 100%; transition: width 0.3s ease; }
+    #bossHp { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); width: 100%; float: right; }
+    #playerHp { background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); width: 100%; }
+    .hp-labels { display: flex; justify-content: space-between; width: 100%; position: absolute; top: 45px; padding: 0 20px; font-size: 1rem;}
+
+    /* Combo & Special Attack UI */
+    .combo-container {
+      position: absolute; top: 80px; left: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .combo-text { font-size: 1.5rem; font-weight: 900; color: var(--neon-yellow); text-shadow: 0 0 10px var(--neon-yellow); }
+    .special-btn {
+      background: rgba(0,0,0,0.6); border: 2px solid #555; color: #555;
+      padding: 5px 15px; border-radius: 8px; font-weight: 900; text-align: left;
+      transition: all 0.3s;
+    }
+    .special-btn.ready-z { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); animation: pulseZ 1s infinite alternate;}
+    .special-btn.ready-x { border-color: var(--neon-purple); color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); animation: pulseX 1s infinite alternate;}
+    .special-btn.ready-c { border-color: var(--neon-yellow); color: var(--neon-yellow); box-shadow: 0 0 20px var(--neon-yellow); animation: pulseC 0.5s infinite alternate; background: rgba(255,251,0,0.2);}
+    
+    @keyframes pulseZ { to { box-shadow: 0 0 20px var(--neon-green); text-shadow: 0 0 10px var(--neon-green); } }
+    @keyframes pulseX { to { box-shadow: 0 0 20px var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); } }
+    @keyframes pulseC { to { box-shadow: 0 0 40px var(--neon-yellow); text-shadow: 0 0 20px var(--neon-yellow); transform: scale(1.05); } }
+
+    #tauntBox {
+      position: absolute; top: 15%; left: 50%; transform: translateX(-50%) scale(0);
+      background: rgba(255, 0, 60, 0.9); border: 2px solid #fff; padding: 10px 20px;
+      border-radius: 20px; font-weight: 900; font-size: 1.2rem; text-align: center;
+      box-shadow: 0 0 20px var(--neon-red); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #tauntBox.show { transform: translateX(-50%) scale(1); }
+
+    .control-panel {
+      padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0));
+      pointer-events: auto;
+    }
+    .question-box {
+      text-align: center; font-size: 1.8rem; font-weight: 900; margin-bottom: 20px;
+      text-shadow: 0 0 10px var(--neon-blue); background: rgba(0, 243, 255, 0.1);
+      padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 243, 255, 0.3);
+      word-break: keep-all;
+    }
+    .answers-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 800px; margin: 0 auto;
+    }
+    .answer-btn {
+      background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 1.3rem; font-weight: 800; padding: 15px 10px;
+      border-radius: 10px; cursor: pointer; transition: all 0.1s;
+      word-break: keep-all;
+    }
+    .answer-btn:active { transform: translateY(4px); }
+    .answer-btn.correct { background: rgba(57, 255, 20, 0.3); border-color: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); }
+    .answer-btn.wrong { background: rgba(255, 0, 60, 0.3); border-color: var(--neon-red); box-shadow: 0 0 15px var(--neon-red); }
+
+    /* Screens & Modals */
+    .screen {
+      position: absolute; inset: 0; background: rgba(5,5,16,0.98);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 20; pointer-events: auto;
+    }
+    .screen.hidden { display: none; }
+    h1 { font-size: 4rem; color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue); margin-bottom: 10px; text-align: center; line-height: 1.1;}
+    
+    .lobby-box {
+      background: rgba(255,255,255,0.05); border: 2px solid var(--neon-blue);
+      border-radius: 20px; padding: 30px; text-align: center; width: 90%; max-width: 600px;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+    }
+    input[type="text"], select {
+      background: rgba(0,0,0,0.5); border: 2px solid var(--neon-blue); color: #fff;
+      font-size: 1.5rem; padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 20px;
+      text-align: center; font-weight: 900; outline: none;
+    }
+    input[type="text"]:focus { box-shadow: 0 0 15px var(--neon-blue); }
+    
+    .tank-selector {
+      display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;
+    }
+    .arrow-btn {
+      background: transparent; border: none; color: var(--neon-yellow); font-size: 3rem;
+      cursor: pointer; text-shadow: 0 0 10px var(--neon-yellow);
+    }
+    .arrow-btn:active { transform: scale(0.8); }
+    #previewCanvas { background: rgba(0,0,0,0.5); border-radius: 15px; border: 1px solid #555; }
+
+    .start-btn {
+      background: transparent; color: var(--neon-yellow); border: 3px solid var(--neon-yellow);
+      padding: 15px 40px; font-size: 2rem; font-weight: 900; border-radius: 50px;
+      cursor: pointer; box-shadow: 0 0 20px rgba(255,251,0,0.4); transition: all 0.2s; width: 100%;
+    }
+    .start-btn:active { transform: scale(0.95); }
+
+    /* Hint Popup */
+    .hint-box {
+      background: rgba(255, 0, 60, 0.15); border: 2px solid var(--neon-red);
+      border-radius: 15px; padding: 30px; text-align: center; max-width: 600px; width: 90%;
+      box-shadow: 0 0 30px rgba(255, 0, 60, 0.4);
+      backdrop-filter: blur(10px);
+    }
+    .hint-box h2 { color: var(--neon-red); margin-bottom: 15px; text-shadow: 0 0 10px var(--neon-red); }
+    .hint-box p { font-size: 1.3rem; line-height: 1.5; margin-bottom: 25px; word-break: keep-all; }
+    .hint-btn {
+      background: rgba(255, 0, 60, 0.2); color: #fff; border: 2px solid var(--neon-red);
+      padding: 15px 30px; font-size: 1.5rem; font-weight: 900; border-radius: 30px;
+      cursor: pointer; box-shadow: 0 0 15px var(--neon-red); transition: all 0.2s;
+    }
+    .hint-btn:active { transform: scale(0.95); }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2.5rem; }
+      .question-box { font-size: 1.3rem; }
+      .answer-btn { font-size: 1.1rem; padding: 10px 5px; }
+      .combo-text { font-size: 1.2rem; }
+      .hint-box p { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="gameCanvas"></canvas>
+  <div id="tensionOverlay"></div>
+  <div id="flashOverlay"></div>
+
+  <div id="uiLayer">
+    <div class="hud">
+      <div class="hp-bar-container"><div id="playerHp" class="hp-fill"></div></div>
+      <div class="hp-bar-container"><div id="bossHp" class="hp-fill"></div></div>
+    </div>
+    <div class="hp-labels">
+      <span id="playerNicknameDisplay" style="color:var(--neon-blue);">PLAYER</span>
+      <span style="color:var(--neon-red);">우리나라 국토여행 보스</span>
+    </div>
+
+    <div class="combo-container">
+      <div class="combo-text" id="comboText">COMBO: 0</div>
+      <div class="special-btn" id="btnZ">[Z] 하이퍼 플라즈마 (3연속)</div>
+      <div class="special-btn" id="btnX">[X] 융단 폭격 (4연속)</div>
+      <div class="special-btn" id="btnC">[C] 아마겟돈 스트라이크 (5연속)</div>
+    </div>
+
+    <div id="tauntBox"></div>
+
+    <div class="control-panel" id="controls">
+      <div class="question-box" id="questionText">Ready?</div>
+      <div class="answers-grid" id="answersGrid"></div>
+    </div>
+  </div>
+
+  <div id="lobbyScreen" class="screen">
+    <h1>CYBER TANK<br><span style="color:var(--neon-yellow);">GEOGRAPHY WARS</span></h1>
+    <div class="lobby-box">
+      <input type="text" id="nicknameInput" placeholder="닉네임을 입력하세요" maxlength="10">
+      
+      <select id="difficultySelect">
+        <option value="all">난이도: 전체 섞기 (60문제)</option>
+        <option value="low">난이도: 하 (기초 개념)</option>
+        <option value="mid">난이도: 중 (특징 이해)</option>
+        <option value="high">난이도: 상 (심화 해결)</option>
+      </select>
+
+      <div style="color:#aaa; margin-bottom:5px;">기체 선택 (30종)</div>
+      <div class="tank-selector">
+        <button class="arrow-btn" onclick="changeTank(-1)">◀</button>
+        <canvas id="previewCanvas" width="120" height="120"></canvas>
+        <button class="arrow-btn" onclick="changeTank(1)">▶</button>
+      </div>
+      <div id="tankName" style="color:var(--neon-blue); font-weight:bold; margin-bottom: 20px;">모델 NO. 1</div>
+
+      <button class="start-btn" id="startBtn">SYSTEM START</button>
+    </div>
+  </div>
+
+  <div id="hintModal" class="screen hidden" style="z-index: 30; background: rgba(0,0,0,0.85);">
+    <div class="hint-box">
+      <h2>⚠️ 시스템 해킹 경고 (오답)</h2>
+      <p id="hintText">힌트 텍스트가 여기에 표시됩니다.</p>
+      <button class="hint-btn" onclick="closeHint()">데이터 복구 (다음 문제)</button>
+    </div>
+  </div>
+
+  <div id="endScreen" class="screen hidden">
+    <h1 id="endTitle">MISSION FAILED</h1>
+    <p style="color:#aaa; font-size:1.2rem; margin-bottom:30px;" id="endSub">보스에게 지리 데이터를 모두 빼앗겼습니다.</p>
+    <button class="start-btn" id="restartBtn">REBOOT</button>
+  </div>
+
+<script>
+  // --- Question Database (5th Grade Social Studies 1-1, Geography & Population) ---
+  const qDB = [
+    { d: 'low', q: "한 지역에서 오랫동안 나타나는 평균적인 대기 상태를 무엇이라고 하나요?", a: "기후", options: ["기후", "날씨", "계절", "지형"], hint: "날씨는 매일 변하지만, '이것'은 일 년 내내 비슷한 상태를 말해요." },
+    { d: 'low', q: "우리나라의 여름철 기후 특징으로 알맞은 것은?", a: "덥고 비가 많이 온다.", options: ["덥고 비가 많이 온다.", "춥고 눈이 많이 온다.", "따뜻하고 건조하다.", "서늘하고 비가 적다."], hint: "여름방학 때 에어컨을 틀고 장마를 겪었던 기억을 떠올려보세요!" },
+    { d: 'low', q: "우리나라의 겨울철에 주로 부는 바람의 방향은?", a: "북서풍", options: ["북서풍", "남동풍", "북동풍", "남서풍"], hint: "겨울에는 시베리아 쪽(북서쪽)에서 차갑고 건조한 바람이 불어와요." },
+    { d: 'low', q: "여름철에 주로 불어오는 따뜻하고 습한 바람의 방향은?", a: "남동풍", options: ["남동풍", "북서풍", "편서풍", "무역풍"], hint: "여름에는 적도 바다 쪽(남동쪽)에서 덥고 습한 바람이 불어와요." },
+    { d: 'low', q: "일정한 공간에 사람들이 흩어져 있거나 모여 있는 상태를 무엇이라고 하나요?", a: "인구 분포", options: ["인구 분포", "인구 밀도", "인구 이동", "인구 성장"], hint: "사람들(인구)이 어떻게 나뉘어(분포) 살고 있는지를 묻는 말이에요." },
+    { d: 'low', q: "산지, 하천, 평야 등 땅의 생김새를 이르는 말은?", a: "지형", options: ["지형", "기후", "산업", "교통"], hint: "땅(지)의 모양(형)을 뜻하는 단어입니다." },
+    { d: 'low', q: "여름부터 가을 사이에 발생하며, 강한 바람과 많은 비를 동반하는 자연재해는?", a: "태풍", options: ["태풍", "폭설", "지진", "가뭄"], hint: "뉴스에서 '매미', '루사' 같은 이름으로 불리며 큰 바람을 몰고 오는 재해예요." },
+    { d: 'low', q: "오랫동안 비가 오지 않아 물이 부족해지는 자연재해는?", a: "가뭄", options: ["가뭄", "홍수", "한파", "폭염"], hint: "땅이 쩍쩍 갈라지고 농작물이 말라 죽는 현상이에요." },
+    { d: 'low', q: "짧은 시간에 많은 비가 내려 하천이 넘치고 땅이 물에 잠기는 자연재해는?", a: "홍수", options: ["홍수", "폭설", "지진", "황사"], hint: "물이 넘쳐서 집과 도로가 잠기는 무서운 재해입니다." },
+    { d: 'low', q: "우리나라에서 사람들이 가장 많이 모여 사는 지역은 어디인가요?", a: "수도권", options: ["수도권", "강원도 산간", "제주도", "호남 평야"], hint: "서울, 인천, 경기도를 하나로 묶어서 부르는 이름이에요." },
+    { d: 'low', q: "겨울철에 눈이 아주 많이 내리는 자연재해는?", a: "폭설", options: ["폭설", "우박", "장마", "태풍"], hint: "눈(설)이 폭발하듯(폭) 엄청나게 쏟아지는 현상입니다." },
+    { d: 'low', q: "땅이 몹시 흔들리고 갈라지는 자연재해는?", a: "지진", options: ["지진", "가뭄", "홍수", "폭염"], hint: "땅(지)이 흔들리는(진) 현상이에요. 책상 밑으로 숨어야 해요!" },
+    { d: 'low', q: "우리나라는 어느 계절에 강수량(비나 눈이 내린 양)이 가장 집중되나요?", a: "여름", options: ["여름", "봄", "가을", "겨울"], hint: "장마와 태풍이 오는 덥고 습한 계절에 비가 가장 많이 와요." },
+    { d: 'low', q: "봄철에 중국이나 몽골의 사막에서 날아오는 모래 먼지를 무엇이라고 하나요?", a: "황사", options: ["황사", "태풍", "장마", "한파"], hint: "누런(황) 모래(사) 먼지가 날아오는 현상이에요." },
+    { d: 'low', q: "인구가 빽빽하게 모여 있는 정도를 나타내는 말은?", a: "인구 밀도", options: ["인구 밀도", "인구 성장률", "인구 이동", "인구 수"], hint: "얼마나 빽빽한가(밀도)를 나타내는 말이에요." },
+    { d: 'low', q: "여름철에 비가 며칠 동안 계속해서 많이 내리는 현상은?", a: "장마", options: ["장마", "가뭄", "소나기", "이슬비"], hint: "보통 6월 하순부터 한 달 정도 비가 오락가락하는 시기예요." },
+    { d: 'low', q: "매우 심한 추위가 찾아오는 현상을 무엇이라고 하나요?", a: "한파", options: ["한파", "폭염", "냉해", "결빙"], hint: "차가운(한) 파도(파)처럼 갑자기 추워지는 현상입니다." },
+    { d: 'low', q: "매우 심한 더위가 계속되는 현상을 무엇이라고 하나요?", a: "폭염", options: ["폭염", "가뭄", "열대야", "온난화"], hint: "폭발하듯 심한 더위(염)를 뜻해요." },
+    { d: 'low', q: "지구의 평균 기온이 점차 높아지는 현상은?", a: "지구 온난화", options: ["지구 온난화", "오존층 파괴", "사막화", "엘니뇨"], hint: "지구가 점점 따뜻해지는(온난) 현상입니다." },
+    { d: 'low', q: "자연현상으로 인해 사람의 생명이나 재산에 피해가 발생하는 것은?", a: "자연재해", options: ["자연재해", "환경 오염", "기후 변화", "인구 문제"], hint: "자연이 주는 재앙과 피해(재해)를 말합니다." },
+
+    { d: 'mid', q: "날씨와 기후의 차이점을 바르게 설명한 것은?", a: "날씨는 짧은 기간, 기후는 오랜 기간의 상태이다.", options: ["날씨는 짧은 기간, 기후는 오랜 기간의 상태이다.", "날씨는 기온만, 기후는 강수량만 나타낸다.", "날씨는 넓은 지역, 기후는 좁은 지역의 상태이다.", "날씨는 변하지 않고, 기후는 매일 변한다."], hint: "오늘 내일의 상태는 날씨, 30년 동안의 평균은 기후입니다." },
+    { d: 'mid', q: "과거(1960년대 이전) 우리나라의 인구 분포에 가장 큰 영향을 미친 요인은?", a: "자연환경(지형, 기후)", options: ["자연환경(지형, 기후)", "교통의 발달", "산업의 발달", "교육 환경"], hint: "옛날에는 농사를 지어야 했기 때문에 평야나 하천 주변(자연환경)에 사람이 많았어요." },
+    { d: 'mid', q: "현대(1960년대 이후) 인구 분포에 큰 영향을 미치는 '인문환경'에 해당하지 않는 것은?", a: "평야와 하천", options: ["평야와 하천", "일자리", "편리한 교통", "발달된 교육 시설"], hint: "평야와 하천은 사람이 만든 '인문환경'이 아니라 원래 있던 '자연환경'이에요." },
+    { d: 'mid', q: "태풍이 발생했을 때 올바른 대처 방법은?", a: "창문에 테이프를 붙여 파손을 막는다.", options: ["창문에 테이프를 붙여 파손을 막는다.", "계곡으로 캠핑을 간다.", "지하 주차장으로 대피한다.", "해안가에서 파도를 구경한다."], hint: "강한 바람에 유리가 깨지지 않도록 창문을 고정해야 해요." },
+    { d: 'mid', q: "지진이 발생했을 때 가장 먼저 취해야 할 행동은?", a: "책상 아래로 들어가 머리를 보호한다.", options: ["책상 아래로 들어가 머리를 보호한다.", "엘리베이터를 타고 밖으로 나간다.", "건물 안에서 창문 옆에 서 있는다.", "가스 밸브를 켜둔 채 밖으로 뛴다."], hint: "천장에서 떨어지는 물건으로부터 머리를 보호하는 것이 가장 중요해요!" },
+    { d: 'mid', q: "황사나 미세 먼지가 심한 날의 올바른 행동 수칙은?", a: "외출 시 보건용 마스크를 착용한다.", options: ["외출 시 보건용 마스크를 착용한다.", "집 안의 창문을 활짝 열어 환기한다.", "야외에서 격렬한 운동을 한다.", "외출 후 손을 씻지 않는다."], hint: "나쁜 먼지가 몸에 들어오지 않도록 꼭 마스크를 써야 합니다." },
+    { d: 'mid', q: "기후 변화로 인해 우리나라에서 나타나는 현상이 아닌 것은?", a: "겨울철이 점점 길어지고 있다.", options: ["겨울철이 점점 길어지고 있다.", "여름철이 길어지고 폭염이 잦아진다.", "사과 재배 지역이 점차 북쪽으로 이동한다.", "열대야 현상이 자주 발생한다."], hint: "지구가 따뜻해지면서 오히려 겨울은 짧아지고 여름이 길어지고 있어요." },
+    { d: 'mid', q: "우리나라 강수량의 특징으로 바른 것은?", a: "계절에 따른 강수량의 차이가 크다.", options: ["계절에 따른 강수량의 차이가 크다.", "일 년 내내 비가 고르게 내린다.", "겨울에 비가 가장 많이 내린다.", "전국 어디나 강수량이 똑같다."], hint: "비의 대부분이 여름철에 집중적으로 내린다는 점을 기억하세요." },
+    { d: 'mid', q: "울릉도에서 겨울철 눈이 많이 내리는 것에 대비해 만든 특수한 집의 시설은?", a: "우데기", options: ["우데기", "온돌", "대청마루", "너와지붕"], hint: "눈이 집 안으로 들어오지 못하게 외벽 바깥에 설치한 방설벽 이름이에요." },
+    { d: 'mid', q: "인구가 도시로만 집중될 때 도시에 나타날 수 있는 문제점은?", a: "주택 부족과 교통 혼잡", options: ["주택 부족과 교통 혼잡", "일손 부족", "폐교 증가", "의료 시설 여유"], hint: "사람이 너무 많아지면 집이 모자라고 차가 많이 막히게 돼요." },
+    { d: 'mid', q: "촌락(농어촌)에서 인구가 줄어들어 발생하는 문제점은?", a: "농사를 지을 일손 부족", options: ["농사를 지을 일손 부족", "주차 공간 부족", "환경 오염 심화", "집값 폭등"], hint: "젊은 사람들이 도시로 떠나서 농사지을 사람이 부족해져요." },
+    { d: 'mid', q: "호우 주의보나 경보가 발령되었을 때 주의할 점으로 틀린 것은?", a: "하천 근처에 주차된 차를 둔다.", options: ["하천 근처에 주차된 차를 둔다.", "외출을 자제하고 방송을 듣는다.", "가로등이나 신호등 근처에 가지 않는다.", "침수 위험이 있는 지하실에서 나온다."], hint: "비가 많이 오면 하천물이 넘쳐 차가 떠내려갈 수 있어요." },
+    { d: 'mid', q: "여름철에 집중호우로 인한 홍수 피해를 줄이기 위한 시설물은?", a: "다목적 댐 건설", options: ["다목적 댐 건설", "방풍림 조성", "제설함 설치", "지진 조기 경보 시스템"], hint: "비가 많이 올 때 물을 가두어 홍수를 막아주는 거대한 벽이에요." },
+    { d: 'mid', q: "인구 분포 지도를 볼 때, 점 하나가 일정한 사람 수를 나타내는 지도는?", a: "점 지도", options: ["점 지도", "등고선 지도", "기후도", "노선도"], hint: "인구가 많은 곳은 점이 빽빽하고, 적은 곳은 듬성듬성한 지도입니다." },
+    { d: 'mid', q: "남부 지방과 북부 지방 중 연평균 기온이 더 높은 곳과 그 이유는?", a: "남부 지방 (적도와 더 가까워서)", options: ["남부 지방 (적도와 더 가까워서)", "북부 지방 (적도와 더 가까워서)", "남부 지방 (바다가 멀어서)", "북부 지방 (산이 많아서)"], hint: "지구에서 가장 더운 적도 쪽에 가까울수록 따뜻해요. 남쪽이 더 가깝죠." },
+    { d: 'mid', q: "겨울철에 폭설 피해를 줄이기 위한 노력으로 알맞지 않은 것은?", a: "하천 주변의 제방(둑)을 높인다.", options: ["하천 주변의 제방(둑)을 높인다.", "내 집 앞 눈을 쓸어낸다.", "비닐하우스에 받침대를 세운다.", "도로에 제설함을 설치해 둔다."], hint: "제방(둑)을 높이는 것은 눈(폭설)이 아니라 홍수(비)를 막기 위한 방법이에요." },
+    { d: 'mid', q: "여름철 밤에도 기온이 25도 이하로 떨어지지 않아 매우 더운 현상은?", a: "열대야", options: ["열대야", "백야", "폭염", "온난화"], hint: "밤(야)에도 열대 지방처럼 덥다는 뜻의 단어입니다." },
+    { d: 'mid', q: "우리나라에서 인구가 집중되어 있는 수도권은 어디를 말하나요?", a: "서울, 인천, 경기", options: ["서울, 인천, 경기", "부산, 울산, 경남", "대전, 세종, 충남", "광주, 전남, 전북"], hint: "여러분이 살고 있는 인천과 서울, 경기도를 합쳐 수도권이라고 해요." },
+    { d: 'mid', q: "지구 온난화를 막기 위해 우리가 생활 속에서 할 수 있는 노력은?", a: "에너지 절약 및 대중교통 이용", options: ["에너지 절약 및 대중교통 이용", "일회용품 적극 사용", "에어컨 하루 종일 켜기", "가까운 거리도 자동차 이용"], hint: "전기를 아끼고 매연을 줄이는 방법이 지구를 시원하게 만들어요." },
+    { d: 'mid', q: "해안 지역에 소나무 숲(방풍림)을 조성하는 주된 이유는 무엇인가요?", a: "강한 바닷바람과 모래를 막기 위해", options: ["강한 바닷바람과 모래를 막기 위해", "홍수를 예방하기 위해", "지진 피해를 줄이기 위해", "눈사태를 막기 위해"], hint: "방풍림은 바람(풍)을 막아주는(방) 숲(림)이라는 뜻이에요." },
+
+    { d: 'high', q: "태백산맥을 기준으로 동쪽(영동 지방)과 서쪽(영서 지방)의 겨울 기후가 다른 주된 이유는?", a: "지형의 영향(태백산맥) 때문에", options: ["지형의 영향(태백산맥) 때문에", "위도의 차이 때문에", "바다의 깊이 때문에", "강물의 방향 때문에"], hint: "높고 험한 산맥이 차가운 바람을 막아주기 때문이에요." },
+    { d: 'high', q: "국가 기관이나 공공 기관을 지방으로 옮겨 만든 도시로, 국토의 균형 발전을 위한 곳은?", a: "혁신 도시", options: ["혁신 도시", "신도시", "공업 도시", "항구 도시"], hint: "수도권에 몰려있던 기관들을 지방으로 옮겨 새롭게(혁신) 만든 도시예요." },
+    { d: 'high', q: "수도권에 인구가 지나치게 집중되는 현상을 막기 위한 정부의 노력으로 적절한 단어는?", a: "지방에 일자리를 창출하고 투자를 늘린다.", options: ["지방에 일자리를 창출하고 투자를 늘린다.", "서울에만 대학교를 더 많이 짓는다.", "수도권의 아파트 건설을 대폭 늘린다.", "농촌의 병원과 학교를 없앤다."], hint: "사람들이 고향을 떠나지 않고도 잘 살 수 있도록 지방을 키워야 해요." },
+    { d: 'high', q: "지구 온난화로 인해 우리나라 주변 바다에서 일어나는 변화는?", a: "난류성 물고기(오징어 등)가 많이 잡힌다.", options: ["난류성 물고기(오징어 등)가 많이 잡힌다.", "명태와 같은 한류성 물고기가 흔해진다.", "바닷물의 온도가 낮아져 빙하가 생긴다.", "해수면의 높이가 점차 낮아진다."], hint: "바다가 따뜻해져서 따뜻한 물(난류)을 좋아하는 물고기가 많이 올라와요." },
+    { d: 'high', q: "1960년대 이후 이촌향도 현상이 발생한 가장 근본적인 원인은?", a: "도시를 중심으로 산업화가 진행되어서", options: ["도시를 중심으로 산업화가 진행되어서", "농촌의 자연환경이 파괴되어서", "도시의 농업 기술이 발달해서", "농촌에 교통 체증이 심해져서"], hint: "도시에 공장이 많이 생겨서 일자리를 찾아 농촌을 떠나게 된 거예요." },
+    { d: 'high', q: "겨울철에 북서풍이 황해(서해)를 지나면서 수증기를 공급받아 특정 지역에 많은 눈을 내리게 합니다. 이 지역은?", a: "호남 지방(서해안)", options: ["호남 지방(서해안)", "영남 지방(동해안)", "제주도 남쪽", "함경도 북부"], hint: "바다를 건너온 눈구름이 우리나라 서쪽, 전라도 부근에 눈을 뿌려요." },
+    { d: 'high', q: "제주도 전통 가옥에서 지붕을 그물로 꽁꽁 묶어두는 이유는 어떤 자연환경 때문인가?", a: "바람이 매우 강하게 불어서", options: ["바람이 매우 강하게 불어서", "눈이 너무 많이 내려서", "햇빛이 너무 강해서", "비가 오지 않아서"], hint: "돌, 여자, 그리고 '이것'이 많다는 제주의 특징! 쌩쌩 부는 이것 때문이에요." },
+    { d: 'high', q: "인구 문제 해결을 위해 지역 간 불균형을 줄이고 골고루 잘 살게 하려는 정책은?", a: "국토 균형 발전 정책", options: ["국토 균형 발전 정책", "이촌 향도 정책", "인구 집중 정책", "해외 이주 정책"], hint: "어느 한 곳으로 치우치지 않고 시소를 맞추듯 '균형'을 이루려는 정책이에요." },
+    { d: 'high', q: "동해안이 같은 위도의 서해안보다 겨울철에 더 따뜻한 이유 두 가지는?", a: "태백산맥과 수심이 깊은 바다", options: ["태백산맥과 수심이 깊은 바다", "소백산맥과 얕은 바다", "편서풍과 차가운 해류", "적도와의 거리와 편동풍"], hint: "북서풍을 막아주는 산맥과, 물이 깊어 쉽게 식지 않는 동해 바다 때문이에요." },
+    { d: 'high', q: "전통 가옥의 대청마루와 온돌은 우리나라 기후의 어떤 특징을 보여주나요?", a: "더운 여름과 추운 겨울을 모두 대비함", options: ["더운 여름과 추운 겨울을 모두 대비함", "비가 많이 오는 것에만 대비함", "눈이 많이 오는 것에만 대비함", "사계절이 없는 기후에 대비함"], hint: "바람이 통하는 대청마루(여름용), 바닥을 덥히는 온돌(겨울용)이 모두 필요했어요." },
+    { d: 'high', q: "기상청에서 자연재해로 인한 큰 피해가 예상될 때 국민에게 미리 알리는 제도는?", a: "기상 특보 (주의보, 경보)", options: ["기상 특보 (주의보, 경보)", "안전 신문고", "인구 주택 총조사", "국토 종합 계획"], hint: "호우 주의보, 태풍 경보 등 특별히 보고하는 제도를 말합니다." },
+    { d: 'high', q: "가뭄 극복을 위해 조상들이 만든 농업용 인공 저수 시설의 대표적인 예는?", a: "벽골제(김제)", options: ["벽골제(김제)", "첨성대(경주)", "수원 화성(수원)", "해인사 장경판전"], hint: "김제 땅에 물을 가두기 위해 둑을 쌓아 만든 커다란 저수지 유적이에요." },
+    { d: 'high', q: "최근 들어 폭우나 폭설 등 이상 기후 현상이 잦아지는 근본적인 원인으로 지목되는 것은?", a: "지구 온난화와 기후 변화", options: ["지구 온난화와 기후 변화", "달의 인력 변화", "태양의 활동 감소", "지구 자전 속도 증가"], hint: "지구가 뜨거워지면서 날씨의 흐름이 완전히 고장 났기 때문이에요." },
+    { d: 'high', q: "농촌의 인구 문제를 해결하기 위한 노력 중 '귀농·귀촌 지원'의 목적은 무엇인가요?", a: "도시 인구를 농촌으로 유입하여 활력을 주려고", options: ["도시 인구를 농촌으로 유입하여 활력을 주려고", "농촌 인구를 도시로 보내려고", "농촌의 학교를 폐교하려고", "농촌의 산업을 공업으로 완전히 바꾸려고"], hint: "도시 사람들이 농촌으로 돌아가(귀농) 다시 농촌을 살리기 위해서예요." },
+    { d: 'high', q: "지구 온난화 방지를 위한 국제적인 약속이나 협약이 아닌 것은?", a: "제네바 협약(전쟁 포로 대우)", options: ["제네바 협약(전쟁 포로 대우)", "교토 의정서", "파리 기후 변화 협약", "탄소 중립 선언"], hint: "전쟁과 관련된 제네바 협약은 기후 변화와 무관합니다." },
+    { d: 'high', q: "도시의 열섬 현상(도심 기온이 주변보다 높은 현상)을 완화하기 위한 방법은?", a: "옥상 정원 조성 및 녹지(숲) 확대", options: ["옥상 정원 조성 및 녹지(숲) 확대", "고층 유리 빌딩 더 많이 짓기", "아스팔트 도로 확장하기", "공장 굴뚝 높이 낮추기"], hint: "식물들이 물을 내뿜으며 온도를 낮추기 때문에 숲과 정원이 많아야 해요." },
+    { d: 'high', q: "홍수 피해를 줄이기 위해 산이나 비탈면에 나무를 심는 사업을 무엇이라 하나요?", a: "사방 사업", options: ["사방 사업", "간척 사업", "재개발 사업", "신도시 건설"], hint: "모래나 흙이 무너지는 것을 사방팔방 막아준다는 뜻의 사업이에요." },
+    { d: 'high', q: "인구 피라미드(연령별 인구 구조)에서 최근 우리나라는 아랫부분(유소년층)이 어떻게 변하고 있나요?", a: "출생아 수 감소로 좁아지고 있다.", options: ["출생아 수 감소로 좁아지고 있다.", "출생아 수 증가로 넓어지고 있다.", "노인 인구 증가로 좁아지고 있다.", "외국인 증가로 넓어지고 있다."], hint: "요즘 아기들이 적게 태어나서 피라미드 맨 아랫부분이 홀쭉해지고 있어요." },
+    { d: 'high', q: "지진 발생 시 건물 밖으로 대피할 때 가장 안전한 장소는?", a: "주변에 건물이 없는 넓은 운동장이나 공원", options: ["주변에 건물이 없는 넓은 운동장이나 공원", "튼튼해 보이는 대형 마트 안", "높은 아파트의 옥상", "지하 깊은 곳에 있는 대피소"], hint: "지진이 나면 위에서 떨어지는 유리나 간판을 피해야 하므로 넓은 공터가 최고예요." },
+    { d: 'high', q: "저출산·고령화 현상이 인구 분포와 경제에 미치는 가장 심각한 영향은?", a: "일할 수 있는 청장년층 감소로 경제 성장이 어려워짐", options: ["일할 수 있는 청장년층 감소로 경제 성장이 어려워짐", "학생 수 증가로 학교가 부족해짐", "일자리 부족으로 실업률이 급증함", "주택이 너무 부족해짐"], hint: "할아버지 할머니는 많아지는데 젊은 사람들이 부족해져서 경제가 힘들어져요." }
+  ];
+
+  // --- Audio Context ---
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let audioCtx;
+
+  function initAudio() {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playSound(type) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+
+    if (type === 'shoot') {
+      osc.type = 'square'; osc.frequency.setValueAtTime(880, now); osc.frequency.exponentialRampToValueAtTime(110, now + 0.1);
+      gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now); osc.stop(now + 0.1);
+    } else if (type === 'hit') {
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.2);
+      gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'error') {
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.setValueAtTime(100, now + 0.1);
+      gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+      osc.start(now); osc.stop(now + 0.3);
+    } else if (type === 'alarm') {
+      osc.type = 'square'; osc.frequency.setValueAtTime(400, now);
+      gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+      osc.start(now); osc.stop(now + 0.4);
+    } else if (type === 'laser') {
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, now); 
+      osc.frequency.exponentialRampToValueAtTime(50, now + 1.0);
+      gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 1.0);
+      osc.start(now); osc.stop(now + 1.0);
+    } else if (type === 'carpet') {
+      osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(20, now + 0.8);
+      gainNode.gain.setValueAtTime(0.2, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+      osc.start(now); osc.stop(now + 0.8);
+    } else if (type === 'orbital') {
+      osc.type = 'square'; osc.frequency.setValueAtTime(100, now); osc.frequency.linearRampToValueAtTime(10, now + 2.0);
+      gainNode.gain.setValueAtTime(0.4, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2.0);
+      osc.start(now); osc.stop(now + 2.0);
+    } else if (type === 'boss_boom') { 
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(10, now + 1.5);
+      gainNode.gain.setValueAtTime(0.5, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+      osc.start(now); osc.stop(now + 1.5);
+    } else if (type === 'fanfare') { 
+      const notes = [
+        { f: 392.00, d: 0.15 }, 
+        { f: 392.00, d: 0.15 }, 
+        { f: 392.00, d: 0.15 }, 
+        { f: 523.25, d: 0.40 }, 
+        { f: 392.00, d: 0.15 }, 
+        { f: 523.25, d: 0.60 }  
+      ];
+      let timeOffset = 0;
+      notes.forEach(note => {
+        setTimeout(() => {
+          const fnOsc = audioCtx.createOscillator();
+          const fnGain = audioCtx.createGain();
+          fnOsc.type = 'square';
+          fnOsc.frequency.setValueAtTime(note.f, audioCtx.currentTime);
+          fnGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          fnGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + note.d);
+          fnOsc.connect(fnGain);
+          fnGain.connect(audioCtx.destination);
+          fnOsc.start(); fnOsc.stop(audioCtx.currentTime + note.d);
+        }, timeOffset * 1000);
+        timeOffset += note.d + 0.05;
+      });
+    }
+  }
+
+  // --- Tank Designer (30 variants) ---
+  const tankColors = ['#00f3ff', '#39ff14', '#fffb00', '#ff003c', '#b700ff'];
+  function drawTankPreview(ctx, id, w, h) {
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(w/2, h/2 + 10);
+    ctx.scale(1.5, 1.5);
+    renderTankModel(ctx, id);
+    ctx.restore();
+  }
+
+  function renderTankModel(ctx, id, isPanicking = false) {
+    const color = tankColors[id % 5];
+    const barrelType = Math.floor(id / 5) % 3;
+    const bodyType = Math.floor(id / 15) % 2;
+
+    ctx.fillStyle = isPanicking ? '#555' : '#111';
+    ctx.strokeStyle = isPanicking ? varNeon('red') : color;
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = isPanicking ? 15 : 10;
+    ctx.shadowColor = ctx.strokeStyle;
+
+    ctx.fillRect(-30, -15, 12, 45); ctx.strokeRect(-30, -15, 12, 45);
+    ctx.fillRect(18, -15, 12, 45); ctx.strokeRect(18, -15, 12, 45);
+
+    ctx.beginPath();
+    if(bodyType === 0) {
+      ctx.rect(-20, -10, 40, 35);
+    } else {
+      ctx.moveTo(0, -15); ctx.lineTo(22, 10); ctx.lineTo(15, 30); ctx.lineTo(-15, 30); ctx.lineTo(-22, 10); ctx.closePath();
+    }
+    ctx.fill(); ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(0, 8, 12, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+    if (barrelType === 0) {
+      ctx.fillRect(-3, -30, 6, 38); ctx.strokeRect(-3, -30, 6, 38);
+    } else if (barrelType === 1) {
+      ctx.fillRect(-7, -25, 4, 33); ctx.strokeRect(-7, -25, 4, 33);
+      ctx.fillRect(3, -25, 4, 33); ctx.strokeRect(3, -25, 4, 33);
+    } else {
+      ctx.fillRect(-5, -35, 10, 43); ctx.strokeRect(-5, -35, 10, 43);
+      ctx.fillStyle = color; ctx.fillRect(-2, -35, 4, 20); ctx.fillStyle = isPanicking ? '#555' : '#111';
+    }
+  }
+
+  function varNeon(colorName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(`--neon-${colorName}`).trim();
+  }
+
+  let selectedTankId = 0;
+  const previewCanvas = document.getElementById('previewCanvas');
+  const previewCtx = previewCanvas.getContext('2d');
+  
+  function changeTank(dir) {
+    selectedTankId = (selectedTankId + dir + 30) % 30;
+    document.getElementById('tankName').innerText = `모델 NO. ${selectedTankId + 1}`;
+    drawTankPreview(previewCtx, selectedTankId, previewCanvas.width, previewCanvas.height);
+  }
+  changeTank(0);
+
+  // --- Game Engine ---
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  let animationId;
+  let lastTime = 0;
+  
+  let state = 'lobby'; 
+  let tensionLevel = 0;
+  let cameraShake = 0;
+  let particles = [];
+  let projectiles = [];
+  let specialBeams = [];
+
+  const player = { x: 0, y: 0, hp: 100, maxHp: 100, isPanicking: false, panicTimer: 0, combo: 0 };
+  const boss = { x: 0, y: 0, hp: 400, maxHp: 400, targetY: 0, deathTimer: 0 }; 
+  let activeQuestions = [];
+  let currentQuestion = null;
+
+  const taunts = [
+    "사회 실력이 겨우 이 정도인가? ㅋㅋㅋ",
+    "이건 교과서 펴놓고도 틀리겠군!",
+    "하하! 치명적인 오답이다, 휴먼!",
+    "기후와 날씨도 구분 못하는 건 아니겠지?",
+    "연산 속도만 느린 줄 알았더니 암기력도 꽝이군!",
+    "당황해서 땀 흘리는 탱크라니, 재밌군!",
+    "이런 지식으로 국토를 지키겠다고?"
+  ];
+
+  function resize() {
+    W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight;
+    player.x = W / 2; 
+    // 🔥 위치 및 원근법 조정 (거리 증가)
+    player.y = H * 0.65; 
+    boss.x = W / 2; 
+    boss.y = H * 0.12; 
+    boss.targetY = boss.y;
+  }
+  window.addEventListener('resize', resize);
+
+  // Drawing
+  let gridOffset = 0;
+  function drawBackground(dt) {
+    ctx.fillStyle = `rgba(5, 5, ${16 + tensionLevel * 40}, 0.8)`; ctx.fillRect(0, 0, W, H);
+    gridOffset = (gridOffset + (50 + tensionLevel * 150) * dt) % 40;
+    ctx.strokeStyle = `rgba(0, 243, 255, ${0.1 + tensionLevel * 0.1})`; ctx.lineWidth = 1; ctx.beginPath();
+    for (let i = -10; i <= 10; i++) {
+      ctx.moveTo(W / 2 + i * 40, H * 0.3); ctx.lineTo(W / 2 + i * (100 + tensionLevel * 50), H);
+    }
+    for (let i = 0; i < 20; i++) {
+      const y = H * 0.3 + Math.pow(i / 15, 2) * (H * 0.7) + gridOffset;
+      if (y < H) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+    }
+    ctx.stroke();
+    ctx.strokeStyle = tensionLevel > 0.5 ? varNeon('red') : varNeon('blue');
+    ctx.lineWidth = 2; ctx.shadowBlur = 10; ctx.shadowColor = ctx.strokeStyle;
+    ctx.beginPath(); ctx.moveTo(0, H * 0.3); ctx.lineTo(W, H * 0.3); ctx.stroke(); ctx.shadowBlur = 0;
+  }
+
+  function drawPlayer() {
+    ctx.save();
+    let drawX = player.x; let drawY = player.y;
+    if (player.isPanicking) {
+      drawX += Math.sin(Date.now() * 0.05) * 8; drawY += Math.cos(Date.now() * 0.05) * 3;
+      ctx.font = "26px Arial"; 
+      ctx.fillText("💦", drawX + 70, drawY - 50); 
+      ctx.fillText("❗", drawX - 70, drawY - 60);
+    }
+    ctx.translate(drawX, drawY);
+    ctx.scale(2.0, 2.0); // 🔥 거대한 스케일 유지하되 화면 밸런스에 맞춤
+    renderTankModel(ctx, selectedTankId, player.isPanicking);
+    ctx.restore();
+  }
+
+  function drawBoss(dt) {
+    if (state === 'gameover' && boss.hp <= 0) return; 
+
+    ctx.save();
+    let pulse = Math.abs(Math.sin(Date.now() * 0.005));
+
+    if (state === 'boss_dying') {
+      const progress = 1 - (boss.deathTimer / 3.5); 
+      ctx.translate(boss.x + (Math.random()-0.5)*40, boss.y + (Math.random()-0.5)*40); 
+      ctx.scale(1 + progress*0.5, 1 - progress*0.3); 
+      ctx.globalAlpha = Math.max(0, 1 - progress); 
+      pulse = Math.random() * 2; 
+    } else {
+      boss.y += (boss.targetY - boss.y) * 2 * dt;
+      const hoverY = boss.y + Math.sin(Date.now() * 0.002) * 15;
+      ctx.translate(boss.x, hoverY);
+    }
+    
+    ctx.shadowBlur = 30 + pulse * 20; ctx.shadowColor = varNeon('red');
+    ctx.fillStyle = '#111'; ctx.strokeStyle = varNeon('red'); ctx.lineWidth = 4;
+    ctx.beginPath();
+    
+    // 🔥 원근법 적용: 보스 사이즈 축소
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4 + (Date.now() * 0.0005);
+      const px = Math.cos(angle) * 45; const py = Math.sin(angle) * 45;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    
+    ctx.fillStyle = (tensionLevel > 0.5 || state === 'boss_dying') ? '#fff' : varNeon('red');
+    ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(0, 0, 12 + pulse * 3, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawProjectiles(dt) {
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+      let p = projectiles[i];
+      p.y += p.vy * dt; p.x += p.vx * dt;
+      ctx.shadowBlur = 10; ctx.shadowColor = p.color; ctx.fillStyle = p.color;
+      
+      if(p.type === 'player' || p.type === 'carpet') {
+        ctx.fillRect(p.x - 4, p.y, 8, p.type === 'carpet' ? 30 : 20);
+        // 🔥 보스 피격 판정 (축소된 보스 사이즈 반영)
+        if (p.y < boss.y + 45 && Math.abs(p.x - boss.x) < 50) {
+          createParticles(p.x, boss.y + 45, p.color, p.type === 'carpet' ? 30 : 15);
+          boss.hp -= p.dmg;
+          playSound('hit'); updateHpUI(); projectiles.splice(i, 1);
+          if (boss.hp <= 0) triggerBossDeath(); 
+        }
+      } else {
+        ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI*2); ctx.fill();
+        // 🔥 플레이어 피격 판정 (확대된 주인공 사이즈 반영)
+        if (p.y > player.y - 60 && Math.abs(p.x - player.x) < 80) {
+          createParticles(p.x, player.y - 60, p.color, 20);
+          player.hp -= 20;
+          playSound('hit'); updateHpUI(); triggerScreenShake(20); projectiles.splice(i, 1);
+          if (player.hp <= 0) gameOver(false);
+        }
+      }
+    }
+  }
+
+  function drawSpecialBeams(dt) {
+    for (let i = specialBeams.length - 1; i >= 0; i--) {
+      let b = specialBeams[i];
+      b.life -= dt;
+      if (b.life <= 0) { specialBeams.splice(i, 1); continue; }
+      
+      const progress = 1 - (b.life / b.maxLife); 
+      ctx.save();
+      
+      if (b.type === 'z') {
+        const width = Math.sin(progress * Math.PI) * 120;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.shadowBlur = 40; ctx.shadowColor = varNeon('green');
+        ctx.fillStyle = `rgba(57, 255, 20, ${Math.sin(progress * Math.PI)})`;
+        ctx.fillRect(b.x - width, boss.y, width * 2, player.y - boss.y);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(b.x - width/3, boss.y, width*(2/3), player.y - boss.y);
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#fffb00';
+        ctx.lineWidth = 4;
+        let ly = player.y;
+        ctx.moveTo(b.x, ly);
+        while(ly > boss.y) {
+            ly -= 30 + Math.random()*30;
+            let lx = b.x + (Math.random() - 0.5) * width * 2;
+            ctx.lineTo(lx, ly);
+        }
+        ctx.stroke();
+        
+        if(Math.random() > 0.5) createParticles(boss.x + (Math.random()-0.5)*100, boss.y + 30, varNeon('green'), 5);
+
+      } else if (b.type === 'c') {
+        ctx.globalCompositeOperation = 'lighter';
+        if (progress < 0.2) {
+            ctx.fillStyle = `rgba(255, 0, 60, ${progress * 5})`;
+            ctx.fillRect(boss.x - 2, 0, 4, H);
+            ctx.fillRect(boss.x - 40, 0, 2, H);
+            ctx.fillRect(boss.x + 40, 0, 2, H);
+        } else if (progress < 0.5) {
+            let beamW = (progress - 0.2) * 5 * W;
+            ctx.fillStyle = `rgba(255, 255, 255, 0.95)`;
+            ctx.shadowBlur = 100; ctx.shadowColor = varNeon('yellow');
+            ctx.fillRect(boss.x - beamW/2, 0, beamW, H);
+        } else {
+            let alpha = 1 - ((progress - 0.5) * 2);
+            ctx.strokeStyle = `rgba(0, 243, 255, ${alpha})`;
+            ctx.lineWidth = 20;
+            ctx.beginPath();
+            ctx.arc(boss.x, boss.y, Math.pow((progress - 0.5)*3, 2) * 1500, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.strokeStyle = `rgba(255, 251, 0, ${alpha * 0.5})`;
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.arc(boss.x, boss.y, (progress - 0.5) * 2000, 0, Math.PI*2);
+            ctx.stroke();
+            if(Math.random() > 0.7) createParticles(boss.x, boss.y, '#ffffff', 20);
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+    }
+  }
+
+  function createParticles(x, y, color, count) {
+    for(let i=0; i<count; i++){
+      particles.push({
+        x: x, y: y, vx: (Math.random() - 0.5) * 800, vy: (Math.random() - 0.5) * 800,
+        life: 1 + Math.random(), color: color
+      });
+    }
+  }
+  function drawParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * 2;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      ctx.globalAlpha = Math.min(1, p.life); 
+      ctx.fillStyle = p.color; 
+      ctx.shadowBlur = 10; ctx.shadowColor = p.color;
+      ctx.fillRect(p.x - 3, p.y - 3, 6, 6); 
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    }
+  }
+
+  function triggerScreenShake(amount) { cameraShake = Math.max(cameraShake, amount); }
+  function updateHpUI() {
+    document.getElementById('playerHp').style.width = Math.max(0, (player.hp / player.maxHp) * 100) + '%';
+    document.getElementById('bossHp').style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%';
+  }
+  function showTaunt() {
+    const box = document.getElementById('tauntBox');
+    box.innerText = taunts[Math.floor(Math.random() * taunts.length)];
+    box.classList.add('show'); setTimeout(() => box.classList.remove('show'), 3000);
+  }
+
+  function updateComboUI() {
+    document.getElementById('comboText').innerText = `COMBO: ${player.combo}`;
+    document.getElementById('btnZ').className = `special-btn ${player.combo >= 3 ? 'ready-z' : ''}`;
+    document.getElementById('btnX').className = `special-btn ${player.combo >= 4 ? 'ready-x' : ''}`;
+    document.getElementById('btnC').className = `special-btn ${player.combo >= 5 ? 'ready-c' : ''}`;
+  }
+
+  function triggerBossDeath() {
+    if(state === 'boss_dying' || state === 'gameover') return;
+    state = 'boss_dying';
+    boss.hp = 0;
+    boss.deathTimer = 3.5; 
+    document.getElementById('uiLayer').style.pointerEvents = 'none';
+    playSound('boss_boom');
+  }
+
+  function useSpecial(type) {
+    if (state !== 'playing') return;
+    if (type === 'z' && player.combo >= 3) {
+      player.combo -= 3;
+      playSound('laser'); 
+      triggerScreenShake(40);
+      specialBeams.push({ type: 'z', x: player.x, maxLife: 1.0, life: 1.0 });
+      boss.hp -= 50;
+    } else if (type === 'x' && player.combo >= 4) {
+      player.combo -= 4;
+      playSound('carpet'); triggerScreenShake(40);
+      for(let i=0; i<15; i++) {
+        setTimeout(() => {
+          // 🔥 융단폭격 비행속도 조절
+          projectiles.push({ x: boss.x + (Math.random()-0.5)*300, y: H, vy: -1000, vx: 0, color: varNeon('purple'), type: 'carpet', dmg: 10 });
+        }, i * 80);
+      }
+    } else if (type === 'c' && player.combo >= 5) {
+      player.combo -= 5;
+      playSound('orbital'); 
+      triggerScreenShake(100);
+      specialBeams.push({ type: 'c', maxLife: 2.0, life: 2.0 });
+      boss.hp -= 150;
+      
+      const flash = document.getElementById('flashOverlay');
+      setTimeout(() => {
+        flash.style.opacity = '1';
+        setTimeout(() => { flash.style.transition = 'opacity 1s ease'; flash.style.opacity = '0'; }, 100);
+      }, 400);
+      setTimeout(() => { flash.style.transition = 'none'; }, 1500); 
+    } else {
+      return; 
+    }
+    
+    updateComboUI(); updateHpUI();
+    if (boss.hp <= 0) triggerBossDeath(); 
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'z' || e.key === 'Z') useSpecial('z');
+    if (e.key === 'x' || e.key === 'X') useSpecial('x');
+    if (e.key === 'c' || e.key === 'C') useSpecial('c');
+  });
+
+  document.getElementById('btnZ').addEventListener('click', () => useSpecial('z'));
+  document.getElementById('btnX').addEventListener('click', () => useSpecial('x'));
+  document.getElementById('btnC').addEventListener('click', () => useSpecial('c'));
+
+  function getQuestionPool() {
+    const diff = document.getElementById('difficultySelect').value;
+    let pool = [];
+    if (diff === 'all') pool = [...qDB];
+    else pool = qDB.filter(q => q.d === diff);
+    return pool.sort(() => Math.random() - 0.5);
+  }
+
+  function generateNextQuestion() {
+    if (activeQuestions.length === 0) activeQuestions = getQuestionPool(); 
+    currentQuestion = activeQuestions.pop();
+    
+    document.getElementById('questionText').innerText = currentQuestion.q;
+    const grid = document.getElementById('answersGrid');
+    grid.innerHTML = '';
+    
+    let opts = [...currentQuestion.options].sort(() => Math.random() - 0.5);
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn'; btn.innerText = opt;
+      btn.onclick = () => handleAnswer(opt, btn);
+      grid.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(selected, btnElement) {
+    if (state !== 'playing') return;
+    initAudio();
+    document.querySelectorAll('.answer-btn').forEach(b => b.style.pointerEvents = 'none');
+
+    if (selected === currentQuestion.a) {
+      btnElement.classList.add('correct'); playSound('shoot');
+      player.combo++; updateComboUI();
+      // 🔥 포탄 발사 속도와 높이를 스케일/원근법에 맞게 조정
+      projectiles.push({ x: player.x, y: player.y - 85, vy: -900, vx: 0, color: tankColors[selectedTankId%5], type: 'player', dmg: 15 });
+      
+      tensionLevel = Math.max(0, tensionLevel - 0.2);
+      boss.targetY = Math.max(H * 0.12, boss.targetY - 20);
+      document.getElementById('tensionOverlay').classList.remove('active');
+      player.isPanicking = false;
+
+      setTimeout(() => { if(state === 'playing') generateNextQuestion(); }, 400);
+
+    } else {
+      btnElement.classList.add('wrong'); playSound('error'); triggerScreenShake(15);
+      player.combo = 0; updateComboUI();
+      player.isPanicking = true; player.panicTimer = 2.0;
+      tensionLevel = Math.min(1, tensionLevel + 0.3);
+      boss.targetY = Math.min(H * 0.25, boss.targetY + 30);
+      
+      if (tensionLevel >= 0.6) { document.getElementById('tensionOverlay').classList.add('active'); playSound('alarm'); }
+      showTaunt();
+
+      setTimeout(() => {
+        playSound('shoot');
+        // 🔥 보스 발사 속도 및 높이 조정
+        projectiles.push({ x: boss.x, y: boss.y + 45, vy: 500, vx: (player.x - boss.x)*0.4, color: varNeon('red'), type: 'boss', dmg: 20 });
+      }, 300);
+
+      activeQuestions.unshift(currentQuestion);
+
+      setTimeout(() => {
+        document.getElementById('hintText').innerText = currentQuestion.hint || "교과서를 다시 한번 꼼꼼히 확인해 보세요!";
+        document.getElementById('hintModal').classList.remove('hidden');
+      }, 1000); 
+    }
+  }
+
+  function closeHint() {
+    document.getElementById('hintModal').classList.add('hidden');
+    if (state === 'playing') {
+        generateNextQuestion();
+    }
+  }
+
+  // --- Main Loop ---
+  function update(dt) {
+    if (state === 'playing') {
+      if (player.isPanicking) {
+        player.panicTimer -= dt;
+        if (player.panicTimer <= 0) player.isPanicking = false;
+      }
+    } else if (state === 'boss_dying') { 
+      boss.deathTimer -= dt;
+      triggerScreenShake(20);
+      
+      if (Math.random() < 0.2) {
+        playSound('hit');
+        createParticles(boss.x + (Math.random()-0.5)*90, boss.y + (Math.random()-0.5)*90, ['#ff003c', '#fffb00', '#ffffff'][Math.floor(Math.random()*3)], 20);
+      }
+      
+      if (boss.deathTimer <= 0) {
+        const flash = document.getElementById('flashOverlay');
+        flash.style.opacity = '1';
+        setTimeout(() => { flash.style.transition = 'opacity 2s ease'; flash.style.opacity = '0'; }, 100);
+        setTimeout(() => { flash.style.transition = 'none'; }, 2200); 
+        gameOver(true);
+      }
+    }
+  }
+
+  function draw() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
+    if (cameraShake > 0) {
+      ctx.translate((Math.random() - 0.5) * cameraShake, (Math.random() - 0.5) * cameraShake);
+      cameraShake *= 0.9; if (cameraShake < 0.5) cameraShake = 0;
+    }
+    const now = performance.now(); const dt = (now - lastTime) / 1000; lastTime = now;
+
+    drawBackground(dt);
+    if (state === 'playing' || state === 'boss_dying') {
+      update(dt); drawSpecialBeams(dt); drawBoss(dt); drawPlayer(); drawProjectiles(dt); drawParticles(dt);
+    }
+    animationId = requestAnimationFrame(draw);
+  }
+
+  function startGame() {
+    initAudio();
+    const nick = document.getElementById('nicknameInput').value || "인천장도초 요원";
+    document.getElementById('playerNicknameDisplay').innerText = nick;
+    
+    state = 'playing'; player.hp = player.maxHp; boss.hp = boss.maxHp;
+    player.isPanicking = false; player.combo = 0; tensionLevel = 0; boss.targetY = H * 0.12;
+    projectiles = []; particles = []; specialBeams = []; activeQuestions = getQuestionPool();
+    
+    document.getElementById('lobbyScreen').classList.add('hidden');
+    document.getElementById('endScreen').classList.add('hidden');
+    document.getElementById('hintModal').classList.add('hidden');
+    document.getElementById('uiLayer').style.pointerEvents = 'auto';
+    document.getElementById('tensionOverlay').classList.remove('active');
+    
+    updateHpUI(); updateComboUI(); generateNextQuestion();
+  }
+
+  function gameOver(isWin) {
+    state = 'gameover'; document.getElementById('uiLayer').style.pointerEvents = 'none';
+    const nick = document.getElementById('playerNicknameDisplay').innerText; 
+
+    document.getElementById('endScreen').classList.remove('hidden');
+    
+    if(isWin) {
+      playSound('fanfare'); 
+      document.getElementById('endTitle').innerText = "MISSION ACCOMPLISHED";
+      document.getElementById('endTitle').style.color = varNeon('green');
+      document.getElementById('endSub').innerText = `${nick}의 완벽한 승리입니다!`; 
+      
+      for(let i=0; i<100; i++) {
+          createParticles(W/2, H/2, ['#39ff14', '#00f3ff', '#fffb00'][Math.floor(Math.random()*3)], 1);
+      }
+    } else {
+      document.getElementById('endTitle').innerText = "MISSION FAILED";
+      document.getElementById('endTitle').style.color = varNeon('red');
+      document.getElementById('endSub').innerText = "보스에게 지리 데이터를 모두 빼앗겼습니다...";
+    }
+  }
+
+  resize(); lastTime = performance.now(); requestAnimationFrame(draw);
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    document.getElementById('endScreen').classList.add('hidden');
+    document.getElementById('lobbyScreen').classList.remove('hidden');
+  });
+</script>
+</body>
+</html>
