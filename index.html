@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>✨에듀테크 게임 저장소✨</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -292,14 +292,14 @@
 
     /* 모듈 임베딩 프레임 */
    .game-frame-iframe {
-  width: 100%;
-  height: 100%;
-  flex: 1;
-  border: none;
-  display: block;
-  background: #111;
-  overflow: hidden;
-}
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      border: none;
+      display: block;
+      background: #111;
+      overflow: hidden;
+    }
 
     /* 관리자 팝업 모달 */
     .modal-overlay {
@@ -405,43 +405,40 @@
     let selectedCategory = "전체";
 
     // 기본 게임 리스트 스펙
-  const initialGames = [
-  {
-    id: 3,
-    icon: "🚀",
-    title: "우주 수학 탐험 (약분, 통분, 기약분수)",
-    desc: "행성을 여행하며 약분, 통분, 기약분수 문제를 해결하세요!",
-    category: "수학",
-    url: "#space-math-menu"
-  },
-
-  {
-    id: 7,
-    icon: "🍁",
-    title: "수학의 나라 (분수의 덧셈과 뺄셈)",
-    desc: "분수의 덧셈과 뺄셈 문제를 해결하며 모험을 떠나세요!",
-    category: "수학",
-    url: "./baram.html"
-  },
-
-  {
-    id: 8,
-    icon: "🍄",
-    title: "마리오 분수 구출대작전",
-    desc: "약분과 통분 문제를 해결하며 피치공주를 구하세요!",
-    category: "수학",
-    url: "./mario.html"
-  }
-    {
-      id: 9,
-      icon: "⚽",
-      title: "문학 스타디움 페널티 챌린지",
-      desc: "분수의 덧셈과 뺄셈을 풀고 짜릿한 페널티 킥에 도전하세요!",
-      category: "수학",
-      url: "./soccor.html"
-    }
-  ];
-];
+    const initialGames = [
+      {
+        id: 3,
+        icon: "🚀",
+        title: "우주 수학 탐험 (약분, 통분, 기약분수)",
+        desc: "행성을 여행하며 약분, 통분, 기약분수 문제를 해결하세요!",
+        category: "수학",
+        url: "#space-math-menu"
+      },
+      {
+        id: 7,
+        icon: "🍁",
+        title: "수학의 나라 (분수의 덧셈과 뺄셈)",
+        desc: "분수의 덧셈과 뺄셈 문제를 해결하며 모험을 떠나세요!",
+        category: "수학",
+        url: "./baram.html"
+      },
+      {
+        id: 8,
+        icon: "🍄",
+        title: "마리오 분수 구출대작전",
+        desc: "약분과 통분 문제를 해결하며 피치공주를 구하세요!",
+        category: "수학",
+        url: "./mario.html"
+      },
+      {
+        id: 9,
+        icon: "⚽",
+        title: "문학 스타디움 페널티 챌린지",
+        desc: "분수의 덧셈과 뺄셈을 풀고 짜릿한 페널티 킥에 도전하세요!",
+        category: "수학",
+        url: "./soccor.html"
+      }
+    ];
 
     let currentGames = [];
 
@@ -479,16 +476,16 @@
       filtered.forEach(game => {
         const card = document.createElement('div');
         card.className = "game-card";
-       let actionHtml = "";
+        let actionHtml = "";
 
-if (game.url === "#space-math-menu") {
-  actionHtml = `
-    <button onclick="bootUpGameConsole('./airplane.html')" class="launch-btn">✈️ Airplane</button>
-    <button onclick="bootUpGameConsole('./defence.html')" class="launch-btn">🛡️ Defence</button>
-  `;
-} else {
-  actionHtml = `<button onclick="bootUpGameConsole('${game.url}')" class="launch-btn">🚀 학습 시작하기</button>`;
-}
+        if (game.url === "#space-math-menu") {
+          actionHtml = `
+            <button onclick="bootUpGameConsole('./airplane.html')" class="launch-btn">✈️ Airplane</button>
+            <button onclick="bootUpGameConsole('./defence.html')" class="launch-btn">🛡️ Defence</button>
+          `;
+        } else {
+          actionHtml = `<button onclick="bootUpGameConsole('${game.url}')" class="launch-btn">🚀 학습 시작하기</button>`;
+        }
         
         if(isAdminAuthenticated) {
           actionHtml = `
