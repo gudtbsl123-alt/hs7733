@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>민주주의 어드벤처: 4개의 세계</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================= */
+        /* [CSS 스타일] UI 디자인 및 애니메이션 */
+        /* ========================================= */
+        :root {
+            --primary: #2ecc71;
+            --primary-dark: #27ae60;
+            --accent: #e74c3c;
+            --ui-bg: rgba(255, 255, 255, 0.98);
+            --text-main: #2c3e50;
+            --shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Jua', sans-serif;
+            overflow: hidden; background-color: #000;
+            user-select: none; -webkit-user-select: none;
+        }
+
+        #gameCanvas { display: block; width: 100%; height: 100%; }
+        #game-screen { width: 100%; height: 100%; position: relative; overflow: hidden; background: #34495e; transition: background 1s; }
+
+        /* 상단 상태창 */
+        #status-bar {
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0, 0, 0, 0.75); color: white;
+            padding: 12px 20px; border-radius: 20px;
+            box-shadow: var(--shadow); z-index: 10; border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .stat-section { display: flex; align-items: center; font-size: 1.2rem; }
+        .stat-center { flex-grow: 1; justify-content: center; gap: 20px; }
+        .stat-group { display: flex; align-items: center; gap: 8px; }
+
+        #hp-container {
+            width: 130px; height: 20px; background: #333;
+            border-radius: 10px; border: 2px solid #fff; overflow: hidden;
+            position: relative; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        #hp-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #ff7675, #e74c3c); transition: width 0.3s ease, background 0.3s; }
+        #hp-text { position: absolute; width: 100%; text-align: center; font-size: 0.85rem; top: 1px; color: white; font-family: 'Poppins', sans-serif; }
+
+        @media (max-width: 650px) {
+            #status-bar { flex-wrap: wrap; gap: 10px; justify-content: center; }
+            .stat-center { width: 100%; order: 3; }
+        }
+
+        /* 가상 조이스틱 */
+        #joystick-zone {
+            position: absolute; bottom: 30px; left: 30px;
+            width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.15); border: 3px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%; z-index: 10; touch-action: none; backdrop-filter: blur(5px);
+        }
+        #joystick-knob {
+            position: absolute; top: 50%; left: 50%;
+            width: 50px; height: 50px;
+            background: linear-gradient(145deg, #ffffff, #e0e0e0);
+            border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; border: 2px solid #333;
+        }
+
+        /* 퀴즈 모달창 */
+        #quiz-modal {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 90%; max-width: 650px; background: var(--ui-bg);
+            padding: 30px; border-radius: 25px; border: 5px solid var(--text-main);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); z-index: 30; display: none; text-align: center;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0;
+        }
+        #quiz-modal.active { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        #q-header { font-size: 1.3rem; color: #8e44ad; margin-bottom: 10px; }
+        #q-text { font-size: 1.6rem; color: var(--text-main); margin-bottom: 25px; word-break: keep-all; line-height: 1.4; }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 500px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+        
+        .opt-btn {
+            background: white; border: 3px solid var(--text-main); border-radius: 15px;
+            padding: 15px 10px 15px 40px; font-size: 1.2rem; font-family: 'Jua', sans-serif;
+            cursor: pointer; box-shadow: 0 5px 0 var(--text-main); color: var(--text-main);
+            position: relative; text-align: center; transition: 0.1s;
+        }
+        .opt-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--text-main); }
+        .opt-btn::before {
+            content: attr(data-index); position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+            width: 24px; height: 24px; background: var(--text-main); color: white; border-radius: 50%;
+            font-size: 1rem; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 피드백 화면 및 해설창 */
+        #feedback-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 40; backdrop-filter: blur(8px);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 30px; box-sizing: border-box;
+        }
+        #fb-icon { font-size: 7rem; margin: 0; animation: popIn 0.5s both; }
+        #fb-title { font-size: 2.8rem; margin: 15px 0; }
+        
+        /* [핵심 변경] 문제 풀이 해설창 스타일 */
+        .explanation-box {
+            background: rgba(255, 255, 255, 0.95); color: #333; padding: 20px; border-radius: 15px;
+            max-width: 500px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border: 4px solid #f1c40f; text-align: left;
+        }
+        .explanation-box h4 { margin: 0 0 10px 0; color: #d35400; font-size: 1.4rem; text-align: center; }
+        .explanation-box p { margin: 0; font-size: 1.3rem; line-height: 1.5; word-break: keep-all; }
+        
+        .action-btn {
+            background: var(--primary); color: white; border: 4px solid var(--text-main);
+            padding: 15px 40px; font-size: 1.8rem; border-radius: 20px;
+            cursor: pointer; font-family: 'Jua', sans-serif; box-shadow: 0 6px 0 var(--text-main); transition: 0.1s; margin: 10px;
+        }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--text-main); }
+
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
+        @keyframes flashRed { 0% { background: rgba(231, 76, 60, 0); } 50% { background: rgba(231, 76, 60, 0.4); } 100% { background: rgba(231, 76, 60, 0); } }
+        .effect-shake { animation: shake 0.15s; animation-iteration-count: 3; }
+        .effect-flash { animation: flashRed 0.25s; animation-iteration-count: 2; }
+
+        /* 시작화면, 캐릭터 및 난이도 선택 */
+        #start-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1abc9c, #2980b9); z-index: 50;
+            display: flex; flex-direction: column; justify-content: flex-start; align-items: center; color: white;
+            overflow-y: auto; padding: 40px 0;
+        }
+
+        .neon-title {
+            font-size: 5.85rem; color: #fff; text-align: center; margin-bottom: 20px; line-height: 1.3;
+            animation: neon-rainbow-soft 8s linear infinite; font-weight: bold; margin-top: 20px;
+        }
+        .neon-subtitle { font-size: 3.64rem; font-weight: normal; display: block; margin-top: 10px; }
+        
+        @keyframes neon-rainbow-soft {
+            0% { text-shadow: 0 0 15px #fff, 0 0 30px #ff7675, 0 0 50px #ff7675, 0 0 70px #ff7675; } 
+            25% { text-shadow: 0 0 15px #fff, 0 0 30px #55efc4, 0 0 50px #55efc4, 0 0 70px #55efc4; } 
+            50% { text-shadow: 0 0 15px #fff, 0 0 30px #74b9ff, 0 0 50px #74b9ff, 0 0 70px #74b9ff; } 
+            75% { text-shadow: 0 0 15px #fff, 0 0 30px #a29bfe, 0 0 50px #a29bfe, 0 0 70px #a29bfe; } 
+            100% { text-shadow: 0 0 15px #fff, 0 0 30px #ff7675, 0 0 50px #ff7675, 0 0 70px #ff7675; }
+        }
+
+        #start-logo { font-size: 6rem; margin-bottom: 10px; animation: float 3s infinite ease-in-out; }
+        
+        #nickname-input {
+            font-size: 1.5rem; padding: 12px; border-radius: 12px; border: 3px solid #fff;
+            text-align: center; width: 80%; max-width: 300px; font-family: 'Jua'; margin-bottom: 20px; outline: none; color: #333;
+        }
+        
+        .selection-box {
+            background: rgba(255,255,255,0.2); border-radius: 15px; padding: 20px;
+            width: 95%; max-width: 750px; margin-bottom: 20px; border: 2px solid rgba(255,255,255,0.5);
+        }
+        .selection-box h3 { margin: 0 0 15px 0; text-align: center; font-size: 1.4rem; text-shadow: 1px 1px 2px #000; }
+        
+        /* 난이도 선택 버튼 */
+        .diff-btn-group { display: flex; justify-content: center; gap: 15px; }
+        .diff-btn {
+            background: rgba(0,0,0,0.4); padding: 15px 25px; border-radius: 15px; font-size: 1.4rem;
+            cursor: pointer; border: 3px solid transparent; transition: 0.2s;
+        }
+        .diff-btn.selected { background: #f39c12; border: 3px solid #fff; transform: scale(1.05); box-shadow: 0 0 15px #f39c12; }
+
+        #emoji-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; padding: 5px; }
+        
+        @media (max-width: 650px) {
+            #emoji-grid { grid-template-columns: repeat(8, 1fr); gap: 5px; }
+            .emoji-item { font-size: 1.6rem; }
+            .neon-title { font-size: 3.9rem; } 
+            .neon-subtitle { font-size: 2.6rem; } 
+            .diff-btn { padding: 10px 15px; font-size: 1.2rem; }
+        }
+        @media (max-width: 400px) {
+            #emoji-grid { grid-template-columns: repeat(6, 1fr); gap: 5px; }
+        }
+        
+        .emoji-item {
+            font-size: 2.2rem; cursor: pointer; transition: 0.2s; text-align: center;
+            padding: 5px; border-radius: 10px; background: rgba(0,0,0,0.2);
+        }
+        .emoji-item:hover { transform: scale(1.1); background: rgba(255,255,255,0.3); }
+        .emoji-item.selected { background: #f1c40f; transform: scale(1.15); box-shadow: 0 0 10px #f1c40f; border: 3px solid #fff; }
+        
+        .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-bottom: 40px;}
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    </style>
+</head>
+<body>
+
+    <div id="game-screen">
+        <div id="start-screen">
+            <div id="start-logo">🌍✨</div>
+            <h1 class="neon-title">
+                민주주의 어드벤처<br>
+                <span class="neon-subtitle">4개의 세계를 통과해라!</span>
+            </h1>
+            
+            <input type="text" id="nickname-input" placeholder="여기에 닉네임을 입력하세요!" maxlength="8">
+
+            <div class="selection-box">
+                <h3>👇 문제 난이도를 선택하세요 👇</h3>
+                <div class="diff-btn-group">
+                    <div class="diff-btn selected" onclick="selectDifficulty('basic', this)">🌱 기초 (기본 개념)</div>
+                    <div class="diff-btn" onclick="selectDifficulty('advanced', this)">🔥 심화 (사례·응용)</div>
+                </div>
+            </div>
+
+            <div class="selection-box">
+                <h3>👇 내 캐릭터를 선택하세요 👇</h3>
+                <div id="emoji-grid">
+                    </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="action-btn" onclick="startGame()">탐험 시작!</button>
+            </div>
+        </div>
+
+        <div id="status-bar">
+            <div class="stat-section"><div>🗺️ <span id="map-text">맵 1 / 4</span></div></div>
+            <div class="stat-section stat-center">
+                <div class="stat-group">
+                    <span style="font-size: 1.5rem;">❤️</span>
+                    <div id="hp-container"><div id="hp-bar"></div><div id="hp-text">100 / 100</div></div>
+                </div>
+                <div class="stat-group">
+                    <span style="font-size: 1.5rem;">🪙</span>
+                    <div style="font-weight: bold;"><span id="score-text">0</span>점</div>
+                </div>
+            </div>
+            <div class="stat-section"><div>🏆 <span id="cleared-text">0 / 5</span></div></div>
+        </div>
+
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="quiz-modal">
+            <div id="q-header">❓ 문제 풀이</div>
+            <div id="q-text">여기에 문제가 표시됩니다.</div>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <div id="feedback-overlay">
+            <h1 id="fb-icon">O</h1>
+            <h2 id="fb-title">정답입니다!</h2>
+            <div id="fb-desc"></div>
+            <button class="action-btn" id="fb-btn" onclick="closeFeedback()">계속하기</button>
+        </div>
+    </div>
+
+<script>
+    // ================= :[기초 난이도 문제 데이터 (20문제)] =================
+    const questionsBasic = [
+        // 맵 1
+        { q: "모든 국민이 나라의 주인으로서 권리를 가지는 정치 제도는?", options: ["공산주의", "민주주의", "독재주의", "왕정주의"], answerIndex: 1, explanation: "민주주의는 국민에게 주권이 있는 제도입니다." },
+        { q: "다음 중 민주주의 사회에서 갈등을 해결하는 올바른 방법은?", options: ["힘으로 제압한다", "대화와 타협", "상대방 무시", "가짜 뉴스 퍼뜨리기"], answerIndex: 1, explanation: "대화와 타협을 통해 평화롭게 갈등을 해결해야 합니다." },
+        { q: "민주주의의 꽃이라고 불리며, 국민의 뜻을 전달하는 가장 기본적인 참여 방법은?", options: ["선거(투표)", "세금 납부", "시위 참여", "댓글 달기"], answerIndex: 0, explanation: "선거는 국민의 뜻을 정치에 반영하는 가장 기본적이고 중요한 권리입니다." },
+        { q: "사람들은 모두 다르게 생각할 수 있습니다. 나와 다른 생각을 어떻게 대해야 할까요?", options: ["틀렸다고 비난한다", "무시한다", "존중하고 이해한다", "싸워서 이긴다"], answerIndex: 2, explanation: "나와 다른 의견도 존중하는 '관용'의 태도가 필요합니다." },
+        { q: "회의에서 의견이 모아지지 않을 때, 효율적으로 결정하기 위해 따르는 원칙은?", options: ["소수 의견 존중", "양보와 타협", "만장일치", "다수결의 원칙"], answerIndex: 3, explanation: "결정이 어려울 때는 다수결의 원칙을 따릅니다. 단, 소수의 의견도 경청해야 해요." },
+        // 맵 2
+        { q: "누구나 나이가 되면 조건 없이 똑같이 투표권을 가지는 선거 원칙은?", options: ["평등선거", "대리선거", "보통선거", "비밀선거"], answerIndex: 2, explanation: "일정 연령 이상의 모든 국민에게 선거권을 주는 것을 '보통 선거'라고 합니다." },
+        { q: "재산, 성별, 학력에 관계없이 누구나 공평하게 '1표씩' 행사하는 원칙은?", options: ["평등선거", "직접선거", "보통선거", "비밀선거"], answerIndex: 0, explanation: "부자든 가난하든 모두 똑같이 한 표의 가치를 가지는 것이 '평등 선거'입니다." },
+        { q: "자신이 누구에게 투표했는지 다른 사람이 알지 못하게 하는 원칙은?", options: ["보통선거", "직접선거", "평등선거", "비밀선거"], answerIndex: 3, explanation: "자유로운 선택을 보장하기 위해 '비밀 선거' 원칙을 지킵니다." },
+        { q: "민주주의 국가에서 시민들이 정치에 참여하는 방법이 아닌 것은?", options: ["시민 단체 활동", "선거에 출마하기", "서명 운동", "불법 폭력 시위"], answerIndex: 3, explanation: "정치 참여는 반드시 법과 규칙을 지키는 평화적인 방법으로 이루어져야 합니다." },
+        { q: "우리 지역의 문제를 해결하기 위해 주민들이 스스로 대표를 뽑아 다스리는 제도는?", options: ["지방 자치 제도", "삼권 분립", "의원 내각제", "중앙 집권제"], answerIndex: 0, explanation: "주민들이 지역의 일을 스스로 결정하고 처리하는 제도를 지방 자치라고 합니다." },
+        // 맵 3
+        { q: "국민의 뜻을 반영하여 법을 만드는 국가 기관은 어디인가요?", options: ["법원", "정부", "국회", "경찰청"], answerIndex: 2, explanation: "국회는 국민의 대표들이 모여 법을 만드는 입법부입니다." },
+        { q: "국회에서 만든 법을 바탕으로, 나라 살림을 맡아하는 기관은?", options: ["국회", "정부", "법원", "헌법재판소"], answerIndex: 1, explanation: "대통령과 장관들이 모여 실제로 나라 살림을 운영하는 곳이 정부(행정부)입니다." },
+        { q: "사람들 사이에 다툼이 생겼을 때, 법에 따라 공정하게 재판하는 기관은?", options: ["법원", "정부", "국회", "주민센터"], answerIndex: 0, explanation: "법원(사법부)은 법을 해석하고 적용하여 재판을 하는 곳입니다." },
+        { q: "국가 권력을 국회, 정부, 법원 세 곳으로 나누어 맡는 제도를 무엇이라고 하나요?", options: ["지방 자치", "다수결", "삼권 분립", "정당 정치"], answerIndex: 2, explanation: "한 기관이 권력이 남용되지 못하도록 나누는 제도가 삼권 분립입니다." },
+        { q: "삼권 분립을 하는 가장 큰 이유는 무엇인가요?", options: ["재판을 빨리 하려고", "국민의 자유와 권리 보호", "세금을 덜 내려고", "투표를 쉽게 하려고"], answerIndex: 1, explanation: "권력이 한 곳에 집중되는 것을 막아, 국민의 자유와 권리 보호를 위함입니다." },
+        // 맵 4
+        { q: "많은 사람에게 영향을 미치는 새로운 사실을 전달하는 수단은?", options: ["미디어", "자동차", "냉장고", "책상"], answerIndex: 0, explanation: "미디어는 정보를 주고받으며 의사소통하기 위해 사용하는 수단입니다." },
+        { q: "허위 조작 정보의 설명으로 옳은 것은?", options: ["진실한 뉴스", "사실과 다른 내용을 꾸며서 전달", "비판적 기사", "정확한 사실"], answerIndex: 1, explanation: "허위 조작 정보는 사실과 다른 내용을 꾸며서 전달하는 가짜 정보입니다." },
+        { q: "미디어 정보를 이용할 때의 올바른 태도는?", options: ["있는 그대로 믿는다", "비판적으로 분석한다", "무조건 반대한다", "친구의 말만 믿는다"], answerIndex: 1, explanation: "미디어의 정보를 비판적으로 분석하여 이용해야 합니다." },
+        { q: "다음 중 신문이나 방송을 이용할 때 주의할 점으로 옳은 것은?", options: ["속보라고 무조건 믿는다", "여러 자료를 통해 사실 여부를 확인한다", "제목만 보고 판단한다", "내가 지지하는 쪽만 믿는다"], answerIndex: 1, explanation: "믿을 만한 자료를 통해 사실 여부를 여러 번 확인하는 과정이 필요합니다." },
+        { q: "허위 조작 정보를 비판적으로 분석할 때 확인해야 할 점은?", options: ["글 작성자와 날짜", "내용이 재미있는지", "광고가 많은지", "글자 크기"], answerIndex: 0, explanation: "글을 작성한 사람(출처)과 날짜를 확인하는 것이 중요합니다." }
+    ];
+
+    // ================= :[심화 난이도 문제 데이터 (20문제)] =================
+    const questionsAdvanced = [
+        // 맵 1
+        { q: "학급 회의에서 소수의 의견인 '피구'를 무시하고 다수가 원하는 '축구'만 강행했습니다. 여기서 부족한 민주주의의 태도는?", options: ["대화와 타협", "다수결의 원칙", "비판적 태도", "강제와 지배"], answerIndex: 0, explanation: "다수결을 적용하기 전, 소수 의견을 존중하고 대화와 타협을 거치는 것이 중요합니다." },
+        { q: "아파트 층간 소음 문제로 다툼이 생겼을 때, 민주적인 해결 방법으로 가장 적절한 것은?", options: ["경찰에 잡아간다", "똑같이 소음을 낸다", "주민 회의를 열어 규칙을 정한다", "무조건 참는다"], answerIndex: 2, explanation: "공동의 문제를 해결하기 위해 대화와 토론을 거쳐 합의점을 찾는 것이 민주적인 태도입니다." },
+        { q: "생활 속에서 겪는 갈등을 조정하고, 사람들에게 영향을 끼치는 공동의 문제를 해결해 가는 모든 활동을 뜻하는 말은?", options: ["경제", "정치", "문화", "예술"], answerIndex: 1, explanation: "정치는 정치인들만 하는 것이 아니라, 우리 생활 속 갈등을 해결하는 모든 과정을 뜻합니다." },
+        { q: "다수결의 원칙이 항상 옳은 것은 아닙니다. 다수결을 적용하기 전에 반드시 거쳐야 하는 과정은?", options: ["충분한 대화와 토론", "힘 있는 사람의 결정", "제비뽑기", "무조건 투표하기"], answerIndex: 0, explanation: "다수결을 결정하기 전에는 충분한 대화와 토론으로 소수의 의견까지 들어보아야 합니다." },
+        { q: "시민들이 자발적으로 모여 환경 보호, 인권 보장 등 사회 문제를 해결하기 위해 활동하는 단체는?", options: ["국회", "시민 단체", "법원", "기업"], answerIndex: 1, explanation: "시민 단체는 사회의 여러 문제를 해결하기 위해 시민들이 스스로 만든 모임입니다." },
+        // 맵 2
+        { q: "'세금을 많이 내는 사람에게 투표권을 2장씩 주자'고 한다면, 이는 어떤 선거 원칙에 어긋나나요?", options: ["보통 선거", "평등 선거", "직접 선거", "비밀 선거"], answerIndex: 1, explanation: "재산, 성별 등에 관계없이 누구나 공평하게 '1표씩'을 가지는 것이 평등 선거입니다." },
+        { q: "'나이가 만 18세 이상이 된 국민은 누구에게나 선거권을 준다'는 것은 어떤 선거 원칙인가요?", options: ["보통 선거", "평등 선거", "직접 선거", "비밀 선거"], answerIndex: 0, explanation: "일정한 나이가 되면 조건 없이 투표할 수 있는 권리를 주는 것을 보통 선거라고 합니다." },
+        { q: "도지사나 시의원 등 지역의 대표를 지역 주민이 직접 뽑아서 우리 지역 살림을 맡기는 제도는?", options: ["지방 자치 제도", "삼권 분립", "대통령 직선제", "국민 투표"], answerIndex: 0, explanation: "지방 자치 제도는 지역의 일을 주민이 스스로 결정하고 처리하는 풀뿌리 민주주의의 핵심입니다." },
+        { q: "우리 지역에 쓰레기 소각장이 들어서는 것을 막기 위해 시민들이 할 수 있는 민주적 정치 참여는?", options: ["공사장 부수기", "서명 운동 및 평화적 집회", "공무원 협박하기", "아무것도 안 하기"], answerIndex: 1, explanation: "서명 운동, 캠페인, 평화적인 집회 등은 시민들의 올바른 정치 참여 방법입니다." },
+        { q: "국민의 중요한 권리인 선거를 공정하게 관리하기 위해 독립적으로 설치된 국가 기관은?", options: ["경찰청", "국회", "선거 관리 위원회", "대법원"], answerIndex: 2, explanation: "선거 관리 위원회는 선거와 국민 투표가 공정하게 이루어지도록 돕는 기관입니다." },
+        // 맵 3
+        { q: "'어린이 보호 구역에서 자동차 속도를 제한하는 법'처럼 국민 생활에 필요한 법을 만드는 기관은?", options: ["법원", "정부", "국회", "청와대"], answerIndex: 2, explanation: "국민의 대표인 국회의원들이 모여 법을 만드는 입법부가 바로 국회입니다." },
+        { q: "국회에서 만든 법에 따라, 도로에 카메라를 설치하고 실제로 정책을 실행하는 기관은?", options: ["법원", "정부", "국회", "헌법재판소"], answerIndex: 1, explanation: "법을 바탕으로 나라 살림을 실제로 맡아 일하는 행정부가 바로 정부입니다." },
+        { q: "법을 어긴 사람에게 재판을 통해 벌을 주거나, 사람들 사이의 다툼을 법에 따라 해결해 주는 기관은?", options: ["법원", "정부", "국회", "주민센터"], answerIndex: 0, explanation: "법원(사법부)은 모든 사람이 법 앞에 평등하도록 공정하게 재판하는 역할을 합니다." },
+        { q: "국가 권력이 집중되어 남용되는 것을 막기 위해 국회, 정부, 법원이 권력을 나누는 제도는?", options: ["다수결의 원칙", "지방 자치 제도", "삼권 분립", "의원 내각제"], answerIndex: 2, explanation: "권력을 세 기관이 나누어 서로 견제하고 균형을 이루게 하는 것이 삼권 분립입니다." },
+        { q: "국회는 정부(대통령)가 나랏일을 잘하고 있는지 감시하고 확인합니다. 이를 무엇이라고 하나요?", options: ["국정 감사", "헌법 소원", "지방 자치", "국민 투표"], answerIndex: 0, explanation: "국정 감사는 법을 만드는 국회가 정부의 권력을 견제하는 대표적인 방법입니다." },
+        // 맵 4
+        { q: "선거를 앞두고 특정 후보에 대한 거짓 소문을 진짜 뉴스처럼 꾸며서 퍼뜨리는 것을 무엇이라고 하나요?", options: ["비판적 기사", "허위 조작 정보", "공익 광고", "여론 조사"], answerIndex: 1, explanation: "사실과 다른 내용을 꾸며서 전달하는 허위 조작 정보(가짜 뉴스)는 민주주의를 위협합니다." },
+        { q: "SNS에서 자신이 좋아하는 내용만 보게 되어 생각이 한쪽으로 치우치는 현상을 방지하려면?", options: ["SNS를 아예 탈퇴한다", "다양한 매체와 관점을 비교한다", "친구의 말만 믿는다", "자극적인 기사만 본다"], answerIndex: 1, explanation: "다양한 시각의 정보를 비교해 보며 균형 잡힌 생각을 가지는 것이 중요합니다." },
+        { q: "미디어의 정보를 그대로 믿지 않고 그 타당성과 숨겨진 의도를 따져보는 태도는?", options: ["비판적 태도", "수용적 태도", "무관심", "맹목적 태도"], answerIndex: 0, explanation: "정보의 사실 여부와 숨겨진 의도를 따져보는 비판적 태도가 반드시 필요합니다." },
+        { q: "유명 연예인이 특정 상품을 쓰는 사진이 SNS에 올라왔을 때의 올바른 미디어 이용 태도는?", options: ["무조건 따라서 산다", "광고일 수 있으므로 비판적으로 본다", "나쁜 댓글을 단다", "아무 생각 없이 넘긴다"], answerIndex: 1, explanation: "미디어 속 정보에는 특정 상품을 홍보하려는 의도(광고)가 숨어있을 수 있습니다." },
+        { q: "미디어의 정보가 사실인지 확인하기 위해 글을 작성한 사람이나 기관을 따져보는 것을 무엇을 확인한다고 하나요?", options: ["정보의 제목", "정보의 출처", "정보의 길이", "댓글 수"], answerIndex: 1, explanation: "누가, 어디서 만든 정보인지 '출처'를 확인하는 것은 비판적 수용의 첫걸음입니다." }
+    ];
+
+    // ================= :[캐릭터 및 난이도 세팅]= =================
+    const characterEmojis = [
+        "🏃‍♂️", "🏃‍♀️", "🦸‍♂️", "🦸‍♀️", "🧙‍♂️", "🧙‍♀️", "🧚‍♂️", "🧚‍♀️", "🧛‍♂️", "🧛‍♀️",
+        "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
+        "🦁", "🐮", "🐷", "🐸", "🐵", "🐧", "🦉", "🐢", "🐙", "🦖",
+        "🌲", "🌳", "🌴", "🌵", "🌷", "🌸", "🌹", "🌻", "🍄", "🍎",
+        "🍓", "🍉", "🍇", "🍒", "🍔", "🍕", "🍩", "🍦", "🍭", "⚽"
+    ];
+    let selectedEmoji = "🏃‍♂️"; 
+    let selectedDifficulty = "basic"; // 기본값 기초
+
+    const emojiGrid = document.getElementById('emoji-grid');
+    characterEmojis.forEach((emoji, index) => {
+        const div = document.createElement('div');
+        div.className = 'emoji-item';
+        if(index === 0) div.classList.add('selected'); 
+        div.innerText = emoji;
+        div.onclick = () => {
+            document.querySelectorAll('.emoji-item').forEach(e => e.classList.remove('selected'));
+            div.classList.add('selected');
+            selectedEmoji = emoji;
+        };
+        emojiGrid.appendChild(div);
+    });
+
+    function selectDifficulty(diff, btnElement) {
+        document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('selected'));
+        btnElement.classList.add('selected');
+        selectedDifficulty = diff;
+    }
+
+    // ========================================= :[맵 테마 설정]= =========================================
+    const themes = [
+        { bgGame: "#27ae60", floor: "#a8e6cf", lines: "rgba(0,0,0,0.05)", border: "#2e7d32", obstacles: ['🌳', '🪨', '🍄'], monster: '🌵', npc: '🦉' }, 
+        { bgGame: "#d35400", floor: "#ffeaa7", lines: "rgba(211, 84, 0, 0.2)", border: "#e67e22", obstacles: ['🌵', '🐪', '🏜️'], monster: '🦂', npc: '🧞‍♂️' }, 
+        { bgGame: "#2980b9", floor: "#e0f7fa", lines: "rgba(41, 128, 185, 0.2)", border: "#0097e6", obstacles: ['⛄', '🧊', '🌲'], monster: '🐺', npc: '🧝‍♂️' }, 
+        { bgGame: "#192a56", floor: "#2c3e50", lines: "rgba(255,255,255,0.08)", border: "#8c7ae6", obstacles: ['🚀', '🛸', '🪐'], monster: '👽', npc: '🤖' } 
+    ];
+
+    // ========================================= :[게임 엔진 설정]= =========================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gameScreen = document.getElementById('game-screen');
+    
+    let gameState = 'START'; 
+    let currentMapIndex = 0; 
+    let currentHP = 100;
+    const maxHP = 100;
+    const hpPerWrong = 25; 
+    const hpPerMonster = 5; 
+    let mapClearedCount = 0; 
+    let activeQuizIndex = -1;
+    let score = 0; 
+    
+    let gameStartTime = 0;
+    let totalQuestionsAttempted = 0;
+    let totalCorrectAnswers = 0;
+    let activeQuestions = []; // 현재 난이도의 20문제 보관
+
+    let audioCtx;
+    const keySoundJinglePlayed = new Set(); 
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playKeyJingle() {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator(); const gainNode1 = audioCtx.createGain();
+        osc1.type = 'sine'; osc1.frequency.setValueAtTime(1100, now); 
+        gainNode1.gain.setValueAtTime(0.02, now); 
+        osc1.connect(gainNode1); gainNode1.connect(audioCtx.destination);
+        osc1.start(now); osc1.stop(now + 0.15);
+    }
+
+    const worldWidth = 1800;
+    const worldHeight = 1800;
+    let camera = { x: 0, y: 0 };
+
+    const player = { x: worldWidth / 2, y: worldHeight / 2, radius: 22, speed: 1.75, emoji: '🏃‍♂️', nickname: '학생', vx: 0, vy: 0, invincible: false };
+
+    let npcs = []; let obstacles = []; let monsters = []; let coins = []; let floatTexts = [];
+    let currentTheme = themes[0];
+    let mapQuestions = []; 
+
+    function initMap(mapIndex) {
+        currentMapIndex = mapIndex;
+        currentTheme = themes[mapIndex];
+        mapClearedCount = 0;
+        
+        gameScreen.style.backgroundColor = currentTheme.bgGame;
+        document.getElementById('map-text').innerText = `맵 ${mapIndex + 1} / 4`;
+        
+        mapQuestions = activeQuestions.slice(mapIndex * 5, (mapIndex + 1) * 5);
+
+        npcs = []; obstacles = []; monsters = []; coins = []; floatTexts = [];
+        player.x = worldWidth / 2; player.y = worldHeight / 2;
+        keySoundJinglePlayed.clear(); 
+
+        for(let i=0; i<5; i++) {
+            let validPosition = false;
+            let nx, ny, attempts = 0;
+            while(!validPosition && attempts < 100) {
+                nx = Math.random() * (worldWidth - 400) + 200; 
+                ny = Math.random() * (worldHeight - 400) + 200;
+                validPosition = true;
+                for(let j=0; j<npcs.length; j++) {
+                    let d = Math.hypot(nx - npcs[j].x, ny - npcs[j].y);
+                    if(d < 400) { validPosition = false; break; } 
+                }
+                attempts++;
+            }
+            npcs.push({ id: i, x: nx, y: ny, radius: 35, active: true, emoji: currentTheme.npc, nearPlayer: false });
+        }
+
+        for(let i=0; i<5; i++) {
+            coins.push({ x: Math.random()*1600+100, y: Math.random()*1600+100, radius: 20, active: true, emoji: '🪙' });
+        }
+
+        for(let i=0; i<40; i++) {
+            const typeEmoji = currentTheme.obstacles[Math.floor(Math.random()*currentTheme.obstacles.length)];
+            obstacles.push({ x: Math.random()*1700+50, y: Math.random()*1700+50, radius: 25, emoji: typeEmoji });
+        }
+
+        for(let i=0; i<10; i++) {
+            monsters.push({ 
+                x: Math.random()*1600+100, y: Math.random()*1600+100, 
+                radius: 20, speed: 0.5 + Math.random()*0.5,
+                vx: Math.random()>0.5 ? 1 : -1, vy: Math.random()>0.5 ? 1 : -1,
+                emoji: currentTheme.monster
+            });
+        }
+        
+        updateUI();
+    }
+
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    const joyZone = document.getElementById('joystick-zone');
+    const joyKnob = document.getElementById('joystick-knob');
+    let joyActive = false; let joyCenter = { x: 0, y: 0 }; let joyVector = { x: 0, y: 0 };
+
+    joyZone.addEventListener('touchstart', (e) => { e.preventDefault(); joyActive = true; const rect = joyZone.getBoundingClientRect(); joyCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 }; updateJoystick(e.touches[0]); });
+    joyZone.addEventListener('touchmove', (e) => { e.preventDefault(); if(joyActive) updateJoystick(e.touches[0]); });
+    joyZone.addEventListener('touchend', (e) => { e.preventDefault(); joyActive = false; joyVector = { x: 0, y: 0 }; joyKnob.style.transform = `translate(-50%, -50%)`; });
+
+    function updateJoystick(touch) {
+        let dx = touch.clientX - joyCenter.x; let dy = touch.clientY - joyCenter.y;
+        let distance = Math.sqrt(dx*dx + dy*dy); const maxDist = 45;
+        if(distance > maxDist) { dx = (dx / distance) * maxDist; dy = (dy / distance) * maxDist; }
+        joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        joyVector.x = distance > 0 ? dx / maxDist : 0; joyVector.y = distance > 0 ? dy / maxDist : 0;
+    }
+
+    function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+
+    function update() {
+        if(gameState !== 'PLAYING') return;
+
+        player.vx = 0; player.vy = 0;
+        if(keys['ArrowUp'] || keys['w']) player.vy = -1; if(keys['ArrowDown'] || keys['s']) player.vy = 1;
+        if(keys['ArrowLeft'] || keys['a']) player.vx = -1; if(keys['ArrowRight'] || keys['d']) player.vx = 1;
+        if(joyActive) { player.vx = joyVector.x; player.vy = joyVector.y; }
+
+        const length = Math.sqrt(player.vx*player.vx + player.vy*player.vy);
+        let nextX = player.x; let nextY = player.y;
+        if(length > 0) { nextX += (player.vx / length) * player.speed; nextY += (player.vy / length) * player.speed; }
+
+        let canMoveX = true; let canMoveY = true;
+        for(let obs of obstacles) {
+            if(Math.sqrt(Math.pow(nextX - obs.x, 2) + Math.pow(player.y - obs.y, 2)) < player.radius + obs.radius) canMoveX = false;
+            if(Math.sqrt(Math.pow(player.x - obs.x, 2) + Math.pow(nextY - obs.y, 2)) < player.radius + obs.radius) canMoveY = false;
+        }
+
+        if(canMoveX) player.x = Math.max(player.radius, Math.min(worldWidth - player.radius, nextX));
+        if(canMoveY) player.y = Math.max(player.radius, Math.min(worldHeight - player.radius, nextY));
+
+        camera.x = player.x - canvas.width / 2;
+        camera.y = player.y - canvas.height / 2;
+
+        for(let mon of monsters) {
+            mon.x += mon.vx * mon.speed; mon.y += mon.vy * mon.speed;
+            if(mon.x < mon.radius || mon.x > worldWidth - mon.radius) mon.vx *= -1;
+            if(mon.y < mon.radius || mon.y > worldHeight - mon.radius) mon.vy *= -1;
+
+            if(!player.invincible && gameState === 'PLAYING') {
+                let dist = Math.sqrt(Math.pow(player.x - mon.x, 2) + Math.pow(player.y - mon.y, 2));
+                if(dist < player.radius + mon.radius) {
+                    triggerHurtEffect(hpPerMonster);
+                }
+            }
+        }
+
+        for(let coin of coins) {
+            if(!coin.active) continue;
+            let dist = Math.sqrt(Math.pow(player.x - coin.x, 2) + Math.pow(player.y - coin.y, 2));
+            if(dist < player.radius + coin.radius) {
+                coin.active = false;
+                let earned = Math.floor(Math.random() * 201) + 100; 
+                score += earned;
+                floatTexts.push({ x: coin.x, y: coin.y, text: `+${earned}`, life: 40, color: '#f1c40f' }); 
+                updateUI();
+            }
+        }
+
+        floatTexts.forEach(ft => { ft.y -= 1.5; ft.life--; });
+        floatTexts = floatTexts.filter(ft => ft.life > 0);
+
+        for(let npc of npcs) {
+            if(!npc.active) continue;
+            let dist = Math.sqrt(Math.pow(player.x - npc.x, 2) + Math.pow(player.y - npc.y, 2));
+            
+            if (dist < player.radius + npc.radius + 100) {
+                if (!keySoundJinglePlayed.has(npc.id)) { playKeyJingle(); keySoundJinglePlayed.add(npc.id); }
+                npc.nearPlayer = true; 
+            } else {
+                npc.nearPlayer = false; 
+            }
+
+            if(dist < player.radius + npc.radius + 10) { startQuiz(npc.id); break; }
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0; 
+
+        ctx.save(); ctx.translate(-camera.x, -camera.y);
+
+        ctx.fillStyle = currentTheme.floor; 
+        ctx.fillRect(0, 0, worldWidth, worldHeight);
+        ctx.strokeStyle = currentTheme.lines; ctx.lineWidth = 2;
+        for(let i=0; i<=worldWidth; i+=100) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, worldHeight); ctx.stroke(); }
+        for(let i=0; i<=worldHeight; i+=100) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(worldWidth, i); ctx.stroke(); }
+        ctx.strokeStyle = currentTheme.border; ctx.lineWidth = 20; ctx.strokeRect(0, 0, worldWidth, worldHeight);
+
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        
+        for(let obs of obstacles) {
+            ctx.fillStyle = 'rgba(0,0,0,0.15)'; 
+            ctx.beginPath(); ctx.ellipse(obs.x, obs.y + 15, 12, 6, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#000000'; 
+            ctx.font = (obs.radius * 1.5) + 'px Arial'; 
+            ctx.fillText(obs.emoji, obs.x, obs.y);
+        }
+
+        let coinBounce = Math.sin(Date.now() / 150) * 6;
+        coins.forEach(coin => {
+            if(coin.active) {
+                ctx.fillStyle = 'rgba(0,0,0,0.15)'; 
+                ctx.beginPath(); ctx.ellipse(coin.x, coin.y + 15, 10, 5, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#000000';
+                ctx.font = '35px Arial';
+                ctx.fillText(coin.emoji, coin.x, coin.y + coinBounce);
+            }
+        });
+
+        let bounce = Math.sin(Date.now() / 200) * 8; 
+        npcs.forEach(npc => {
+            if(!npc.active) return;
+            
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; 
+            ctx.beginPath(); ctx.ellipse(npc.x, npc.y + 30, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+
+            ctx.save();
+            const auraGrad = ctx.createRadialGradient(npc.x, npc.y + bounce, npc.radius * 0.2, npc.x, npc.y + bounce, npc.radius * 2.2);
+            auraGrad.addColorStop(0, 'rgba(255, 235, 59, 0.7)'); 
+            auraGrad.addColorStop(0.5, 'rgba(255, 152, 0, 0.3)'); 
+            auraGrad.addColorStop(1, 'rgba(255, 152, 0, 0)'); 
+            ctx.fillStyle = auraGrad;
+            ctx.beginPath(); ctx.arc(npc.x, npc.y + bounce, npc.radius * 2.2, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+
+            if (npc.nearPlayer) {
+                ctx.font = 'bold 24px Jua';
+                ctx.lineWidth = 4; ctx.strokeStyle = '#333';
+                ctx.strokeText("💡문제 풀기!", npc.x, npc.y + bounce - 65);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText("💡문제 풀기!", npc.x, npc.y + bounce - 65);
+            }
+
+            ctx.fillStyle = '#000000'; 
+            ctx.font = '55px Arial'; 
+            ctx.fillText(npc.emoji, npc.x, npc.y + bounce);
+        });
+
+        monsters.forEach(mon => {
+            ctx.fillStyle = 'rgba(0,0,0,0.15)'; 
+            ctx.beginPath(); ctx.ellipse(mon.x, mon.y + 15, 12, 6, 0, 0, Math.PI*2); ctx.fill(); 
+            ctx.fillStyle = '#000000'; 
+            ctx.font = '35px Arial';
+            ctx.fillText(mon.emoji, mon.x, mon.y); 
+        });
+
+        if(!player.invincible || Math.floor(Date.now()/150) % 2 === 0) {
+            ctx.fillStyle = 'rgba(0,0,0,0.15)'; 
+            ctx.beginPath(); ctx.ellipse(player.x, player.y + 20, 15, 7, 0, 0, Math.PI*2); ctx.fill();
+            
+            ctx.save();
+            let pBounce = Math.sin(Date.now() / 300) * 2; 
+            const playerAura = ctx.createRadialGradient(player.x, player.y, player.radius * 0.2, player.x, player.y, player.radius * 2.5 + pBounce);
+            playerAura.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); 
+            playerAura.addColorStop(0.4, 'rgba(255, 240, 200, 0.4)'); 
+            playerAura.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = playerAura;
+            ctx.beginPath(); ctx.arc(player.x, player.y, player.radius * 2.5 + pBounce, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+
+            ctx.fillStyle = '#000000'; 
+            ctx.font = '45px Arial'; 
+            ctx.fillText(player.emoji, player.x, player.y);
+
+            ctx.font = 'bold 16px Jua';
+            ctx.fillStyle = '#fff';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.strokeText(player.nickname, player.x, player.y - 50);
+            ctx.fillText(player.nickname, player.x, player.y - 50);
+
+            const hpWidth = 60;
+            const hpHeight = 8;
+            const hpX = player.x - hpWidth / 2;
+            const hpY = player.y - 40;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(hpX, hpY, hpWidth, hpHeight);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(hpX, hpY, hpWidth * (currentHP / maxHP), hpHeight);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(hpX, hpY, hpWidth, hpHeight);
+        }
+
+        floatTexts.forEach(ft => {
+            ctx.globalAlpha = ft.life / 40;
+            ctx.fillStyle = ft.color || '#f1c40f'; 
+            ctx.font = 'bold 30px Jua';
+            ctx.lineWidth = 4; ctx.strokeStyle = '#333';
+            ctx.strokeText(ft.text, ft.x, ft.y);
+            ctx.fillText(ft.text, ft.x, ft.y);
+        });
+        ctx.globalAlpha = 1.0;
+
+        ctx.restore();
+    }
+
+    const hpBar = document.getElementById('hp-bar');
+    const hpText = document.getElementById('hp-text');
+    const clearedText = document.getElementById('cleared-text');
+    const scoreText = document.getElementById('score-text');
+    const quizModal = document.getElementById('quiz-modal');
+    const optionsContainer = document.getElementById('options-container');
+    const fbOverlay = document.getElementById('feedback-overlay');
+    
+    function startGame() {
+        const nickInput = document.getElementById('nickname-input').value.trim();
+        if(!nickInput) {
+            alert("닉네임을 꼭 입력해주세요!");
+            return;
+        }
+
+        document.getElementById('start-screen').style.display = 'none';
+        
+        player.nickname = nickInput;
+        player.emoji = selectedEmoji;
+        
+        // 난이도에 따른 문제 세팅
+        activeQuestions = selectedDifficulty === 'basic' ? questionsBasic : questionsAdvanced;
+        
+        initAudio(); 
+        currentHP = maxHP; 
+        score = 0; 
+        
+        gameStartTime = Date.now();
+        totalQuestionsAttempted = 0;
+        totalCorrectAnswers = 0;
+
+        initMap(0); 
+        gameState = 'PLAYING';
+        gameLoop();
+    }
+
+    function updateUI() {
+        hpBar.style.width = currentHP + '%'; hpText.innerText = `${currentHP} / ${maxHP}`;
+        hpBar.style.background = currentHP > 40 ? 'linear-gradient(90deg, #ff7675, #e74c3c)' : '#c0392b';
+        clearedText.innerText = `${mapClearedCount} / 5`;
+        scoreText.innerText = score;
+    }
+
+    function triggerHurtEffect(damage) {
+        currentHP = Math.max(0, currentHP - damage); updateUI();
+        gameScreen.classList.add('effect-shake', 'effect-flash');
+        setTimeout(() => gameScreen.classList.remove('effect-shake', 'effect-flash'), 300);
+
+        if(currentHP <= 0) {
+            setTimeout(() => showFeedback('GAMEOVER', "체력 소진...", `아쉽네요, 다시 도전해볼까요?`), 400);
+        } else {
+            player.invincible = true; setTimeout(() => player.invincible = false, 1500); 
+        }
+    }
+
+    function startQuiz(npcId) {
+        gameState = 'QUIZ'; activeQuizIndex = npcId; joyVector = {x:0, y:0};
+        const qData = mapQuestions[npcId];
+
+        document.getElementById('q-text').innerText = qData.q;
+        optionsContainer.innerHTML = '';
+        qData.options.forEach((optText, index) => {
+            const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.innerText = optText; btn.setAttribute('data-index', index + 1);
+            btn.onclick = () => checkAnswer(index); optionsContainer.appendChild(btn);
+        });
+
+        quizModal.style.display = 'block';
+        setTimeout(() => quizModal.classList.add('active'), 10);
+        npcs[npcId].nearPlayer = false; 
+    }
+
+    function checkAnswer(selectedIndex) {
+        quizModal.classList.remove('active');
+        setTimeout(() => quizModal.style.display = 'none', 300);
+
+        totalQuestionsAttempted++; 
+
+        const qData = mapQuestions[activeQuizIndex];
+        const isCorrect = (selectedIndex === qData.answerIndex);
+
+        if(isCorrect) {
+            totalCorrectAnswers++; 
+            npcs[activeQuizIndex].active = false;
+            mapClearedCount++; 
+            score += 500; 
+            
+            currentHP = Math.min(maxHP, currentHP + 10);
+            floatTexts.push({ x: player.x, y: player.y - 30, text: `+10 ❤️`, life: 40, color: '#ff7675' });
+            updateUI();
+            
+            ctx.save(); ctx.font = 'bold 80px Jua'; ctx.fillStyle = '#2ecc71'; ctx.textAlign='center'; ctx.fillText("정답!", canvas.width/2, canvas.height/2 - 50); ctx.restore();
+            
+            setTimeout(() => {
+                if(mapClearedCount >= 5) {
+                    if(currentMapIndex < 3) {
+                        currentHP = Math.min(maxHP, currentHP + 30);
+                        updateUI();
+                        showFeedback('MAP_CLEAR', `맵 ${currentMapIndex + 1} 클리어!`, "훌륭합니다! 보너스 체력이 회복되었습니다.\n다음 세계로 이동할 준비가 되었나요?");
+                    }
+                    else showFeedback('ALL_CLEAR', "🎉 최종 탈출 성공!", "축하합니다! 민주주의 어드벤처를 완벽하게 클리어했습니다.");
+                } else {
+                    showFeedback('CORRECT', "완벽해요!", qData.explanation);
+                }
+            }, 500);
+
+        } else {
+            triggerHurtEffect(hpPerWrong); 
+            // [핵심 변경] 오답 시 직관적인 해설 UI 제공
+            if(currentHP > 0) {
+                setTimeout(() => {
+                    let descHtml = `
+                        <div class="explanation-box">
+                            <h4>💡 선생님의 문제 풀이 해설</h4>
+                            <p>${qData.explanation}</p>
+                        </div>
+                    `;
+                    showFeedback('WRONG', "앗, 오답이에요!", descHtml);
+                }, 500);
+            }
+        }
+    }
+
+    function getPlayTimeString() {
+        if (!gameStartTime) return "00:00";
+        let diffSec = Math.floor((Date.now() - gameStartTime) / 1000);
+        let m = Math.floor(diffSec / 60).toString().padStart(2, '0');
+        let s = (diffSec % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function showFeedback(type, title, desc) {
+        gameState = 'FEEDBACK';
+        fbOverlay.style.display = 'flex';
+        const iconEl = document.getElementById('fb-icon');
+        const titleEl = document.getElementById('fb-title');
+        const descEl = document.getElementById('fb-desc');
+        const btnEl = document.getElementById('fb-btn');
+
+        titleEl.innerText = title;
+        
+        if (type === 'ALL_CLEAR' || type === 'GAMEOVER') {
+            let accuracy = totalQuestionsAttempted === 0 ? 0 : Math.round((totalCorrectAnswers / totalQuestionsAttempted) * 100);
+            let timeStr = getPlayTimeString();
+            
+            let statsHtml = `
+                <div style="font-size: 1.2rem; margin-top: 15px; color: #f1c40f; line-height: 1.8;">
+                    ⏱️ 클리어 타임: <b>${timeStr}</b><br>
+                    🎯 정답률: <b>${accuracy}%</b> (${totalCorrectAnswers}/${totalQuestionsAttempted})<br>
+                    🪙 최종 점수: <b>${score}점</b>
+                </div>
+            `;
+            descEl.innerHTML = desc + statsHtml;
+        } else {
+            descEl.innerHTML = desc; // HTML 태그(해설 박스) 적용을 위해 innerHTML 사용
+        }
+
+        if(type === 'CORRECT') {
+            iconEl.innerText = '⭕'; iconEl.style.color = '#2ecc71'; titleEl.style.color = '#2ecc71';
+            btnEl.innerText = "맵 계속 탐험하기"; btnEl.onclick = closeFeedback;
+        } else if(type === 'WRONG') {
+            iconEl.innerText = '❌'; iconEl.style.color = '#e74c3c'; titleEl.style.color = '#e74c3c';
+            btnEl.innerText = "다시 찾아가기"; btnEl.onclick = closeFeedback;
+        } else if(type === 'MAP_CLEAR') {
+            iconEl.innerText = '🚀'; iconEl.style.color = '#3498db'; titleEl.style.color = '#3498db';
+            btnEl.innerText = "다음 맵으로 이동"; 
+            btnEl.onclick = () => { fbOverlay.style.display = 'none'; initMap(currentMapIndex + 1); gameState = 'PLAYING'; };
+        } else if(type === 'ALL_CLEAR') {
+            iconEl.innerText = '👑'; iconEl.style.color = '#f1c40f'; titleEl.style.color = '#f1c40f';
+            btnEl.innerText = "처음부터 다시하기"; 
+            btnEl.onclick = () => { fbOverlay.style.display = 'none'; document.getElementById('start-screen').style.display = 'flex'; };
+        } else if(type === 'GAMEOVER') {
+            iconEl.innerText = '👻'; iconEl.style.color = '#e74c3c'; titleEl.style.color = '#e74c3c';
+            btnEl.innerText = "처음부터 다시 도전"; 
+            btnEl.onclick = () => { fbOverlay.style.display = 'none'; document.getElementById('start-screen').style.display = 'flex'; };
+        }
+    }
+
+    function closeFeedback() { fbOverlay.style.display = 'none'; gameState = 'PLAYING'; }
+
+</script>
+</body>
+</html>

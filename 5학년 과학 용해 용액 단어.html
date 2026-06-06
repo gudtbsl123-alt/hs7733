@@ -1,0 +1,772 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a1a; --surface: #12122a; --card: #1a1a38;
+    --basic: #38bdf8; --normal: #c084fc;
+    --correct: #22c55e;
+    --accent: #818cf8; --text: #e2e8f0; --muted: #94a3b8;
+    --border: rgba(129,140,248,0.2); --glow: rgba(129,140,248,0.15);
+  }
+  body { font-family:'Nanum Gothic',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; overflow-x:hidden; }
+  .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; background:radial-gradient(ellipse at 20% 20%,rgba(99,102,241,0.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(167,139,250,0.06) 0%,transparent 50%); }
+  .container { width:100%; max-width:760px; padding:20px 16px 40px; position:relative; z-index:1; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+
+  .title-area { text-align:center; padding:30px 0 20px; }
+  .game-title { font-family:'Jua',sans-serif; font-size:2.4rem; background:linear-gradient(135deg,#818cf8,#c084fc,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1.2; margin-bottom:8px; }
+  .game-subtitle { color:var(--muted); font-size:0.95rem; margin-bottom:30px; }
+  .flask-icon { font-size:3.5rem; margin-bottom:10px; animation:float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+  .diff-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin:0 auto 24px; max-width:560px; }
+  .diff-card { border-radius:22px; padding:30px 20px; cursor:pointer; border:2px solid transparent; transition:all 0.3s; text-align:center; }
+  .diff-card:hover { transform:translateY(-5px); }
+  .diff-card.basic  { background:linear-gradient(135deg,rgba(56,189,248,0.12),rgba(56,189,248,0.06));  border-color:rgba(56,189,248,0.3); }
+  .diff-card.basic:hover  { border-color:var(--basic);  box-shadow:0 8px 30px rgba(56,189,248,0.25); }
+  .diff-card.normal { background:linear-gradient(135deg,rgba(192,132,252,0.12),rgba(192,132,252,0.06)); border-color:rgba(192,132,252,0.3); }
+  .diff-card.normal:hover { border-color:var(--normal); box-shadow:0 8px 30px rgba(192,132,252,0.25); }
+  .diff-emoji { font-size:2.8rem; margin-bottom:12px; display:block; }
+  .diff-name { font-family:'Jua',sans-serif; font-size:1.5rem; margin-bottom:8px; }
+  .diff-card.basic  .diff-name { color:var(--basic); }
+  .diff-card.normal .diff-name { color:var(--normal); }
+  .diff-desc { font-size:0.82rem; color:var(--muted); line-height:1.6; }
+  .diff-score { font-size:0.78rem; margin-top:10px; padding:5px 12px; border-radius:20px; display:inline-block; }
+  .diff-card.basic  .diff-score { background:rgba(56,189,248,0.15);  color:var(--basic); }
+  .diff-card.normal .diff-score { background:rgba(192,132,252,0.15); color:var(--normal); }
+  .best-score-display { text-align:center; margin-bottom:16px; }
+  .best-label { font-size:0.8rem; color:var(--muted); }
+
+  .game-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+  .diff-badge { font-family:'Jua',sans-serif; font-size:0.9rem; padding:6px 16px; border-radius:20px; }
+  .diff-badge.basic  { background:rgba(56,189,248,0.2);  color:var(--basic);  border:1px solid rgba(56,189,248,0.4); }
+  .diff-badge.normal { background:rgba(192,132,252,0.2); color:var(--normal); border:1px solid rgba(192,132,252,0.4); }
+  .stats-row { display:flex; gap:12px; align-items:center; }
+  .stat-chip { display:flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:6px 12px; font-size:0.85rem; }
+  .stat-chip .val { font-weight:800; color:var(--accent); font-size:1rem; }
+  .progress-area { margin-bottom:18px; }
+  .progress-info { display:flex; justify-content:space-between; font-size:0.8rem; color:var(--muted); margin-bottom:6px; }
+  .progress-bar { height:8px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:10px; transition:width 0.5s ease; background:linear-gradient(90deg,#818cf8,#c084fc); }
+  .hearts { display:flex; gap:6px; }
+  .heart { font-size:1.4rem; transition:all 0.3s; }
+  .heart.lost { filter:grayscale(1); opacity:0.3; transform:scale(0.8); }
+
+  .question-card { background:var(--card); border:1px solid var(--border); border-radius:24px; padding:28px 24px; margin-bottom:20px; position:relative; overflow:hidden; }
+  .question-card::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; border-radius:50%; background:var(--glow); pointer-events:none; }
+  .question-num { font-size:0.8rem; color:var(--muted); margin-bottom:10px; }
+  .question-type-badge { display:inline-block; font-size:0.75rem; padding:3px 10px; border-radius:10px; background:rgba(129,140,248,0.15); color:var(--accent); border:1px solid rgba(129,140,248,0.3); margin-bottom:14px; }
+  .question-text { font-size:1.1rem; line-height:1.7; margin-bottom:18px; word-break:keep-all; }
+  .word-display { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; margin:16px 0; }
+  .letter-box { width:42px; height:52px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Jua',sans-serif; font-size:1.4rem; transition:all 0.3s; }
+  .letter-box.blank { border:2px solid var(--accent); background:rgba(129,140,248,0.1); cursor:pointer; }
+  .letter-box.blank:hover { background:rgba(129,140,248,0.2); transform:scale(1.05); }
+  .letter-box.blank.filled { border-color:#c084fc; background:rgba(192,132,252,0.15); color:#c084fc; }
+  .letter-box.correct-anim { animation:correctPop 0.4s ease; }
+  @keyframes correctPop { 0%{transform:scale(1)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
+
+  .choices-label { text-align:center; font-size:0.8rem; color:var(--muted); margin-bottom:10px; }
+  .letter-choices { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:20px; }
+  .letter-btn { width:48px; height:52px; border-radius:12px; border:2px solid var(--border); background:var(--surface); color:var(--text); font-family:'Jua',sans-serif; font-size:1.3rem; cursor:pointer; transition:all 0.2s; }
+  .letter-btn:hover:not(:disabled) { border-color:var(--accent); background:rgba(129,140,248,0.15); transform:translateY(-2px); }
+  .letter-btn:active:not(:disabled) { transform:scale(0.95); }
+  .letter-btn:disabled { opacity:0.25; cursor:not-allowed; }
+
+  /* ── 모든 버튼 항상 보임, 깜빡임 없음 ── */
+  .action-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:4px; }
+
+  .btn { padding:12px 24px; border-radius:14px; cursor:pointer; font-family:'Nanum Gothic',sans-serif; font-weight:800; font-size:0.95rem; transition:transform 0.15s, box-shadow 0.15s; min-width:100px; border:none; }
+  .btn:active { transform:scale(0.96); }
+
+  /* 건너뛰기 — 밝은 회색 */
+  .btn-skip { background:#d1d5db; color:#1a1a38; }
+  .btn-skip:hover { background:#e5e7eb; box-shadow:0 4px 14px rgba(209,213,219,0.4); }
+
+  /* 지우기 — 흰색 */
+  .btn-clear { background:#ffffff; color:#1a1a38; }
+  .btn-clear:hover { background:#f0f0ff; box-shadow:0 4px 14px rgba(255,255,255,0.35); }
+
+  /* 확인 — 보라 그라디언트 */
+  .btn-confirm { background:linear-gradient(135deg,#818cf8,#c084fc); color:#ffffff; }
+  .btn-confirm:hover { box-shadow:0 6px 20px rgba(129,140,248,0.5); transform:translateY(-2px); }
+
+  /* 홈으로 — 항상 보이는 테두리 버튼 */
+  .btn-home-nav { background:#1a1a38; color:#e2e8f0; border:2px solid rgba(129,140,248,0.5); border-radius:14px; padding:12px 24px; font-family:'Nanum Gothic',sans-serif; font-weight:800; font-size:0.95rem; cursor:pointer; min-width:100px; transition:all 0.2s; }
+  .btn-home-nav:hover { border-color:var(--accent); color:#ffffff; background:rgba(129,140,248,0.15); }
+
+  /* 다시 도전 — 항상 보이는 진한 버튼 */
+  .btn-retry { background:linear-gradient(135deg,#818cf8,#c084fc); color:#ffffff; border:none; border-radius:14px; padding:12px 24px; font-family:'Nanum Gothic',sans-serif; font-weight:800; font-size:0.95rem; cursor:pointer; min-width:100px; transition:all 0.2s; }
+  .btn-retry:hover { box-shadow:0 6px 20px rgba(129,140,248,0.5); transform:translateY(-2px); }
+
+  /* 홈(헤더 뒤로가기) */
+  .btn-back { background:#1a1a38; border:1px solid rgba(255,255,255,0.2); color:#e2e8f0; padding:8px 16px; border-radius:10px; cursor:pointer; font-size:0.85rem; font-family:'Nanum Gothic',sans-serif; font-weight:700; transition:all 0.2s; }
+  .btn-back:hover { border-color:var(--accent); color:#ffffff; }
+
+  .timer-bar { height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+  .timer-fill { height:100%; border-radius:10px; transition:width 0.1s linear,background 0.3s; }
+
+  .feedback-overlay { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0; transition:opacity 0.3s; }
+  .feedback-overlay.show { opacity:1; }
+  .feedback-bubble { font-family:'Jua',sans-serif; font-size:2.5rem; padding:20px 40px; border-radius:24px; text-align:center; transform:scale(0.5); transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+  .feedback-overlay.show .feedback-bubble { transform:scale(1); }
+  .feedback-bubble.correct { background:rgba(34,197,94,0.92); color:white; }
+  .feedback-bubble.wrong { background:rgba(239,68,68,0.92); color:white; }
+
+  .combo-display { position:fixed; top:20px; right:20px; z-index:50; font-family:'Jua',sans-serif; font-size:1.5rem; color:#f59e0b; text-shadow:0 0 20px rgba(245,158,11,0.8); opacity:0; transition:all 0.3s; }
+  .combo-display.show { opacity:1; transform:translateY(-10px); }
+
+  .particle { position:fixed; pointer-events:none; z-index:200; width:8px; height:8px; border-radius:50%; animation:particleFly 0.8s ease-out forwards; }
+  @keyframes particleFly { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:translateY(-80px) scale(0)} }
+
+  /* TIP POPUP */
+  .tip-backdrop { position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.72); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .tip-backdrop.show { opacity:1; pointer-events:all; }
+  .tip-modal { background:#1a1a38; border:2px solid rgba(239,68,68,0.4); border-radius:24px; padding:30px 26px; max-width:420px; width:90%; transform:scale(0.85); transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275); }
+  .tip-backdrop.show .tip-modal { transform:scale(1); }
+  .tip-icon { font-size:2.8rem; text-align:center; margin-bottom:10px; }
+  .tip-title { font-family:'Jua',sans-serif; font-size:1.3rem; color:#ef4444; text-align:center; margin-bottom:6px; }
+  .tip-word-area { text-align:center; margin:14px 0; }
+  .tip-word-label { font-size:0.8rem; color:var(--muted); margin-bottom:6px; }
+  .tip-blanks { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .tip-box { width:38px; height:46px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:'Jua',sans-serif; font-size:1.3rem; }
+  .tip-box.hint-revealed { background:rgba(129,140,248,0.2); border:2px solid var(--accent); color:var(--accent); }
+  .tip-box.hint-blank { background:rgba(255,255,255,0.06); border:2px dashed rgba(255,255,255,0.2); }
+  .tip-text { font-size:0.95rem; line-height:1.8; color:var(--text); text-align:center; margin:14px 0; word-break:keep-all; }
+  .tip-keyword { display:inline-block; background:rgba(245,158,11,0.15); color:#f59e0b; border-radius:8px; padding:2px 8px; font-weight:700; }
+  .tip-close-btn { display:block; width:100%; padding:13px; border-radius:14px; border:none; background:linear-gradient(135deg,#818cf8,#c084fc); color:white; font-family:'Jua',sans-serif; font-size:1rem; cursor:pointer; margin-top:18px; transition:all 0.2s; }
+  .tip-close-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(129,140,248,0.4); }
+  .tip-tries { font-size:0.8rem; color:var(--muted); text-align:center; margin-top:10px; }
+
+  .result-card { background:var(--card); border:1px solid var(--border); border-radius:24px; padding:32px 24px; text-align:center; margin-bottom:20px; }
+  .result-emoji { font-size:4rem; margin-bottom:12px; animation:float 2s ease-in-out infinite; }
+  .result-title { font-family:'Jua',sans-serif; font-size:2rem; margin-bottom:8px; }
+  .result-score-big { font-family:'Jua',sans-serif; font-size:3.5rem; background:linear-gradient(135deg,#818cf8,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:16px 0; }
+  .result-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:20px 0; }
+  .result-stat { background:var(--surface); border-radius:14px; padding:14px 10px; }
+  .result-stat .r-val { font-family:'Jua',sans-serif; font-size:1.6rem; color:var(--accent); }
+  .result-stat .r-label { font-size:0.78rem; color:var(--muted); margin-top:4px; }
+  .rank-badge { display:inline-block; padding:8px 24px; border-radius:20px; font-family:'Jua',sans-serif; font-size:1.1rem; margin:10px auto; }
+
+  .hint-area { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .hint-count { font-size:0.85rem; color:var(--muted); }
+  .hint-btn { background:rgba(245,158,11,0.2); color:#f59e0b; border:1px solid rgba(245,158,11,0.5); border-radius:10px; padding:7px 16px; font-size:0.82rem; cursor:pointer; font-family:'Nanum Gothic',sans-serif; font-weight:700; transition:all 0.2s; }
+  .hint-btn:hover:not(:disabled) { background:rgba(245,158,11,0.32); }
+  .hint-btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+  .xp-bar-wrap { margin-top:20px; background:rgba(255,255,255,0.03); border:1px solid rgba(129,140,248,0.2); border-radius:16px; padding:14px 16px; }
+  .xp-top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .xp-level-badge { font-family:'Jua',sans-serif; font-size:1.05rem; padding:5px 14px; border-radius:12px; background:rgba(129,140,248,0.2); color:var(--accent); border:2px solid rgba(129,140,248,0.4); letter-spacing:0.5px; }
+  .xp-amount { font-family:'Jua',sans-serif; font-size:0.95rem; color:var(--muted); }
+  .xp-bar { height:18px; background:rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; position:relative; }
+  .xp-fill { height:100%; background:linear-gradient(90deg,#f59e0b,#ef4444); border-radius:12px; transition:width 0.6s ease; position:relative; }
+  .xp-fill::after { content:''; position:absolute; top:3px; left:6px; right:6px; height:5px; background:rgba(255,255,255,0.25); border-radius:4px; }
+  .xp-fill.levelup-flash { animation:xpFlash 0.6s ease; }
+  @keyframes xpFlash { 0%{filter:brightness(1)} 50%{filter:brightness(2.5)} 100%{filter:brightness(1)} }
+
+  /* 레벨업 팝업 */
+  .levelup-backdrop { position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.82); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.35s; }
+  .levelup-backdrop.show { opacity:1; pointer-events:all; }
+  .levelup-modal { background:linear-gradient(145deg,#1a1a38,#12122a); border:2px solid rgba(245,158,11,0.5); border-radius:28px; padding:36px 28px; max-width:400px; width:90%; text-align:center; transform:scale(0.75); transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275); box-shadow:0 0 60px rgba(245,158,11,0.2); }
+  .levelup-backdrop.show .levelup-modal { transform:scale(1); }
+  .levelup-firework { font-size:3.2rem; margin-bottom:4px; animation:spinBounce 0.8s ease; display:block; }
+  @keyframes spinBounce { 0%{transform:scale(0) rotate(-180deg)} 70%{transform:scale(1.2) rotate(10deg)} 100%{transform:scale(1) rotate(0)} }
+  .levelup-title { font-family:'Jua',sans-serif; font-size:1.1rem; color:#f59e0b; margin-bottom:6px; letter-spacing:1px; }
+  .levelup-num { font-family:'Jua',sans-serif; font-size:3rem; background:linear-gradient(135deg,#f59e0b,#ef4444,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; line-height:1.1; margin-bottom:4px; }
+  .levelup-title-name { font-family:'Jua',sans-serif; font-size:1.6rem; color:#fff; margin-bottom:14px; }
+  .levelup-reward-box { background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.35); border-radius:14px; padding:12px 16px; margin:14px 0; }
+  .levelup-reward-title { font-size:0.78rem; color:#22c55e; margin-bottom:6px; font-weight:700; }
+  .levelup-rewards { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .reward-chip { background:rgba(255,255,255,0.08); border-radius:10px; padding:6px 14px; font-size:0.85rem; color:var(--text); font-weight:700; display:flex; align-items:center; gap:5px; }
+  .levelup-msg { font-size:0.88rem; color:var(--muted); line-height:1.7; margin:10px 0 18px; word-break:keep-all; }
+  .levelup-close-btn { display:block; width:100%; padding:13px; border-radius:14px; border:none; background:linear-gradient(135deg,#f59e0b,#ef4444); color:white; font-family:'Jua',sans-serif; font-size:1.05rem; cursor:pointer; transition:all 0.2s; }
+  .levelup-close-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(245,158,11,0.4); }
+
+  /* 레벨업 파티클 */
+  .lu-particle { position:fixed; pointer-events:none; z-index:600; font-size:1.4rem; animation:luFly 1.2s ease-out forwards; }
+  @keyframes luFly { 0%{opacity:1;transform:scale(1) translateY(0)} 100%{opacity:0;transform:scale(0) translateY(-120px)} }
+
+  /* 닉네임 입력 화면 */
+  .nickname-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:0; }
+  .nickname-card { background:var(--card); border:1px solid var(--border); border-radius:28px; padding:40px 32px; width:100%; max-width:460px; text-align:center; box-shadow:0 0 40px rgba(129,140,248,0.1); }
+  .nickname-flask { font-size:4rem; margin-bottom:12px; animation:float 3s ease-in-out infinite; display:block; }
+  .nickname-game-title { font-family:'Jua',sans-serif; font-size:2rem; background:linear-gradient(135deg,#818cf8,#c084fc,#38bdf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px; }
+  .nickname-sub { font-size:0.88rem; color:var(--muted); margin-bottom:28px; }
+  .nickname-label { font-size:0.9rem; color:var(--text); font-weight:700; margin-bottom:10px; text-align:left; }
+  .nickname-input { width:100%; padding:14px 18px; border-radius:14px; border:2px solid var(--border); background:var(--surface); color:var(--text); font-family:'Jua',sans-serif; font-size:1.2rem; text-align:center; outline:none; transition:border-color 0.2s; margin-bottom:8px; }
+  .nickname-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(129,140,248,0.15); }
+  .nickname-input::placeholder { color:var(--muted); font-size:1rem; }
+  .nickname-error { font-size:0.8rem; color:#ef4444; min-height:18px; margin-bottom:16px; }
+  .nickname-btn { width:100%; padding:15px; border-radius:14px; border:none; background:linear-gradient(135deg,#818cf8,#c084fc); color:white; font-family:'Jua',sans-serif; font-size:1.1rem; cursor:pointer; transition:all 0.2s; }
+  .nickname-btn:hover { box-shadow:0 6px 24px rgba(129,140,248,0.45); transform:translateY(-2px); }
+  .nickname-examples { margin-top:16px; font-size:0.78rem; color:var(--muted); }
+  .nickname-example-chips { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+  .nickname-chip { background:rgba(129,140,248,0.12); border:1px solid rgba(129,140,248,0.25); border-radius:20px; padding:4px 12px; font-size:0.8rem; color:var(--accent); cursor:pointer; transition:all 0.15s; }
+  .nickname-chip:hover { background:rgba(129,140,248,0.25); }
+
+  /* 학습 피드백 팝업 */
+  .feedback-report-backdrop { position:fixed; inset:0; z-index:700; background:rgba(0,0,0,0.88); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.4s; overflow-y:auto; padding:16px; }
+  .feedback-report-backdrop.show { opacity:1; pointer-events:all; }
+  .feedback-report-modal { background:linear-gradient(160deg,#1a1a38,#0f0f25); border:2px solid rgba(129,140,248,0.3); border-radius:28px; padding:32px 26px; max-width:480px; width:100%; transform:translateY(30px); transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275); position:relative; }
+  .feedback-report-backdrop.show .feedback-report-modal { transform:translateY(0); }
+  .fr-header { text-align:center; margin-bottom:22px; }
+  .fr-icon { font-size:3rem; display:block; margin-bottom:8px; }
+  .fr-name { font-family:'Jua',sans-serif; font-size:1.6rem; color:var(--text); margin-bottom:4px; }
+  .fr-subtitle { font-size:0.85rem; color:var(--muted); }
+  .fr-section { margin-bottom:18px; }
+  .fr-section-title { font-size:0.75rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .fr-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .fr-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .fr-stat-box { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; }
+  .fr-stat-val { font-family:'Jua',sans-serif; font-size:1.7rem; margin-bottom:2px; }
+  .fr-stat-label { font-size:0.73rem; color:var(--muted); line-height:1.3; }
+  .fr-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .fr-bar-label { font-size:0.8rem; color:var(--muted); width:60px; flex-shrink:0; }
+  .fr-bar-bg { flex:1; height:8px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; }
+  .fr-bar-fill { height:100%; border-radius:10px; transition:width 1s ease; }
+  .fr-bar-val { font-size:0.8rem; font-weight:700; width:36px; text-align:right; flex-shrink:0; }
+  .fr-comment-box { background:rgba(129,140,248,0.07); border:1px solid rgba(129,140,248,0.2); border-radius:14px; padding:14px 16px; font-size:0.88rem; line-height:1.8; color:var(--text); word-break:keep-all; }
+  .fr-comment-box .highlight { color:#f59e0b; font-weight:700; }
+  .fr-actions { display:flex; gap:10px; margin-top:20px; }
+  .fr-btn-home { flex:1; padding:13px; border-radius:14px; border:2px solid rgba(129,140,248,0.4); background:transparent; color:var(--text); font-family:'Jua',sans-serif; font-size:0.95rem; cursor:pointer; transition:all 0.2s; }
+  .fr-btn-home:hover { border-color:var(--accent); background:rgba(129,140,248,0.1); }
+  .fr-btn-retry { flex:1; padding:13px; border-radius:14px; border:none; background:linear-gradient(135deg,#818cf8,#c084fc); color:white; font-family:'Jua',sans-serif; font-size:0.95rem; cursor:pointer; transition:all 0.2s; }
+  .fr-btn-retry:hover { box-shadow:0 6px 20px rgba(129,140,248,0.4); transform:translateY(-2px); }
+
+  html,body { overflow-y:auto; }
+  .shake { animation:shake 0.5s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+  @media(max-width:480px){ .diff-grid{grid-template-columns:1fr} .game-title{font-size:1.8rem} }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="feedback-overlay" id="feedbackOverlay"><div class="feedback-bubble" id="feedbackBubble"></div></div>
+<div class="combo-display" id="comboDisplay"></div>
+
+<!-- TIP POPUP -->
+<div class="tip-backdrop" id="tipBackdrop">
+  <div class="tip-modal">
+    <div class="tip-icon">💡</div>
+    <div class="tip-title">아직 풀 수 있어!</div>
+    <div class="tip-word-area">
+      <div class="tip-word-label">단어 길이: <span id="tipWordLen"></span>글자</div>
+      <div class="tip-blanks" id="tipBlanks"></div>
+    </div>
+    <div class="tip-text" id="tipText"></div>
+    <button class="tip-close-btn" onclick="closeTip()">다시 도전하기! 💪</button>
+    <div class="tip-tries" id="tipTries"></div>
+  </div>
+</div>
+
+<!-- LEVEL UP POPUP -->
+<div class="levelup-backdrop" id="levelupBackdrop">
+  <div class="levelup-modal">
+    <span class="levelup-firework" id="luFirework">🎉</span>
+    <div class="levelup-title">레벨 업!</div>
+    <div class="levelup-num" id="luLevelNum">Lv.2</div>
+    <div class="levelup-title-name" id="luTitleName">🔬 탐구자</div>
+    <div class="levelup-reward-box">
+      <div class="levelup-reward-title">✨ 보상 획득!</div>
+      <div class="levelup-rewards" id="luRewards"></div>
+    </div>
+    <div class="levelup-msg" id="luMsg"></div>
+    <button class="levelup-close-btn" onclick="closeLevelUp()">계속 도전하기! 🚀</button>
+  </div>
+</div>
+
+<!-- 학습 피드백 리포트 팝업 -->
+<div class="feedback-report-backdrop" id="feedbackReportBackdrop">
+  <div class="feedback-report-modal" id="feedbackReportModal">
+    <div class="fr-header">
+      <span class="fr-icon" id="frIcon">📊</span>
+      <div class="fr-name" id="frName"></div>
+      <div class="fr-subtitle" id="frSubtitle"></div>
+    </div>
+
+    <div class="fr-section">
+      <div class="fr-section-title">📈 핵심 성과</div>
+      <div class="fr-grid-3">
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frAccuracy" style="color:#22c55e"></div>
+          <div class="fr-stat-label">정답률</div>
+        </div>
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frTime" style="color:#38bdf8"></div>
+          <div class="fr-stat-label">총 소요시간</div>
+        </div>
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frHintUsed" style="color:#f59e0b"></div>
+          <div class="fr-stat-label">힌트 사용</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fr-section">
+      <div class="fr-section-title">🎯 상세 분석</div>
+      <div class="fr-grid">
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frCorrect" style="color:#818cf8"></div>
+          <div class="fr-stat-label">정답 수 / 전체</div>
+        </div>
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frMaxCombo" style="color:#c084fc"></div>
+          <div class="fr-stat-label">최대 콤보</div>
+        </div>
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frAvgTime" style="color:#38bdf8"></div>
+          <div class="fr-stat-label">문제당 평균</div>
+        </div>
+        <div class="fr-stat-box">
+          <div class="fr-stat-val" id="frSkipped" style="color:#94a3b8"></div>
+          <div class="fr-stat-label">건너뛴 문제</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fr-section">
+      <div class="fr-section-title">📊 능력치 분포</div>
+      <div id="frBars"></div>
+    </div>
+
+    <div class="fr-section">
+      <div class="fr-section-title">💬 선생님 코멘트</div>
+      <div class="fr-comment-box" id="frComment"></div>
+    </div>
+
+    <div class="fr-actions">
+      <button class="fr-btn-home" onclick="frGoHome()">🏠 홈으로</button>
+      <button class="fr-btn-retry" onclick="frRetry()">🔄 다시 도전</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- NICKNAME -->
+<div class="screen active" id="nicknameScreen">
+  <div class="nickname-wrap">
+    <div class="nickname-card">
+      <span class="nickname-flask">🧪</span>
+      <div class="nickname-game-title">용해 & 용액<br>단어 마스터</div>
+      <div class="nickname-sub">5학년 1학기 과학 | 용어를 맞춰 과학자가 되어봐!</div>
+      <div class="nickname-label">👤 닉네임을 입력해봐!</div>
+      <input class="nickname-input" id="nicknameInput" type="text" maxlength="8" placeholder="예) ㅇㅇ초 과학천재"
+        onkeydown="if(event.key==='Enter')goToTitle()" oninput="clearNicknameError()" />
+      <div class="nickname-error" id="nicknameError"></div>
+      <button class="nickname-btn" onclick="goToTitle()">🚀 시작하기!</button>
+      <div class="nickname-examples">
+        추천 닉네임
+        <div class="nickname-example-chips">
+          <span class="nickname-chip" onclick="setNickname('과학왕')">과학왕</span>
+          <span class="nickname-chip" onclick="setNickname('용해박사')">용해박사</span>
+          <span class="nickname-chip" onclick="setNickname('실험가')">실험가</span>
+          <span class="nickname-chip" onclick="setNickname('탐구자')">탐구자</span>
+          <span class="nickname-chip" onclick="setNickname('화학천재')">화학천재</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TITLE (난이도 선택) -->
+<div class="screen" id="titleScreen">
+  <div class="title-area">
+    <div class="flask-icon">🧪</div>
+    <h1 class="game-title">난이도를 골라봐!</h1>
+    <p class="game-subtitle" id="titleWelcome"></p>
+  </div>
+  <div class="best-score-display" id="bestScoreArea" style="display:none">
+    <span class="best-label">🏆 최고 기록: </span>
+    <span id="bestScoreText" style="color:var(--accent);font-weight:800;"></span>
+  </div>
+  <div class="diff-grid">
+    <div class="diff-card basic" onclick="startGame('basic')">
+      <span class="diff-emoji">🌱</span>
+      <div class="diff-name">기초</div>
+      <div class="diff-desc">용해·용질·용매·용액 등<br>핵심 낱말 20개<br>2~3글자 짧은 용어</div>
+      <div class="diff-score">⏱️ 40초 · +10점/문제</div>
+    </div>
+    <div class="diff-card normal" onclick="startGame('normal')">
+      <span class="diff-emoji">🔬</span>
+      <div class="diff-name">기본</div>
+      <div class="diff-desc">실험도구 & 심화 개념 20개<br>포화용액·거름종이 등<br>3~6글자 복합 용어</div>
+      <div class="diff-score">⏱️ 30초 · +20점/문제</div>
+    </div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;font-size:0.85rem;color:var(--muted);line-height:1.9">
+    💡 <strong style="color:var(--text)">게임 방법</strong><br>
+    힌트를 읽고 아래 글자 버튼을 눌러 빈칸을 채워봐!<br>
+    연속으로 맞추면 🔥 콤보 보너스 점수를 받을 수 있어.<br>
+    <span style="color:#22c55e">✅ 정답 맞추면 힌트 +1 충전</span> · ⭐ 힌트 3개 · ❤️ 목숨 3개
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <button class="btn-back" onclick="goHome()">← 홈</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div class="diff-badge" id="diffBadge"></div>
+      <div style="font-size:0.75rem;color:var(--muted);" id="playerNameDisplay"></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-chip">⭐ <span class="val" id="scoreDisplay">0</span></div>
+      <div class="hearts" id="heartsDisplay"></div>
+    </div>
+  </div>
+  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+  <div class="progress-area">
+    <div class="progress-info">
+      <span id="qProgress">문제 1/20</span>
+      <span id="comboInfo" style="color:#f59e0b"></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="question-card" id="questionCard">
+    <div class="question-num" id="questionNum"></div>
+    <div class="question-type-badge" id="qtypeBadge"></div>
+    <div class="question-text" id="questionText"></div>
+    <div class="word-display" id="wordDisplay"></div>
+  </div>
+  <div class="hint-area">
+    <button class="hint-btn" id="hintBtn" onclick="useHint()">💡 힌트 사용</button>
+    <span class="hint-count" id="hintCount">힌트 3개 남음</span>
+  </div>
+  <div class="choices-label">아래 글자를 눌러서 빈칸을 채워봐!</div>
+  <div class="letter-choices" id="letterChoices"></div>
+  <div class="action-row">
+    <button class="btn btn-skip"    onclick="skipQuestion()">건너뛰기</button>
+    <button class="btn btn-clear"   onclick="clearAnswer()">지우기</button>
+    <button class="btn btn-confirm" onclick="submitAnswer()">확인 ✓</button>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-top-row">
+      <span class="xp-level-badge" id="xpLevelBadge">Lv.1 🧪 초보 과학자</span>
+      <span class="xp-amount"><span id="xpText">0</span> / 100 XP</span>
+    </div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="resultScreen">
+  <div class="result-card">
+    <div class="result-emoji" id="resultEmoji"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="rank-badge" id="rankBadge"></div>
+    <div class="result-score-big" id="resultScore"></div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="r-val" id="rCorrect">0</div><div class="r-label">정답 수</div></div>
+      <div class="result-stat"><div class="r-val" id="rMaxCombo">0</div><div class="r-label">최대 콤보</div></div>
+      <div class="result-stat"><div class="r-val" id="rAccuracy">0%</div><div class="r-label">정확도</div></div>
+    </div>
+    <p id="resultMsg" style="color:var(--muted);font-size:0.9rem;line-height:1.7;margin-top:10px"></p>
+  </div>
+  <div class="action-row">
+    <button class="btn-home-nav" onclick="goHome()">🏠 홈으로</button>
+    <button class="btn-retry"    onclick="restartGame()">🔄 다시 도전</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const TIPS={
+용해:["소금이 물속으로 사라지는 것처럼, 물질이 액체 속으로 녹아드는 현상이야!","녹는다 → 어떤 현상일까? 용(溶)은 '녹을 용'이야!"],
+용액:["용질 + 용매가 합쳐진 것! '용액'의 '액'은 액체를 뜻해.","소금물, 설탕물처럼 뭔가가 녹아있는 액체를 생각해봐!"],
+용질:["소금물에서 소금처럼, 녹는 쪽이 '용질'이야. 용(溶)+질(質)!","사라지는 것, 녹는 것 → 그게 바로 이 단어!"],
+용매:["소금물에서 물처럼, 녹이는 쪽이 '용매'야. 매(媒)는 '매개'를 뜻해!","용질을 담아주는 액체를 생각해봐!"],
+투명:["빛이 통과해서 맞은편이 보이는 성질! 용액은 이런 성질을 가져.","창문처럼 훤히 보이는 것을 나타내는 단어야."],
+균일:["어느 곳을 떠도 똑같이 섞여 있는 상태! '균'은 고를 균(均)이야.","소금물의 위아래가 똑같이 짠 것을 설명하는 단어!"],
+거름:["체로 거르는 방법! 큰 알갱이를 걸러내는 분리 방법이야.","커피 필터로 커피 찌꺼기를 거르는 것을 상상해봐!"],
+용해도:["녹을 수 있는 한계량! '도'는 정도나 양을 나타내.","온도에 따라 달라지는, 최대로 녹을 수 있는 양이야!"],
+포화:["더 이상 못 녹는 상태! '포'는 가득 찰 포(飽)야.","배가 터질 것 같은 상태처럼, 꽉 찬 용액 상태!"],
+결정:["규칙적인 모양을 가진 고체! 소금을 현미경으로 보면 보여.","용액을 식히거나 증발시키면 나타나는 규칙적인 모양의 고체야!"],
+증발:["물이 수증기가 되는 현상! 젖은 빨래가 마르는 것이야.","열을 받아 액체가 기체로 변하는 것을 뜻해!"],
+혼합:["두 가지를 섞는 것! '혼'은 섞을 혼(混)이야.","서로 다른 물질이 함께 섞이는 것을 나타내!"],
+물질:["눈에 보이거나 손에 잡히는 모든 것! 소금, 물, 돌, 나무 모두 이것이야.","과학에서 가장 기본이 되는 단어를 생각해봐!"],
+고체:["소금처럼 모양이 일정한 것! 3가지 상태 중 하나야.","손에 잡을 수 있고 모양이 안 변하는 상태!"],
+액체:["물처럼 흘러다니는 것! 3가지 상태 중 하나야.","용매는 보통 이 상태야!"],
+소금:["짠맛! 바다에서 만들어지는 흰 결정이야.","소금물을 만들 때 물에 넣는 것!"],
+설탕:["단맛! 물에 잘 녹는 하얀 가루야.","설탕물을 만들 때 물에 넣는 흰 가루!"],
+온도:["차갑고 따뜻한 정도! 이것이 높을수록 대부분의 물질이 잘 녹아.","온(溫)도(度) — 용해 속도에 영향을 주는 조건이야!"],
+색깔:["눈으로 보이는 특징! 황산구리 용액은 파란 이것을 가져.","용액의 성질 중 눈으로 확인하는 것!"],
+녹임:["고체를 액체에 녹게 하는 행동! 저어주면 더 잘 돼.","용해를 일으키는 행동을 나타내는 단어야!"],
+포화용액:["더 이상 용질이 녹지 않아 꽉 찬 용액! '포화'는 가득 찼다는 뜻이야.","'포화' + '용액'을 합친 단어야. 소금을 계속 넣어도 더 녹지 않는 상태!"],
+용해속도:["얼마나 빨리 녹는지! 온도·저어주기·알갱이 크기에 영향받아.","'용해'가 일어나는 '속도'야. 세 글자씩 두 단어를 이어붙인 말!"],
+알갱이:["용질의 크기! 작을수록 더 빨리 녹아.","용질을 잘게 부수면 녹는 속도가 빨라지는 이유가 되는 것!"],
+저어주기:["용해 속도를 빠르게 하는 방법! 스푼으로 젓는 것이야.","유리막대로 용액을 이 동작을 해주면 용질이 빨리 녹아!"],
+분리:["섞인 것을 나누는 것! 거름이나 증발 같은 방법이야.","혼합물에서 성분을 나누는 과정!"],
+농도:["얼마나 진한지를 나타내는 것! %로 표시해.","용액이 얼마나 진한지 나타내는 값!"],
+진하기:["같은 양의 용매에 용질이 얼마나 들어 있는지 나타내는 정도야!","용액의 색이 짙을수록, 물체가 높이 뜰수록 이것이 크다는 뜻이야!"],
+식초:["신맛이 나는 투명한 용액이야. 요리할 때 맛을 낼 때 쓰여.","'신맛'하면 떠오르는 주방 용액! 두 글자야."],
+소금물:["소금을 물에 녹인 용액이야. 상처 소독이나 양치에도 쓰여!","'소금'+'물' 두 단어를 합친 세 글자야."],
+분말주스:["가루를 물에 타서 만드는 음료야. 가루가 물에 녹아 만들어진 용액!","'분말'은 가루, '주스'는 음료 — 두 단어를 합친 말이야."],
+백반:["흰색 알갱이로 물에 녹아. 차가운 물보다 따뜻한 물에 훨씬 더 많이 녹아!","소금·설탕과 함께 비교 실험에 자주 나오는 흰색 용질이야!"],
+이온음료:["운동하고 나서 땀을 흘린 뒤 마시면 수분을 보충해 주는 용액이야.","'이온'이 들어간 음료 이름! 생활 속 용액의 대표 예야."],
+구강청결제:["입안을 헹궈 청결하게 만들 때 쓰는 용액이야.","'구강'은 입안, '청결제'는 깨끗하게 하는 물질 — 합치면?"],
+인공눈물:["눈이 건조할 때 눈에 넣으면 촉촉하게 해주는 용액이야.","'인공'으로 만든 '눈물'! 두 단어를 합친 말이야."],
+용질의양:["같은 용매에 이것이 많을수록 용액이 더 진해져.","진하기를 결정하는 요소 중 하나! '용질의'+'양'이야."],
+무게보존:["각설탕을 물에 다 녹여도 전체 무게는 변하지 않아!","녹기 전 무게 = 녹은 후 무게. 용해 전후 이것이 같아!"],
+탄산칼슘:["물에 넣으면 뿌옇게 흐려지고 흰 덩어리가 바닥에 가라앉아.","'탄산'+'칼슘' 두 단어를 합친 물질 이름이야. 용액이 되지 않아!"],
+용질의종류:["설탕·소금·백반을 같은 온도, 같은 양의 물에 넣으면 녹는 양이 서로 달라.","'용질'의 '종류'! 이것에 따라 물에 녹는 양이 달라져."],
+묽다:["같은 양의 물에 용질이 적게 녹아 있는 상태야.","반대말은 '진하다'! 물을 많이 넣을수록 이 상태가 돼."],
+냉각:["용액을 식혀 온도를 낮추는 것! 결정을 얻는 방법 중 하나야.","냉(冷)은 차가울 냉, 각(却)은 물리칠 각 — 차갑게 만드는 것!"],
+황산구리:["파란색 결정! 물에 녹으면 파란 용액이 돼.","실험실에서 용해 실험에 자주 등장하는 파란색 물질이야!"],
+거름종이:["불에 타지 않는 특수한 종이! 알갱이를 걸러낼 때 사용해.","거름 실험에서 깔때기 위에 얹어 사용하는 종이야!"],
+깔때기:["거름 실험에서 거름종이를 고정하는 도구야.","아래가 좁고 위가 넓은 모양의 실험 도구!"],
+비커:["용액을 담고 가열하는 데 사용하는 원통형 유리 도구야.","눈금이 있고 손잡이가 없는 넓은 유리 그릇!"],
+증발접시:["용액을 가열해 용매를 날리고 용질을 얻는 접시 모양 도구야.","'증발'로 용질을 얻는 '접시'! 두 단어를 이어붙인 말이야."],
+알코올램프:["실험실에서 용액을 가열할 때 사용하는 불꽃 도구야.","알코올을 연료로 태워 불꽃을 내는 실험 도구!"],
+유리막대:["용액을 저을 때 사용하는 가는 유리 막대야.","'유리'로 만든 가는 '막대' — 두 단어를 이어붙인 말!"],
+불포화:["용질을 더 녹일 수 있는 여유 있는 상태! '불'은 아닐 불(不).","포화가 아직 안 된 상태야!"],
+용해도곡선:["온도에 따른 용해도 변화를 나타낸 그래프야.","'용해도'의 변화를 '곡선'으로 나타낸 그래프!"],
+석출:["온도를 낮추면 녹아 있던 용질이 다시 고체로 나오는 현상이야.","녹아있던 것이 다시 나오는 현상 — 석(析)은 '나올 석'이야!"],
+혼합물분리:["거름과 증발을 이용해 용액 속 성분들을 나누는 방법이야.","'혼합물'을 '분리'하는 것!"]
+};
+
+
+const ALL_QUESTIONS={
+basic:[
+  {word:"용해",  hint:"소금이 물에 녹아 사라지는 것처럼, 물질이 액체 속에 고루 섞이는 현상",       type:"현상"},
+  {word:"용액",  hint:"소금물처럼 용질이 용매에 녹아 만들어진 액체",                           type:"물질"},
+  {word:"용질",  hint:"소금물에서 소금처럼, 물에 녹는 물질",                                  type:"물질"},
+  {word:"용매",  hint:"소금물에서 물처럼, 다른 물질을 녹이는 액체",                            type:"물질"},
+  {word:"투명",  hint:"소금물처럼 빛이 통과해 맞은편이 훤히 보이는 성질",                      type:"성질"},
+  {word:"균일",  hint:"용액은 어느 부분이든 성분이 똑같이 고르게 섞여 있다는 뜻",               type:"성질"},
+  {word:"거름",  hint:"체나 거름종이를 이용해 녹지 않는 알갱이를 걸러내는 방법",                type:"방법"},
+  {word:"결정",  hint:"소금이나 설탕처럼 일정하고 규칙적인 모양을 가진 고체",                   type:"물질"},
+  {word:"포화",  hint:"더 이상 용질이 녹지 않아 꽉 찬 용액의 상태",                           type:"상태"},
+  {word:"증발",  hint:"물이 수증기로 변해 날아가는 현상으로, 용질을 얻을 때도 사용",            type:"현상"},
+  {word:"혼합",  hint:"두 가지 이상의 물질이 함께 섞이는 것",                                  type:"현상"},
+  {word:"고체",  hint:"소금이나 설탕처럼 모양이 일정하고 단단한 물질의 상태",                   type:"상태"},
+  {word:"액체",  hint:"물처럼 흘러다니고 담는 그릇에 따라 모양이 바뀌는 상태",                 type:"상태"},
+  {word:"소금",  hint:"짠맛이 나고 물에 잘 녹는 흰색 알갱이 물질",                             type:"물질"},
+  {word:"설탕",  hint:"단맛이 나고 물에 잘 녹는 하얀 가루 물질",                              type:"물질"},
+  {word:"온도",  hint:"따뜻하고 차가운 정도를 나타내는 것으로, 높을수록 용질이 잘 녹아",        type:"조건"},
+  {word:"색깔",  hint:"황산구리 용액이 파란색인 것처럼 눈으로 확인하는 용액의 성질",            type:"성질"},
+  {word:"물질",  hint:"소금, 물, 돌, 나무처럼 눈에 보이거나 손에 잡히는 모든 것",                  type:"개념"},
+  {word:"용해도",hint:"어떤 온도에서 물 100g에 최대로 녹을 수 있는 용질의 양",                 type:"개념"},
+  {word:"분리",  hint:"거름이나 증발 같은 방법으로 혼합된 물질의 성분을 나누는 것",             type:"방법"},
+],
+normal:[
+  {word:"용해속도",  hint:"온도·저어주기·알갱이 크기 세 가지 조건에 따라 달라지는, 용질이 녹는 빠르기",   type:"개념"},
+  {word:"알갱이",    hint:"용질의 이것을 잘게 부술수록 물과 닿는 면이 넓어져 더 빨리 녹아",             type:"특성"},
+  {word:"저어주기",  hint:"유리막대 등으로 용액을 젓는 행동으로, 용해 속도를 빠르게 하는 방법",          type:"방법"},
+  {word:"진하기",    hint:"같은 양의 용매에 용해된 용질이 많고 적은 정도를 나타내는 말",                 type:"개념"},
+  {word:"식초",      hint:"신맛이 나는 투명한 액체로, 요리할 때 음식의 맛을 낼 때 쓰이는 대표적인 용액", type:"사례"},
+  {word:"묽다",      hint:"같은 양의 물에 용질이 적게 녹아 색깔이 옅고 물체가 덜 뜨는 상태",             type:"성질"},
+  {word:"백반",      hint:"물의 온도가 높을수록 더 많이 녹고, 따뜻한 물에 넣으면 모두 녹는 흰색 용질",   type:"물질"},
+  {word:"거름종이",  hint:"거름 실험에서 깔때기 안에 넣어 녹지 않은 알갱이를 걸러내는 특수 종이",        type:"도구"},
+  {word:"깔때기",    hint:"거름 실험에서 거름종이를 고정하고 용액을 아래 비커로 흘려보내는 도구",         type:"도구"},
+  {word:"비커",      hint:"눈금이 새겨진 원통형 유리 용기로 용액을 담거나 가열할 때 사용",               type:"도구"},
+  {word:"증발접시",  hint:"용액을 가열해 용매를 날리고 바닥에 용질을 남길 때 쓰는 접시 모양 도구",       type:"도구"},
+  {word:"알코올램프",hint:"알코올을 연료 삼아 불꽃을 내어 용액을 가열할 때 쓰는 실험 도구",             type:"도구"},
+  {word:"유리막대",  hint:"용액을 저을 때 또는 거름 실험에서 용액을 유도할 때 사용하는 가느다란 막대",    type:"도구"},
+  {word:"이온음료",  hint:"운동 후 땀으로 빠져나간 수분을 보충해 주는 대표적인 용액 음료",               type:"사례"},
+  {word:"구강청결제",hint:"입안을 헹궈 청결하게 만들 때 사용하는 용액으로, 생활 속 용액의 한 예",        type:"사례"},
+  {word:"소금물",    hint:"소금을 물에 녹인 가장 기본적인 용액으로, 상처 소독이나 양치에도 활용돼",       type:"사례"},
+  {word:"용질의양",  hint:"같은 용매에 이것이 많을수록 용액이 더 진해지고, 물체가 더 높이 떠오른다",      type:"개념"},
+  {word:"분말주스",  hint:"가루를 물에 타서 만드는 음료로, 가루가 물에 녹아 만들어진 용액이야",          type:"사례"},
+  {word:"탄산칼슘",  hint:"물에 넣으면 뿌옇게 흐려지다가 흰색 물질이 바닥에 가라앉아 용액이 되지 않는 물질", type:"물질"},
+  {word:"용질의종류",hint:"온도와 물의 양이 같아도 이것이 다르면 녹는 양이 달라진다. 설탕·소금·백반 비교 실험이 그 예", type:"개념"},
+]};
+
+let state={diff:'basic',questions:[],qIndex:0,score:0,combo:0,maxCombo:0,hearts:3,hintsLeft:3,correct:0,total:0,xp:0,level:1,selectedLetters:[],availableLetters:[],timer:null,timeLeft:100,bestScores:{basic:0,normal:0},wrongTries:0,tipShowing:false,levelupPending:false,nickname:'',hintsUsed:0,skipped:0,gameStartTime:0,totalElapsed:0};
+
+function goHome(){clearInterval(state.timer);showScreen('titleScreen');updateBestScore();}
+function setNickname(name){document.getElementById('nicknameInput').value=name;clearNicknameError();}
+function clearNicknameError(){document.getElementById('nicknameError').textContent='';}
+function goToTitle(){const raw=document.getElementById('nicknameInput').value.trim();if(!raw){document.getElementById('nicknameError').textContent='닉네임을 입력해줘! 최소 1글자 이상이야.';return;}if(raw.length>8){document.getElementById('nicknameError').textContent='닉네임은 8글자 이하로 입력해줘!';return;}state.nickname=raw;document.getElementById('titleWelcome').textContent=`${raw} 과학자, 난이도를 골라봐! 💪`;showScreen('titleScreen');updateBestScore();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function updateBestScore(){const area=document.getElementById('bestScoreArea');if(Object.values(state.bestScores).some(v=>v>0)){area.style.display='block';document.getElementById('bestScoreText').textContent=`기초 ${state.bestScores.basic} | 기본 ${state.bestScores.normal}`;}}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function startGame(diff){state.diff=diff;state.questions=shuffle([...ALL_QUESTIONS[diff]]);state.qIndex=0;state.score=0;state.combo=0;state.maxCombo=0;state.hearts=3;state.hintsLeft=3;state.correct=0;state.total=0;state.xp=0;state.level=1;state.levelupPending=false;state.hintsUsed=0;state.skipped=0;state.gameStartTime=Date.now();state.totalElapsed=0;showScreen('gameScreen');const badge=document.getElementById('diffBadge');badge.className='diff-badge '+diff;badge.textContent=diff==='basic'?'🌱 기초':'🔬 기본';document.getElementById('playerNameDisplay').textContent=state.nickname?`👤 ${state.nickname}`:'';loadQuestion();}
+
+function loadQuestion(){if(state.qIndex>=state.questions.length){endGame();return;}const q=state.questions[state.qIndex];state.selectedLetters=Array(q.word.length).fill(null);state.wrongTries=0;state.total++;document.getElementById('questionNum').textContent=`Q${state.qIndex+1}`;document.getElementById('qProgress').textContent=`문제 ${state.qIndex+1} / ${state.questions.length}`;document.getElementById('qtypeBadge').textContent=q.type;document.getElementById('questionText').textContent=q.hint;document.getElementById('progressFill').style.width=(state.qIndex/state.questions.length*100)+'%';document.getElementById('comboInfo').textContent=state.combo>1?`🔥 ${state.combo} 콤보!`:'';document.getElementById('scoreDisplay').textContent=state.score;document.getElementById('hintCount').textContent=`힌트 ${state.hintsLeft}개 남음`;document.getElementById('hintBtn').disabled=state.hintsLeft<=0;updateHearts();renderWordDisplay();renderLetterChoices(q.word);startTimer();updateXP();}
+
+function renderWordDisplay(){const q=state.questions[state.qIndex];const container=document.getElementById('wordDisplay');container.innerHTML='';for(let i=0;i<q.word.length;i++){const box=document.createElement('div');box.className='letter-box blank';box.id='lbox_'+i;if(state.selectedLetters[i]){box.textContent=state.selectedLetters[i];box.classList.add('filled');}box.onclick=()=>removeLetterAt(i);container.appendChild(box);}}
+
+function renderLetterChoices(word){const extra=['가','나','다','라','마','바','사','아','자','차','카','타','파','하','기','리','미','비','시','이'];const chars=[...word].map(c=>({c,isAnswer:true}));const shuffled=shuffle([...extra]).slice(0,Math.max(0,8-word.length));shuffled.forEach(c=>chars.push({c,isAnswer:false}));const all=shuffle(chars);state.availableLetters=all.map((item,i)=>({...item,id:i,used:false}));const container=document.getElementById('letterChoices');container.innerHTML='';state.availableLetters.forEach(item=>{const btn=document.createElement('button');btn.className='letter-btn';btn.id='lbtn_'+item.id;btn.textContent=item.c;btn.onclick=()=>selectLetter(item.id,item.c);container.appendChild(btn);});}
+
+function selectLetter(id,char){const firstEmpty=state.selectedLetters.indexOf(null);if(firstEmpty===-1)return;state.selectedLetters[firstEmpty]=char;const item=state.availableLetters.find(x=>x.id===id);if(item)item.used=true;document.getElementById('lbtn_'+id).disabled=true;document.getElementById('lbtn_'+id).classList.add('used');renderWordDisplay();if(!state.selectedLetters.includes(null)){setTimeout(submitAnswer,200);}}
+
+function removeLetterAt(i){if(!state.selectedLetters[i])return;const removed=state.selectedLetters[i];state.selectedLetters[i]=null;const item=state.availableLetters.find(x=>x.c===removed&&x.used);if(item){item.used=false;const btn=document.getElementById('lbtn_'+item.id);if(btn){btn.disabled=false;btn.classList.remove('used');}}renderWordDisplay();}
+
+function clearAnswer(){state.selectedLetters=state.selectedLetters.map(()=>null);state.availableLetters.forEach(item=>{item.used=false;const btn=document.getElementById('lbtn_'+item.id);if(btn){btn.disabled=false;btn.classList.remove('used');}});renderWordDisplay();}
+
+function submitAnswer(){const answer=state.selectedLetters.join('');const q=state.questions[state.qIndex];if(answer===q.word){handleCorrect();}else if(!state.selectedLetters.includes(null)){handleWrong();}}
+
+function handleCorrect(){clearInterval(state.timer);state.combo++;if(state.combo>state.maxCombo)state.maxCombo=state.combo;state.correct++;const base=state.diff==='basic'?10:20;const comboBonus=Math.min(state.combo-1,5)*5;const timeBonus=Math.floor(state.timeLeft/10)*2;const gained=base+comboBonus+timeBonus;state.score+=gained;
+// 힌트 충전: 정답 맞추면 +1 (최대 3)
+if(state.hintsLeft<3){state.hintsLeft++;document.getElementById('hintCount').textContent=`힌트 ${state.hintsLeft}개 남음`;document.getElementById('hintBtn').disabled=false;}
+// XP 레벨업 체크
+state.xp+=gained;
+if(state.xp>=100){state.xp=state.xp-100;state.level++;state.levelupPending=true;}else{state.xp=Math.min(99,state.xp);}
+showFeedback(true,state.combo>1?`🔥 ${state.combo} 콤보! +${gained}점`:`정답! +${gained}점`);if(state.combo>=3)showCombo(state.combo);spawnParticles();const q=state.questions[state.qIndex];q.word.split('').forEach((c,i)=>{const box=document.getElementById('lbox_'+i);if(box){box.textContent=c;box.classList.add('correct-anim');box.style.borderColor='var(--correct)';box.style.color='var(--correct)';}});
+const fill=document.getElementById('xpFill');fill.classList.remove('levelup-flash');void fill.offsetWidth;fill.classList.add('levelup-flash');
+updateXP();
+if(state.levelupPending){setTimeout(()=>{showLevelUp();},1300);}else{setTimeout(()=>{state.qIndex++;loadQuestion();},1200);}}
+
+function handleWrong(){clearInterval(state.timer);state.combo=0;state.wrongTries++;document.getElementById('questionCard').classList.add('shake');setTimeout(()=>document.getElementById('questionCard').classList.remove('shake'),500);showTipPopup();}
+
+function showTipPopup(){const q=state.questions[state.qIndex];const tips=TIPS[q.word]||["다시 한 번 힌트를 잘 읽어봐!","단어의 뜻을 천천히 생각해봐!"];const tipIdx=Math.min(state.wrongTries-1,tips.length-1);document.getElementById('tipWordLen').textContent=q.word.length;const blanksEl=document.getElementById('tipBlanks');blanksEl.innerHTML='';q.word.split('').forEach((ch,i)=>{const box=document.createElement('div');if(i===0&&state.wrongTries>=2){box.className='tip-box hint-revealed';box.textContent=ch;}else{box.className='tip-box hint-blank';box.textContent='?';}blanksEl.appendChild(box);});let formatted=tips[tipIdx].replace(/([가-힣]+(?:현상|상태|물질|방법|법칙|단위|개념))/g,'<span class="tip-keyword">$1</span>');document.getElementById('tipText').innerHTML='💬 '+formatted;const triesEl=document.getElementById('tipTries');if(state.wrongTries>=2){triesEl.textContent=`⚠️ 첫 글자 공개: "${q.word[0]}" — 나머지 글자를 맞춰봐!`;triesEl.style.color='#f59e0b';}else{triesEl.textContent=`틀린 횟수: ${state.wrongTries}번 — 다시 도전해봐!`;triesEl.style.color='var(--muted)';}if(state.wrongTries>=3){state.hearts--;updateHearts();if(state.hearts<=0){document.getElementById('tipTries').textContent='❤️ 목숨을 다 썼어! 다음 문제로 넘어가!';document.getElementById('tipTries').style.color='#ef4444';}}document.getElementById('tipBackdrop').classList.add('show');state.tipShowing=true;}
+
+function closeTip(){document.getElementById('tipBackdrop').classList.remove('show');state.tipShowing=false;if(state.hearts<=0){setTimeout(()=>endGame(),300);return;}const q=state.questions[state.qIndex];if(state.wrongTries>=2&&state.selectedLetters[0]===null){const firstChar=q.word[0];const item=state.availableLetters.find(x=>x.c===firstChar&&!x.used);if(item){selectLetter(item.id,firstChar);}}else{clearAnswer();}state.availableLetters.forEach(item=>{if(!item.used){const btn=document.getElementById('lbtn_'+item.id);if(btn){btn.disabled=false;btn.classList.remove('used');}}});startTimer();}
+
+function skipQuestion(){clearInterval(state.timer);state.combo=0;state.skipped++;state.qIndex++;loadQuestion();}
+function useHint(){if(state.hintsLeft<=0)return;state.hintsLeft--;state.hintsUsed++;document.getElementById('hintCount').textContent=`힌트 ${state.hintsLeft}개 남음`;document.getElementById('hintBtn').disabled=state.hintsLeft<=0;const q=state.questions[state.qIndex];const firstEmpty=state.selectedLetters.indexOf(null);if(firstEmpty!==-1){const correctChar=q.word[firstEmpty];const item=state.availableLetters.find(x=>x.c===correctChar&&!x.used);if(item){selectLetter(item.id,correctChar);}}}
+
+function startTimer(){state.timeLeft=100;clearInterval(state.timer);const maxTime=state.diff==='basic'?40:30;const tick=maxTime*10;state.timer=setInterval(()=>{state.timeLeft=Math.max(0,state.timeLeft-(100/tick));const fill=document.getElementById('timerFill');fill.style.width=state.timeLeft+'%';fill.style.background=state.timeLeft>60?'#22c55e':state.timeLeft>30?'#f59e0b':'#ef4444';if(state.timeLeft<=0){clearInterval(state.timer);if(!state.tipShowing)handleWrong();}},100);}
+
+function updateHearts(){const c=document.getElementById('heartsDisplay');c.innerHTML='';for(let i=0;i<3;i++){const h=document.createElement('span');h.className='heart'+(i>=state.hearts?' lost':'');h.textContent='❤️';c.appendChild(h);}}
+const LEVEL_TITLES=[
+  {lv:1,emoji:'🧪',name:'초보 과학자',color:'#94a3b8'},
+  {lv:2,emoji:'🔬',name:'탐구자',color:'#22c55e'},
+  {lv:3,emoji:'⚗️',name:'실험가',color:'#38bdf8'},
+  {lv:4,emoji:'🌡️',name:'분석가',color:'#818cf8'},
+  {lv:5,emoji:'🧫',name:'연구원',color:'#c084fc'},
+  {lv:6,emoji:'🔭',name:'선임 연구원',color:'#f59e0b'},
+  {lv:7,emoji:'🏅',name:'과학 박사',color:'#ef4444'},
+  {lv:8,emoji:'🏆',name:'용해 마스터',color:'#f59e0b'},
+];
+const LEVEL_MSGS=[
+  '','',
+  '첫 레벨업! 실험실 문이 열렸어! 🔬',
+  '용해 개념이 조금씩 보이기 시작했어! ⚗️',
+  '데이터를 분석하는 눈이 생겼어! 🌡️',
+  '실험 결과를 논문으로 써볼 수 있겠는데? 🧫',
+  '선배 연구원들도 네 실력을 인정해! 🔭',
+  '드디어 박사 타이틀 획득! 🎓',
+  '용해와 용액의 진정한 마스터! 왕중왕! 👑',
+];
+const LEVEL_REWARDS=[
+  [],
+  [],
+  [{icon:'💡',text:'힌트 +1'}],
+  [{icon:'⏱️',text:'시간 +5초'},{icon:'💡',text:'힌트 +1'}],
+  [{icon:'💡',text:'힌트 +2'},{icon:'❤️',text:'목숨 +1'}],
+  [{icon:'⭐',text:'점수 x1.2'},{icon:'💡',text:'힌트 +1'}],
+  [{icon:'❤️',text:'목숨 +2'},{icon:'💡',text:'힌트 +2'}],
+  [{icon:'⭐',text:'점수 x1.5'},{icon:'❤️',text:'목숨 +1'}],
+  [{icon:'🏆',text:'전설 칭호!'},{icon:'💡',text:'힌트 +3'},{icon:'❤️',text:'목숨 +2'}],
+];
+const LEVELUP_FIREWORKS=['🎉','🎊','✨','🌟','🎆','🎇','💫','⭐'];
+
+function getLevelInfo(lv){return LEVEL_TITLES[Math.min(lv,LEVEL_TITLES.length)-1]||LEVEL_TITLES[LEVEL_TITLES.length-1];}
+
+function applyLevelRewards(lv){const rewards=LEVEL_REWARDS[Math.min(lv,LEVEL_REWARDS.length-1)]||[];rewards.forEach(r=>{if(r.icon==='💡')state.hintsLeft+=parseInt(r.text.replace(/[^0-9]/g,''))||1;if(r.icon==='❤️'){state.hearts=Math.min(5,state.hearts+(parseInt(r.text.replace(/[^0-9]/g,''))||1));}});updateHearts();document.getElementById('hintCount').textContent=`힌트 ${state.hintsLeft}개 남음`;document.getElementById('hintBtn').disabled=state.hintsLeft<=0;}
+
+function showLevelUp(){const lv=state.level;const info=getLevelInfo(lv);const rewards=LEVEL_REWARDS[Math.min(lv,LEVEL_REWARDS.length-1)]||[];// apply rewards
+applyLevelRewards(lv);// firework emoji
+document.getElementById('luFirework').textContent=LEVELUP_FIREWORKS[Math.floor(Math.random()*LEVELUP_FIREWORKS.length)];document.getElementById('luLevelNum').textContent=`Lv.${lv}`;document.getElementById('luTitleName').textContent=`${info.emoji} ${info.name}`;// rewards list
+const rewardsEl=document.getElementById('luRewards');rewardsEl.innerHTML='';if(rewards.length===0){rewardsEl.innerHTML='<div class="reward-chip">🌱 레벨업 달성!</div>';}else{rewards.forEach(r=>{const chip=document.createElement('div');chip.className='reward-chip';chip.textContent=`${r.icon} ${r.text}`;rewardsEl.appendChild(chip);});}document.getElementById('luMsg').textContent=LEVEL_MSGS[Math.min(lv,LEVEL_MSGS.length-1)]||'계속 도전해봐!';// particles
+spawnLevelUpParticles();document.getElementById('levelupBackdrop').classList.add('show');}
+
+function closeLevelUp(){document.getElementById('levelupBackdrop').classList.remove('show');state.levelupPending=false;state.qIndex++;loadQuestion();}
+
+function spawnLevelUpParticles(){const emojis=['⭐','✨','💫','🌟','🎉','🔬','⚗️'];for(let i=0;i<14;i++){const p=document.createElement('div');p.className='lu-particle';p.style.cssText=`left:${5+Math.random()*90}%;top:${20+Math.random()*60}%;animation-delay:${Math.random()*0.5}s`;p.textContent=emojis[Math.floor(Math.random()*emojis.length)];document.body.appendChild(p);setTimeout(()=>p.remove(),1500);}}
+
+function updateXP(){const info=getLevelInfo(state.level);document.getElementById('xpFill').style.width=state.xp+'%';document.getElementById('xpText').textContent=Math.floor(state.xp);document.getElementById('xpLevelBadge').textContent=`Lv.${state.level} ${info.emoji} ${info.name}`;document.getElementById('xpLevelBadge').style.color=info.color;document.getElementById('xpLevelBadge').style.borderColor=info.color+'80';document.getElementById('xpLevelBadge').style.background=info.color+'22';}
+function showFeedback(correct,msg){const overlay=document.getElementById('feedbackOverlay');const bubble=document.getElementById('feedbackBubble');bubble.textContent=msg;bubble.className='feedback-bubble '+(correct?'correct':'wrong');overlay.classList.add('show');setTimeout(()=>overlay.classList.remove('show'),1100);}
+function showCombo(n){const el=document.getElementById('comboDisplay');el.textContent=`🔥 ${n} 콤보!`;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500);}
+function spawnParticles(){const colors=['#818cf8','#c084fc','#38bdf8','#22c55e','#f59e0b'];for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';p.style.cssText=`left:${30+Math.random()*40}%;top:${40+Math.random()*20}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.3}s`;document.body.appendChild(p);setTimeout(()=>p.remove(),900);}}
+
+function endGame(){
+  clearInterval(state.timer);
+  state.totalElapsed=Math.floor((Date.now()-state.gameStartTime)/1000);
+  if(state.score>state.bestScores[state.diff])state.bestScores[state.diff]=state.score;
+  showFeedbackReport();
+}
+
+function showFeedbackReport(){
+  const acc=state.questions.length>0?Math.round(state.correct/state.questions.length*100):0;
+  const pct=state.correct/state.questions.length;
+  const avgSec=state.questions.length>0?Math.round(state.totalElapsed/state.questions.length):0;
+  const mins=Math.floor(state.totalElapsed/60);
+  const secs=state.totalElapsed%60;
+  const timeStr=mins>0?`${mins}분 ${secs}초`:`${secs}초`;
+  const avgStr=`${avgSec}초`;
+
+  // 아이콘/제목
+  let icon,nameMsg;
+  if(pct>=0.9){icon='🏆';nameMsg='완벽한 과학자!';}
+  else if(pct>=0.7){icon='🥇';nameMsg='훌륭한 실험가!';}
+  else if(pct>=0.5){icon='🥈';nameMsg='성장하는 탐구자!';}
+  else{icon='🔬';nameMsg='다시 도전하자!';}
+
+  document.getElementById('frIcon').textContent=icon;
+  document.getElementById('frName').textContent=state.nickname?`${state.nickname} 학생의 학습 리포트`:'학습 리포트';
+  document.getElementById('frSubtitle').textContent=`${state.diff==='basic'?'🌱 기초':'🔬 기본'} | ${nameMsg}`;
+  document.getElementById('frAccuracy').textContent=acc+'%';
+  document.getElementById('frTime').textContent=timeStr;
+  document.getElementById('frHintUsed').textContent=state.hintsUsed+'회';
+  document.getElementById('frCorrect').textContent=`${state.correct}/${state.questions.length}`;
+  document.getElementById('frMaxCombo').textContent=state.maxCombo+'x';
+  document.getElementById('frAvgTime').textContent=avgStr;
+  document.getElementById('frSkipped').textContent=state.skipped+'문제';
+
+  // 능력치 바
+  const speedScore=Math.max(0,Math.round(100-(state.totalElapsed/state.questions.length-5)*4));
+  const hintPenalty=Math.max(0,100-state.hintsUsed*15);
+  const comboScore=Math.min(100,state.maxCombo*14);
+  const bars=[
+    {label:'정답률',val:acc,color:'#22c55e'},
+    {label:'풀이속도',val:Math.min(100,speedScore),color:'#38bdf8'},
+    {label:'힌트절약',val:hintPenalty,color:'#f59e0b'},
+    {label:'콤보력',val:comboScore,color:'#c084fc'},
+  ];
+  const barsEl=document.getElementById('frBars');
+  barsEl.innerHTML='';
+  bars.forEach(b=>{
+    barsEl.innerHTML+=`<div class="fr-bar-row">
+      <div class="fr-bar-label">${b.label}</div>
+      <div class="fr-bar-bg"><div class="fr-bar-fill" style="width:0%;background:${b.color}" data-val="${b.val}"></div></div>
+      <div class="fr-bar-val" style="color:${b.color}">${b.val}%</div>
+    </div>`;
+  });
+
+  // 선생님 코멘트 생성
+  let comments=[];
+  if(acc>=90)comments.push(`<span class="highlight">정답률 ${acc}%</span>, 정말 훌륭해! 용해와 용액 개념을 완벽하게 이해하고 있어.`);
+  else if(acc>=70)comments.push(`정답률 <span class="highlight">${acc}%</span>으로 좋은 성과야! 틀린 ${state.questions.length-state.correct}문제를 다시 복습하면 완벽해질 거야.`);
+  else if(acc>=50)comments.push(`정답률 <span class="highlight">${acc}%</span>, 절반 이상 맞혔어! 조금만 더 공부하면 훨씬 잘할 수 있어.`);
+  else comments.push(`아직 어렵지? 교과서의 <span class="highlight">용해, 용액, 용질, 용매</span> 개념부터 차근차근 다시 읽어봐!`);
+
+  if(state.hintsUsed===0)comments.push(`힌트를 하나도 안 썼어! 🎖️ 대단한 집중력이야.`);
+  else if(state.hintsUsed<=2)comments.push(`힌트를 ${state.hintsUsed}번 사용했어. 스스로 도전하는 습관이 좋아!`);
+  else comments.push(`힌트를 <span class="highlight">${state.hintsUsed}번</span> 사용했어. 힌트 없이도 풀 수 있도록 용어 뜻을 다시 익혀봐.`);
+
+  if(state.maxCombo>=5)comments.push(`최대 <span class="highlight">${state.maxCombo}콤보</span>! 연속 정답 능력이 뛰어나.`);
+  if(state.skipped>2)comments.push(`${state.skipped}문제를 건너뛰었어. 건너뛴 문제들을 다시 찾아서 공부해봐!`);
+
+  document.getElementById('frComment').innerHTML=comments.join('<br>');
+
+  // 팝업 표시
+  document.getElementById('feedbackReportBackdrop').classList.add('show');
+
+  // 바 애니메이션 (살짝 딜레이)
+  setTimeout(()=>{
+    document.querySelectorAll('.fr-bar-fill').forEach(el=>{
+      el.style.width=el.dataset.val+'%';
+    });
+  },300);
+}
+
+function frGoHome(){document.getElementById('feedbackReportBackdrop').classList.remove('show');showScreen('resultScreen');// 기존 결과 화면도 채워두기
+const acc=state.questions.length>0?Math.round(state.correct/state.questions.length*100):0;const pct=state.correct/state.questions.length;let emoji,title,rank,rankColor,msg;if(pct>=0.9){emoji='🏆';title='완벽한 과학자!';rank='S 랭크';rankColor='background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid rgba(245,158,11,0.4)';msg='대단해! 용해와 용액을 완벽하게 이해했어! 🎉';}else if(pct>=0.7){emoji='🥇';title='훌륭한 실험가!';rank='A 랭크';rankColor='background:rgba(129,140,248,0.2);color:#818cf8;border:1px solid rgba(129,140,248,0.4)';msg='잘했어! 조금만 더 연습하면 완벽해질 수 있어!';}else if(pct>=0.5){emoji='🥈';title='성장하는 탐구자!';rank='B 랭크';rankColor='background:rgba(34,197,94,0.2);color:#22c55e;border:1px solid rgba(34,197,94,0.4)';msg='반이상 맞혔어! 틀린 문제를 다시 복습해봐!';}else{emoji='🔬';title='다시 도전!';rank='C 랭크';rankColor='background:rgba(148,163,184,0.2);color:#94a3b8;border:1px solid rgba(148,163,184,0.4)';msg='어려웠지? 교과서를 다시 읽고 도전해봐!';}
+document.getElementById('resultEmoji').textContent=emoji;document.getElementById('resultTitle').textContent=title;document.getElementById('rankBadge').setAttribute('style',rankColor);document.getElementById('rankBadge').textContent=rank;document.getElementById('resultScore').textContent=state.score+'점';document.getElementById('rCorrect').textContent=`${state.correct}/${state.questions.length}`;document.getElementById('rMaxCombo').textContent=state.maxCombo+'x';document.getElementById('rAccuracy').textContent=acc+'%';document.getElementById('resultMsg').textContent=msg;updateBestScore();}
+
+function frRetry(){document.getElementById('feedbackReportBackdrop').classList.remove('show');startGame(state.diff);}
+function restartGame(){startGame(state.diff);}
+</script>
+</body>
+</html>

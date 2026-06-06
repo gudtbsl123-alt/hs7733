@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>에듀런: 수학 대탐험</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        
+        body {
+            font-family: 'Jua', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a202c;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .screen-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .hidden-screen {
+            display: none !important;
+        }
+
+        @keyframes bounce-soft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .btn-bounce:hover {
+            animation: bounce-soft 1s infinite;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .heart {
+            color: #ff4757;
+            animation: heartbeat 1.5s infinite;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        .glass-pill {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 9999px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { transform: translateX(-50%) scale(0.95); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.05); opacity: 0.8; }
+        }
+        .boost-active {
+            animation: pulse-fast 0.5s infinite;
+            box-shadow: 0 0 30px rgba(239,68,68,1) !important;
+        }
+
+        .auto-boost-active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+            color: white !important;
+            border-color: white !important;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.8) !important;
+            animation: pulse-fast 1s infinite;
+        }
+    </style>
+</head>
+<body class="text-white relative w-screen h-screen">
+
+    <!-- 메인 게임 캔버스 -->
+    <canvas id="game-canvas" class="absolute inset-0"></canvas>
+
+    <!-- 인게임 UI -->
+    <div id="ingame-ui" class="absolute top-0 w-full p-6 flex justify-between items-start pointer-events-none hidden-screen z-10">
+        <div class="flex flex-col gap-3">
+            <div id="health-container" class="flex gap-2 text-3xl drop-shadow-md"></div>
+            
+            <div class="flex items-center gap-2 px-6 py-2 glass-pill" style="background: linear-gradient(to right, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8));">
+                <span class="text-2xl">🪙</span>
+                <span id="coin-score" class="text-2xl font-black text-white drop-shadow-md tracking-wider">0</span>
+            </div>
+
+            <div class="flex items-center gap-2 px-6 py-2 glass-pill" style="background: linear-gradient(to right, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8));">
+                <span class="text-white font-bold drop-shadow-md text-lg">🏃 회피:</span>
+                <span id="dodge-score" class="text-2xl font-black text-white drop-shadow-md tracking-wider">0</span>
+            </div>
+
+            <div class="flex items-center gap-2 px-6 py-2 glass-pill" style="background: linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(79, 70, 229, 0.8));">
+                <span class="text-white font-bold drop-shadow-md text-lg">✨ 퀴즈 게이지:</span>
+                <span class="text-2xl font-black text-yellow-300 drop-shadow-md tracking-wider">
+                    <span id="coin-gauge">0</span><span class="text-sm opacity-80 text-white"> / 100</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-3">
+            <div id="map-indicator" class="text-2xl font-bold text-white glass-pill px-6 py-3 border-4 border-white/50" style="background: linear-gradient(135deg, #a855f7, #ec4899);">
+                MAP 1: 캔디 마을
+            </div>
+            <div class="glass-pill px-6 py-2 bg-black/40">
+                <span class="text-lg font-bold text-white/90 drop-shadow-md">해결한 퀴즈: </span>
+                <span id="quiz-progress" class="text-2xl font-black text-white">0</span> <span class="text-white/70">/ 5</span>
+            </div>
+            <div class="text-4xl font-black text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] tracking-widest mt-2">
+                <span id="total-score">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 터치 안내 오버레이 -->
+    <div id="touch-guide" class="absolute inset-0 flex pointer-events-none hidden-screen z-20">
+        <div class="w-1/2 h-full flex items-center justify-center border-r-2 border-white/20 bg-blue-500/10">
+            <span class="text-4xl text-white/50 font-bold bg-black/40 px-6 py-3 rounded-full backdrop-blur-sm">👈 슬라이드 (터치)</span>
+        </div>
+        <div class="w-1/2 h-full flex items-center justify-center bg-red-500/10">
+            <span class="text-4xl text-white/50 font-bold bg-black/40 px-6 py-3 rounded-full backdrop-blur-sm">점프 (터치) 👉</span>
+        </div>
+    </div>
+
+    <!-- 속도 부스터 컨테이너 -->
+    <div id="boost-container" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4 z-30 hidden pointer-events-auto">
+        <div id="boost-btn" class="glass-pill px-8 py-3 text-xl md:text-2xl font-black text-white shadow-[0_0_20px_rgba(239,68,68,0.8)] border-2 border-white/50 transition-transform cursor-pointer select-none" style="background: linear-gradient(135deg, #ef4444, #f97316);">
+            🚀 부스터 (Shift)
+        </div>
+        <div id="auto-boost-btn" class="glass-pill px-6 py-3 text-lg md:text-xl font-bold text-white/80 border-2 border-white/30 transition-all cursor-pointer select-none bg-black/50 hover:bg-black/70">
+            🔄 상시 부스터: OFF
+        </div>
+    </div>
+
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="screen-overlay bg-gradient-to-b from-purple-900 to-indigo-900 z-50">
+        <div class="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/20 flex flex-col items-center max-w-5xl w-full max-h-[95vh] shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <h1 class="text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 font-bold mb-6 drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] text-center animate-pulse">
+                🍪 에듀런: 수학 대탐험 ✨
+            </h1>
+            
+            <div class="w-full flex flex-col md:flex-row gap-6 h-full overflow-hidden">
+                <div class="flex-[1.2] flex flex-col gap-4">
+                    <div class="bg-black/40 p-5 rounded-2xl border border-blue-400/30 shadow-inner">
+                        <label class="block text-2xl mb-3 text-yellow-300 font-bold drop-shadow-md">플레이어 이름</label>
+                        <input type="text" id="nickname-input" class="w-full p-3 rounded-xl bg-white/20 border-2 border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-yellow-400 text-xl mb-2 transition-colors" placeholder="이름을 입력하세요!">
+                    </div>
+
+                    <div class="bg-indigo-900/60 p-5 rounded-2xl border border-blue-400/30 shadow-inner">
+                        <h3 class="text-xl text-blue-300 mb-2 font-bold flex items-center gap-2">
+                            <span>📚 6학년 1학기 [여러 가지 그래프]</span>
+                        </h3>
+                        <p class="text-white/90 leading-relaxed">
+                            코인을 <span class="text-yellow-300 font-bold">100개</span> 획득할 때마다 문제가 나옵니다!<br>
+                            틀려도 괜찮아요. 힌트를 보고 다시 풀 수 있어요.<br>
+                        </p>
+                    </div>
+
+                    <div class="bg-black/50 p-4 rounded-xl border border-white/10 text-sm md:text-base shadow-inner">
+                        <h3 class="text-xl text-yellow-200 mb-2 border-b border-white/20 pb-1 font-bold">📜 조작법 (억까 없음!)</h3>
+                        <ul class="list-disc pl-5 space-y-2 text-white/90">
+                            <li><strong>PC:</strong> [Space/↑] 점프(2단 가능), [Z/↓] 슬라이딩</li>
+                            <li><strong>모바일:</strong> 우측 터치(점프), 좌측 터치(슬라이드)</li>
+                            <li><strong class="text-red-300">부스터:</strong> [Shift] 누를 시 빠른 속도로 진행!</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex-[2] bg-black/40 p-5 rounded-2xl border border-white/10 flex flex-col h-full shadow-inner relative">
+                    <label class="block text-2xl mb-3 text-yellow-300 font-bold drop-shadow-md flex justify-between items-center">
+                        <span>캐릭터 선택</span>
+                        <button onclick="openGallery()" class="text-sm bg-blue-500 hover:bg-blue-400 text-white px-3 py-1 rounded-full shadow-md transition-colors">
+                            🖼️ 맵 배경 미리보기
+                        </button>
+                    </label>
+                    <div id="character-grid" class="grid grid-cols-3 md:grid-cols-5 gap-3 overflow-y-auto pr-2 no-scrollbar flex-1 h-64 p-1">
+                        <!-- JS로 동적 생성됨 -->
+                    </div>
+                </div>
+            </div>
+
+            <button id="start-btn" class="mt-8 px-14 py-5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-full text-4xl font-black shadow-[0_0_30px_rgba(99,102,241,0.8)] hover:scale-105 transition-transform btn-bounce text-white border-4 border-white/50 flex items-center gap-3">
+                <span>🏃 게임 시작!</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 🖼️ 맵 배경 미리보기 갤러리 모달 -->
+    <div id="gallery-modal" class="screen-overlay hidden-screen z-[60]">
+        <div class="bg-black/90 p-6 rounded-3xl border-4 border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)] flex flex-col items-center w-[90%] max-w-4xl relative">
+            <h2 id="gallery-title" class="text-4xl font-black text-yellow-300 mb-4 drop-shadow-md">MAP 1: 캔디 마을</h2>
+            
+            <div id="gallery-container" class="relative w-full h-[400px] rounded-xl overflow-hidden border-2 border-white/30 shadow-inner mb-6 bg-gray-900">
+                <canvas id="gallery-canvas" class="absolute inset-0"></canvas>
+            </div>
+
+            <div class="flex gap-6">
+                <button onclick="changeGallery(-1)" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xl rounded-full shadow-lg transition-colors border-2 border-white/50">
+                    ◀ 이전 맵
+                </button>
+                <button onclick="closeGallery()" class="px-8 py-3 bg-red-500 hover:bg-red-400 text-white font-bold text-2xl rounded-full shadow-lg transition-colors border-2 border-white/50">
+                    닫기
+                </button>
+                <button onclick="changeGallery(1)" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xl rounded-full shadow-lg transition-colors border-2 border-white/50">
+                    다음 맵 ▶
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 퀴즈 화면 -->
+    <div id="quiz-screen" class="screen-overlay hidden-screen backdrop-blur-md z-50 overflow-y-auto">
+        <div class="bg-gradient-to-b from-indigo-800 to-purple-900 p-6 md:p-10 rounded-3xl border-4 border-yellow-400 shadow-[0_0_60px_rgba(250,204,21,0.6)] max-w-4xl w-[95%] relative my-auto">
+            <div class="flex justify-between items-center mb-6 border-b border-white/20 pb-4">
+                <span class="text-yellow-300 font-bold text-2xl md:text-3xl flex items-center gap-3 drop-shadow-md">
+                    <span id="quiz-map-title">MAP 1</span> 
+                    <span id="quiz-difficulty" class="text-sm md:text-base bg-red-500/80 px-3 py-1 rounded-full text-white border border-red-300 shadow-sm">난이도</span>
+                </span>
+                <span class="text-white bg-black/60 px-4 md:px-5 py-2 rounded-full text-xl md:text-2xl font-bold border border-white/20 shadow-inner">
+                    문제 <span id="quiz-number" class="text-yellow-400">1</span> / 5
+                </span>
+            </div>
+            <div id="quiz-graph-container" class="mb-6 flex justify-center w-full min-h-[50px]"></div>
+            <h2 id="quiz-question" class="text-2xl md:text-3xl font-bold text-white mb-8 leading-snug text-center break-keep flex items-center justify-center drop-shadow-lg">
+                여기에 문제가 표시됩니다.
+            </h2>
+            <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div id="quiz-feedback" class="mt-6 text-center text-2xl md:text-3xl font-black h-10 hidden drop-shadow-md">
+                정답입니다! ❤️+1
+            </div>
+            <div id="quiz-hint-area" class="mt-6 p-4 md:p-5 bg-blue-900/80 rounded-2xl border-2 border-blue-400 shadow-lg hidden">
+                <h3 class="text-yellow-300 font-bold text-xl mb-2 flex items-center gap-2"><span>💡 선생님의 힌트</span></h3>
+                <p id="quiz-hint-text" class="text-white text-lg leading-relaxed"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 오버 / 클리어 화면 -->
+    <div id="game-over-screen" class="screen-overlay hidden-screen z-50">
+        <div class="bg-black/90 p-12 rounded-3xl border-2 border-white/20 text-center flex flex-col items-center max-w-2xl w-[90%] shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            <h1 id="end-title" class="text-7xl font-black mb-6 text-red-500 drop-shadow-[0_5px_5px_rgba(220,38,38,0.8)]">GAME OVER</h1>
+            <p id="end-message" class="text-3xl text-gray-300 mb-8 font-bold">체력을 모두 소진했습니다.</p>
+            <div class="bg-gradient-to-r from-indigo-900/60 to-purple-900/60 p-8 rounded-2xl w-full mb-10 border border-white/10 shadow-inner">
+                <p class="text-2xl mb-3 text-yellow-300 font-bold">플레이어: <span id="end-nickname" class="text-white"></span></p>
+                <p class="text-5xl font-black mb-4 drop-shadow-md">점수: <span id="end-score" class="text-yellow-400">0</span></p>
+                <p class="text-2xl text-blue-300 font-bold">해결한 수학 문제: <span id="end-correct-count" class="text-white">0</span>개</p>
+            </div>
+            <button id="restart-map-btn" class="px-12 py-4 bg-white text-black font-black text-3xl rounded-full hover:bg-gray-200 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+                현재 맵 다시 도전하기!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const characters = [
+            { name: '용감한 쿠키', color: '#c49b79', emoji: '🏃' },
+            { name: '명랑한 쿠키', color: '#ffb6c1', emoji: '👧' },
+            { name: '딸기맛 쿠키', color: '#ff4081', emoji: '🍓' },
+            { name: '초코맛 쿠키', color: '#5d4037', emoji: '🍫' },
+            { name: '닌자맛 쿠키', color: '#37474f', emoji: '🥷' },
+            { name: '천사맛 쿠키', color: '#fff9c4', emoji: '👼' },
+            { name: '악마맛 쿠키', color: '#b71c1c', emoji: '👿' },
+            { name: '근육맛 쿠키', color: '#d84315', emoji: '💪' },
+            { name: '마법사 쿠키', color: '#311b92', emoji: '🧙' },
+            { name: '해적맛 쿠키', color: '#212121', emoji: '🏴‍☠️' },
+            { name: '시간지기 쿠키', color: '#f59e0b', emoji: '⏳' }, 
+            { name: '체리맛 쿠키', color: '#c62828', emoji: '🍒' },
+            { name: '키위맛 쿠키', color: '#7cb342', emoji: '🥝' },
+            { name: '눈설탕 쿠키', color: '#b2ebf2', emoji: '⛄' },
+            { name: '뱀파이어 쿠키', color: '#880e4f', emoji: '🧛' }
+        ];
+
+        // 맵 테마
+        const mapThemes = [
+            { id: 1, name: "캔디 마을", bgStart: "#ff9a9e", bgEnd: "#fecfef", groundColor: "#ff6b81" },
+            { id: 2, name: "신비의 숲", bgStart: "#0f2027", bgEnd: "#203a43", groundColor: "#27ae60" },
+            { id: 3, name: "오븐 탈출", bgStart: "#2a0000", bgEnd: "#4a0000", groundColor: "#c0392b" },
+            { id: 4, name: "마법사의 도시", bgStart: "#0f0c29", bgEnd: "#302b63", groundColor: "#4a1c40" }
+        ];
+
+        // 6학년 1학기 [여러 가지 그래프] 40문제 풀
+        const mathQuizPool = [
+            { diff: "하", q: "전체에 대한 각 부분의 비율을 띠 모양에 나타낸 그래프는 무엇인가요?", options: ["막대그래프", "꺾은선그래프", "띠그래프", "원그래프"], a: 2, explanation: "전체에 대한 각 부분의 비율을 띠 모양으로 나타낸 것을 띠그래프라고 합니다.", hint: "모양이 긴 '띠'처럼 생긴 그래프의 이름을 생각해보세요." },
+            { diff: "하", q: "전체에 대한 각 부분의 비율을 원 모양에 나타낸 그래프는 무엇인가요?", options: ["막대그래프", "꺾은선그래프", "띠그래프", "원그래프"], a: 3, explanation: "전체에 대한 각 부분의 비율을 원 모양으로 나타낸 것을 원그래프라고 합니다.", hint: "동그란 '원' 모양으로 생긴 그래프의 이름을 떠올려보세요." },
+            { diff: "하", q: "백분율(%)의 합계는 항상 얼마가 되어야 하나요?", options: ["10%", "50%", "100%", "360%"], a: 2, explanation: "모든 항목의 백분율을 합하면 전체를 의미하는 100%가 됩니다.", hint: "전체를 100으로 기준을 두고 구한 비율을 백분율이라고 해요." },
+            { diff: "하", q: "시간에 따른 수량의 '변화'를 알아보기에 가장 알맞은 그래프는 무엇인가요?", options: ["막대그래프", "꺾은선그래프", "띠그래프", "원그래프"], a: 1, explanation: "꺾은선그래프는 선의 기울기를 통해 수량의 변화를 한눈에 알기 쉽습니다.", hint: "선이 오르락내리락하면서 변하는 모습을 잘 보여주는 그래프예요." },
+            
+            { diff: "중", q: "표를 보고 답하세요. 수학을 좋아하는 학생은 전체의 몇 %인가요?", options: ["15%", "20%", "25%", "30%"], a: 3, explanation: "(15 ÷ 50) × 100 = 30% 입니다.", hint: "(수학을 좋아하는 학생 수 ÷ 전체 학생 수) × 100 을 계산해보세요.", 
+              graph: { type: 'table', title: '좋아하는 과목별 학생 수', data: [{label: '수학', value: '15명'}, {label: '기타', value: '35명'}, {label: '합계', value: '50명'}] } },
+            { diff: "중", q: "표를 보고 답하세요. 피자를 좋아하는 학생은 전체의 몇 %인가요?", options: ["15%", "20%", "25%", "30%"], a: 1, explanation: "(5 ÷ 25) × 100 = 20% 입니다.", hint: "분모를 100으로 만들려면 25와 5에 각각 4를 곱해보세요.", 
+              graph: { type: 'table', title: '좋아하는 음식별 학생 수', data: [{label: '피자', value: '5명'}, {label: '치킨 등', value: '20명'}, {label: '합계', value: '25명'}] } },
+            
+            { diff: "중", q: "전체 학생 40명 중 체육을 좋아하는 학생이 10명입니다. 체육을 좋아하는 학생은 전체의 몇 %인가요?", options: ["20%", "25%", "30%", "40%"], a: 1, explanation: "10/40은 1/4이므로 백분율로 나타내면 25%입니다.", hint: "10명은 40명의 딱 절반의 절반(4분의 1)이에요." },
+            { diff: "중", q: "전체 학생 20명 중 사과를 좋아하는 학생이 8명입니다. 사과를 좋아하는 학생은 전체의 몇 %인가요?", options: ["20%", "30%", "40%", "50%"], a: 2, explanation: "(8 ÷ 20) × 100 = 40% 입니다.", hint: "20에 5를 곱하면 100이 되니, 8에도 5를 곱해보세요." },
+            
+            { diff: "상", q: "원그래프에서 D 항목의 비율(?)은 몇 %인가요?", options: ["15%", "20%", "25%", "30%"], a: 2, explanation: "100% - (35% + 25% + 15%) = 25% 입니다.", hint: "전체 백분율의 합은 항상 100%가 되어야 한다는 것을 기억하세요.", 
+              graph: { type: 'pie', title: '항목별 선호도 비율', data: [{label: 'A', value: 35, color: '#ef4444'}, {label: 'B', value: 25, color: '#f59e0b'}, {label: 'C', value: 15, color: '#10b981'}, {label: 'D', value: 25, color: '#3b82f6', hideValue: true}] } },
+            { diff: "상", q: "띠그래프에서 체육(?)의 비율은 몇 %인가요?", options: ["10%", "20%", "30%", "40%"], a: 1, explanation: "100% - 80% = 20% 입니다.", hint: "나와 있는 비율을 모두 더한 뒤 100에서 빼보세요.", 
+              graph: { type: 'strip', title: '좋아하는 과목별 학생 수의 비율', data: [{label: '국어', value: 30, color: '#ef4444'}, {label: '수학', value: 20, color: '#f59e0b'}, {label: '사회', value: 20, color: '#10b981'}, {label: '과학', value: 10, color: '#8b5cf6'}, {label: '체육', value: 20, color: '#3b82f6', hideValue: true}] } },
+            
+            { diff: "하", q: "띠그래프의 작은 눈금 한 칸이 5%를 나타낼 때, 눈금 4칸이 차지하는 비율은 몇 %인가요?", options: ["10%", "15%", "20%", "25%"], a: 2, explanation: "5% × 4칸 = 20% 입니다.", hint: "5%를 4번 더해보세요." },
+            { diff: "하", q: "띠그래프나 원그래프에서 반원(절반)이 차지하는 비율은 몇 %인가요?", options: ["25%", "50%", "75%", "100%"], a: 1, explanation: "전체 100%의 절반은 50%입니다.", hint: "100을 2로 똑같이 나누면 얼마가 될까요?" },
+            { diff: "하", q: "어떤 항목이 전체의 4분의 1을 차지할 때, 원그래프에서는 몇 %로 표시되나요?", options: ["20%", "25%", "30%", "40%"], a: 1, explanation: "100%를 4로 나누면 25%입니다.", hint: "100을 4로 똑같이 나누어보세요." },
+            
+            { diff: "중", q: "띠그래프를 보고 답하세요. 축구를 좋아하는 학생은 야구의 몇 배인가요?", options: ["2배", "3배", "4배", "5배"], a: 0, explanation: "40% ÷ 20% = 2배 입니다.", hint: "40은 20이 몇 번 들어가야 되는지 생각해보세요.", 
+              graph: { type: 'strip', title: '좋아하는 스포츠 비율', data: [{label: '축구', value: 40, color: '#ef4444'}, {label: '야구', value: 20, color: '#3b82f6'}, {label: '농구', value: 25, color: '#f59e0b'}, {label: '기타', value: 15, color: '#9ca3af'}] } },
+            { diff: "상", q: "원그래프를 보고 답하세요. 독서를 좋아하는 학생은 줄넘기의 몇 배인가요?", options: ["2배", "3배", "4배", "5배"], a: 1, explanation: "30% ÷ 10% = 3배 입니다.", hint: "30은 10의 몇 배일까요?", 
+              graph: { type: 'pie', title: '취미 생활 비율', data: [{label: '독서', value: 30, color: '#10b981'}, {label: '보드게임', value: 40, color: '#f59e0b'}, {label: '줄넘기', value: 10, color: '#3b82f6'}, {label: '기타', value: 20, color: '#9ca3af'}] } },
+            
+            { diff: "상", q: "전체 학생이 200명일 때, 30%를 차지하는 항목의 학생 수는 몇 명인가요?", options: ["30명", "60명", "90명", "120명"], a: 1, explanation: "200 × (30/100) = 60명 입니다.", hint: "100명일 때 30명이면, 200명일 때는 그 2배가 되겠죠?" },
+            
+            { diff: "상", q: "한 달 용돈 10,000원에 대한 씀씀이 그래프입니다. 간식비는 얼마인가요?", options: ["2,000원", "4,000원", "6,000원", "8,000원"], a: 1, explanation: "10,000 × (40/100) = 4,000원 입니다.", hint: "1,000원의 40%가 400원이니, 10,000원이면 0을 하나 더 붙여보세요.", 
+              graph: { type: 'pie', title: '용돈 씀씀이 비율', data: [{label: '간식비', value: 40, color: '#f43f5e'}, {label: '준비물', value: 30, color: '#3b82f6'}, {label: '저축', value: 20, color: '#10b981'}, {label: '기타', value: 10, color: '#8b5cf6'}] } },
+            
+            { diff: "상", q: "전체 학생이 50명일 때, 10%를 차지하는 항목의 학생 수는 몇 명인가요?", options: ["5명", "10명", "15명", "20명"], a: 0, explanation: "50 × (10/100) = 5명 입니다.", hint: "10%는 전체를 10으로 나눈 것과 같아요." },
+            
+            { diff: "상", q: "그래프에서 과일과 초코 케이크를 좋아하는 학생의 합은 전체의 몇 %인가요?", options: ["40%", "50%", "60%", "70%"], a: 1, explanation: "20% + 30% = 50% 입니다.", hint: "두 비율을 그대로 덧셈해보세요.", 
+              graph: { type: 'pie', title: '좋아하는 케이크 비율', data: [{label: '초코', value: 30, color: '#78350f'}, {label: '생크림', value: 40, color: '#f1f5f9'}, {label: '과일', value: 20, color: '#f43f5e'}, {label: '치즈', value: 10, color: '#fef08a'}] } },
+            
+            { diff: "상", q: "10%에 해당하는 학생 수가 4명일 때, 전체 학생 수는 몇 명인가요?", options: ["20명", "30명", "40명", "50명"], a: 2, explanation: "10%가 10번 모여야 100%가 되므로 4 × 10 = 40명 입니다.", hint: "10%를 10배 하면 전체(100%)가 됩니다." },
+            { diff: "중", q: "다음 중 원그래프로 나타내기에 가장 알맞은 것은 무엇인가요?", options: ["좋아하는 색깔 비율", "시간에 따른 기온의 변화", "지역별 쌀의 생산량", "하루 동안의 강수량"], a: 0, explanation: "원그래프는 전체에 대한 각 부분의 '비율'을 나타내기 좋습니다.", hint: "'비율'이나 '백분율'을 보여주기 좋은 그래프를 찾아보세요." },
+            { diff: "중", q: "수량의 많고 적음을 비교하기에 가장 편리한 그래프는 무엇인가요?", options: ["꺾은선그래프", "막대그래프", "띠그래프", "원그래프"], a: 1, explanation: "막대그래프는 막대의 길이로 수량의 크기를 한눈에 비교할 수 있습니다.", hint: "막대의 길이가 길수록 수량이 많은 그래프예요." },
+            
+            { diff: "상", q: "띠그래프에서 비율이 가장 큰 항목과 가장 작은 항목의 차이는 몇 %인가요?", options: ["15%", "20%", "25%", "30%"], a: 3, explanation: "45% - 15% = 30% 입니다.", hint: "가장 큰 수(45)에서 가장 작은 수(15)를 빼보세요.", 
+              graph: { type: 'strip', title: '가고 싶은 여행지 비율', data: [{label: '바다', value: 45, color: '#3b82f6'}, {label: '놀이공원', value: 40, color: '#f43f5e'}, {label: '산', value: 15, color: '#10b981'}] } },
+            
+            { diff: "중", q: "표를 보고 답하세요. 여학생은 전체 학생의 몇 %인가요?", options: ["48%", "50%", "52%", "54%"], a: 2, explanation: "전체 25명 중 13명이므로 (13 ÷ 25) × 100 = 52% 입니다.", hint: "먼저 전체 학생 수(12+13)를 구하고 백분율을 계산하세요.", 
+              graph: { type: 'table', title: '우리 반 남녀 학생 수', data: [{label: '남학생', value: '12명'}, {label: '여학생', value: '13명'}, {label: '합계', value: '25명'}] } },
+            
+            { diff: "중", q: "전체의 1/5을 백분율로 바르게 나타낸 것은 무엇인가요?", options: ["15%", "20%", "25%", "30%"], a: 1, explanation: "1/5 = 20/100 이므로 20% 입니다.", hint: "100을 5로 나누어보세요." },
+            { diff: "중", q: "백분율 75%를 기약분수로 바르게 나타낸 것은 무엇인가요?", options: ["1/4", "1/2", "3/4", "4/5"], a: 2, explanation: "75/100을 25로 약분하면 3/4 입니다.", hint: "75/100를 기약분수가 될 때까지 약분해보세요." },
+            
+            { diff: "상", q: "고양이와 햄스터 비율의 합은 강아지의 비율보다 큰가요, 작은가요?", options: ["크다", "작다", "같다", "알 수 없다"], a: 0, explanation: "고양이(30%)+햄스터(20%) = 50%로 강아지 40%보다 큽니다.", hint: "두 동물의 비율을 더한 값과 강아지의 비율을 비교해보세요.", 
+              graph: { type: 'pie', title: '키우고 싶은 동물 비율', data: [{label: '강아지', value: 40, color: '#d97706'}, {label: '고양이', value: 30, color: '#fbbf24'}, {label: '햄스터', value: 20, color: '#10b981'}, {label: '기타', value: 10, color: '#9ca3af'}] } },
+            
+            { diff: "하", q: "원그래프에서 부채꼴의 넓이가 가장 넓은 항목은 어떤 항목인가요?", options: ["가장 낮은 항목", "두 번째로 높은 항목", "중간인 항목", "가장 높은 항목"], a: 3, explanation: "원그래프는 비율이 높을수록 부채꼴의 중심각이 커져 넓이가 넓어집니다.", hint: "차지하는 %가 클수록 피자 조각도 커지겠죠?" },
+            { diff: "상", q: "25%에 해당하는 금액이 1,000원일 때, 전체 금액은 얼마인가요?", options: ["2,000원", "3,000원", "4,000원", "5,000원"], a: 2, explanation: "25%는 1/4이므로, 1,000 × 4 = 4,000원 입니다.", hint: "25%가 4번 모이면 100%가 됩니다." },
+            { diff: "중", q: "비율을 나타내는 그래프(띠, 원그래프)를 그릴 때 가장 먼저 해야 할 일은 무엇인가요?", options: ["제목 쓰기", "항목의 이름 적기", "백분율 구하기", "눈금 나누기"], a: 2, explanation: "비율 그래프를 그리려면 항목별 백분율을 먼저 구해야 합니다.", hint: "그래프의 눈금을 나누기 전에 어떤 숫자(%)가 필요한지 생각해보세요." },
+            { diff: "중", q: "띠그래프를 그릴 때, 각 항목의 백분율의 합이 100%가 되지 않으면 어떻게 해야 하나요?", options: ["그냥 그린다", "큰 항목에 더한다", "작은 항목에서 뺀다", "다시 계산한다"], a: 3, explanation: "합이 100%가 맞는지 반드시 확인하고, 틀리면 다시 계산해야 합니다.", hint: "계산에 실수가 있었는지 확인하는 과정이에요." },
+            
+            { diff: "상", q: "원그래프로 그릴 때, 가장 작은 부채꼴로 그려지는 과목은?", options: ["음악", "미술", "체육", "모두 같다"], a: 0, explanation: "백분율이 가장 낮은 음악(25%)이 가장 작게 그려집니다.", hint: "백분율 숫자가 가장 작은 것을 찾으세요.", 
+              graph: { type: 'pie', title: '예체능 선호도 비율', data: [{label: '음악', value: 25, color: '#3b82f6'}, {label: '미술', value: 30, color: '#f43f5e'}, {label: '체육', value: 45, color: '#10b981'}] } },
+            
+            { diff: "상", q: "전체 학생 200명 중 10%가 안경을 썼습니다. 안경을 쓰지 않은 학생은 몇 명인가요?", options: ["160명", "170명", "180명", "190명"], a: 2, explanation: "안경 쓴 학생 20명을 전체 200명에서 빼면 180명입니다.", hint: "안경을 쓰지 않은 비율은 90%예요. 200명의 90%를 구해보세요." },
+            
+            { diff: "상", q: "(딸기+포도)의 합은 (수박+복숭아)의 합보다 몇 % 더 많은가요?", options: ["10%", "15%", "20%", "25%"], a: 2, explanation: "(35+25) - (20+20) = 60 - 40 = 20% 입니다.", hint: "(딸기+포도) 값에서 (수박+복숭아) 값을 빼보세요.", 
+              graph: { type: 'pie', title: '좋아하는 과일 비율', data: [{label: '딸기', value: 35, color: '#f43f5e'}, {label: '포도', value: 25, color: '#a855f7'}, {label: '수박', value: 20, color: '#10b981'}, {label: '복숭아', value: 20, color: '#fbcfe8'}] } },
+            
+            { diff: "하", q: "어느 학교 학생들의 혈액형별 비율을 나타내기에 가장 알맞은 그래프는?", options: ["막대그래프", "꺾은선그래프", "원그래프", "그림그래프"], a: 2, explanation: "전체에 대한 비율을 한눈에 보려면 원그래프나 띠그래프가 알맞습니다.", hint: "혈액형은 전체 학생 중 몇 %인지 비율로 나타내는 것이 좋아요." },
+            { diff: "하", q: "연도별 강수량의 변화를 나타내기에 가장 알맞은 그래프는?", options: ["막대그래프", "꺾은선그래프", "띠그래프", "원그래프"], a: 1, explanation: "연속적으로 변하는 수량은 꺾은선그래프가 가장 알맞습니다.", hint: "'변화'라는 단어에 어울리는 그래프를 찾아보세요." },
+            { diff: "중", q: "띠그래프에서 길이가 가장 긴 띠를 가진 항목은 무엇을 의미하나요?", options: ["가장 낮은 항목", "중간인 항목", "가장 높은 항목", "전체를 의미하는 항목"], a: 2, explanation: "띠그래프에서 띠의 길이는 백분율의 크기를 나타냅니다.", hint: "띠의 길이는 차지하는 비율(%)과 똑같이 움직여요." },
+            { diff: "상", q: "전체 수확량 500kg 중 감자가 200kg입니다. 감자의 수확량은 전체의 몇 %인가요?", options: ["20%", "30%", "40%", "50%"], a: 2, explanation: "(200 ÷ 500) × 100 = 40% 입니다.", hint: "200은 500의 절반(250)보다 조금 작아요. 백분율 공식을 써보세요." },
+            { diff: "상", q: "어떤 항목의 백분율이 15%이고 전체 학생 수가 40명일 때, 이 항목의 학생 수는?", options: ["4명", "5명", "6명", "7명"], a: 2, explanation: "40 × (15/100) = 6명 입니다.", hint: "40명의 10%는 4명, 5%는 2명이에요. 둘을 더해보세요." },
+            
+            { diff: "중", q: "A 항목이 전체의 3/5을 차지할 때, 이를 띠그래프로 나타내면 몇 %를 차지하나요?", options: ["40%", "50%", "60%", "70%"], a: 2, explanation: "3/5 = 60/100 이므로 60% 입니다.", hint: "분모와 분자에 똑같이 20을 곱해서 분모를 100으로 만들어보세요.", 
+              graph: { type: 'strip', title: '설문조사 결과', data: [{label: 'A 항목', value: 60, color: '#10b981'}, {label: '나머지', value: 40, color: '#9ca3af'}] } }
+        ];
+
+        function renderGraph(graphData) {
+            const container = document.createElement('div');
+            container.className = "w-full flex flex-col items-center justify-center p-5 bg-black/30 rounded-2xl border border-white/20 shadow-inner";
+
+            if (graphData.title) {
+                const title = document.createElement('div');
+                title.className = "text-yellow-300 font-bold mb-4 text-xl tracking-wide";
+                title.innerText = `[ ${graphData.title} ]`;
+                container.appendChild(title);
+            }
+
+            if (graphData.type === 'strip') {
+                let stripHtml = `<div class="w-full h-12 md:h-16 flex rounded-lg overflow-hidden border-2 border-white/60 mb-3 shadow-[0_5px_15px_rgba(0,0,0,0.5)]">`;
+                graphData.data.forEach(d => {
+                    let dispText = d.hideValue ? '?' : `${d.value}%`;
+                    stripHtml += `<div style="width: ${d.value}%; background-color: ${d.color};" class="h-full flex flex-col items-center justify-center text-xs md:text-sm font-bold text-black border-r border-white/30 relative shadow-inner">
+                        <span class="bg-white/80 px-1 rounded mb-0.5 whitespace-nowrap">${d.label}</span>
+                        <span class="bg-white/80 px-1 rounded">${dispText}</span>
+                    </div>`;
+                });
+                stripHtml += `</div>`;
+                container.insertAdjacentHTML('beforeend', stripHtml);
+            } else if (graphData.type === 'pie') {
+                let stops = [];
+                let current = 0;
+                let legendHtml = `<div class="flex flex-wrap justify-center gap-3 mt-5">`;
+                graphData.data.forEach(d => {
+                    stops.push(`${d.color} ${current}% ${current + d.value}%`);
+                    current += d.value;
+                    let dispText = d.hideValue ? '?' : `${d.value}%`;
+                    legendHtml += `<div class="flex items-center gap-2 text-sm md:text-base font-bold text-white bg-black/50 px-4 py-2 rounded-full shadow-inner"><div class="w-4 h-4 rounded-full border border-white/50" style="background:${d.color}"></div>${d.label} ${dispText}</div>`;
+                });
+                legendHtml += `</div>`;
+
+                let pieHtml = `<div class="w-40 h-40 md:w-48 md:h-48 rounded-full border-4 border-white/60 shadow-[0_0_20px_rgba(255,255,255,0.4)]" style="background: conic-gradient(${stops.join(', ')})"></div>`;
+                container.insertAdjacentHTML('beforeend', pieHtml);
+                container.insertAdjacentHTML('beforeend', legendHtml);
+            } else if (graphData.type === 'table') {
+                let thead = `<tr class="bg-indigo-900/80">`;
+                let tbody = `<tr class="bg-black/50">`;
+                graphData.data.forEach(d => {
+                    thead += `<th class="border-2 border-white/40 px-5 py-3 text-white font-bold text-lg whitespace-nowrap">${d.label}</th>`;
+                    let dispText = d.hideValue ? '?' : d.value;
+                    tbody += `<td class="border-2 border-white/40 px-5 py-3 text-center text-yellow-200 font-bold text-lg">${dispText}</td>`;
+                });
+                thead += `</tr>`;
+                tbody += `</tr>`;
+                let tableHtml = `<table class="w-full max-w-xl border-collapse border-4 border-white/50 rounded-xl overflow-hidden shadow-xl"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+                container.insertAdjacentHTML('beforeend', tableHtml);
+            }
+
+            return container;
+        }
+
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const previewCanvas = document.getElementById('gallery-canvas');
+        const pCtx = previewCanvas ? previewCanvas.getContext('2d') : null;
+        
+        let width, height;
+
+        // 게임 상태
+        let gameState = 'START';
+        let player;
+        let obstacles = [];
+        let coins = [];
+        let particles = [];
+        let pitfalls = []; 
+        
+        // 시간 제어
+        let lastTime = 0;
+        const FIXED_TIME_STEP = 1000 / 60; 
+        let accumulator = 0;
+        let simTime = 0; 
+
+        // 속도 및 밸런스 설정
+        let baseGameSpeed = 8.3; 
+        let currentSpeed = baseGameSpeed;
+        let isBoosting = false; 
+        let isAutoBoost = false; 
+        
+        let nickname = "";
+        let selectedCharacter = characters[0];
+        
+        let lives = 7;
+        let score = 0;
+        let mapIndex = 0;
+        let questionsAnsweredInMap = 0;
+        let totalCorrectAnswers = 0;
+        let coinCounter = 0;
+        let dodgeCounter = 0;
+        let isInvincible = false;
+        let invincibilityTimer = 0;
+
+        // 갤러리 변수
+        let previewMapIndex = 0; 
+        let previewAnimFrame;
+        let previewBgLayers = [];
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            // 갤러리 캔버스 크기 재조정
+            if(previewCanvas && !document.getElementById('gallery-modal').classList.contains('hidden-screen')) {
+                previewCanvas.width = previewCanvas.parentElement.clientWidth;
+                previewCanvas.height = previewCanvas.parentElement.clientHeight;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 입력 처리
+        const keys = { jump: false, slide: false };
+        let jumpKeyWasPressed = false; 
+
+        const boostBtn = document.getElementById('boost-btn');
+        const setBoost = (state) => {
+            if (gameState !== 'PLAYING') return;
+            isBoosting = state;
+            if (state) boostBtn.classList.add('boost-active');
+            else boostBtn.classList.remove('boost-active');
+        };
+
+        boostBtn.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); setBoost(true); });
+        window.addEventListener('mouseup', () => setBoost(false)); 
+        boostBtn.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); setBoost(true); }, {passive: false});
+        boostBtn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); setBoost(false); }, {passive: false});
+        boostBtn.addEventListener('touchcancel', (e) => { e.preventDefault(); e.stopPropagation(); setBoost(false); }, {passive: false});
+
+        const autoBoostBtn = document.getElementById('auto-boost-btn');
+        autoBoostBtn.addEventListener('click', (e) => {
+            if (gameState !== 'PLAYING') return;
+            isAutoBoost = !isAutoBoost;
+            if (isAutoBoost) {
+                autoBoostBtn.classList.add('auto-boost-active');
+                autoBoostBtn.innerText = '🔄 상시 부스터: ON';
+            } else {
+                autoBoostBtn.classList.remove('auto-boost-active');
+                autoBoostBtn.innerText = '🔄 상시 부스터: OFF';
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if(e.code === 'Space' || e.code === 'ArrowUp') {
+                keys.jump = true;
+                if(gameState === 'PLAYING' && !jumpKeyWasPressed) {
+                    player.jump();
+                    jumpKeyWasPressed = true;
+                }
+            }
+            if(e.code === 'KeyZ' || e.code === 'ArrowDown') keys.slide = true;
+            if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') setBoost(true);
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.code === 'Space' || e.code === 'ArrowUp') {
+                keys.jump = false;
+                jumpKeyWasPressed = false;
+            }
+            if(e.code === 'KeyZ' || e.code === 'ArrowDown') keys.slide = false;
+            if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') setBoost(false);
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if(gameState !== 'PLAYING') return;
+            for(let i=0; i<e.changedTouches.length; i++) {
+                if(e.changedTouches[i].clientX > width / 2) player.jump(); 
+                else keys.slide = true; 
+            }
+        }, {passive: false});
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            for(let i=0; i<e.changedTouches.length; i++) {
+                if(e.changedTouches[i].clientX <= width / 2) keys.slide = false; 
+            }
+        }, {passive: false});
+
+        function updateUI() {
+            document.getElementById('coin-score').innerText = score;
+            document.getElementById('total-score').innerText = score;
+            document.getElementById('dodge-score').innerText = dodgeCounter;
+            document.getElementById('coin-gauge').innerText = coinCounter;
+            document.getElementById('quiz-progress').innerText = questionsAnsweredInMap;
+            
+            const healthContainer = document.getElementById('health-container');
+            healthContainer.innerHTML = '';
+            for(let i=0; i<7; i++) {
+                if(i < lives) healthContainer.innerHTML += '<span class="heart text-red-500 text-4xl" style="text-shadow: 0 0 10px rgba(255,0,0,0.5);">❤️</span>';
+                else healthContainer.innerHTML += '<span class="text-gray-600 grayscale opacity-40 text-4xl">❤️</span>';
+            }
+        }
+
+        class Player {
+            constructor() {
+                this.x = width * 0.15;
+                this.baseSize = Math.min(width, height) * 0.12; 
+                this.width = this.baseSize * 0.7; 
+                this.height = this.baseSize;
+                this.vy = 0;
+                
+                this.gravity = 0.52; 
+                this.jumpPower = -14.5; 
+                
+                this.jumpCount = 0;
+                this.maxJumps = 2;
+                this.isSliding = false;
+                this.groundY = height * 0.8;
+                this.y = this.groundY - this.height;
+                
+                this.runCycle = 0;
+                this.rotation = 0;
+                this.isFalling = false;
+                this.fallTimer = 0;
+            }
+
+            update() {
+                if (this.isFalling) {
+                    this.y += 15;
+                    this.rotation += 0.2;
+                    this.fallTimer++;
+                    if (this.fallTimer > 30) this.rescue();
+                    return;
+                }
+
+                let onPitfall = false;
+                if (!isInvincible && this.y >= this.groundY - this.height) {
+                    for (let p of pitfalls) {
+                        if (this.x + this.width/2 > p.x && this.x + this.width/2 < p.x + p.w) {
+                            onPitfall = true; break;
+                        }
+                    }
+                }
+
+                if (onPitfall && this.y >= this.groundY - this.height) {
+                    this.isFalling = true;
+                    lives--;
+                    updateUI();
+                    return;
+                }
+
+                if (keys.slide) {
+                    if (!this.isSliding && this.y >= this.groundY - this.height) {
+                        this.isSliding = true;
+                        this.height = this.baseSize * 0.5; 
+                        this.width = this.baseSize * 1.1; 
+                        this.y = this.groundY - this.height;
+                    }
+                } else {
+                    if (this.isSliding) {
+                        this.isSliding = false;
+                        this.height = this.baseSize;
+                        this.width = this.baseSize * 0.7;
+                        this.y = this.groundY - this.height;
+                    }
+                }
+
+                this.vy += this.gravity;
+                this.y += this.vy;
+
+                if (this.y >= this.groundY - this.height && !this.isFalling) {
+                    this.y = this.groundY - this.height;
+                    this.vy = 0;
+                    this.jumpCount = 0;
+                    this.rotation = 0;
+                    if(!this.isSliding) this.runCycle += 0.2; 
+                } else {
+                    if(!this.isSliding) this.rotation += 0.05; 
+                }
+
+                if (isInvincible) {
+                    invincibilityTimer -= FIXED_TIME_STEP;
+                    if (invincibilityTimer <= 0) isInvincible = false;
+                }
+            }
+
+            jump() {
+                if (this.isFalling) return;
+                
+                if (this.jumpCount === 0) {
+                    this.vy = this.jumpPower; 
+                    this.jumpCount++;
+                    if(this.isSliding) {
+                        keys.slide = false; 
+                        this.isSliding = false;
+                        this.height = this.baseSize;
+                        this.width = this.baseSize * 0.7;
+                    }
+                    createParticles(this.x + this.width/2, this.y + this.height, 5, 'white');
+                } else if (this.jumpCount < this.maxJumps) {
+                    this.vy = this.jumpPower * 1.1; 
+                    this.jumpCount++;
+                    createParticles(this.x + this.width/2, this.y + this.height, 8, 'white');
+                }
+            }
+
+            rescue() {
+                this.isFalling = false;
+                this.fallTimer = 0;
+                this.y = 0; 
+                this.vy = 0;
+                isInvincible = true;
+                invincibilityTimer = 2500; 
+                
+                createParticles(this.x + this.width/2, this.groundY, 30, '#f1c40f');
+                if (lives <= 0) gameOver();
+            }
+
+            draw(context = ctx) {
+                context.save();
+                
+                const cx = this.x + this.width / 2;
+                const cy = this.y + this.height / 2;
+                const r = this.baseSize / 2;
+
+                if (isInvincible) {
+                    context.shadowColor = '#00e5ff';
+                    context.shadowBlur = 20;
+                    context.fillStyle = 'rgba(0, 229, 255, 0.3)';
+                    context.beginPath();
+                    context.arc(cx, cy, r * 2.5, 0, Math.PI * 2);
+                    context.fill();
+                    context.shadowBlur = 0; 
+                    if (Math.floor(simTime / 150) % 2 === 0) context.globalAlpha = 0.6; 
+                }
+
+                if (!this.isFalling && this.y >= this.groundY - this.height - 10) {
+                    context.fillStyle = 'rgba(0,0,0,0.3)';
+                    context.beginPath();
+                    context.ellipse(cx, this.groundY, this.width*0.8, 8, 0, 0, Math.PI*2);
+                    context.fill();
+                }
+
+                context.translate(cx, cy);
+                if (!this.isSliding) context.rotate(this.rotation);
+
+                context.fillStyle = selectedCharacter.color;
+                context.strokeStyle = '#3e2723'; 
+                context.lineWidth = 3;
+
+                if (this.isSliding) {
+                    context.beginPath(); context.ellipse(0, r*0.3, r*1.2, r*0.6, 0, 0, Math.PI*2); context.fill(); context.stroke();
+                    context.beginPath(); context.arc(-r*0.6, -r*0.2, r*0.6, 0, Math.PI*2); context.fill(); context.stroke();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.arc(-r*0.8, -r*0.3, r*0.08, 0, Math.PI*2); context.fill(); 
+                    context.beginPath(); context.arc(-r*0.4, -r*0.3, r*0.08, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(-r*0.6, -r*0.1, r*0.15, 0, Math.PI, true); context.stroke(); 
+                } else {
+                    let swing = Math.sin(this.runCycle) * r * 0.5;
+                    if(this.y < this.groundY - this.height) swing = r * 0.3; 
+
+                    context.lineCap = 'round'; context.lineWidth = r * 0.4; context.strokeStyle = selectedCharacter.color;
+                    context.beginPath(); context.moveTo(0, r*0.2); context.lineTo(-swing, r); context.stroke();
+                    context.beginPath(); context.moveTo(0, -r*0.2); context.lineTo(swing, r*0.4); context.stroke();
+
+                    context.lineWidth = r * 0.4 + 4; context.strokeStyle = '#3e2723';
+                    context.beginPath(); context.moveTo(0, r*0.2); context.lineTo(-swing, r); context.stroke();
+                    context.beginPath(); context.moveTo(0, -r*0.2); context.lineTo(swing, r*0.4); context.stroke();
+                    
+                    context.lineWidth = r * 0.4; context.strokeStyle = selectedCharacter.color;
+                    context.beginPath(); context.moveTo(0, r*0.2); context.lineTo(-swing, r); context.stroke();
+                    context.beginPath(); context.moveTo(0, -r*0.2); context.lineTo(swing, r*0.4); context.stroke();
+
+                    context.beginPath(); context.ellipse(0, r*0.2, r*0.6, r*0.7, 0, 0, Math.PI*2); context.fill();
+                    context.lineWidth = 3; context.strokeStyle = '#3e2723'; context.stroke();
+
+                    context.beginPath(); context.arc(0, -r*0.6, r*0.7, 0, Math.PI*2); context.fill(); context.stroke();
+
+                    context.fillStyle = 'white';
+                    context.beginPath(); context.arc(-r*0.25, -r*0.7, r*0.12, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(r*0.25, -r*0.7, r*0.12, 0, Math.PI*2); context.fill();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.arc(-r*0.25, -r*0.7, r*0.06, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(r*0.25, -r*0.7, r*0.06, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(0, -r*0.4, r*0.2, 0, Math.PI); context.stroke();
+
+                    context.lineWidth = r * 0.4 + 4; context.strokeStyle = '#3e2723';
+                    context.beginPath(); context.moveTo(0, r*0.2); context.lineTo(swing, r); context.stroke();
+                    context.lineWidth = r * 0.4; context.strokeStyle = selectedCharacter.color;
+                    context.beginPath(); context.moveTo(0, r*0.2); context.lineTo(swing, r); context.stroke();
+
+                    context.lineWidth = r * 0.4 + 4; context.strokeStyle = '#3e2723';
+                    context.beginPath(); context.moveTo(0, -r*0.2); context.lineTo(-swing, r*0.4); context.stroke();
+                    context.lineWidth = r * 0.4; context.strokeStyle = selectedCharacter.color;
+                    context.beginPath(); context.moveTo(0, -r*0.2); context.lineTo(-swing, r*0.4); context.stroke();
+                    
+                    context.fillStyle = 'red'; context.beginPath(); context.arc(0, r*0.1, r*0.1, 0, Math.PI*2); context.fill();
+                    context.fillStyle = 'green'; context.beginPath(); context.arc(0, r*0.4, r*0.1, 0, Math.PI*2); context.fill();
+                }
+                context.restore();
+            }
+        }
+
+        class Obstacle {
+            constructor(type, xOffset) {
+                this.x = width + xOffset;
+                this.type = type;
+                this.passed = false;
+                this.groundY = height * 0.8;
+                this.size = player.baseSize;
+
+                switch(type) {
+                    case 1: this.w = this.size * 0.8; this.h = this.size * 0.9; this.y = this.groundY - this.h; break; 
+                    case 2: this.w = this.size * 1.2; this.h = this.size * 1.5; this.y = this.groundY - this.h; break; 
+                    case 3: this.w = this.size * 1.8; this.h = this.size * 0.3; this.y = this.groundY - this.h; break; 
+                    case 4: this.w = this.size * 1.2; this.h = this.size * 0.5; this.y = this.groundY - this.size * 1.2; break; 
+                    case 5: this.w = this.size * 0.8; this.h = this.size * 0.8; this.y = this.groundY - this.h; break; 
+                    case 6: this.w = this.size; this.h = this.size * 1.2; this.y = this.groundY - this.size * 1.5; this.baseY = this.y; this.isMoving = true; break; 
+                    case 7: this.w = this.size * 0.8; this.h = this.groundY - this.size * 1.2; this.y = 0; break; 
+                    case 8: this.w = this.size * 1.5; this.h = this.size * 0.6; this.y = this.groundY - this.h; break; 
+                    case 9: this.w = this.size * 0.8; this.h = this.size * 0.8; this.y = this.groundY - this.h; this.speedBoost = currentSpeed * 0.5; break; 
+                    case 10: this.w = this.size * 1.2; this.h = this.size * 1.6; this.y = this.groundY - this.h; break; 
+                }
+
+                if (type === 4) {
+                    this.y = this.groundY - player.baseSize * 1.2;
+                } else if (type === 7) {
+                    this.y = 0;
+                    this.h = this.groundY - player.baseSize * 1.2;
+                }
+            }
+
+            update(time) {
+                let s = currentSpeed + (this.speedBoost || 0);
+                this.x -= s;
+                if(this.isMoving) this.y = this.baseY + Math.sin(time / 150) * (this.size * 0.6); 
+                if(this.type === 9) this.rotation = (this.rotation || 0) + 0.2;
+
+                if (!this.passed && this.x + this.w < player.x) {
+                    this.passed = true;
+                    if (!isInvincible) { dodgeCounter++; score += 50; updateUI(); }
+                }
+            }
+
+            draw(context = ctx) {
+                const cx = this.x + this.w / 2;
+                const cy = this.y + this.h / 2;
+                context.save();
+                
+                if (this.type === 1) { 
+                    context.fillStyle = '#4a148c'; context.fillRect(this.x + this.w*0.1, this.y + this.h*0.8, this.w*0.8, this.h*0.2);
+                    context.fillStyle = '#ff5252'; 
+                    context.beginPath(); context.moveTo(this.x, this.y + this.h*0.8); context.lineTo(cx, this.y); context.lineTo(this.x+this.w, this.y + this.h*0.8); context.fill();
+                    context.lineWidth = 2; context.strokeStyle = '#ff1744'; context.stroke();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.arc(cx - this.w*0.15, this.y + this.h*0.5, 3, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(cx + this.w*0.15, this.y + this.h*0.5, 3, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(cx, this.y + this.h*0.6, 3, 0, Math.PI); context.stroke();
+                } 
+                else if (this.type === 2) {
+                    context.fillStyle = '#5d4037';
+                    context.beginPath(); context.moveTo(this.x, this.y+this.h); context.lineTo(cx, this.y); context.lineTo(this.x+this.w, this.y+this.h); context.fill();
+                    context.fillStyle = 'white'; 
+                    context.beginPath(); context.moveTo(cx - this.w*0.2, this.y + this.h*0.4); context.lineTo(cx, this.y); context.lineTo(cx + this.w*0.2, this.y + this.h*0.4); 
+                    context.quadraticCurveTo(cx, this.y + this.h*0.5, cx - this.w*0.2, this.y + this.h*0.4); context.fill();
+                }
+                else if (this.type === 3) {
+                    context.fillStyle = '#9c27b0';
+                    context.beginPath(); context.roundRect(this.x, this.y + this.h*0.5, this.w, this.h*0.5, 5); context.fill();
+                    context.fillStyle = '#e1bee7';
+                    for(let i=0; i<3; i++) {
+                        context.beginPath(); context.arc(this.x + this.w*(0.2 + i*0.3), this.y + this.h*0.4 + Math.sin(simTime/200 + i)*5, this.h*0.3, 0, Math.PI*2); context.fill();
+                    }
+                }
+                else if (this.type === 4) {
+                    context.fillStyle = '#ff4081';
+                    context.beginPath(); context.ellipse(cx, cy, this.w*0.4, this.h*0.4, 0, 0, Math.PI*2); context.fill();
+                    context.fillStyle = '#c2185b';
+                    let wingY = Math.sin(simTime/100) * 10;
+                    context.beginPath(); context.moveTo(cx - this.w*0.3, cy); context.lineTo(this.x, cy - wingY); context.lineTo(cx - this.w*0.3, cy + this.h*0.2); context.fill();
+                    context.beginPath(); context.moveTo(cx + this.w*0.3, cy); context.lineTo(this.x + this.w, cy - wingY); context.lineTo(cx + this.w*0.3, cy + this.h*0.2); context.fill();
+                    context.fillStyle = 'white';
+                    context.beginPath(); context.arc(cx - 5, cy - 2, 4, 0, Math.PI*2); context.arc(cx + 5, cy - 2, 4, 0, Math.PI*2); context.fill();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.arc(cx - 5, cy - 2, 2, 0, Math.PI*2); context.arc(cx + 5, cy - 2, 2, 0, Math.PI*2); context.fill();
+                }
+                else if (this.type === 5) {
+                    context.fillStyle = '#607d8b';
+                    context.beginPath(); context.roundRect(this.x, this.y, this.w, this.h, 8); context.fill();
+                    context.lineWidth = 3; context.strokeStyle = '#37474f'; context.stroke();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.moveTo(cx - 15, cy - 10); context.lineTo(cx - 5, cy - 5); context.stroke(); 
+                    context.beginPath(); context.moveTo(cx + 15, cy - 10); context.lineTo(cx + 5, cy - 5); context.stroke();
+                    context.fillRect(cx - 10, cy, 5, 5); context.fillRect(cx + 5, cy, 5, 5); 
+                }
+                else if (this.type === 6) {
+                    context.fillStyle = '#69f0ae';
+                    context.beginPath(); context.moveTo(this.x, this.y + this.h); 
+                    context.quadraticCurveTo(cx, this.y - this.h*0.2, this.x + this.w, this.y + this.h); context.fill();
+                    context.fillStyle = '#00e676'; 
+                    context.beginPath(); context.moveTo(this.x + this.w*0.2, this.y + this.h*0.3);
+                    context.quadraticCurveTo(cx, this.y, this.x + this.w*0.8, this.y + this.h*0.3); context.fill();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.arc(cx - 10, cy, 4, 0, Math.PI*2); context.arc(cx + 10, cy, 4, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(cx, cy + 10, 5, 0, Math.PI, false); context.stroke();
+                }
+                else if (this.type === 7) {
+                    context.fillStyle = '#2e7d32';
+                    context.fillRect(cx - 5, 0, 10, this.h); 
+                    for(let i=0; i<this.h; i+=20) {
+                        context.beginPath(); context.moveTo(cx, i); context.lineTo(cx - 15, i + 10); context.lineTo(cx, i + 15); context.fill(); 
+                        context.beginPath(); context.moveTo(cx, i+10); context.lineTo(cx + 15, i + 20); context.lineTo(cx, i + 25); context.fill(); 
+                    }
+                }
+                else if (this.type === 8) {
+                    context.fillStyle = '#8bc34a';
+                    for(let i=0; i<4; i++) {
+                        context.beginPath(); context.arc(this.x + this.w*0.2 + i*this.w*0.2, cy + Math.sin(simTime/100 + i)*5, this.h*0.4, 0, Math.PI*2); context.fill();
+                        context.lineWidth = 2; context.strokeStyle = '#558b2f'; context.stroke();
+                    }
+                    context.fillStyle = 'black'; context.fillRect(this.x + 5, cy - 5, 4, 4); context.fillRect(this.x + 5, cy + 5, 4, 4);
+                }
+                else if (this.type === 9) {
+                    context.translate(cx, cy); context.rotate(this.rotation);
+                    context.fillStyle = '#03a9f4';
+                    context.beginPath(); context.arc(0, 0, this.w/2, 0, Math.PI*2); context.fill();
+                    context.lineWidth = 4; context.strokeStyle = 'white';
+                    context.beginPath(); context.moveTo(0, -this.h/2); context.lineTo(0, this.h/2); context.stroke();
+                    context.beginPath(); context.moveTo(-this.w/2, 0); context.lineTo(this.w/2, 0); context.stroke();
+                }
+                else if (this.type === 10) {
+                    context.fillStyle = '#9e9e9e';
+                    context.fillRect(cx - 5, this.y + this.h*0.3, 10, this.h*0.7); 
+                    context.beginPath(); context.moveTo(this.x, this.y + this.h*0.3); context.lineTo(this.x + this.w, this.y + this.h*0.3);
+                    context.lineTo(this.x + this.w, this.y + this.h*0.1); context.lineTo(this.x + this.w*0.8, this.y); context.lineTo(this.x + this.w*0.6, this.y + this.h*0.1);
+                    context.lineTo(cx, this.y); context.lineTo(this.x + this.w*0.4, this.y + this.h*0.1); context.lineTo(this.x + this.w*0.2, this.y);
+                    context.lineTo(this.x, this.y + this.h*0.1); context.fill();
+                }
+                context.restore();
+            }
+        }
+
+        class Coin {
+            constructor(x, y) { 
+                this.x = x; this.y = y; this.r = player.baseSize * 0.25; 
+                this.angle = 0; this.type = Math.random() > 0.8 ? 1 : 0; 
+            }
+            update() { this.x -= currentSpeed; this.angle += 0.1; }
+            draw(context = ctx) {
+                context.save(); context.translate(this.x, this.y); context.scale(Math.max(0.3, Math.abs(Math.cos(this.angle))), 1); 
+                if (this.type === 1) { 
+                    context.fillStyle = '#ffeb3b';
+                    context.beginPath(); context.arc(0, 0, this.r * 1.2, 0, Math.PI * 2); context.fill(); 
+                    context.beginPath(); context.arc(-this.r * 0.8, -this.r * 0.8, this.r * 0.5, 0, Math.PI * 2); context.fill(); 
+                    context.beginPath(); context.arc(this.r * 0.8, -this.r * 0.8, this.r * 0.5, 0, Math.PI * 2); context.fill();
+                    context.fillStyle = 'black';
+                    context.beginPath(); context.arc(-this.r*0.4, -this.r*0.2, 2, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(this.r*0.4, -this.r*0.2, 2, 0, Math.PI*2); context.fill();
+                    context.beginPath(); context.arc(0, this.r*0.2, 3, 0, Math.PI); context.stroke();
+                } else { 
+                    context.beginPath(); context.arc(0, 0, this.r, 0, Math.PI * 2); context.fillStyle = '#ffd700'; context.fill();
+                    context.lineWidth = 2; context.strokeStyle = '#e65100'; context.stroke();
+                    context.beginPath(); context.arc(0, 0, this.r * 0.7, 0, Math.PI * 2); context.strokeStyle = '#ffb300'; context.stroke();
+                    context.fillStyle = '#e65100'; context.font = `bold ${this.r * 1.2}px Arial`; context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText('C', 0, 1);
+                }
+                context.restore();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; 
+                this.vx = (Math.random() - 0.5) * 10; this.vy = (Math.random() - 0.5) * 10;
+                this.life = 1.0; this.color = color; this.size = Math.random() * 5 + 3;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.life -= 0.05; }
+            draw(context = ctx) {
+                context.globalAlpha = Math.max(0, this.life); context.fillStyle = this.color;
+                context.beginPath(); context.arc(this.x, this.y, this.size, 0, Math.PI*2); context.fill();
+                context.globalAlpha = 1.0;
+            }
+        }
+
+        function createParticles(x, y, count, color) {
+            for(let i=0; i<count; i++) particles.push(new Particle(x, y, color));
+        }
+
+        function drawMapBackground(context, mapIdx, w, h, bgOffset) {
+            const theme = mapThemes[mapIdx];
+            
+            let grad = context.createLinearGradient(0, 0, 0, h*0.8);
+            grad.addColorStop(0, theme.bgStart); grad.addColorStop(1, theme.bgEnd);
+            context.fillStyle = grad; context.fillRect(0, 0, w, h);
+
+            let speeds = [0.2, 0.5];
+            speeds.forEach((speed, idx) => {
+                let offset = (bgOffset * speed);
+                let loopWidth = 2000; 
+                offset = offset % loopWidth;
+
+                context.save();
+                context.translate(-offset, 0);
+
+                for (let i = 0; i < Math.ceil(w / loopWidth) + 2; i++) {
+                    context.save();
+                    context.translate(i * loopWidth, 0);
+
+                    if (mapIdx === 0) { // 캔디 마을
+                        if (idx === 0) {
+                            context.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                            context.beginPath(); context.arc(300, h*0.2, 80, 0, Math.PI*2); context.arc(400, h*0.15, 100, 0, Math.PI*2); context.arc(500, h*0.2, 80, 0, Math.PI*2); context.fill();
+                            context.beginPath(); context.arc(1200, h*0.25, 60, 0, Math.PI*2); context.arc(1300, h*0.2, 80, 0, Math.PI*2); context.arc(1400, h*0.25, 60, 0, Math.PI*2); context.fill();
+                        } else if (idx === 1) {
+                            context.fillStyle = '#f8bbd0'; 
+                            context.beginPath(); context.moveTo(0, h*0.8); context.quadraticCurveTo(500, -h*0.1, 1000, h*0.8); context.fill();
+                            context.fillStyle = '#f48fb1'; 
+                            context.beginPath(); context.moveTo(800, h*0.8); context.quadraticCurveTo(1400, 0, 2000, h*0.8); context.fill();
+                        }
+                    }
+                    else if (mapIdx === 1) { // 신비의 숲
+                        if (idx === 0) {
+                            context.fillStyle = '#f1c40f'; context.beginPath(); context.arc(800, h*0.2, 80, 0, Math.PI*2); context.fill();
+                            context.fillStyle = theme.bgStart; context.beginPath(); context.arc(830, h*0.18, 70, 0, Math.PI*2); context.fill();
+                            context.fillStyle = '#00e676';
+                            for(let f=0; f<10; f++) { context.beginPath(); context.arc( (f*200)%2000, h*0.3 + (f%3)*100, 4, 0, Math.PI*2); context.fill(); }
+                        } else if (idx === 1) {
+                            context.fillStyle = '#1b3320';
+                            context.fillRect(200, h*0.1, 80, h*0.7);
+                            context.fillRect(1100, -50, 120, h*0.85);
+                            context.fillStyle = '#b2dfdb'; context.fillRect(400, h*0.7, 20, h*0.1);
+                            context.fillStyle = '#00bfa5'; context.beginPath(); context.arc(410, h*0.7, 40, Math.PI, 0); context.fill();
+                            context.fillStyle = '#b2dfdb'; context.fillRect(1300, h*0.6, 25, h*0.2);
+                            context.fillStyle = '#1de9b6'; context.beginPath(); context.arc(1312, h*0.6, 50, Math.PI, 0); context.fill();
+                        }
+                    }
+                    else if (mapIdx === 2) { // 오븐 탈출
+                        if (idx === 0) {
+                            context.fillStyle = 'rgba(255, 0, 0, 0.5)'; context.beginPath(); context.arc(500, h*0.3, 120, 0, Math.PI*2); context.fill();
+                            context.fillStyle = '#d50000'; context.beginPath(); context.arc(500, h*0.3, 100, 0, Math.PI*2); context.fill();
+                        } else if (idx === 1) {
+                            context.fillStyle = '#212121';
+                            context.beginPath(); context.moveTo(0, h*0.8); context.lineTo(300, h*0.2); context.lineTo(500, h*0.2); context.lineTo(800, h*0.8); context.fill();
+                            context.beginPath(); context.moveTo(900, h*0.8); context.lineTo(1200, h*0.1); context.lineTo(1400, h*0.1); context.lineTo(1800, h*0.8); context.fill();
+                            context.fillStyle = '#ff3d00';
+                            context.beginPath(); context.moveTo(350, h*0.2); context.lineTo(450, h*0.2); context.lineTo(400, h*0.8); context.lineTo(300, h*0.8); context.fill();
+                            context.fillStyle = '#ffea00';
+                            context.beginPath(); context.moveTo(380, h*0.2); context.lineTo(420, h*0.2); context.lineTo(380, h*0.8); context.lineTo(340, h*0.8); context.fill();
+                        }
+                    }
+                    else if (mapIdx === 3) { // 마법사의 도시
+                        if (idx === 0) {
+                            context.fillStyle = '#fff59d'; context.beginPath(); context.arc(400, h*0.2, 100, 0, Math.PI*2); context.fill();
+                            context.fillStyle = 'white';
+                            for(let s=0; s<20; s++) { context.fillRect((s*150)%2000, (s*70)%h*0.5, 3, 3); }
+                        } else if (idx === 1) {
+                            context.fillStyle = '#1a237e';
+                            context.fillRect(200, h*0.3, 100, h*0.5); 
+                            context.beginPath(); context.moveTo(150, h*0.3); context.lineTo(250, h*0.05); context.lineTo(350, h*0.3); context.fill(); 
+                            context.fillStyle = '#ffeb3b'; context.fillRect(230, h*0.4, 40, 60); 
+
+                            context.fillStyle = '#283593';
+                            context.fillRect(1100, h*0.4, 80, h*0.4); 
+                            context.beginPath(); context.moveTo(1070, h*0.4); context.lineTo(1140, h*0.1); context.lineTo(1210, h*0.4); context.fill(); 
+                            context.fillStyle = '#ffeb3b'; context.beginPath(); context.arc(1140, h*0.5, 20, 0, Math.PI*2); context.fill();
+
+                            context.fillStyle = '#b388ff';
+                            context.beginPath(); context.moveTo(700, h*0.2); context.lineTo(720, h*0.3); context.lineTo(700, h*0.4); context.lineTo(680, h*0.3); context.fill();
+                            context.beginPath(); context.moveTo(1500, h*0.5); context.lineTo(1530, h*0.6); context.lineTo(1500, h*0.7); context.lineTo(1470, h*0.6); context.fill();
+                        }
+                    }
+                    context.restore();
+                }
+                context.restore();
+            });
+
+            const groundY = h * 0.8;
+            const groundHeight = h * 0.2;
+            context.fillStyle = theme.groundColor; 
+            context.fillRect(0, groundY, w, groundHeight);
+            context.fillStyle = 'rgba(255,255,255,0.15)';
+            context.fillRect(0, groundY, w, 6);
+
+            for (let p of pitfalls) {
+                context.fillStyle = theme.bgEnd; 
+                context.fillRect(p.x, groundY, p.w, groundHeight);
+                if (isInvincible) {
+                    context.fillStyle = 'rgba(0, 229, 255, 0.4)'; 
+                    context.fillRect(p.x, groundY, p.w, 15);
+                }
+            }
+        }
+
+        let waveTimer = 0;
+        let blankDistance = 0; 
+        let bgScrollOffset = 0; 
+
+        function isCoinOverlapping(x, y) {
+            for (let c of coins) {
+                if (Math.hypot(c.x - x, c.y - y) < player.baseSize * 0.8) return true;
+            }
+            return false;
+        }
+
+        function spawnPattern() {
+            let spawnX = width + 200; 
+            let minGap = Math.max(player.baseSize * 10, width * 0.6); 
+            if (obstacles.length > 0) {
+                let lastObs = obstacles[obstacles.length - 1];
+                if (spawnX - lastObs.x < minGap) spawnX = lastObs.x + minGap;
+            }
+            if (pitfalls.length > 0) {
+                let lastPit = pitfalls[pitfalls.length - 1];
+                if (spawnX - lastPit.x < minGap) spawnX = lastPit.x + minGap;
+            }
+
+            if (Math.random() < 0.15) {
+                let pitWidth = player.baseSize * (Math.random() * 1.5 + 2.0); 
+                pitfalls.push({ x: spawnX, w: pitWidth });
+                spawnCoinArc(spawnX - player.baseSize, spawnX + pitWidth + player.baseSize, player.groundY - player.baseSize, player.groundY - player.baseSize * 3.3, Math.floor(pitWidth / 40) + 3);
+                return;
+            }
+
+            let type = Math.floor(Math.random() * 10) + 1;
+            let obs = new Obstacle(type, spawnX - width);
+            obstacles.push(obs);
+
+            let s = player.baseSize; let ground = player.groundY;
+            let leftX = obs.x - s * 1.5; let rightX = obs.x + obs.w + s * 1.5;
+
+            if (type === 1 || type === 3 || type === 5 || type === 8 || type === 9) {
+                spawnCoinArc(leftX, rightX, ground - s*0.5, ground - s*2.0, 5); 
+            } else if (type === 2 || type === 10) {
+                spawnCoinArc(obs.x - s*2.5, obs.x + obs.w + s*2.5, ground - s*0.5, ground - s*3.5, 7); 
+            } else if (type === 4 || type === 7) {
+                spawnCoinLine(leftX, ground - s*0.3, rightX, ground - s*0.3, 6); 
+            } else if (type === 6) {
+                spawnCoinArc(leftX - s, rightX + s, ground - s*0.5, ground - s*3.8, 6);
+            }
+        }
+
+        function spawnCoinArc(startX, endX, startY, peakY, count) {
+            for(let i=0; i<count; i++) {
+                let t = count > 1 ? i / (count - 1) : 0;
+                let x = startX + (endX - startX) * t;
+                let y = startY - (startY - peakY) * Math.sin(t * Math.PI);
+                if (!isCoinOverlapping(x, y)) coins.push(new Coin(x, y));
+            }
+        }
+        function spawnCoinLine(x1, y1, x2, y2, count) {
+            for(let i=0; i<count; i++) { 
+                let t = count > 1 ? i / (count - 1) : 0; 
+                let x = x1 + (x2-x1)*t; let y = y1 + (y2-y1)*t;
+                if (!isCoinOverlapping(x, y)) coins.push(new Coin(x, y)); 
+            }
+        }
+
+        function checkCollisions() {
+            for(let i = coins.length - 1; i >= 0; i--) {
+                let c = coins[i];
+                let px = player.x + player.width/2; let py = player.y + player.height/2;
+                let dist = Math.hypot(px - c.x, py - c.y);
+                if (dist < Math.max(player.width/2, player.height/2) + c.r + 25) { 
+                    coins.splice(i, 1);
+                    score += (c.type === 1 ? 50 : 10); 
+                    coinCounter++; // 수정된 부분: 곰젤리도 게이지 +1로 하향
+                    createParticles(c.x, c.y, 5, c.type === 1 ? '#ffeb3b' : '#ffd700');
+                    updateUI(); checkQuizTrigger();
+                }
+            }
+
+            if (!isInvincible && !player.isFalling) {
+                for(let obs of obstacles) {
+                    let hitX = (player.x + player.width * 0.8 > obs.x) && (player.x + player.width * 0.2 < obs.x + obs.w);
+                    let hitY = (player.y + player.height * 0.9 > obs.y) && (player.y + player.height * 0.1 < obs.y + obs.h);
+                    if (hitX && hitY) {
+                        lives--; isInvincible = true; invincibilityTimer = 2000;
+                        createParticles(player.x + player.width/2, player.y + player.height/2, 20, '#e74c3c');
+                        updateUI(); canvas.classList.add('translate-y-2', 'translate-x-2');
+                        setTimeout(() => canvas.classList.remove('translate-y-2', 'translate-x-2'), 100);
+                        if (lives <= 0) gameOver();
+                        break;
+                    }
+                }
+            }
+        }
+
+        function checkQuizTrigger() {
+            if (coinCounter >= 100) {
+                coinCounter -= 100;
+                updateUI(); triggerQuiz();
+            }
+        }
+
+        function triggerQuiz() {
+            gameState = 'QUIZ';
+            document.getElementById('quiz-screen').classList.remove('hidden-screen');
+            document.getElementById('quiz-hint-area').classList.add('hidden'); 
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('quiz-map-title').innerText = mapThemes[mapIndex].name;
+            document.getElementById('quiz-number').innerText = questionsAnsweredInMap + 1;
+            
+            let currentQuiz = mathQuizPool[Math.floor(Math.random() * mathQuizPool.length)];
+            document.getElementById('quiz-difficulty').innerText = `난이도: ${currentQuiz.diff}`;
+            document.getElementById('quiz-question').innerText = currentQuiz.q;
+            
+            const graphContainer = document.getElementById('quiz-graph-container');
+            graphContainer.innerHTML = '';
+            if (currentQuiz.graph) {
+                graphContainer.appendChild(renderGraph(currentQuiz.graph));
+                graphContainer.style.display = 'flex';
+            } else graphContainer.style.display = 'none';
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = "";
+            currentQuiz.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn w-full py-4 md:py-5 text-xl md:text-2xl font-bold bg-white text-indigo-900 rounded-2xl hover:bg-yellow-300 transition-colors shadow-[0_5px_0_rgba(200,200,200,1)] active:shadow-none active:translate-y-[5px]';
+                btn.innerText = opt;
+                btn.onclick = () => handleQuizAnswer(btn, idx === currentQuiz.a, currentQuiz);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(clickedBtn, isCorrect, qObj) {
+            const feedback = document.getElementById('quiz-feedback');
+            const hintArea = document.getElementById('quiz-hint-area');
+            const hintText = document.getElementById('quiz-hint-text');
+            
+            if (isCorrect) {
+                feedback.classList.remove('hidden'); hintArea.classList.add('hidden'); 
+                feedback.innerText = "🎉 정답입니다! (3초 무적 보호막 발동 & 점수 획득)";
+                feedback.className = "mt-6 text-center text-2xl md:text-3xl font-black text-green-400 drop-shadow-md animate-bounce";
+                
+                if(lives < 7) lives++;
+                score += 1000; totalCorrectAnswers++; updateUI(); questionsAnsweredInMap++;
+
+                const btns = document.getElementById('quiz-options').querySelectorAll('.quiz-btn');
+                btns.forEach(b => {
+                    b.disabled = true;
+                    b.classList.remove('hover:bg-yellow-300', 'active:shadow-none', 'active:translate-y-[5px]');
+                    b.classList.add('opacity-50', 'cursor-not-allowed', 'shadow-none', 'translate-y-[5px]');
+                });
+                clickedBtn.classList.remove('bg-white', 'opacity-50');
+                clickedBtn.classList.add('bg-green-400', 'text-white', 'opacity-100');
+
+                setTimeout(() => {
+                    document.getElementById('quiz-screen').classList.add('hidden-screen');
+                    isInvincible = true; invincibilityTimer = 3000;
+                    if (questionsAnsweredInMap >= 5) levelUpMap();
+                    else resumeGame();
+                }, 1000); 
+            } else {
+                lives--; updateUI();
+                if (lives <= 0) {
+                    document.getElementById('quiz-screen').classList.add('hidden-screen');
+                    gameOver(); return;
+                }
+                clickedBtn.disabled = true;
+                clickedBtn.classList.remove('bg-white', 'hover:bg-yellow-300', 'active:shadow-none', 'active:translate-y-[5px]');
+                clickedBtn.classList.add('bg-red-400', 'text-white', 'opacity-80', 'cursor-not-allowed', 'shadow-none', 'translate-y-[5px]');
+                
+                feedback.classList.remove('hidden');
+                feedback.innerText = "❌ 아쉽네요. (체력 -1)";
+                feedback.className = "mt-6 text-center text-xl md:text-2xl font-bold text-red-300 drop-shadow-md";
+
+                hintArea.classList.remove('hidden'); hintText.innerText = qObj.hint;
+                document.getElementById('quiz-screen').scrollTo({ top: document.getElementById('quiz-screen').scrollHeight, behavior: 'smooth' });
+            }
+        }
+
+        function levelUpMap() {
+            mapIndex++; questionsAnsweredInMap = 0;
+            if (mapIndex >= mapThemes.length) { gameClear(); return; }
+            document.getElementById('map-indicator').innerText = `MAP ${mapIndex+1}: ${mapThemes[mapIndex].name}`;
+            baseGameSpeed += 1.8; currentSpeed = baseGameSpeed;
+            obstacles = []; coins = []; pitfalls = [];
+            player.y = player.groundY - player.height; player.isFalling = false;
+            isInvincible = true; invincibilityTimer = 3000;
+            resumeGame();
+        }
+
+        function resumeGame() {
+            gameState = 'PLAYING'; lastTime = performance.now(); requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            document.getElementById('ingame-ui').classList.add('hidden-screen');
+            document.getElementById('game-over-screen').classList.remove('hidden-screen');
+            document.getElementById('boost-container').classList.add('hidden');
+            
+            document.getElementById('end-title').innerText = "GAME OVER";
+            document.getElementById('end-message').innerText = "체력을 모두 소진했습니다.";
+            document.getElementById('end-nickname').innerText = nickname;
+            document.getElementById('end-score').innerText = score;
+            document.getElementById('end-correct-count').innerText = totalCorrectAnswers;
+        }
+
+        function gameClear() {
+            gameState = 'CLEAR';
+            document.getElementById('ingame-ui').classList.add('hidden-screen');
+            document.getElementById('game-over-screen').classList.remove('hidden-screen');
+            document.getElementById('boost-container').classList.add('hidden');
+            document.getElementById('restart-map-btn').classList.add('hidden');
+            
+            document.getElementById('end-title').innerText = "🎉 완벽 클리어! 🎉";
+            document.getElementById('end-title').className = "text-6xl md:text-7xl font-black mb-6 text-yellow-400 drop-shadow-[0_5px_5px_rgba(250,204,21,0.8)] animate-bounce";
+            document.getElementById('end-message').innerText = "모든 맵의 수학 문제를 정복했습니다!";
+            score += 5000;
+            document.getElementById('end-nickname').innerText = nickname;
+            document.getElementById('end-score').innerText = score;
+            document.getElementById('end-correct-count').innerText = totalCorrectAnswers;
+        }
+
+        document.getElementById('restart-map-btn').addEventListener('click', () => {
+            document.getElementById('game-over-screen').classList.add('hidden-screen');
+            document.getElementById('ingame-ui').classList.remove('hidden-screen');
+            document.getElementById('boost-container').classList.remove('hidden');
+            
+            lives = 7; questionsAnsweredInMap = 0; coinCounter = 0;
+            currentSpeed = baseGameSpeed; obstacles = []; coins = []; pitfalls = []; particles = [];
+            player.y = player.groundY - player.height; player.isFalling = false; player.vy = 0; player.jumpCount = 0;
+            
+            isBoosting = false; setBoost(false);
+            isAutoBoost = false; 
+            autoBoostBtn.classList.remove('auto-boost-active'); autoBoostBtn.innerText = '🔄 상시 부스터: OFF';
+            
+            isInvincible = true; invincibilityTimer = 3000; updateUI();
+            
+            gameState = 'PLAYING'; lastTime = performance.now(); accumulator = 0; simTime = 0; waveTimer = -2000; 
+            requestAnimationFrame(gameLoop);
+        });
+
+        function gameLoop(timestamp) {
+            if (gameState !== 'PLAYING') return;
+
+            let deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (deltaTime > 200) deltaTime = FIXED_TIME_STEP;
+
+            let timeScale = (isBoosting || isAutoBoost) ? 1.9 : 1.0;
+            accumulator += deltaTime * timeScale;
+
+            while (accumulator >= FIXED_TIME_STEP) {
+                simTime += FIXED_TIME_STEP; 
+                waveTimer += FIXED_TIME_STEP;
+                
+                let spawnInterval = 12000 / currentSpeed; 
+                if (waveTimer > spawnInterval) {
+                    spawnPattern(); waveTimer = 0; blankDistance = 0;
+                } else {
+                    blankDistance += currentSpeed;
+                    if (blankDistance > 350 && !player.isFalling) {
+                        let yPos = player.groundY - player.baseSize * 0.4; 
+                        for(let c = 0; c < 5; c++) {
+                            let cx = width + 50 + c * 45;
+                            if (!isCoinOverlapping(cx, yPos)) coins.push(new Coin(cx, yPos));
+                        }
+                        blankDistance = 100;
+                    }
+                }
+
+                player.update();
+                bgScrollOffset += currentSpeed;
+                
+                for(let i = pitfalls.length - 1; i >= 0; i--) {
+                    pitfalls[i].x -= currentSpeed;
+                    if(pitfalls[i].x + pitfalls[i].w < 0) pitfalls.splice(i, 1);
+                }
+                for(let i = obstacles.length - 1; i >= 0; i--) {
+                    obstacles[i].update(simTime); 
+                    if(obstacles[i].x + obstacles[i].w < 0) obstacles.splice(i, 1);
+                }
+                for(let i = coins.length - 1; i >= 0; i--) {
+                    coins[i].update();
+                    if(coins[i].x + coins[i].r < 0) coins.splice(i, 1);
+                }
+
+                checkCollisions();
+
+                for(let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.update();
+                    if(p.life <= 0 || p.x < 0) particles.splice(i, 1);
+                }
+
+                if(Math.floor(simTime / 100) % 5 === 0) { score += 1; updateUI(); }
+                accumulator -= FIXED_TIME_STEP;
+            }
+
+            ctx.clearRect(0, 0, width, height);
+            drawMapBackground(ctx, mapIndex, width, height, bgScrollOffset);
+            
+            for(let c of coins) c.draw(ctx);
+            for(let o of obstacles) o.draw(ctx);
+            player.draw(ctx);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 갤러리 로직
+        function openGallery() {
+            previewMapIndex = 0; 
+            document.getElementById('gallery-modal').classList.remove('hidden-screen');
+            if(previewCanvas) {
+                previewCanvas.width = previewCanvas.parentElement.clientWidth;
+                previewCanvas.height = previewCanvas.parentElement.clientHeight;
+            }
+            updateGalleryUI();
+            if(!previewAnimFrame) previewLoop();
+        }
+        function closeGallery() {
+            document.getElementById('gallery-modal').classList.add('hidden-screen');
+            if(previewAnimFrame) { cancelAnimationFrame(previewAnimFrame); previewAnimFrame = null; }
+        }
+        function changeGallery(dir) {
+            previewMapIndex += dir;
+            if(previewMapIndex > 3) previewMapIndex = 0;
+            if(previewMapIndex < 0) previewMapIndex = 3;
+            updateGalleryUI();
+        }
+        function updateGalleryUI() {
+            document.getElementById('gallery-title').innerText = `MAP ${previewMapIndex+1}: ${mapThemes[previewMapIndex].name}`;
+        }
+        let galleryScroll = 0;
+        function previewLoop() {
+            if(pCtx && previewCanvas.width > 0) {
+                pCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+                galleryScroll += 3;
+                drawMapBackground(pCtx, previewMapIndex, previewCanvas.width, previewCanvas.height, galleryScroll);
+            }
+            previewAnimFrame = requestAnimationFrame(previewLoop);
+        }
+
+        function initStartScreen() {
+            const grid = document.getElementById('character-grid');
+            characters.forEach((char, index) => {
+                const btn = document.createElement('button');
+                btn.className = `flex flex-col items-center justify-center p-2 rounded-2xl border-4 transition-all ${index === 0 ? 'border-yellow-400 bg-white/30 scale-105 shadow-lg' : 'border-transparent bg-white/10 hover:bg-white/20'}`;
+                btn.innerHTML = `
+                    <div class="text-4xl mb-1 drop-shadow-md">${char.emoji}</div>
+                    <div class="text-sm font-bold text-white break-keep text-center w-full">${char.name}</div>
+                `;
+                btn.onclick = () => {
+                    Array.from(grid.children).forEach(c => {
+                        c.classList.remove('border-yellow-400', 'bg-white/30', 'scale-105', 'shadow-lg');
+                        c.classList.add('border-transparent', 'bg-white/10');
+                    });
+                    btn.classList.remove('border-transparent', 'bg-white/10');
+                    btn.classList.add('border-yellow-400', 'bg-white/30', 'scale-105', 'shadow-lg');
+                    selectedCharacter = char;
+                };
+                grid.appendChild(btn);
+            });
+            
+            // 시작 버튼 클릭 이벤트 리스너 추가
+            document.getElementById('start-btn').onclick = startGame;
+        }
+
+        function startGame() {
+            const nameInput = document.getElementById('nickname-input').value.trim();
+            nickname = nameInput === "" ? "익명 쿠키" : nameInput;
+
+            document.getElementById('start-screen').classList.add('hidden-screen');
+            document.getElementById('ingame-ui').classList.remove('hidden-screen');
+            document.getElementById('boost-container').classList.remove('hidden'); 
+            
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                const guide = document.getElementById('touch-guide');
+                guide.classList.remove('hidden-screen');
+                setTimeout(() => guide.classList.add('hidden-screen'), 3000);
+            }
+
+            player = new Player();
+            obstacles = []; coins = []; particles = []; pitfalls = [];
+            score = 0; lives = 7; mapIndex = 0; questionsAnsweredInMap = 0;
+            coinCounter = 0; dodgeCounter = 0; totalCorrectAnswers = 0;
+            
+            baseGameSpeed = 8.3; currentSpeed = baseGameSpeed;
+            isBoosting = false; setBoost(false); 
+            isAutoBoost = false; autoBoostBtn.classList.remove('auto-boost-active'); autoBoostBtn.innerText = '🔄 상시 부스터: OFF';
+            
+            updateUI();
+            document.getElementById('map-indicator').innerText = `MAP 1: ${mapThemes[0].name}`;
+
+            gameState = 'PLAYING'; lastTime = performance.now(); accumulator = 0; simTime = 0;
+            requestAnimationFrame(gameLoop);
+            waveTimer = -2000; 
+        }
+
+        window.onload = () => {
+            initStartScreen();
+            drawMapBackground(ctx, 0, width, height, 0); 
+        };
+    </script>
+</body>
+</html>

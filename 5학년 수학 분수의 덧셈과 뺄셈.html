@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ 수학의 나라 - 5학년 수학 대모험</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Press+Start+2P&display=swap');
+
+:root {
+  --bg-dark: #0a0a0a;
+  --panel-bg: #1a1a24;
+  --border-gold: #c5a059;
+  --text-light: #e0e0e0;
+  --hp-green: #2ecc71;
+  --hp-red: #e74c3c;
+  --text-shadow: 2px 2px 0 #000;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Jua', sans-serif;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  color: var(--text-light);
+}
+
+/* ===== 상단 UI ===== */
+#topUI {
+  position: absolute; top: 15px; left: 0; right: 0; width: 100%;
+  display: flex; justify-content: space-between; padding: 0 20px; z-index: 1000;
+  pointer-events: none;
+}
+#topUI > * { pointer-events: auto; }
+
+#homeBtn {
+  font-family: 'Jua'; background: #3e2723; color: #fff; padding: 10px 20px;
+  border: 2px solid var(--border-gold); border-radius: 5px; cursor: pointer; font-size: 1.2em;
+  box-shadow: 2px 2px 0 #000; transition: 0.2s;
+}
+#homeBtn:hover { background: #5d4037; transform: scale(1.05); }
+
+/* ===== SCREENS ===== */
+.screen { display:none; width:100%; max-width:1200px; height: 100vh; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* ===== TITLE SCREEN ===== */
+#titleScreen {
+  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=1920&auto=format&fit=crop') center/cover;
+  align-items: center; justify-content: center; text-align: center;
+}
+.title-content {
+  background: rgba(15, 15, 20, 0.85); border: 8px solid var(--border-gold); /* 테두리 두께 2배 */
+  border-radius: 20px; /* 둥근 모서리 2배 */
+  padding: 120px; /* 패딩 2배 */
+  box-shadow: 0 0 60px rgba(197, 160, 89, 0.4); /* 그림자 효과 2배 */
+}
+.game-title { 
+  font-size: 11em; /* 폰트 크기 2배 */
+  color: #c5a059; 
+  text-shadow: 8px 8px 0 #3e2723, 12px 12px 0 #000; /* 그림자 효과 2배 */
+  margin-bottom: 20px; 
+}
+.game-subtitle { 
+  font-size: 4em; /* 폰트 크기 2배 */
+  color: #fff; 
+  margin-bottom: 80px; /* 여백 2배 */
+}
+.start-btn { 
+  width: 100%; padding: 40px; /* 버튼 크기 및 패딩 2배 */
+  font-family: 'Jua'; font-size: 3em; /* 버튼 폰트 2배 */
+  background: #5d4037; border: 8px solid #3e2723; border-radius: 10px; color: #fff; cursor: pointer; margin-top: 40px; transition: 0.2s; 
+}
+
+/* ===== SETUP SCREEN ===== */
+#setupScreen { background: #111; align-items: center; justify-content: center; padding: 20px; }
+.setup-box { background: var(--panel-bg); border: 4px solid var(--border-gold); border-radius: 10px; padding: 40px; width: 100%; max-width: 900px; }
+.setup-title { font-size: 3em; color: var(--border-gold); text-align: center; margin-bottom: 30px; }
+.form-group { margin-bottom: 25px; }
+.form-label { font-size: 1.5em; margin-bottom: 10px; display: block; color: #ccc; }
+.form-input { width: 100%; padding: 15px; font-family: 'Jua'; font-size: 1.5em; background: #000; border: 2px solid #555; border-radius: 5px; color: #fff; }
+.form-input:focus { border-color: var(--border-gold); outline: none; }
+.difficulty-btns { display: flex; gap: 15px; }
+.diff-btn { flex: 1; padding: 15px; font-family: 'Jua'; font-size: 1.5em; background: #222; border: 2px solid #444; border-radius: 5px; color: #aaa; cursor: pointer; }
+.diff-btn.selected { background: #4a69bd; border-color: #6a89cc; color: #fff; }
+.character-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.char-card { background: #222; border: 2px solid #444; border-radius: 5px; padding: 20px 10px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; height: 160px; }
+.char-card:hover { border-color: #fff; }
+.char-card.selected { border-color: var(--border-gold); background: #332b14; }
+.char-name { font-size: 1.4em; position: absolute; bottom: 10px; width: 100%; left: 0; }
+.preview-canvas { width: 100%; height: 90px; display: block; margin: 0 auto; }
+
+.start-btn { width: 100%; padding: 20px; font-family: 'Jua'; font-size: 2em; background: #5d4037; border: 4px solid #3e2723; border-radius: 5px; color: #fff; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+.start-btn:hover { background: #795548; transform: scale(1.02); }
+
+/* ===== GAME SCREEN (BATTLE) ===== */
+#gameScreen { flex-direction: column; background: #000; position: relative; }
+
+/* HUD Top */
+#battleHud { display: flex; justify-content: space-between; padding: 15px 30px; background: rgba(20,20,20,0.9); border-bottom: 3px solid #3e2723; height: 100px; }
+.stat-box { display: flex; flex-direction: column; width: 35%; }
+.stat-name { font-size: 1.5em; margin-bottom: 5px; text-shadow: var(--text-shadow); }
+.hp-bar-bg { width: 100%; height: 25px; background: #222; border: 2px solid #000; overflow: hidden; position: relative;}
+.hp-bar-fill { height: 100%; background: var(--hp-green); transition: width 0.3s; }
+.hp-text { position: absolute; width: 100%; text-align: center; line-height: 25px; font-size: 1.1em; color: #fff; text-shadow: 1px 1px 0 #000; top: 0; left: 0;}
+.monster-stat .hp-bar-fill { background: var(--hp-red); }
+.monster-stat { text-align: right; }
+
+/* Combo UI */
+#comboUI { flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.combo-text { font-size: 2em; color: #FFD700; text-shadow: 2px 2px 0 #b33939; font-weight: bold; margin-bottom: 5px; }
+.combo-text span { font-size: 1.3em; color: #ff7979; }
+.skill-btns { display: flex; gap: 10px; }
+.skill-btn { padding: 5px 10px; background: #333; border: 2px solid #555; border-radius: 5px; color: #777; font-size: 1.1em; transition: 0.3s; cursor: not-allowed; }
+.skill-btn.ready-Z { background: #0984e3; border-color: #74b9ff; color: #fff; cursor: pointer; box-shadow: 0 0 10px #0984e3; animation: pulse 1s infinite; }
+.skill-btn.ready-X { background: #d63031; border-color: #ff7675; color: #fff; cursor: pointer; box-shadow: 0 0 10px #d63031; animation: pulse 1s infinite; }
+.skill-btn.ready-C { background: #fdcb6e; border-color: #ffeaa7; color: #000; cursor: pointer; box-shadow: 0 0 15px #fdcb6e; animation: pulse 1s infinite; font-weight: bold; }
+
+@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+
+/* Canvas Area */
+#battleCanvas { width: 100%; flex: 1; background: #2c3e50; display: block; }
+
+/* Command Panel */
+#commandPanel { height: 350px; background: var(--panel-bg); border-top: 4px solid var(--border-gold); padding: 20px 30px; display: flex; flex-direction: column; z-index: 20; position: relative; }
+.q-info { font-size: 1.3em; color: #bcaaa4; margin-bottom: 10px; }
+.q-text { font-size: 2.2em; margin-bottom: 20px; color: #fff; line-height: 1.4; word-break: keep-all;}
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1; }
+.opt-btn { background: #3e2723; border: 2px solid #5d4037; border-radius: 5px; color: #d7ccc8; font-family: 'Jua'; font-size: 1.6em; cursor: pointer; transition: 0.2s; }
+.opt-btn:hover:not(:disabled) { background: #4e342e; border-color: #c5a059; color: #fff; transform: scale(1.02); }
+.opt-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.opt-btn.correct { background: #2e7d32; border-color: #4caf50; color: #fff; animation: flashGreen 0.5s; }
+.opt-btn.wrong { background: #c62828; border-color: #ef5350; color: #fff; opacity: 0.8; }
+@keyframes flashGreen { 0%,100%{background:#2e7d32;} 50%{background:#4caf50; transform:scale(1.05);} }
+
+/* Feedback Overlay */
+#feedbackOverlay { position: absolute; bottom: 360px; left: 0; right: 0; padding: 20px; text-align: center; font-size: 2.5em; font-weight: bold; text-shadow: var(--text-shadow); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 10; }
+.feedback-msg.success { color: #4caf50; }
+.feedback-msg.fail { color: #ef5350; }
+.feedback-msg.epic { color: #FFD700; text-shadow: 2px 2px 0 #FF4500, 4px 4px 0 #000; font-size: 1.2em; }
+
+/* Next Button */
+#nextBtnWrapper { position: absolute; bottom: 20px; right: 30px; display: none; z-index: 25; }
+.next-btn { padding: 15px 40px; font-family: 'Jua'; font-size: 1.8em; background: var(--border-gold); border: 3px solid #FFF; border-radius: 5px; color: #000; cursor: pointer; box-shadow: 0 4px 0 #5d4037; }
+.next-btn:active { transform: translateY(4px); box-shadow: none; }
+
+/* 힌트 팝업 CSS */
+#hintPopup {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(15, 15, 20, 0.95); border: 3px solid #f1c40f; border-radius: 10px;
+  padding: 40px; text-align: center; z-index: 2000; display: none; box-shadow: 0 0 30px rgba(241,196,15,0.6);
+  width: 80%; max-width: 600px;
+}
+#hintPopup h3 { color: #f1c40f; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 0 #000; }
+#hintPopup p { font-size: 1.8em; line-height: 1.5; margin-bottom: 30px; color: #fff; }
+.close-hint-btn {
+  font-family: 'Jua'; background: #d35400; color: #fff; padding: 15px 40px;
+  border: 2px solid #e67e22; border-radius: 5px; cursor: pointer; font-size: 1.8em; transition: 0.2s;
+}
+.close-hint-btn:hover { background: #e67e22; transform: scale(1.05); }
+
+/* 보스 경고 오버레이 */
+#bossWarningOverlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255, 0, 0, 0.4); z-index: 3000;
+  display: none; flex-direction: column; justify-content: center; align-items: center;
+  animation: flashRed 0.5s infinite alternate; pointer-events: none;
+}
+.boss-warning-text {
+  font-family: 'Press Start 2P', 'Jua', sans-serif; text-align: center;
+  color: #ff3333; font-size: 4em; text-shadow: 4px 4px 0 #000, 0 0 20px #ff0000;
+}
+@keyframes flashRed {
+  0% { background: rgba(150, 0, 0, 0.3); }
+  100% { background: rgba(255, 0, 0, 0.7); }
+}
+
+/* Screen Shake */
+@keyframes shake { 0% { transform: translate(6px, 4px); } 20% { transform: translate(-6px, -4px); } 40% { transform: translate(-6px, 4px); } 60% { transform: translate(6px, -4px); } 80% { transform: translate(4px, 4px); } 100% { transform: translate(0, 0); } }
+.shake { animation: shake 0.3s; }
+
+/* Floating Damage */
+.dmg-text { position: absolute; font-family: 'Press Start 2P', 'Jua', sans-serif; font-size: 3em; font-weight: bold; color: #fff; text-shadow: 3px 3px 0 #000; pointer-events: none; animation: floatUp 1s forwards; z-index: 100; }
+.dmg-text.crit { font-size: 4.5em; color: #FFD700; text-shadow: 4px 4px 0 #D32F2F; z-index: 105; }
+@keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(-60px) scale(1.3); opacity: 1; } 100% { transform: translateY(-120px) scale(1); opacity: 0; } }
+
+/* ===== RESULT SCREEN ===== */
+#resultScreen { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); align-items: center; justify-content: center; padding: 20px; }
+.result-box { background: rgba(0,0,0,0.8); border: 4px solid var(--border-gold); border-radius: 10px; padding: 50px; text-align: center; width: 100%; max-width: 800px; }
+.result-title { font-size: 4em; color: var(--border-gold); margin-bottom: 20px; }
+.result-stats { font-size: 2em; line-height: 1.8; margin-bottom: 40px; }
+</style>
+</head>
+<body>
+
+<div id="topUI">
+  <button id="homeBtn" onclick="location.reload()">🏠 마을로 돌아가기</button>
+</div>
+
+<div id="titleScreen" class="screen active">
+  <div class="title-content">
+    <div class="game-title">수학의 나라</div>
+    <div class="game-subtitle">~ 5학년 분수 정복 대모험 ~</div>
+    <button class="start-btn" onclick="showScreen('setupScreen')">모험 시작하기</button>
+  </div>
+</div>
+
+<div id="setupScreen" class="screen">
+  <div class="setup-box">
+    <div class="setup-title">직업 및 난이도 선택</div>
+    <div class="form-group">
+      <label class="form-label">캐릭터의 이름을 입력하세요</label>
+      <input type="text" id="nicknameInput" class="form-input" placeholder="예: 무휼">
+    </div>
+    <div class="form-group">
+      <label class="form-label">문제 난이도 (분수의 덧셈과 뺄셈)</label>
+      <div class="difficulty-btns">
+        <button class="diff-btn" data-diff="평민" onclick="selectDiff('평민')">평민</button>
+        <button class="diff-btn selected" data-diff="귀족" onclick="selectDiff('귀족')">귀족</button>
+        <button class="diff-btn" data-diff="황제" onclick="selectDiff('황제')">황제</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">직업 선택</label>
+      <div class="character-grid" id="charGrid"></div>
+    </div>
+    <button class="start-btn" onclick="startGame()">사냥터로 출발</button>
+  </div>
+</div>
+
+<div id="gameScreen" class="screen">
+  <div id="battleHud">
+    <div class="stat-box player-stat">
+      <div class="stat-name" id="hudPlayerName">용사</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="playerHpBar"></div><div class="hp-text" id="playerHpText">100 / 100</div></div>
+    </div>
+    
+    <div id="comboUI">
+      <div class="combo-text">COMBO <span id="comboVal">0</span></div>
+      <div class="skill-btns">
+        <div class="skill-btn" id="btnZ" onclick="triggerUltimate('Z')">Z (3)</div>
+        <div class="skill-btn" id="btnX" onclick="triggerUltimate('X')">X (4)</div>
+        <div class="skill-btn" id="btnC" onclick="triggerUltimate('C')">C (5)</div>
+      </div>
+    </div>
+
+    <div class="stat-box monster-stat">
+      <div class="stat-name" id="hudMonsterName">몬스터</div>
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="monsterHpBar"></div><div class="hp-text" id="monsterHpText">10 / 10</div></div>
+    </div>
+  </div>
+  
+  <canvas id="battleCanvas"></canvas>
+  <div id="feedbackOverlay"></div>
+  <div id="nextBtnWrapper"><button class="next-btn" id="nextActionBtn" onclick="nextAction()">다음 문제 / 타격 ▶</button></div>
+
+  <div id="bossWarningOverlay">
+    <div class="boss-warning-text">⚠️ 경고 ⚠️<br>거대한 흑룡 출현!</div>
+  </div>
+
+  <div id="hintPopup">
+    <h3>💡 다시 한번 생각해 볼까요?</h3>
+    <p id="hintText"></p>
+    <button class="close-hint-btn" onclick="closeHintPopup()">다시 풀기</button>
+  </div>
+
+  <div id="commandPanel">
+    <div class="q-info" id="qInfo">스테이지 1/20</div>
+    <div class="q-text" id="qText">문제를 불러오는 중...</div>
+    <div class="options-grid" id="optionsGrid"></div>
+  </div>
+</div>
+
+<div id="resultScreen" class="screen">
+  <div class="result-box">
+    <div class="result-title">사냥 완료! 🎉</div>
+    <div class="result-stats">
+      <div><span style="color:#aaa">캐릭터 이름:</span> <span id="resName" style="color:#fff"></span></div>
+      <div><span style="color:#aaa">처치한 몬스터:</span> <span id="resMonsters" style="color:var(--hp-green)"></span></div>
+      <div><span style="color:#aaa">정답률:</span> <span id="resScore" style="color:var(--border-gold)"></span></div>
+    </div>
+    <button class="start-btn" onclick="location.reload()">새로운 모험 떠나기</button>
+  </div>
+</div>
+
+<script>
+const CHARACTERS = [
+  { id: 'warrior', name: '전사', color: '#B22222' },
+  { id: 'archer', name: '궁수', color: '#2E8B57' },
+  { id: 'mage', name: '마법사', color: '#4169E1' },
+  { id: 'rogue', name: '도적', color: '#2F4F4F' }
+];
+
+const MONSTER_POOL = [
+  { name: '토끼', c1: '#FFFFFF', size: 0.8, bg: '#3e4a3d' },
+  { name: '다람쥐', c1: '#D2691E', size: 0.8, bg: '#4a3d3d' },
+  { name: '뱀', c1: '#228B22', size: 0.9, bg: '#2e3b2b' },
+  { name: '여우', c1: '#D35400', size: 1.0, bg: '#423632' },
+  { name: '자객', c1: '#1a1a1a', size: 1.1, bg: '#1f1a24' },
+  { name: '해골', c1: '#E0E0E0', size: 1.0, bg: '#242424' },
+  { name: '처녀귀신', c1: '#FFFFFF', size: 1.1, bg: '#111111' },
+  { name: '도깨비', c1: '#C0392B', size: 1.2, bg: '#331c1c' },
+  { name: '흑룡(보스)', c1: '#111111', size: 8.0, bg: '#220000' }
+];
+
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function lcm(a, b) { return a * b / gcd(a, b); }
+function simplify(n, d) {
+  if (n === 0) return [0, 1];
+  let g = gcd(Math.abs(n), d); return [n/g, d/g];
+}
+function makeFractionText(whole, num, den) {
+  if(num === 0) return whole === 0 ? "0" : whole.toString();
+  let [n, d] = simplify(num, den);
+  if(n === d) { whole += 1; return whole.toString(); }
+  if(n > d) { whole += Math.floor(n/d); n = n%d; }
+  if(whole === 0) return `${n}/${d}`;
+  return `${whole}과 ${n}/${d}`;
+}
+
+function generateSingleQuestion(diff, isWordProblem) {
+  const denoms = [2, 3, 4, 5, 6, 8, 9, 10, 12];
+  let d1 = denoms[Math.floor(Math.random()*denoms.length)];
+  let d2 = denoms[Math.floor(Math.random()*denoms.length)];
+  while(d1 === d2) d2 = denoms[Math.floor(Math.random()*denoms.length)]; 
+
+  let n1, n2, w1 = 0, w2 = 0;
+  let isAdd = Math.random() > 0.5; 
+
+  if (diff === '평민') { 
+    n1 = Math.floor(Math.random()*(d1-1)) + 1; n2 = Math.floor(Math.random()*(d2-1)) + 1;
+    if (!isAdd) {
+       if (n1*d2 < n2*d1) { let tN = n1, tD = d1; n1 = n2; d1 = d2; n2 = tN; d2 = tD;
+       } else if (n1*d2 === n2*d1) isAdd = true;
+    }
+  } else if (diff === '귀족') { 
+    w1 = Math.floor(Math.random()*3) + 1; w2 = Math.floor(Math.random()*2) + 1;
+    n1 = Math.floor(Math.random()*(d1-1)) + 1; n2 = Math.floor(Math.random()*(d2-1)) + 1;
+    if (isAdd && (n1*d2 + n2*d1 >= d1*d2)) { isAdd = false; }
+    if (!isAdd) {
+       if (w1 < w2) { let t=w1; w1=w2; w2=t; }
+       if (n1*d2 < n2*d1) { let tN=n1, tD=d1; n1=n2; d1=d2; n2=tN; d2=tD; }
+    }
+  } else { 
+    w1 = Math.floor(Math.random()*3) + 2; w2 = Math.floor(Math.random()*2) + 1;
+    n1 = Math.floor(Math.random()*(d1-1)) + 1; n2 = Math.floor(Math.random()*(d2-1)) + 1;
+    if (isAdd) {
+        while(n1*d2 + n2*d1 <= d1*d2) { n1 = Math.floor(Math.random()*(d1-1)) + 1; n2 = Math.floor(Math.random()*(d2-1)) + 1; }
+    } else {
+        while(n1*d2 >= n2*d1) { n1 = Math.floor(Math.random()*(d1-1)) + 1; n2 = Math.floor(Math.random()*(d2-1)) + 1; }
+        if (w1 <= w2) w1 = w2 + 1; 
+    }
+  }
+
+  let ansD = lcm(d1, d2);
+  let num1 = w1 * ansD + n1 * (ansD/d1); let num2 = w2 * ansD + n2 * (ansD/d2);
+  let resNum = isAdd ? num1 + num2 : num1 - num2;
+  let ansWhole = Math.floor(resNum / ansD); let ansFracNum = resNum % ansD;
+  const correctAnsText = makeFractionText(ansWhole, ansFracNum, ansD);
+
+  let qText = "";
+  let t1 = makeFractionText(w1, n1, d1);
+  let t2 = makeFractionText(w2, n2, d2);
+
+  if (isWordProblem) {
+      if (isAdd) {
+          const templates = [
+              `철수는 우유를 ${t1}L 마셨고, 영희는 우유를 ${t2}L 마셨습니다. 두 사람이 마신 우유는 모두 몇 L일까요?`,
+              `어제 눈이 ${t1}cm 내렸고, 오늘 ${t2}cm 내렸습니다. 이틀 동안 내린 눈은 모두 몇 cm일까요?`,
+              `가방의 무게가 ${t1}kg이고, 책의 무게가 ${t2}kg입니다. 가방에 책을 넣으면 전체 무게는 몇 kg이 될까요?`,
+              `지민이는 찰흙을 ${t1}kg 가지고 있었고, 친구에게 ${t2}kg을 더 받았습니다. 지민이가 가진 찰흙은 모두 몇 kg일까요?`
+          ];
+          qText = templates[Math.floor(Math.random()*templates.length)];
+      } else {
+          const templates = [
+              `주스 ${t1}L 중에서 ${t2}L를 마셨습니다. 남은 주스는 몇 L일까요?`,
+              `테이프 ${t1}m가 있었습니다. 선물을 포장하는 데 ${t2}m를 사용했다면, 남은 테이프는 몇 m일까요?`,
+              `밀가루 ${t1}kg이 있습니다. 빵을 만드는 데 ${t2}kg을 사용하면 남은 밀가루는 몇 kg일까요?`,
+              `길이가 ${t1}m인 끈에서 ${t2}m를 잘라냈습니다. 남은 끈의 길이는 몇 m일까요?`
+          ];
+          qText = templates[Math.floor(Math.random()*templates.length)];
+      }
+  } else {
+      qText = `${t1} ${isAdd ? '+' : '-'} ${t2} = ?`;
+  }
+
+  let options = new Set();
+  options.add(correctAnsText);
+
+  while(options.size < 4) {
+     let wOff = ansWhole + Math.floor(Math.random()*3) - 1; let nOff = ansFracNum + Math.floor(Math.random()*5) + 1; let dOff = ansD;
+     if(Math.random() > 0.5) dOff = d1 + d2; 
+     wOff = Math.max(0, wOff); let wrong = makeFractionText(wOff, nOff, dOff);
+     if (wrong !== correctAnsText) options.add(wrong);
+  }
+  let optArr = Array.from(options); optArr.sort(() => Math.random() - 0.5); 
+  let ansIdx = optArr.indexOf(correctAnsText);
+
+  return {
+     q: qText, options: optArr, answer: ansIdx, isWordProblem: isWordProblem,
+     explain: `두 분수의 분모가 서로 다릅니다! 분모를 '${ansD}'(으)로 통분하여 다시 한 번 침착하게 계산해 보세요.`
+  };
+}
+
+function generateDynamicQuestions(diff) {
+  let questions = [];
+  for(let i=0; i<19; i++) {
+    questions.push(generateSingleQuestion(diff, false));
+  }
+  return questions;
+}
+
+let state = {
+  nickname: '', difficulty: '귀족', character: CHARACTERS[0],
+  questions: [], currentQIdx: 0, correctCount: 0, combo: 0,
+  player: { hp: 100, maxHp: 100, x: 200, y: 0, isAttacking: false, isHurt: false },
+  monster: null, gameMonsters: [], stageIdx: 0, monstersKilled: 0,
+  activeUlt: null,
+  skillUseCount: 0 
+};
+
+const canvas = document.getElementById('battleCanvas');
+const ctx = canvas.getContext('2d');
+let animFrame;
+
+function initSetup() {
+  const grid = document.getElementById('charGrid');
+  CHARACTERS.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'char-card' + (i===0?' selected':'');
+    const previewId = `preview-${c.id}`;
+    div.innerHTML = `<canvas id="${previewId}" class="preview-canvas" width="100" height="90"></canvas><div class="char-name">${c.name}</div>`;
+    div.onclick = () => { 
+        document.querySelectorAll('.char-card').forEach(x=>x.classList.remove('selected')); div.classList.add('selected'); state.character = c; 
+    };
+    grid.appendChild(div);
+  });
+}
+
+function selectDiff(d) {
+  state.difficulty = d; document.querySelectorAll('.diff-btn').forEach(b => { b.classList.remove('selected'); if (b.dataset.diff === d) b.classList.add('selected'); });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  if(id === 'setupScreen') {
+     setTimeout(() => {
+        CHARACTERS.forEach((c) => {
+           const pCanvas = document.getElementById(`preview-${c.id}`);
+           drawPlayerSprite(pCanvas.getContext('2d'), pCanvas.width/2, pCanvas.height - 20, c, false);
+        });
+     }, 50);
+  }
+}
+
+function startGame() {
+  const nick = document.getElementById('nicknameInput').value.trim();
+  if (!nick) { alert('캐릭터 이름을 입력해주세요!'); return; }
+
+  state.nickname = nick;
+  state.questions = generateDynamicQuestions(state.difficulty);
+  state.gameMonsters = [];
+  
+  const poolCopy = [...MONSTER_POOL].filter(m => m.name !== '흑룡(보스)');
+  for(let i=0; i<19; i++){ state.gameMonsters.push(poolCopy[Math.floor(Math.random() * poolCopy.length)]); }
+  state.gameMonsters.push(MONSTER_POOL.find(m => m.name === '흑룡(보스)'));
+
+  state.currentQIdx = 0; state.stageIdx = 0; state.correctCount = 0; state.combo = 0;
+  state.player.hp = 100; state.monstersKilled = 0;
+  state.skillUseCount = 0; 
+  
+  showScreen('gameScreen');
+  resizeCanvas(); loadMonster(); updateComboUI();
+  renderLoop(); loadQuestion();
+}
+
+window.addEventListener('keydown', (e) => {
+  if (state.player.hp <= 0 || state.monster.hp <= 0 || state.activeUlt) return;
+  if (document.getElementById('nextBtnWrapper').style.display === 'block') return;
+  const key = e.key.toUpperCase();
+  if (['Z', 'X', 'C'].includes(key)) triggerUltimate(key);
+});
+
+function triggerUltimate(type) {
+  if (state.activeUlt || document.getElementById('nextBtnWrapper').style.display === 'block') return;
+  
+  let cost = 0, dmg = 0, effectName = "";
+  const cid = state.character.id;
+
+  if (type === 'Z' && state.combo >= 3) { 
+      cost = 0; 
+      dmg = 15; effectName = (cid==='warrior')?"비검술!":(cid==='archer')?"정밀 헤드샷!":(cid==='mage')?"파이어볼!":"배후 기습!"; 
+  }
+  else if (type === 'X' && state.combo >= 4) { 
+      cost = 0; 
+      dmg = 30; effectName = (cid==='warrior')?"대지 가르기!":(cid==='archer')?"폭우의 화살!":(cid==='mage')?"블리자드 스톰!":"맹독 구름 투척!"; 
+  }
+  else if (type === 'C' && state.combo >= 5) { 
+      cost = state.combo; 
+      dmg = 50; effectName = (cid==='warrior')?"건곤대나이!!":(cid==='archer')?"관통하는 전설의 화살!!":(cid==='mage')?"헬파이어 메테오!!":"그림자 일섬!!"; 
+  }
+  else return; 
+
+  state.skillUseCount++;
+
+  if (state.skillUseCount >= 2) {
+      state.combo = 0; 
+      showFloatingText("연속 스킬 페널티! 콤보 초기화!", state.player.x + 100, state.player.y - 120, '#ff7979');
+  } else {
+      state.combo -= cost; 
+  }
+  
+  updateComboUI();
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  state.activeUlt = { type: type, frame: 0, dmg: dmg, name: effectName, charId: cid };
+}
+
+function drawPlayerSprite(ctx, x, y, charData, isAttacking) {
+  ctx.save(); ctx.translate(x, y);
+  if(isAttacking) ctx.rotate(0.2);
+  const cSkin = '#FFE4C4';
+  
+  ctx.fillStyle = '#111'; ctx.fillRect(-20, -50, 40, 60); 
+  ctx.fillStyle = charData.color; ctx.fillRect(-15, -45, 30, 45); 
+  ctx.fillStyle = cSkin; ctx.fillRect(-12, -70, 24, 25); 
+  
+  if (charData.id === 'warrior') {
+    ctx.fillStyle = '#7f8c8d'; ctx.fillRect(-14, -75, 28, 12); ctx.fillRect(-4, -85, 8, 10);
+    ctx.save(); ctx.translate(15, -25); if(isAttacking) ctx.rotate(1.5);
+    ctx.fillStyle = '#95a5a6'; ctx.fillRect(-5, -60, 15, 65); ctx.fillStyle = '#f1c40f'; ctx.fillRect(-10, 5, 25, 8); ctx.fillStyle = '#34495e'; ctx.fillRect(2, 13, 6, 15); ctx.restore();
+  } else if (charData.id === 'archer') {
+    ctx.fillStyle = '#27ae60'; ctx.fillRect(-14, -75, 28, 12); ctx.beginPath(); ctx.moveTo(-14, -75); ctx.lineTo(-20, -60); ctx.lineTo(-14, -65); ctx.fill();
+    ctx.save(); ctx.translate(20, -30); if(isAttacking) ctx.rotate(0.5);
+    ctx.strokeStyle = '#d35400'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, 35, -Math.PI/2, Math.PI/2); ctx.stroke();
+    ctx.strokeStyle = '#ecf0f1'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, -35); ctx.lineTo(0, 35); ctx.stroke(); 
+    if(!isAttacking) { ctx.fillStyle = '#bdc3c7'; ctx.fillRect(-25, -2, 50, 4); } ctx.restore();
+  } else if (charData.id === 'mage') {
+    ctx.fillStyle = '#2980b9'; ctx.beginPath(); ctx.moveTo(-25, -65); ctx.lineTo(25, -65); ctx.lineTo(0, -110); ctx.fill();
+    ctx.save(); ctx.translate(20, -10); if(isAttacking) ctx.rotate(1.0);
+    ctx.fillStyle = '#8e44ad'; ctx.fillRect(0, -70, 6, 80); ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(3, -75, 12, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(3, -75, 6, 0, Math.PI*2); ctx.fill(); ctx.restore();
+  } else if (charData.id === 'rogue') {
+    ctx.fillStyle = '#2c3e50'; ctx.fillRect(-14, -55, 28, 10);
+    ctx.save(); ctx.translate(15, -20); if(isAttacking) { ctx.translate(10, 0); ctx.rotate(1.5); }
+    ctx.fillStyle = '#bdc3c7'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(12,0); ctx.lineTo(6,-30); ctx.fill(); ctx.fillStyle = '#34495e'; ctx.fillRect(4,0,4,10); ctx.restore();
+    ctx.save(); ctx.translate(-15, -20); if(isAttacking) { ctx.translate(-10, 0); ctx.rotate(-1.5); }
+    ctx.fillStyle = '#bdc3c7'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-12,0); ctx.lineTo(-6,-30); ctx.fill(); ctx.fillStyle = '#34495e'; ctx.fillRect(-8,0,4,10); ctx.restore();
+  }
+  
+  ctx.fillStyle = '#000'; ctx.fillRect(-6, -60, 4, 4); ctx.fillRect(6, -60, 4, 4); 
+  ctx.fillStyle = '#333'; ctx.fillRect(-12, 0, 10, 10); ctx.fillRect(2, 0, 10, 10); 
+  ctx.restore();
+}
+
+function drawMonsterSprite(ctx, x, y, mData) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(mData.size, mData.size);
+  const name = mData.name;
+
+  if (name === '다람쥐') {
+    ctx.fillStyle = '#8B4513'; ctx.beginPath(); ctx.ellipse(-20, -20, 15, 20, Math.PI/4, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#D2691E'; ctx.beginPath(); ctx.ellipse(0, -15, 20, 15, 0, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#3e1a05'; ctx.fillRect(-10, -28, 4, 15); ctx.fillRect(0, -30, 4, 15); ctx.fillRect(10, -28, 4, 15); 
+    ctx.fillStyle = '#D2691E'; ctx.beginPath(); ctx.arc(15, -20, 12, 0, Math.PI*2); ctx.fill(); 
+    ctx.beginPath(); ctx.arc(10, -30, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(20, -30, 5, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(18, -22, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(25, -18, 2, 0, Math.PI*2); ctx.fill(); 
+  } 
+  else if (name === '토끼') {
+    ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.ellipse(0, -15, 18, 15, 0, 0, Math.PI*2); ctx.fill(); 
+    ctx.beginPath(); ctx.arc(-18, -10, 6, 0, Math.PI*2); ctx.fill(); 
+    ctx.beginPath(); ctx.arc(12, -22, 10, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.ellipse(8, -35, 4, 12, -Math.PI/8, 0, Math.PI*2); ctx.fill(); 
+    ctx.beginPath(); ctx.ellipse(16, -35, 4, 12, Math.PI/8, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#FF0000'; ctx.beginPath(); ctx.arc(15, -24, 2, 0, Math.PI*2); ctx.fill(); 
+  }
+  else if (name === '뱀') {
+    const color = '#228B22';
+    ctx.strokeStyle = color; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-20, 0); ctx.quadraticCurveTo(-10, -30, 0, -10); ctx.quadraticCurveTo(10, 10, 20, -25); ctx.stroke(); 
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(20, -30, 8, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(22, -32, 2, 0, Math.PI*2); ctx.fill(); 
+    ctx.strokeStyle = '#FF0000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(28, -30); ctx.lineTo(35, -28); ctx.stroke(); 
+  }
+  else if (name === '흑룡(보스)') {
+      ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#0a0a0a'; ctx.strokeStyle = '#550000'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(0, -5, 12, 16, Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-7, 2); ctx.quadraticCurveTo(-22, -5, -25, 7); ctx.quadraticCurveTo(-15, 0, -5, 7); ctx.fill();
+      ctx.fillStyle = '#ff3333'; ctx.beginPath(); ctx.moveTo(-25, 7); ctx.lineTo(-32, 2); ctx.lineTo(-20, 12); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#110000'; ctx.strokeStyle = '#8b0000'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-5, -10); ctx.lineTo(-25, -35); ctx.quadraticCurveTo(-10, -35, -2, -17); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-25, -35); ctx.quadraticCurveTo(-30, -20, -7, -12); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2, -12); ctx.lineTo(18, -40); ctx.quadraticCurveTo(8, -42, -2, -17); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18, -40); ctx.quadraticCurveTo(25, -22, 5, -12); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.moveTo(7, -10); ctx.quadraticCurveTo(20, -22, 14, -35); ctx.lineTo(5, -32); ctx.quadraticCurveTo(7, -15, 0, -10); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(8, -30); ctx.lineTo(24, -36); ctx.lineTo(20, -42); ctx.lineTo(5, -38); ctx.fill();
+      ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(7, -38); ctx.quadraticCurveTo(2, -47, 0, -52); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(12, -40); ctx.quadraticCurveTo(7, -50, 5, -55); ctx.stroke();
+      ctx.fillStyle = '#ff0000'; ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(16, -37, 1.2, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ff0000';
+      for(let i=0; i<5; i++) {
+         ctx.beginPath(); ctx.moveTo(-6 + i*2.5, -15 + i*3); ctx.lineTo(-9 + i*2.5, -22 + i*3); ctx.lineTo(0 + i*2.5, -12 + i*3); ctx.fill();
+      }
+      ctx.fillStyle = '#ff4500';
+      ctx.beginPath(); ctx.moveTo(22, -35); ctx.lineTo(19, -33); ctx.lineTo(14, -33); ctx.strokeStyle='#ff0000'; ctx.lineWidth=1; ctx.stroke();
+      ctx.shadowColor = '#ff4500'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(25, -34, 3, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+  }
+  else if (name === '해골') {
+    ctx.strokeStyle = '#E0E0E0'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(0, -40); ctx.stroke(); 
+    for(let i=0; i<3; i++) { ctx.beginPath(); ctx.moveTo(-10, -35 + i*5); ctx.lineTo(10, -35 + i*5); ctx.stroke(); } 
+    ctx.beginPath(); ctx.moveTo(0, -35); ctx.lineTo(-15, -20); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -35); ctx.lineTo(15, -20); ctx.stroke(); 
+    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-10, 0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(10, 0); ctx.stroke(); 
+    ctx.fillStyle = '#E0E0E0'; ctx.beginPath(); ctx.arc(0, -50, 12, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-4, -52, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(4, -52, 3, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillRect(-5, -45, 10, 3); 
+  }
+  else if (name === '처녀귀신') {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.beginPath(); ctx.moveTo(0, -60); ctx.lineTo(20, -10); ctx.quadraticCurveTo(0, 0, -20, -10); ctx.fill(); 
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(0, -55, 12, Math.PI, 0); ctx.lineTo(15, -20); ctx.lineTo(-15, -20); ctx.fill(); 
+    ctx.fillStyle = '#8B0000'; ctx.fillRect(-2, -35, 4, 10); 
+  }
+  else if (name === '여우') {
+    ctx.fillStyle = '#D35400'; ctx.beginPath(); ctx.ellipse(0, -20, 25, 15, 0, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#E67E22'; ctx.beginPath(); ctx.ellipse(-25, -25, 15, 8, -Math.PI/4, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(-35, -35, 5, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#D35400'; ctx.beginPath(); ctx.arc(20, -25, 12, 0, Math.PI*2); ctx.fill(); 
+    ctx.beginPath(); ctx.moveTo(12, -35); ctx.lineTo(16, -45); ctx.lineTo(20, -35); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, -35); ctx.lineTo(24, -45); ctx.lineTo(28, -35); ctx.fill(); 
+    ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(28, -22, 5, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(32, -22, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(22, -27, 2, 0, Math.PI*2); ctx.fill(); 
+  }
+  else if (name === '도깨비') {
+    ctx.fillStyle = '#C0392B'; ctx.fillRect(-15, -40, 30, 35); 
+    ctx.fillStyle = '#2C3E50'; ctx.fillRect(-15, -15, 30, 15); 
+    ctx.fillStyle = '#C0392B'; ctx.beginPath(); ctx.arc(0, -45, 15, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#F1C40F'; ctx.beginPath(); ctx.moveTo(-5, -58); ctx.lineTo(0, -70); ctx.lineTo(5, -58); ctx.fill(); 
+    ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(-5, -45, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(5, -45, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-5, -45, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(5, -45, 2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#8B4513'; ctx.save(); ctx.translate(15, -30); ctx.rotate(Math.PI/4); ctx.fillRect(-5, -20, 10, 40); 
+    ctx.fillStyle = '#111'; ctx.fillRect(-7, -15, 14, 2); ctx.fillRect(-7, -5, 14, 2); ctx.restore(); 
+  }
+  else if (name === '자객') {
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(-12, -40, 24, 40); ctx.beginPath(); ctx.arc(0, -45, 12, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = '#8E44AD'; ctx.fillRect(-15, -35, 30, 8); ctx.fillRect(-15, -35, 8, 20); 
+    ctx.fillStyle = '#E74C3C'; ctx.fillRect(-6, -48, 4, 2); ctx.fillRect(2, -48, 4, 2); 
+    ctx.fillStyle = '#BDC3C7'; ctx.beginPath(); ctx.moveTo(12, -25); ctx.lineTo(25, -25); ctx.lineTo(25, -30); ctx.fill(); 
+  }
+  ctx.restore();
+}
+
+function loadMonster() {
+  state.monster = { ...state.gameMonsters[state.stageIdx], hp: 10, maxHp: 10, x: canvas.width - 200, y: canvas.height - 50, isAttacking: false, isHurt: false };
+  
+  if (state.monster.name === '흑룡(보스)') {
+      state.monster.maxHp = 120;
+      state.monster.hp = 120;
+      state.monster.size = 8.0; 
+      state.monster.y = canvas.height - 90; 
+      state.monster.x = canvas.width - 250; 
+  }
+  updateHUD();
+}
+
+function updateHUD() {
+  document.getElementById('hudPlayerName').textContent = `${state.nickname} (${state.character.name})`;
+  document.getElementById('playerHpText').textContent = `${state.player.hp} / ${state.player.maxHp}`;
+  document.getElementById('playerHpBar').style.width = `${Math.max(0, (state.player.hp/state.player.maxHp)*100)}%`;
+  if (state.monster) {
+    document.getElementById('hudMonsterName').textContent = state.monster.name;
+    document.getElementById('monsterHpText').textContent = `${Math.ceil(state.monster.hp)} / ${state.monster.maxHp}`;
+    document.getElementById('monsterHpBar').style.width = `${Math.max(0, (state.monster.hp/state.monster.maxHp)*100)}%`;
+  }
+}
+
+function updateComboUI() {
+  document.getElementById('comboVal').textContent = state.combo;
+  document.getElementById('btnZ').className = 'skill-btn' + (state.combo >= 3 ? ' ready-Z' : '');
+  document.getElementById('btnX').className = 'skill-btn' + (state.combo >= 4 ? ' ready-X' : '');
+  document.getElementById('btnC').className = 'skill-btn' + (state.combo >= 5 ? ' ready-C' : '');
+}
+
+function loadQuestion() {
+  const q = state.questions[state.currentQIdx];
+  document.getElementById('qInfo').textContent = `스테이지 ${state.stageIdx+1}/20 - [${state.monster.name}] 출현!`;
+  
+  const textEl = document.getElementById('qText');
+  textEl.textContent = q.q;
+  if(q.isWordProblem) {
+      textEl.style.fontSize = '1.6em';
+  } else {
+      textEl.style.fontSize = '2.2em';
+  }
+
+  const grid = document.getElementById('optionsGrid'); grid.innerHTML = '';
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button'); btn.className = 'opt-btn'; btn.textContent = opt;
+    btn.onclick = () => handleAnswer(idx, q.answer, btn, q.explain); grid.appendChild(btn);
+  });
+  document.getElementById('nextBtnWrapper').style.display = 'none'; document.getElementById('feedbackOverlay').style.opacity = '0';
+}
+
+function handleAnswer(sIdx, cIdx, btn, exp) {
+  const fb = document.getElementById('feedbackOverlay');
+  
+  if (sIdx === cIdx) {
+    document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+    btn.classList.add('correct'); state.correctCount++; state.combo++; 
+    state.skillUseCount = 0; 
+    updateComboUI();
+    state.player.isAttacking = true;
+    
+    setTimeout(() => {
+      state.player.isAttacking = false; state.monster.isHurt = true; 
+      state.monster.hp = Math.max(0, state.monster.hp - 10); 
+      showFloatingText(`10`, state.monster.x, state.monster.y - 120, '#fff');
+      document.getElementById('gameScreen').classList.add('shake');
+      setTimeout(()=>document.getElementById('gameScreen').classList.remove('shake'), 300); updateHUD();
+    }, 300);
+    
+    fb.innerHTML = `<span class="feedback-msg success">명중! (평타 타격) ⚔️</span>`;
+    fb.style.opacity = '1'; 
+    setTimeout(() => { document.getElementById('nextBtnWrapper').style.display = 'block'; }, 1000);
+    
+  } else {
+    btn.classList.add('wrong'); 
+    btn.disabled = true; 
+    state.combo = 0; updateComboUI(); state.monster.isAttacking = true;
+    
+    setTimeout(() => {
+      state.monster.isAttacking = false; state.player.isHurt = true; state.player.hp = Math.max(0, state.player.hp - 20);
+      showFloatingText(`-20`, state.player.x, state.player.y - 100, '#e74c3c');
+      document.getElementById('gameScreen').classList.add('shake');
+      setTimeout(()=>document.getElementById('gameScreen').classList.remove('shake'), 300); updateHUD();
+      setTimeout(() => { state.player.isHurt = false; }, 300);
+    }, 300);
+    
+    document.getElementById('nextBtnWrapper').style.display = 'none'; 
+    fb.style.opacity = '0'; 
+    
+    setTimeout(() => {
+        document.getElementById('hintText').textContent = exp;
+        document.getElementById('hintPopup').style.display = 'block';
+    }, 600);
+  }
+}
+
+function closeHintPopup() {
+  document.getElementById('hintPopup').style.display = 'none';
+}
+
+function showBossWarning(isRestart = false) {
+  const overlay = document.getElementById('bossWarningOverlay');
+  overlay.style.display = 'flex';
+  
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    loadMonster(); 
+    
+    if (!isRestart) {
+        state.currentQIdx++;
+    }
+    state.questions[state.currentQIdx] = generateSingleQuestion(state.difficulty, true);
+    loadQuestion();
+  }, 3000);
+}
+
+function nextAction() {
+  if (state.player.hp <= 0) { 
+      // 1. 부활 안내 팝업 표시
+      const overlay = document.getElementById('bossWarningOverlay');
+      const text = overlay.querySelector('.boss-warning-text');
+      text.innerHTML = "⚠️ 부활 ⚠️<br>다시 집중해서 풀어보세요!";
+      overlay.style.display = 'flex';
+      
+      // 2. 1.5초 후 부활 로직 실행
+      setTimeout(() => {
+          overlay.style.display = 'none';
+          state.player.hp = state.player.maxHp;
+          state.combo = 0;
+          state.skillUseCount = 0;
+          loadMonster();
+          document.getElementById('feedbackOverlay').style.opacity = '0';
+          document.getElementById('nextBtnWrapper').style.display = 'none';
+          
+          if (state.stageIdx === 19) {
+              showBossWarning(true);
+          } else {
+              loadQuestion();
+          }
+      }, 1500);
+      return;
+  }
+  
+if (state.monster.hp <= 0) {
+    state.monstersKilled++; state.stageIdx++; 
+    state.player.hp = Math.min(state.player.maxHp, state.player.hp + 10);
+    
+    if (state.stageIdx === 19) {
+       showBossWarning(false);
+       return;
+    } else if (state.stageIdx > 19) {
+       endGame(true); return; 
+    }
+    loadMonster();
+  }
+  
+  state.currentQIdx++; 
+  
+  if (state.stageIdx === 19) {
+      state.questions[state.currentQIdx] = generateSingleQuestion(state.difficulty, true);
+  } 
+  else if (state.currentQIdx >= state.questions.length) { 
+      state.questions.push(generateSingleQuestion(state.difficulty, false)); 
+  }
+  
+  loadQuestion();
+}
+
+function endGame(isClear) {
+  cancelAnimationFrame(animFrame);
+  document.getElementById('resName').textContent = state.nickname; document.getElementById('resMonsters').textContent = `${state.monstersKilled} 마리`;
+  document.getElementById('resScore').textContent = `${Math.round((state.correctCount/state.questions.length)*100)}%`;
+  if (!isClear) { document.querySelector('.result-title').textContent = "성황당으로 이동... 💀"; document.querySelector('.result-title').style.color = "var(--hp-red)"; }
+  showScreen('resultScreen');
+}
+
+function resizeCanvas() {
+  canvas.width = document.getElementById('battleCanvas').clientWidth; canvas.height = document.getElementById('battleCanvas').clientHeight;
+  if(state.player) state.player.y = canvas.height - 50;
+  if(state.monster) { state.monster.x = canvas.width - 200; state.monster.y = canvas.height - 50; }
+}
+window.addEventListener('resize', resizeCanvas);
+
+function renderLoop() {
+  animFrame = requestAnimationFrame(renderLoop);
+  let shakeX = 0, shakeY = 0;
+  
+  if (state.activeUlt) {
+    const ult = state.activeUlt; ult.frame++;
+    if (ult.type === 'Z' && ult.frame > 20 && ult.frame < 35) { shakeX = (Math.random()-0.5)*10; shakeY = (Math.random()-0.5)*10; }
+    if (ult.type === 'X' && ult.frame > 15 && ult.frame < 50) { shakeX = (Math.random()-0.5)*15; shakeY = (Math.random()-0.5)*15; }
+    if (ult.type === 'C' && ult.frame > 30 && ult.frame < 80) { shakeX = (Math.random()-0.5)*30; shakeY = (Math.random()-0.5)*30; }
+    
+    let hitFrame = (ult.type==='Z')? 30 : (ult.type==='X')? 45 : 70;
+    if (ult.frame === hitFrame && state.monster.hp > 0) {
+      state.monster.hp = Math.max(0, state.monster.hp - ult.dmg); state.correctCount++;
+      showFloatingText(`+${ult.dmg} (CRITICAL!)`, state.monster.x, state.monster.y - 150, '#FFD700', true);
+      const fb = document.getElementById('feedbackOverlay');
+      if(state.monster.hp <= 0) {
+          fb.innerHTML = `<span class="feedback-msg epic">[${ult.name}] 작렬!! 몬스터 격파! ⚡</span>`;
+      } else {
+          fb.innerHTML = `<span class="feedback-msg epic">[${ult.name}] 적중!! 치명타! ⚡</span>`;
+      }
+      fb.style.opacity = '1'; updateHUD();
+    }
+    
+    if (ult.frame > 90) { state.activeUlt = null; setTimeout(() => { document.getElementById('nextBtnWrapper').style.display = 'block'; }, 500); }
+  }
+  
+  ctx.save(); ctx.translate(shakeX, shakeY);
+  ctx.fillStyle = state.monster ? state.monster.bg : '#2c3e50'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  if (state.activeUlt && state.activeUlt.type === 'C' && state.activeUlt.frame < 80) {
+    ctx.fillStyle = `rgba(0,0,0,${Math.min(0.8, state.activeUlt.frame*0.02)})`; ctx.fillRect(0,0, canvas.width, canvas.height);
+  }
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.ellipse(canvas.width/2, canvas.height - 20, canvas.width/1.5, 30, 0, 0, Math.PI*2); ctx.fill();
+
+  const time = Date.now();
+  let px = state.player.x; let py = state.player.y + Math.sin(time / 200) * 3;
+  let isCasting = false;
+
+  if (state.activeUlt && state.activeUlt.charId === 'rogue' && state.activeUlt.type === 'Z' && state.activeUlt.frame > 10 && state.activeUlt.frame < 40) {
+    px = state.monster.x + 100;
+  } else {
+    if (state.player.isAttacking) px += 100;
+    if (state.activeUlt && state.activeUlt.frame < 20) { px -= 10; isCasting = true; } 
+  }
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(px, state.player.y + 10, 30, 8, 0, 0, Math.PI*2); ctx.fill();
+  drawPlayerSprite(ctx, px, py, state.character, state.player.isAttacking || isCasting);
+
+  if (state.monster) {
+    ctx.save();
+    let mx = state.monster.x; let my = state.monster.y + Math.sin(time / 250) * 5;
+    if (state.monster.isAttacking) mx -= 120;
+    if (state.monster.isHurt) { ctx.filter = 'brightness(200%) sepia(100%) hue-rotate(-50deg) saturate(500%)'; mx += 20;}
+    if (state.monster.hp <= 0) ctx.globalAlpha = 0.2;
+    
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(mx, state.monster.y + 10, 40 * state.monster.size, 10, 0, 0, Math.PI*2); ctx.fill();
+    drawMonsterSprite(ctx, mx, my, state.monster);
+    ctx.restore();
+  }
+  
+  if (state.activeUlt) drawUltimateEffects(ctx, state.activeUlt, px, py, state.monster ? state.monster.x : px+300, state.monster ? state.monster.y : py);
+  ctx.restore();
+}
+
+function drawUltimateEffects(ctx, ult, px, py, mx, my) {
+  const f = ult.frame; const cid = ult.charId;
+  if (cid === 'warrior') {
+    if (ult.type === 'Z' && f > 20 && f < 35) {
+      ctx.strokeStyle = '#ecf0f1'; ctx.lineWidth = 15; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(mx - 40, my, 80, Math.PI*1.5, Math.PI*0.5, true); ctx.stroke();
+    } else if (ult.type === 'X' && f > 25 && f < 50) {
+      ctx.fillStyle = '#e67e22'; ctx.beginPath(); ctx.moveTo(mx, my+20); ctx.lineTo(mx-100, my-150); ctx.lineTo(mx+100, my-150); ctx.fill();
+    } else if (ult.type === 'C' && f > 30 && f < 75) {
+      ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 25;
+      if(f%4===0) { ctx.beginPath(); ctx.moveTo(mx-150, my-150); ctx.lineTo(mx+150, my+150); ctx.stroke(); }
+      if(f%4===2) { ctx.beginPath(); ctx.moveTo(mx+150, my-150); ctx.lineTo(mx-150, my+150); ctx.stroke(); }
+      ctx.fillStyle = `rgba(255,0,0,${Math.random()})`; ctx.beginPath(); ctx.arc(mx, my, 100, 0, Math.PI*2); ctx.fill();
+    }
+  } 
+  else if (cid === 'archer') {
+    if (ult.type === 'Z' && f > 20 && f < 40) {
+      ctx.fillStyle = '#2ecc71'; ctx.fillRect(px, py-30, px + (f-20)*40 - px, 8);
+    } else if (ult.type === 'X' && f > 20 && f < 60) {
+      ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 4;
+      for(let i=0; i<10; i++){
+         let ax = mx - 150 + Math.random()*300; let ay = my - 300 + ((f*20)%400) + Math.random()*50;
+         ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax-20, ay-40); ctx.stroke();
+      }
+    } else if (ult.type === 'C' && f > 30 && f < 80) {
+      ctx.fillStyle = `rgba(46, 204, 113, ${Math.random()*0.8+0.2})`; ctx.fillRect(0, my-80, canvas.width, 160);
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, my-40, canvas.width, 80);
+    }
+  }
+  else if (cid === 'mage') {
+    if (ult.type === 'Z' && f > 15 && f < 40) {
+      const bx = px + (f-15)*30;
+      ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(bx, py-30, 30, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(bx, py-30, 15, 0, Math.PI*2); ctx.fill();
+    } else if (ult.type === 'X' && f > 20 && f < 60) {
+      ctx.fillStyle = '#3498db';
+      for(let i=0; i<15; i++) { ctx.beginPath(); ctx.arc(mx - 150 + Math.random()*300, my - 200 + Math.random()*250, Math.random()*15+5, 0, Math.PI*2); ctx.fill(); }
+    } else if (ult.type === 'C' && f > 20 && f < 75) {
+      const metY = my - 800 + (f-20)*20;
+      ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(mx, metY, 150, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f39c12'; ctx.beginPath(); ctx.arc(mx, metY+50, 100, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  else if (cid === 'rogue') {
+    if (ult.type === 'Z' && f > 25 && f < 40) {
+      ctx.strokeStyle = '#95a5a6'; ctx.lineWidth = 10;
+      ctx.beginPath(); ctx.moveTo(mx-40, my-60); ctx.lineTo(mx+40, my+20); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(mx+40, my-60); ctx.lineTo(mx-40, my+20); ctx.stroke();
+    } else if (ult.type === 'X' && f > 20 && f < 60) {
+      ctx.fillStyle = `rgba(46, 204, 113, ${Math.sin(f/10)*0.5 + 0.3})`;
+      ctx.beginPath(); ctx.arc(mx, my-30, 120, 0, Math.PI*2); ctx.fill();
+    } else if (ult.type === 'C' && f > 30 && f < 75) {
+      ctx.fillStyle = `rgba(0, 0, 0, 0.9)`; ctx.fillRect(0,0, canvas.width, canvas.height); 
+      ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 5;
+      for(let i=0; i<8; i++){
+        ctx.beginPath(); ctx.moveTo(mx-200+Math.random()*400, my-200+Math.random()*400); 
+        ctx.lineTo(mx-200+Math.random()*400, my-200+Math.random()*400); ctx.stroke();
+      }
+    }
+  }
+}
+
+function showFloatingText(text, x, y, color, isCrit=false) {
+  const container = document.getElementById('gameScreen');
+  const div = document.createElement('div');
+  div.className = 'dmg-text' + (isCrit ? ' crit' : '');
+  div.style.left = x + 'px'; div.style.top = (y-50) + 'px'; div.style.color = color;
+  div.textContent = text;
+  container.appendChild(div);
+  setTimeout(() => div.remove(), 1000);
+}
+
+initSetup();
+</script>
+</body>
+</html>
