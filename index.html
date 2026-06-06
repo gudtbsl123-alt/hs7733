@@ -20,8 +20,16 @@
     .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
     .game-card { background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 28px; display: flex; flex-direction: column; transition: all 0.35s ease; }
     .launch-btn { flex-grow: 1; background: #ffffff; color: #0f172a; text-align: center; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; }
+    
+    /* 게임 콘솔 관련 스타일 수정 */
     .game-master-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; align-items: center; justify-content: center; }
+    #gameConsoleBox { width: 100vw; height: 100dvh; display: flex; justify-content: center; align-items: center; background: #000; }
     .game-frame-iframe { width: 100%; height: 100%; border: none; }
+    
+    /* 플로팅 닫기 버튼 스타일 보강 */
+    .floating-close-btn { position: absolute; top: 20px; right: 20px; z-index: 10000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 10px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .floating-close-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
     .modal-box { background: #1e1b4b; border-radius: 28px; padding: 36px; width: 100%; max-width: 520px; color: white; }
     .form-group { margin-bottom: 18px; }
@@ -52,9 +60,9 @@
   </div>
 
   <div id="gameMasterConsole" class="game-master-overlay">
-      <button class="floating-close-btn" style="position:absolute; top:20px; right:20px; z-index:10000;" onclick="shutdownConsole()">✖ 닫기</button>
-      <div id="gameConsoleBox" style="width:960px; height:650px;">
-          <iframe src="" class="game-frame-iframe" id="gameMasterIframe"></iframe>
+      <button class="floating-close-btn" onclick="shutdownConsole()">✖ 닫기</button>
+      <div id="gameConsoleBox">
+          <iframe src="" class="game-frame-iframe" id="gameMasterIframe" allow="autoplay; fullscreen" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
       </div>
   </div>
 
@@ -103,7 +111,12 @@
       document.getElementById('gameMasterConsole').style.display = 'flex';
     }
 
-    function shutdownConsole() { document.getElementById('gameMasterConsole').style.display = 'none'; }
+    function shutdownConsole() { 
+      document.getElementById('gameMasterConsole').style.display = 'none'; 
+      // 닫을 때 게임 소리가 계속 나는 것을 방지하기 위해 iframe 초기화
+      document.getElementById('gameMasterIframe').src = '';
+    }
+    
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function checkAdminPassword() { 
         const pw = prompt("관리자 암호를 입력하세요.");
