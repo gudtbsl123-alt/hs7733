@@ -18,13 +18,11 @@
     .admin-trigger { display: inline-block; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 20px; border-radius: 30px; color: #f8fafc; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-bottom: 24px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
     .hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #ffffff, #f1f5f9, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    /* 학년 및 과목 카테고리 탭 스타일 */
     .category-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
     .tab-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 24px; border-radius: 30px; color: #cbd5e1; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
     .tab-btn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
     .tab-btn.active { background: #ffffff; color: #0f172a; border-color: #ffffff; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25); }
 
-    /* 과목 탭 전용 서브 스타일 */
     .subject-tabs { margin-bottom: 35px; gap: 8px; }
     .subject-btn { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 20px; border-radius: 20px; color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
     .subject-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
@@ -87,7 +85,7 @@
       <h2 id="modalTitle">➕ 관리자 패널</h2>
       <div class="form-group"><label>게임 선택</label><select id="adminGameSelect" onchange="handleAdminGameSelect(this.value)"></select></div>
       <div class="form-group"><label>타이틀 (학년 및 과목 포함 권장)</label><input type="text" id="gameTitleInput" placeholder="예: 5학년 수학 분수의 덧셈과 뺄셈"></div>
-      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput" placeholder="예: ./5학년 수학 분수의 덧셈과 뺄셈.html"></div>
+      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput" placeholder="예: ./5th_grade_math_fraction.html"></div>
       <button class="launch-btn" onclick="saveGameCard()" style="width: 100%;">저장하기</button>
       <button onclick="closeModal('adminModal')" style="width: 100%; background:none; color:#aaa; margin-top:10px; border:none; cursor:pointer; font-weight:600;">닫기</button>
     </div>
@@ -103,22 +101,23 @@
   <script>
     let isAdminAuthenticated = false;
     let selectedGrade = 'all';
-    let selectedSubject = 'all'; // 새롭게 추가된 과목 상태 변수
+    let selectedSubject = 'all'; 
     
-    // 강제 버전 동기화 번호 상향 조정 (버전 5)
-    const CURRENT_DATA_VERSION = 5; 
+    // 강제 버전 동기화 번호 상향 조정 (버전 6)
+    const CURRENT_DATA_VERSION = 6; 
 
+    // url 경로를 깃허브에 업로드하신 영문 파일명으로 정확히 수정했습니다.
     const initialGames = [
-      { id: 1, icon: "📊", title: "6학년 수학 에듀런(여러 가지 그래프)", url: "./6학년 수학 에듀런(여러 가지 그래프).html" },
-      { id: 2, icon: "🧪", title: "5학년 과학 용해 용액 단어", url: "./5학년 과학 용해 용액 단어.html" },
-      { id: 3, icon: "☁️", title: "5학년 사회 기후", url: "./5학년 사회 기후.html" },
-      { id: 4, icon: "🏯", title: "5학년 사회 인구 조선 마을 대모험", url: "./5학년 사회 인구 조선 마을 대모험.html" },
-      { id: 5, icon: "🧩", title: "5학년 수학 분수의 덧셈과 뺄셈", url: "./5학년 수학 분수의 덧셈과 뺄셈.html" },
-      { id: 6, icon: "⚔️", title: "5학년 수학 비와비율 서바이벌", url: "./5학년 수학 비와비율 서바이벌.html" },
-      { id: 7, icon: "🍄", title: "5학년 수학 약분 통분 기약분수 마리오", url: "./5학년 수학 약분 통분 기약분수 마리오.html" },
-      { id: 8, icon: "🏛️", title: "6학년 사회 민주주의 젭스타일", url: "./6학년 사회 민주주의 젭스타일.html" },
-      { id: 9, icon: "🌍", title: "6학년 사회 지구 탐구 대모험", url: "./6학년 사회 지구 탐구 대모험.html" },
-      { id: 10, icon: "🔢", title: "6학년 수학 비와 비율 마리오", url: "./6학년 수학 비와 비율 마리오.html" }
+      { id: 1, icon: "📊", title: "6학년 수학 에듀런(여러 가지 그래프)", url: "./6th_grade_math_edurun_graph.html" },
+      { id: 2, icon: "🧪", title: "5학년 과학 용해 용액 단어", url: "./5th_grade_science_solution.html" },
+      { id: 3, icon: "☁️", title: "5학년 사회 기후", url: "./5th_grade_social_climate.html" },
+      { id: 4, icon: "🏯", title: "5학년 사회 인구 조선 마을 대모험", url: "./5th_grade_social_population_joseon.html" },
+      { id: 5, icon: "🧩", title: "5학년 수학 분수의 덧셈과 뺄셈", url: "./5th_grade_math_fraction_addition_subtraction.html" },
+      { id: 6, icon: "⚔️", title: "5학년 수학 비와비율 서바이벌", url: "./5th_grade_math_ratio_survival.html" },
+      { id: 7, icon: "🍄", title: "5학년 수학 약분 통분 기약분수 마리오", url: "./5th_grade_math_fraction_mario.html" },
+      { id: 8, icon: "🏛️", title: "6학년 사회 민주주의 젭스타일", url: "./6th_grade_social_democracy_zep.html" },
+      { id: 9, icon: "🌍", title: "6학년 사회 지구 탐구 대모험", url: "./6th_grade_social_earth_adventure.html" },
+      { id: 10, icon: "🔢", title: "6학년 수학 비와 비율 마리오", url: "./6th_grade_math_ratio_mario.html" }
     ];
 
     let currentGames = [];
@@ -137,26 +136,23 @@
       renderGamesGrid();
     });
 
-    // 1. 학년 자동 판별
     function getGradeFromTitle(title) {
       const match = title.match(/([3-6])학년/);
       return match ? `${match[1]}학년` : '기타';
     }
 
-    // 2. 과목 자동 판별 기능 추가
     function getSubjectFromTitle(title) {
       if (title.includes('국어')) return '국어';
       if (title.includes('수학')) return '수학';
       if (title.includes('사회')) return '사회';
       if (title.includes('과학')) return '과학';
-      return '기타'; // 명시된 과목 키워드가 없으면 기타로 분류
+      return '기타';
     }
 
     function renderGamesGrid() {
       const grid = document.getElementById('gamesGrid');
       grid.innerHTML = "";
       
-      // 학년과 과목 모두 일치하는 게임만 필터링 (다중 교차 필터링)
       const filteredGames = currentGames.filter(game => {
         const matchGrade = (selectedGrade === 'all') || (getGradeFromTitle(game.title) === selectedGrade);
         const matchSubject = (selectedSubject === 'all') || (getSubjectFromTitle(game.title) === selectedSubject);
@@ -176,7 +172,6 @@
       });
     }
 
-    // 학년 탭 클릭 시
     function filterGrade(grade) {
       selectedGrade = grade;
       document.querySelectorAll('#gradeTabs .tab-btn').forEach(btn => {
@@ -187,7 +182,6 @@
       renderGamesGrid();
     }
 
-    // 과목 탭 클릭 시
     function filterSubject(subject) {
       selectedSubject = subject;
       document.querySelectorAll('#subjectTabs .subject-btn').forEach(btn => {
