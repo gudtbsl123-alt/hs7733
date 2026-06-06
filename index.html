@@ -14,26 +14,42 @@
     @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     body::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 40%); pointer-events: none; z-index: 0; }
     .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 80px 20px; position: relative; z-index: 1; }
-    header { text-align: center; margin-bottom: 50px; }
+    header { text-align: center; margin-bottom: 30px; }
     .admin-trigger { display: inline-block; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 20px; border-radius: 30px; color: #f8fafc; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-bottom: 24px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
     .hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #ffffff, #f1f5f9, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    /* 학년 및 과목 카테고리 탭 스타일 */
+    .category-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .tab-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 24px; border-radius: 30px; color: #cbd5e1; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .tab-btn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
+    .tab-btn.active { background: #ffffff; color: #0f172a; border-color: #ffffff; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25); }
+
+    /* 과목 탭 전용 서브 스타일 */
+    .subject-tabs { margin-bottom: 35px; gap: 8px; }
+    .subject-btn { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 20px; border-radius: 20px; color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+    .subject-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+    .subject-btn.active { background: #cbd5e1; color: #0f172a; border-color: #cbd5e1; box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15); }
+
     .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
     .game-card { background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 28px; display: flex; flex-direction: column; transition: all 0.35s ease; }
-    .launch-btn { flex-grow: 1; background: #ffffff; color: #0f172a; text-align: center; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; }
+    .game-card h3 { font-size: 20px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
+    .launch-btn { margin-top: auto; background: #ffffff; color: #0f172a; text-align: center; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; transition: background 0.2s; }
+    .launch-btn:hover { background: #f1f5f9; }
     
-    /* 게임 콘솔 관련 스타일 수정 */
     .game-master-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; align-items: center; justify-content: center; }
     #gameConsoleBox { width: 100vw; height: 100dvh; display: flex; justify-content: center; align-items: center; background: #000; }
     .game-frame-iframe { width: 100%; height: 100%; border: none; }
     
-    /* 플로팅 닫기 버튼 스타일 보강 */
     .floating-close-btn { position: absolute; top: 20px; right: 20px; z-index: 10000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 10px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
     .floating-close-btn:hover { background: rgba(255, 255, 255, 0.2); }
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
     .modal-box { background: #1e1b4b; border-radius: 28px; padding: 36px; width: 100%; max-width: 520px; color: white; }
     .form-group { margin-bottom: 18px; }
-    input, select, textarea { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; color: #ffffff; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #cbd5e1; }
+    input, select, textarea { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; color: #ffffff; font-size: 15px; transition: all 0.2s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); }
+    select option { background-color: #1e1b4b; color: #ffffff; }
   </style>
 </head>
 <body>
@@ -43,6 +59,24 @@
       <button class="admin-trigger" onclick="checkAdminPassword()">⚙️ 관리자 설정</button>
       <div class="hero"><h1>Play. Learn. Enjoy! ✨</h1></div>
     </header>
+    
+    <div class="category-tabs" id="gradeTabs">
+      <button class="tab-btn active" onclick="filterGrade('all')">전체학년</button>
+      <button class="tab-btn" onclick="filterGrade('3학년')">3학년</button>
+      <button class="tab-btn" onclick="filterGrade('4학년')">4학년</button>
+      <button class="tab-btn" onclick="filterGrade('5학년')">5학년</button>
+      <button class="tab-btn" onclick="filterGrade('6학년')">6학년</button>
+    </div>
+
+    <div class="category-tabs subject-tabs" id="subjectTabs">
+      <button class="subject-btn active" onclick="filterSubject('all')">전체과목</button>
+      <button class="subject-btn" onclick="filterSubject('국어')">국어</button>
+      <button class="subject-btn" onclick="filterSubject('수학')">수학</button>
+      <button class="subject-btn" onclick="filterSubject('사회')">사회</button>
+      <button class="subject-btn" onclick="filterSubject('과학')">과학</button>
+      <button class="subject-btn" onclick="filterSubject('기타')">기타</button>
+    </div>
+
     <main>
       <div class="games-grid" id="gamesGrid"></div>
     </main>
@@ -52,10 +86,10 @@
     <div class="modal-box">
       <h2 id="modalTitle">➕ 관리자 패널</h2>
       <div class="form-group"><label>게임 선택</label><select id="adminGameSelect" onchange="handleAdminGameSelect(this.value)"></select></div>
-      <div class="form-group"><label>타이틀</label><input type="text" id="gameTitleInput"></div>
-      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput"></div>
-      <button class="launch-btn" onclick="saveGameCard()">저장하기</button>
-      <button onclick="closeModal('adminModal')" style="background:none; color:#aaa; margin-top:10px;">닫기</button>
+      <div class="form-group"><label>타이틀 (학년 및 과목 포함 권장)</label><input type="text" id="gameTitleInput" placeholder="예: 5학년 수학 분수의 덧셈과 뺄셈"></div>
+      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput" placeholder="예: ./5학년 수학 분수의 덧셈과 뺄셈.html"></div>
+      <button class="launch-btn" onclick="saveGameCard()" style="width: 100%;">저장하기</button>
+      <button onclick="closeModal('adminModal')" style="width: 100%; background:none; color:#aaa; margin-top:10px; border:none; cursor:pointer; font-weight:600;">닫기</button>
     </div>
   </div>
 
@@ -68,41 +102,100 @@
 
   <script>
     let isAdminAuthenticated = false;
+    let selectedGrade = 'all';
+    let selectedSubject = 'all'; // 새롭게 추가된 과목 상태 변수
+    
+    // 강제 버전 동기화 번호 상향 조정 (버전 5)
+    const CURRENT_DATA_VERSION = 5; 
+
     const initialGames = [
-      { id: 3, icon: "🚀", title: "우주 수학 탐험", category: "수학", url: "#space-math-menu" },
-      { id: 7, icon: "🍁", title: "수학의 나라", category: "수학", url: "./baram.html" },
-      { id: 8, icon: "🍄", title: "마리오 분수 구출", category: "수학", url: "./mario.html" },
-      { id: 9, icon: "⚽", title: "문학 스타디움", category: "수학", url: "./soccor.html" },
-      { id: 10, icon: "🪖", title: "탱크 디펜스", category: "수학", url: "./tank.html" }
+      { id: 1, icon: "📊", title: "6학년 수학 에듀런(여러 가지 그래프)", url: "./6학년 수학 에듀런(여러 가지 그래프).html" },
+      { id: 2, icon: "🧪", title: "5학년 과학 용해 용액 단어", url: "./5학년 과학 용해 용액 단어.html" },
+      { id: 3, icon: "☁️", title: "5학년 사회 기후", url: "./5학년 사회 기후.html" },
+      { id: 4, icon: "🏯", title: "5학년 사회 인구 조선 마을 대모험", url: "./5학년 사회 인구 조선 마을 대모험.html" },
+      { id: 5, icon: "🧩", title: "5학년 수학 분수의 덧셈과 뺄셈", url: "./5학년 수학 분수의 덧셈과 뺄셈.html" },
+      { id: 6, icon: "⚔️", title: "5학년 수학 비와비율 서바이벌", url: "./5학년 수학 비와비율 서바이벌.html" },
+      { id: 7, icon: "🍄", title: "5학년 수학 약분 통분 기약분수 마리오", url: "./5학년 수학 약분 통분 기약분수 마리오.html" },
+      { id: 8, icon: "🏛️", title: "6학년 사회 민주주의 젭스타일", url: "./6학년 사회 민주주의 젭스타일.html" },
+      { id: 9, icon: "🌍", title: "6학년 사회 지구 탐구 대모험", url: "./6학년 사회 지구 탐구 대모험.html" },
+      { id: 10, icon: "🔢", title: "6학년 수학 비와 비율 마리오", url: "./6학년 수학 비와 비율 마리오.html" }
     ];
 
     let currentGames = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-      const stored = localStorage.getItem('edutech_games');
-      if (stored) {
-        currentGames = JSON.parse(stored);
-        // 새로운 게임(ID 10)이 없으면 강제로 병합
-        if (!currentGames.some(g => g.id === 10)) {
-            currentGames = initialGames;
-            localStorage.setItem('edutech_games', JSON.stringify(currentGames));
-        }
-      } else {
+      const storedVersion = localStorage.getItem('edutech_data_version');
+      
+      if (!storedVersion || parseInt(storedVersion) !== CURRENT_DATA_VERSION) {
         currentGames = initialGames;
         localStorage.setItem('edutech_games', JSON.stringify(currentGames));
+        localStorage.setItem('edutech_data_version', CURRENT_DATA_VERSION.toString());
+      } else {
+        const stored = localStorage.getItem('edutech_games');
+        currentGames = stored ? JSON.parse(stored) : initialGames;
       }
       renderGamesGrid();
     });
 
+    // 1. 학년 자동 판별
+    function getGradeFromTitle(title) {
+      const match = title.match(/([3-6])학년/);
+      return match ? `${match[1]}학년` : '기타';
+    }
+
+    // 2. 과목 자동 판별 기능 추가
+    function getSubjectFromTitle(title) {
+      if (title.includes('국어')) return '국어';
+      if (title.includes('수학')) return '수학';
+      if (title.includes('사회')) return '사회';
+      if (title.includes('과학')) return '과학';
+      return '기타'; // 명시된 과목 키워드가 없으면 기타로 분류
+    }
+
     function renderGamesGrid() {
       const grid = document.getElementById('gamesGrid');
       grid.innerHTML = "";
-      currentGames.forEach(game => {
+      
+      // 학년과 과목 모두 일치하는 게임만 필터링 (다중 교차 필터링)
+      const filteredGames = currentGames.filter(game => {
+        const matchGrade = (selectedGrade === 'all') || (getGradeFromTitle(game.title) === selectedGrade);
+        const matchSubject = (selectedSubject === 'all') || (getSubjectFromTitle(game.title) === selectedSubject);
+        return matchGrade && matchSubject;
+      });
+
+      if (filteredGames.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#cbd5e1; font-size:16px;">선택한 카테고리에 해당하는 게임이 없습니다.</div>`;
+        return;
+      }
+
+      filteredGames.forEach(game => {
         const card = document.createElement('div');
         card.className = "game-card";
-        card.innerHTML = `<h3>${game.icon} ${game.title}</h3><br><button class="launch-btn" onclick="bootUpGameConsole('${game.url}')">실행</button>`;
+        card.innerHTML = `<h3>${game.icon} ${game.title}</h3><br><button class="launch-btn" onclick="bootUpGameConsole('${game.url}')">실행하기</button>`;
         grid.appendChild(card);
       });
+    }
+
+    // 학년 탭 클릭 시
+    function filterGrade(grade) {
+      selectedGrade = grade;
+      document.querySelectorAll('#gradeTabs .tab-btn').forEach(btn => {
+        const btnText = btn.textContent === '전체학년' ? 'all' : btn.textContent;
+        if (btnText === grade) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      renderGamesGrid();
+    }
+
+    // 과목 탭 클릭 시
+    function filterSubject(subject) {
+      selectedSubject = subject;
+      document.querySelectorAll('#subjectTabs .subject-btn').forEach(btn => {
+        const btnText = btn.textContent === '전체과목' ? 'all' : btn.textContent;
+        if (btnText === subject) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      renderGamesGrid();
     }
 
     function bootUpGameConsole(url) {
@@ -113,7 +206,6 @@
 
     function shutdownConsole() { 
       document.getElementById('gameMasterConsole').style.display = 'none'; 
-      // 닫을 때 게임 소리가 계속 나는 것을 방지하기 위해 iframe 초기화
       document.getElementById('gameMasterIframe').src = '';
     }
     
@@ -125,8 +217,10 @@
 
     function openAdminForm() {
         const select = document.getElementById('adminGameSelect');
-        select.innerHTML = '<option value="">새 게임 등록</option>';
+        select.innerHTML = '<option value="">➕ 새 게임 등록</option>';
         currentGames.forEach(g => select.innerHTML += `<option value="${g.id}">${g.title}</option>`);
+        document.getElementById('gameTitleInput').value = '';
+        document.getElementById('gameUrlInput').value = '';
         document.getElementById('adminModal').style.display = 'flex';
     }
 
@@ -135,11 +229,43 @@
         if(game) {
             document.getElementById('gameTitleInput').value = game.title;
             document.getElementById('gameUrlInput').value = game.url;
+        } else {
+            document.getElementById('gameTitleInput').value = '';
+            document.getElementById('gameUrlInput').value = '';
         }
     }
 
     function saveGameCard() {
-        alert("저장되었습니다.");
+        const select = document.getElementById('adminGameSelect');
+        const title = document.getElementById('gameTitleInput').value.trim();
+        const url = document.getElementById('gameUrlInput').value.trim();
+        
+        if(!title || !url) {
+            alert("타이틀과 파일 경로를 모두 입력해주세요.");
+            return;
+        }
+        
+        const selectedId = select.value;
+        if(selectedId) {
+            const game = currentGames.find(g => g.id == selectedId);
+            if(game) {
+                game.title = title;
+                game.url = url;
+            }
+        } else {
+            const newId = currentGames.length > 0 ? Math.max(...currentGames.map(g => g.id)) + 1 : 1;
+            let icon = "🎮";
+            if(title.includes("수학")) icon = "🔢";
+            else if(title.includes("사회")) icon = "🌍";
+            else if(title.includes("과학")) icon = "🧪";
+            else if(title.includes("국어")) icon = "📖";
+            
+            currentGames.push({ id: newId, icon: icon, title: title, url: url });
+        }
+        
+        localStorage.setItem('edutech_games', JSON.stringify(currentGames));
+        renderGamesGrid();
+        alert("성공적으로 저장되었습니다.");
         document.getElementById('adminModal').style.display = 'none';
     }
   </script>
