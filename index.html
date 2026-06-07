@@ -85,7 +85,7 @@
       <h2 id="modalTitle">➕ 관리자 패널</h2>
       <div class="form-group"><label>게임 선택</label><select id="adminGameSelect" onchange="handleAdminGameSelect(this.value)"></select></div>
       <div class="form-group"><label>타이틀 (학년 및 과목 포함 권장)</label><input type="text" id="gameTitleInput" placeholder="예: 5학년 수학 분수의 덧셈과 뺄셈"></div>
-      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput" placeholder="예: ./5th_grade_math_fraction.html"></div>
+      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput" placeholder="예: ./5학년 수학 분수의 덧셈과 뺄셈.html"></div>
       <button class="launch-btn" onclick="saveGameCard()" style="width: 100%;">저장하기</button>
       <button onclick="closeModal('adminModal')" style="width: 100%; background:none; color:#aaa; margin-top:10px; border:none; cursor:pointer; font-weight:600;">닫기</button>
     </div>
@@ -103,21 +103,21 @@
     let selectedGrade = 'all';
     let selectedSubject = 'all'; 
     
-    // 강제 버전 동기화 번호 상향 조정 (버전 6)
-    const CURRENT_DATA_VERSION = 6; 
+    // 강제 버전 동기화 번호 상향 조정 (버전 7)
+    const CURRENT_DATA_VERSION = 7; 
 
-    // url 경로를 깃허브에 업로드하신 영문 파일명으로 정확히 수정했습니다.
+    // 다시 실제 깃허브에 올라가 있는 '한글 파일명' 그대로 매칭되도록 되돌렸습니다.
     const initialGames = [
-      { id: 1, icon: "📊", title: "6학년 수학 에듀런(여러 가지 그래프)", url: "./6th_grade_math_edurun_graph.html" },
-      { id: 2, icon: "🧪", title: "5학년 과학 용해 용액 단어", url: "./5th_grade_science_solution.html" },
-      { id: 3, icon: "☁️", title: "5학년 사회 기후", url: "./5th_grade_social_climate.html" },
-      { id: 4, icon: "🏯", title: "5학년 사회 인구 조선 마을 대모험", url: "./5th_grade_social_population_joseon.html" },
-      { id: 5, icon: "🧩", title: "5학년 수학 분수의 덧셈과 뺄셈", url: "./5th_grade_math_fraction_addition_subtraction.html" },
-      { id: 6, icon: "⚔️", title: "5학년 수학 비와비율 서바이벌", url: "./5th_grade_math_ratio_survival.html" },
-      { id: 7, icon: "🍄", title: "5학년 수학 약분 통분 기약분수 마리오", url: "./5th_grade_math_fraction_mario.html" },
-      { id: 8, icon: "🏛️", title: "6학년 사회 민주주의 젭스타일", url: "./6th_grade_social_democracy_zep.html" },
-      { id: 9, icon: "🌍", title: "6학년 사회 지구 탐구 대모험", url: "./6th_grade_social_earth_adventure.html" },
-      { id: 10, icon: "🔢", title: "6학년 수학 비와 비율 마리오", url: "./6th_grade_math_ratio_mario.html" }
+      { id: 1, icon: "📊", title: "6학년 수학 에듀런(여러 가지 그래프)", url: "./6학년 수학 에듀런(여러 가지 그래프).html" },
+      { id: 2, icon: "🧪", title: "5학년 과학 용해 용액 단어", url: "./5학년 과학 용해 용액 단어.html" },
+      { id: 3, icon: "☁️", title: "5학년 사회 기후", url: "./5학년 사회 기후.html" },
+      { id: 4, icon: "🏯", title: "5학년 사회 인구 조선 마을 대모험", url: "./5학년 사회 인구 조선 마을 대모험.html" },
+      { id: 5, icon: "🧩", title: "5학년 수학 분수의 덧셈과 뺄셈", url: "./5학년 수학 분수의 덧셈과 뺄셈.html" },
+      { id: 6, icon: "⚔️", title: "5학년 수학 비와비율 서바이벌", url: "./5학년 수학 비와비율 서바이벌.html" },
+      { id: 7, icon: "🍄", title: "5학년 수학 약분 통분 기약분수 마리오", url: "./5학년 수학 약분 통분 기약분수 마리오.html" },
+      { id: 8, icon: "🏛️", title: "6학년 사회 민주주의 젭스타일", url: "./6학년 사회 민주주의 젭스타일.html" },
+      { id: 9, icon: "🌍", title: "6학년 사회 지구 탐구 대모험", url: "./6학년 사회 지구 탐구 대모험.html" },
+      { id: 10, icon: "🔢", title: "6학년 수학 비와 비율 마리오", url: "./6학년 수학 비와 비율 마리오.html" }
     ];
 
     let currentGames = [];
