@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>세계지리 코스터 타이쿤</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Galmuri9&family=Noto+Sans+KR:wght@400;700&display=swap');
+:root { --tycoon-bg: #405850; --tycoon-border-light: #688878; --tycoon-border-dark: #203028; --tycoon-text: #ffffff; --tycoon-text-dark: #111111; --tycoon-green: #3a7336; --tycoon-green-dark: #2b5a26; --money-green: #44ff44; }
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+body, html { width: 100%; height: 100%; overflow: hidden; background-color: #2b3a32; font-family: 'Galmuri9', 'Tahoma', 'Noto Sans KR', sans-serif; }
+#game-container { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+#game-container:active { cursor: grabbing; }
+canvas { display: block; width: 100%; height: 100%; }
+.retro-panel { background: var(--tycoon-bg); border-top: 2px solid var(--tycoon-border-light); border-left: 2px solid var(--tycoon-border-light); border-right: 2px solid var(--tycoon-border-dark); border-bottom: 2px solid var(--tycoon-border-dark); color: var(--tycoon-text); }
+.retro-button { background: #507060; border-top: 2px solid var(--tycoon-border-light); border-left: 2px solid var(--tycoon-border-light); border-right: 2px solid var(--tycoon-border-dark); border-bottom: 2px solid var(--tycoon-border-dark); color: var(--tycoon-text); cursor: pointer; font-family: inherit; text-shadow: 1px 1px 0px #000; }
+.retro-button:active, .retro-button.active { border-top: 2px solid var(--tycoon-border-dark); border-left: 2px solid var(--tycoon-border-dark); border-right: 2px solid var(--tycoon-border-light); border-bottom: 2px solid var(--tycoon-border-light); background: #385045; padding-top: 2px; padding-left: 2px; }
+#btn-demolish.selected { background: #aa3333; border-top: 2px solid var(--tycoon-border-dark); border-left: 2px solid var(--tycoon-border-dark); border-right: 2px solid var(--tycoon-border-light); border-bottom: 2px solid var(--tycoon-border-light); padding-top: 2px; padding-left: 2px; }
+#top-hud { position: absolute; top: 0; left: 0; right: 0; height: 32px; background: rgba(32, 48, 40, 0.85); border-bottom: 2px solid var(--tycoon-border-dark); display: flex; align-items: center; padding: 0 10px; gap: 20px; z-index: 10; pointer-events: none; }
+.hud-item { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 0 #000; color: #fff; }
+.hud-money { color: var(--money-green); }
+.hud-icon { width: 24px; height: 24px; background: #688878; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid #111; }
+#entrance-warning { color: #ffaa44; font-size: 12px; animation: blink 1s infinite; margin-left: 10px; display: none; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+#bottom-toolbar { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 5px; z-index: 10; }
+.tool-btn { width: 48px; height: 48px; font-size: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
+.tool-btn span { font-size: 10px; margin-top: 2px; }
+#quiz-trigger-btn { position: absolute; bottom: 10px; left: 10px; height: 48px; padding: 0 20px; font-size: 16px; font-weight: bold; z-index: 10; display: flex; align-items: center; gap: 8px; background: #225588; }
+#quiz-trigger-btn:hover { background: #336699; }
+#bgm-panel { position: absolute; top: 45px; left: 10px; z-index: 10; display: flex; gap: 8px; align-items: center; background: rgba(32, 48, 40, 0.85); padding: 6px 12px; border: 2px solid var(--tycoon-border-dark); border-radius: 8px; }
+#build-window { position: absolute; bottom: 65px; right: 10px; width: 340px; max-height: 400px; display: none; flex-direction: column; z-index: 15; }
+.window-titlebar { background: #203028; padding: 4px 8px; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.close-btn { background: #882222; border: 1px solid #ffaaaa; border-right-color: #440000; border-bottom-color: #440000; width: 16px; height: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; }
+.window-content { padding: 8px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--tycoon-bg); max-height: 350px;}
+.build-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #385045; border: 1px solid #203028; padding: 8px 4px; cursor: pointer; text-align: center; }
+.build-item:hover { background: #486055; border-color: #688878; }
+.build-item.selected { background: #225588; border-color: #6699cc; }
+.item-icon { font-size: 32px; margin-bottom: 4px; line-height: 1; }
+.item-name { font-size: 12px; color: #fff; text-shadow: 1px 1px 0 #000; word-break: keep-all; }
+.item-cost { font-size: 11px; color: var(--money-green); margin-top: 2px; }
+.item-cost.premium { color: #ffaa00; font-weight: bold; text-shadow: 0 0 2px #ff4400; } 
+.item-cost.ultra { color: #ff33ff; font-weight: bold; text-shadow: 0 0 3px #bb00bb; font-size: 12px; } 
+.item-cost.god { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px #ff00ff, 0 0 10px #00ffff, 0 0 15px #ffffff; font-size: 13px; animation: rainbow 2s infinite; }
+@keyframes rainbow { 0%{color:#ff0000;} 33%{color:#00ff00;} 66%{color:#0000ff;} 100%{color:#ff0000;} }
+#quiz-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 50; }
+#quiz-modal { width: 90%; max-width: 500px; display: flex; flex-direction: column; }
+.quiz-content { padding: 20px; background: #c0c0c0; color: #000; border-left: 2px solid #fff; border-top: 2px solid #fff; border-right: 2px solid #444; border-bottom: 2px solid #444; }
+.quiz-qno { font-size: 14px; font-weight: bold; color: #555; margin-bottom: 10px; }
+.quiz-text { font-size: 18px; font-weight: bold; margin-bottom: 20px; line-height: 1.4; word-break: keep-all; }
+.quiz-options { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 15px; }
+.quiz-option { background: #e0e0e0; border-top: 2px solid #fff; border-left: 2px solid #fff; border-right: 2px solid #888; border-bottom: 2px solid #888; padding: 12px; font-size: 16px; cursor: pointer; font-family: inherit; color: #000; text-align: left; }
+.quiz-option:hover { background: #f0f0f0; }
+.quiz-option:active { border-top: 2px solid #888; border-left: 2px solid #888; border-right: 2px solid #fff; border-bottom: 2px solid #fff; padding-top: 14px; padding-left: 14px; }
+.quiz-feedback { margin-top: 15px; padding: 10px; background: #fff; border: 1px inset #888; display: none; font-size: 14px; font-weight: bold; line-height: 1.4;}
+.btn-next-quiz { margin-top: 10px; width: 100%; padding: 12px; font-weight: bold; display: none; }
+#hint-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 60; }
+#hint-modal { width: 90%; max-width: 400px; text-align: center; }
+.hint-content { padding: 20px; background: #fffae6; color: #000; border: 3px solid #ffcc00; border-radius: 8px; }
+.hint-title { font-size: 20px; font-weight: bold; color: #cc3300; margin-bottom: 15px; }
+.hint-text { font-size: 16px; margin-bottom: 20px; line-height: 1.5; word-break: keep-all; }
+.btn-close-hint { padding: 10px 20px; font-size: 16px; font-weight: bold; background: #ffcc00; border: 2px solid #cc9900; border-radius: 4px; cursor: pointer; }
+.btn-close-hint:hover { background: #ffdb4d; }
+#intro-modal { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 100; }
+.intro-box { width: 450px; text-align: center; line-height: 1.5; }
+.intro-title { font-size: 36px; color: #fff; margin-bottom: 5px; text-shadow: 2px 2px 0 #000; }
+.intro-sub-title { font-size: 18px; color: #ffdd44; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 0 #000; }
+.intro-sub { font-size: 14px; color: #ffaa44; margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px;}
+.intro-btn { font-size: 20px; padding: 15px 30px; width: 100%; }
+.low-spec-label { color: #fff; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 15px; background: #444; padding: 8px 12px; border-radius: 6px; }
+#nickname-modal { position: fixed; inset: 0; background: #000; display: none; align-items: center; justify-content: center; z-index: 100; }
+.nickname-input { width: 100%; padding: 15px; font-family: 'Galmuri9', sans-serif; font-size: 20px; margin-bottom: 20px; text-align: center; border: 2px solid var(--tycoon-border-dark); background: #eee; color: #111; user-select: text; -webkit-user-select: text; }
+.nickname-input:focus { outline: none; border-color: var(--money-green); background: #fff; }
+#outro-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 200; }
+.outro-box { width: 550px; background: linear-gradient(135deg, #1a2a22, #2b4a3a); border: 4px solid #facc15; box-shadow: 0 0 30px rgba(250, 204, 21, 0.3); border-radius: 15px; text-align: center; }
+.outro-title-fx { font-size: 32px; color: #fff; text-shadow: 0 0 10px #facc15, 0 0 20px #facc15, 2px 2px 0 #cc5500; margin-bottom: 10px; animation: pulse 2s infinite; }
+.outro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+.outro-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; border: 1px solid #688878; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.outro-card-title { font-size: 13px; color: #cccccc; margin-bottom: 5px; }
+.outro-card-value { font-size: 22px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+@media (max-width: 600px) {
+    #build-window { width: 95%; right: 2.5%; bottom: 65px; max-height: 50vh; }
+    .hud-item { font-size: 14px; }
+    .quiz-text { font-size: 16px; }
+    .tool-btn { width: 42px; height: 42px; font-size: 16px; }
+    .intro-title, .outro-title-fx { font-size: 24px; }
+    .intro-sub-title { font-size: 15px; }
+    .outro-grid { grid-template-columns: 1fr; gap: 10px; }
+    .outro-card-value { font-size: 18px; }
+    .outro-box { width: 90%; }
+}
+#build-cursor-tip { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #ffcc00; padding: 8px 15px; border-radius: 15px; font-size: 14px; pointer-events: none; display: none; z-index: 10; text-align: center; }
+</style>
+</head>
+<body>
+<div id="intro-modal">
+    <div class="retro-panel intro-box" style="padding: 30px; margin: 15px;">
+        <h1 class="intro-title">세계지리 코스터<br>타이쿤</h1>
+        <div class="intro-sub-title">[ 6학년 1학기 2단원 세계 여러 국가의 위치와 영토 모습 ]</div>
+        <p class="intro-sub">
+            💡 <b>게임 목표</b><br>문제를 풀어 자금을 모으고 세계 최고의 놀이공원을 만드세요!<br><br>
+            ⚠️ <b>주의사항</b><br>- 반드시 <b>[시설]</b>에서 <b>'공원 입구'</b>를 모서리에 먼저 지으세요.<br>- 입구와 기구들을 <b>'보도(길)'</b>로 꼭 연결해야 합니다.<br>
+            <span style="color: #ffcc00; font-weight: bold; font-size: 15px; display: inline-block; margin-top: 5px;">🔥 놀이기구를 많이 건설할수록<br>최대 1,000명의 손님이 구름처럼 몰려옵니다! 🔥</span>
+        </p>
+        <label class="low-spec-label"><input type="checkbox" id="low-spec-toggle" style="width: 18px; height: 18px;"> <span>저사양 모드 켜기 (학교 구형 PC용)</span></label>
+        <button class="retro-button intro-btn" onclick="showNicknameInput()">다음으로</button>
+    </div>
+</div>
+<div id="nickname-modal">
+    <div class="retro-panel intro-box" style="padding: 30px; margin: 15px;">
+        <h1 class="intro-title">경영자 등록</h1>
+        <p class="intro-sub">놀이공원을 경영할 원장님의 이름을 알려주세요.</p>
+        <input type="text" id="player-nickname" class="nickname-input" placeholder="이름 입력 (예: 지리대장)" maxlength="10">
+        <button class="retro-button intro-btn" onclick="submitNickname()">공원 개장하기</button>
+    </div>
+</div>
+<div id="outro-modal">
+    <div class="retro-panel outro-box" style="padding: 30px; margin: 15px;">
+        <h1 class="outro-title-fx">🎉 위대한 경영자 등극! 🎉</h1>
+        <p class="intro-sub" style="font-size: 14px; line-height: 1.4;">세계 여러 국가의 위치와 영토 모습 단원의 모든 사회 문제(보너스 포함)를 완벽하게 풀었습니다!<br>성공적인 공원 경영을 축하합니다.</p>
+        <div class="outro-grid">
+            <div class="outro-card"><div class="outro-card-title">👑 최고 경영자</div><div class="outro-card-value" id="outro-name" style="color: #ffffff;">원장님</div></div>
+            <div class="outro-card"><div class="outro-card-title">⏱️ 플레이 시간</div><div class="outro-card-value" id="outro-time" style="color: #ffffff;">0분 0초</div></div>
+            <div class="outro-card"><div class="outro-card-title">💯 연구 정답률</div><div class="outro-card-value" style="color: #44aaff;">30 / 30 문제</div></div>
+            <div class="outro-card"><div class="outro-card-title">🎯 단번에 맞춘 문제</div><div class="outro-card-value" id="outro-first-try" style="color: #ff88ff;">0 개</div></div>
+            <div class="outro-card"><div class="outro-card-title">🚶 현재 유치한 손님 수</div><div class="outro-card-value" id="outro-guests" style="color: #ffaa44;">0 명</div></div>
+            <div class="outro-card"><div class="outro-card-title">💰 최종 확보 자금</div><div class="outro-card-value" id="outro-money" style="color: var(--money-green);">₩ 0</div></div>
+        </div>
+        <button class="retro-button intro-btn" onclick="continueGame()" style="background: #225588; border-color: #6699cc;">계속해서 공원 꾸미기</button>
+    </div>
+</div>
+<div id="game-container"><canvas id="gameCanvas"></canvas></div>
+<div id="top-hud">
+    <div class="hud-item" title="방문객 수"><div class="hud-icon">🚶</div><span id="guest-count">0</span>명<span id="entrance-warning">⚠️ 입구를 건설하세요!</span></div>
+    <div class="hud-item" title="자금"><div class="hud-icon">💰</div><span id="money-count" class="hud-money">₩ 5,000</span></div>
+    <div class="hud-item" title="공원 가치" style="margin-left: auto;"><div class="hud-icon">⭐</div><span id="rating-count">0</span></div>
+</div>
+<div id="bgm-panel">
+    <button class="retro-button" id="bgm-play-btn" onclick="toggleBGM()" style="padding:4px 8px; font-size:12px;">🎵 BGM 재생</button>
+    <audio id="bgm-audio" loop crossorigin="anonymous"></audio>
+</div>
+<div id="build-cursor-tip">건설할 위치를 클릭하세요<br>(취소: 빈 곳 우클릭 또는 도구모음 재클릭)</div>
+<button id="quiz-trigger-btn" class="retro-button" onclick="openQuiz()">📝 연구기금 (문제풀기)</button>
+<div id="bottom-toolbar">
+    <button class="retro-button tool-btn" onclick="toggleBuildWindow('facility')" title="시설 (입구 등)">🏢<span>시설</span></button>
+    <button class="retro-button tool-btn" onclick="toggleBuildWindow('path')" title="보도">🛤️<span>보도</span></button>
+    <button class="retro-button tool-btn" onclick="toggleBuildWindow('ride')" title="놀이기구">🎢<span>기구</span></button>
+    <button class="retro-button tool-btn" onclick="toggleBuildWindow('shop')" title="상점">🍔<span>상점</span></button>
+    <button class="retro-button tool-btn" onclick="toggleBuildWindow('scenery')" title="조경">🌳<span>조경</span></button>
+    <button class="retro-button tool-btn" id="btn-demolish" onclick="toggleDemolishMode()" title="철거">🧨<span>철거</span></button>
+</div>
+<div id="build-window" class="retro-panel">
+    <div class="window-titlebar"><span id="build-window-title">건설 메뉴</span><div class="close-btn" onclick="closeBuildWindow()">X</div></div>
+    <div class="window-content" id="build-catalog"></div>
+</div>
+<div id="quiz-modal-overlay">
+    <div id="quiz-modal" class="retro-panel">
+        <div class="window-titlebar"><span>연구 과제 (위치와 영토 모습)</span></div>
+        <div class="quiz-content">
+            <div class="quiz-qno" id="quiz-no">문제 1 / 30</div>
+            <div class="quiz-text" id="quiz-text">문제 텍스트</div>
+            <div class="quiz-options" id="quiz-options"></div>
+            <div class="quiz-feedback" id="quiz-feedback">피드백</div>
+            <button class="retro-button btn-next-quiz" id="btn-next-quiz" onclick="nextQuiz()">자금 수령 및 닫기</button>
+        </div>
+    </div>
+</div>
+<div id="hint-modal-overlay">
+    <div id="hint-modal">
+        <div class="hint-content">
+            <div class="hint-title">💡 힌트</div>
+            <div class="hint-text" id="hint-text">힌트 내용</div>
+            <button class="btn-close-hint" onclick="closeHintModal()">다시 풀어보기</button>
+        </div>
+    </div>
+</div>
+<script>
+const QUESTIONS = [
+    { q: "바다로 둘러싸인 커다란 육지를 무엇이라고 하나요? 아시아, 오세아니아, 유럽, 아프리카 등이 속해 있습니다.", options: ["대륙", "대양", "섬", "반도"], answer: 0, explanation: "대륙은 지구 표면의 약 30%를 차지하는 넓은 땅 덩어리를 말합니다.", hint: "지구 표면의 약 30%를 차지하는 넓은 땅 덩어리를 말해요." },
+    { q: "세계의 바다 가운데 태평양, 대서양, 인도양처럼 아주 넓은 바다를 무엇이라고 부르나요?", options: ["대양", "대륙", "호수", "해협"], answer: 0, explanation: "대양은 육지 사이에 있는 아주 크고 넓은 바다를 뜻합니다.", hint: "육지 사이에 있는 아주 크고 넓은 바다를 뜻하는 두 글자입니다." },
+    { q: "아시아의 서쪽에 있으며, 아시아와 아프리카를 잇는 아라비아반도의 대부분을 차지하는 나라는 어디일까요? 이 나라는 국경선이 비교적 단조로운 특징이 있습니다.", options: ["사우디아라비아", "이란", "이집트", "튀르키예"], answer: 0, explanation: "사우디아라비아는 아라비아반도의 대부분을 차지하며 직선 형태의 단조로운 국경선이 특징입니다.", hint: "중동에 위치하며 석유가 많이 나는 사막 국가입니다." },
+    { q: "우리나라의 서쪽에 있으며 영토가 동서로 넓게 펼쳐져 있는 나라는 어디일까요? 이곳은 동쪽에서 서쪽으로 갈수록 지형이 높아지는 특징이 있습니다.", options: ["중국", "일본", "러시아", "인도"], answer: 0, explanation: "중국은 우리나라 서쪽에 위치하며, 서고동저 지형을 가진 영토가 넓은 나라입니다.", hint: "우리나라와 서해를 사이에 두고 마주 보고 있는 영토가 아주 넓은 나라입니다." },
+    { q: "유럽의 서쪽에 있는 섬나라로, 본초 자오선이 지나며 우리나라와 영토 면적이 비슷한 나라는 어디일까요?", options: ["영국", "프랑스", "아일랜드", "이탈리아"], answer: 0, explanation: "영국은 유럽 서쪽의 섬나라로, 그리니치 천문대를 지나는 본초 자오선이 있습니다.", hint: "유럽의 대표적인 섬나라이자 수도가 런던인 곳입니다." },
+    { q: "북극점 주변을 덮고 있는 바다로, 아시아, 유럽, 북아메리카 대륙에 둘러싸인 세계에서 가장 작은 대양은 무엇일까요?", options: ["북극해", "남극해", "인도양", "대서양"], answer: 0, explanation: "북극해는 5대양 중 가장 작고 얕으며 대부분 얼음으로 덮여 있습니다.", hint: "얼음으로 덮여 있는 북쪽 끝의 바다입니다." },
+    { q: "우랄산맥을 경계로 아시아의 서쪽에 위치한 대륙은 어디인가요? 이 대륙은 북쪽으로 북극해, 서쪽으로 대서양과 접해 있습니다.", options: ["유럽", "아프리카", "북아메리카", "남아메리카"], answer: 0, explanation: "유럽은 유라시아 대륙 서쪽에 위치하며 대서양과 북극해에 접해 있습니다.", hint: "프랑스, 독일, 영국 등이 모여 있는 대륙입니다." },
+    { q: "두 개의 육지를 연결하는 좁고 잘록한 땅을 무엇이라고 하나요? 북아메리카와 남아메리카를 잇는 파나마 지역이 대표적입니다.", options: ["지협", "반도", "섬", "해협"], answer: 0, explanation: "지협은 두 대륙이나 육지를 연결하는 좁고 잘록한 형태의 땅입니다.", hint: "대륙과 대륙 사이를 이어주는 좁은 목 모양의 땅을 말해요." },
+    { q: "이 나라는 캐나다를 사이에 두고 본토와 알래스카 지역으로 나뉘며, 본토는 동쪽으로 대서양, 서쪽으로 태평양과 접해 있습니다. 어디일까요?", options: ["미국", "멕시코", "브라질", "그린란드"], answer: 0, explanation: "미국은 본토와 알래스카, 하와이로 이루어져 있으며, 캐나다 및 멕시코와 국경을 접합니다.", hint: "멕시코, 캐나다와 국경을 맞대고 있는 나라입니다." },
+    { q: "아프리카의 남쪽 끝에 있는 나라로, 동쪽으로는 인도양, 서쪽으로는 대서양과 접해 있는 나라는 어디일까요?", options: ["남아프리카 공화국", "이집트", "에티오피아", "나이지리아"], answer: 0, explanation: "남아프리카 공화국은 아프리카 대륙 최남단에 위치하여 두 대양과 만납니다.", hint: "이름 자체가 아프리카 남쪽이라는 뜻을 담고 있어요." },
+    { q: "오세아니아에서 가장 큰 나라이며, 땅이 매우 넓어 나라 자체가 하나의 대륙인 곳은 어디일까요?", options: ["오스트레일리아", "뉴질랜드", "인도네시아", "피지"], answer: 0, explanation: "오스트레일리아(호주)는 세계에서 유일하게 대륙 전체를 영토로 차지한 국가입니다.", hint: "캥거루와 코알라로 유명한 나라입니다." },
+    { q: "아프리카 대륙은 유럽의 남쪽에 있습니다. 이 대륙의 서쪽은 대서양과 접해 있는데, 동쪽은 어떤 바다와 접해 있을까요?", options: ["인도양", "태평양", "북극해", "남극해"], answer: 0, explanation: "아프리카 대륙의 동쪽 해안은 인도양과 맞닿아 있습니다.", hint: "이름에 '인도'가 들어가는 넓은 바다입니다." },
+    { q: "우리나라의 위치에 대한 설명입니다. 동쪽에는 일본이 있고, 북쪽으로는 중국 등과 국경을 맞대고 있습니다. 우리나라는 주로 북반구와 남반구 중 어디에 위치해 있을까요?", options: ["북반구", "남반구", "적도", "남극권"], answer: 0, explanation: "우리나라는 적도를 기준으로 북쪽에 위치한 북반구에 속합니다.", hint: "적도를 기준으로 위쪽에 위치한 반구를 말합니다." },
+    { q: "아시아에 있는 나라 중, 바다에 접하지 않고 육지로만 둘러싸인 내륙국인 나라는 어디일까요?", options: ["몽골", "일본", "인도", "베트남"], answer: 0, explanation: "몽골은 중국과 러시아 사이에 완전히 둘러싸여 바다가 없는 내륙국입니다.", hint: "중국과 러시아 사이에 끼어 있는 초원의 나라입니다." },
+    { q: "대부분 남반구에 속해 있는 대륙으로, 세계에서 가장 큰 열대 우림인 아마존이 위치한 이 대륙의 이름은 무엇일까요?", options: ["남아메리카", "북아메리카", "아프리카", "오세아니아"], answer: 0, explanation: "남아메리카는 안데스 산맥과 아마존 열대 우림을 포함한 남반구의 대륙입니다.", hint: "브라질, 아르헨티나, 칠레가 속해 있는 대륙입니다." },
+    { q: "영토의 모양이 장화(👢)와 비슷한 유럽의 나라는 어디일까요?", options: ["이탈리아", "프랑스", "독일", "스페인"], answer: 0, explanation: "이탈리아는 지중해로 뻗어 있는 장화 모양의 반도 국가입니다.", hint: "지중해 쪽으로 길게 튀어나온 반도 국가로 피자가 유명합니다." },
+    { q: "영토의 모양이 뱀이나 지팡이처럼 남북으로 아주 길고 얇게 뻗어 있는 남아메리카의 나라는 어디일까요?", options: ["칠레", "브라질", "페루", "아르헨티나"], answer: 0, explanation: "칠레는 남아메리카 서부 연안을 따라 남북으로 약 4,300km 길게 뻗은 나라입니다.", hint: "안데스 산맥과 태평양 사이에 위치해 영토가 세계에서 가장 깁니다." },
+    { q: "세계에서 가장 영토가 넓은 대륙은 어디일까요? 이 대륙은 대부분 북반구에 분포해 있습니다.", options: ["아시아", "아프리카", "북아메리카", "유럽"], answer: 0, explanation: "아시아는 세계 육지 면적의 약 30%를 차지하는 가장 거대한 대륙입니다.", hint: "세계 육지 면적의 가장 큰 부분을 차지하며 우리나라가 속해있습니다." },
+    { q: "다음 중 5대양에 속하지 않는 바다는 무엇일까요?", options: ["지중해", "태평양", "대서양", "인도양"], answer: 0, explanation: "지중해는 유럽, 아프리카, 아시아 대륙에 둘러싸인 큰 바다지만, 5대양에는 속하지 않습니다.", hint: "대륙과 대륙 사이에 있는 비교적 작은 바다로 유럽과 아프리카 사이에 있습니다." },
+    { q: "북아메리카의 대부분을 미국과 함께 차지하고 있는 세계에서 두 번째로 영토가 넓은 나라는 어디일까요?", options: ["캐나다", "멕시코", "그린란드", "쿠바"], answer: 0, explanation: "캐나다는 러시아에 이어 세계 면적 2위의 광활한 영토를 가진 국가입니다.", hint: "미국의 북쪽에 위치하며 단풍잎 국기를 사용하는 나라입니다." },
+    { q: "사방이 바다로 둘러싸여 육지와 닿은 국경선이 없는 국가를 무엇이라고 하나요? 일본, 뉴질랜드 등이 속합니다.", options: ["섬나라", "내륙국", "반도국", "지협"], answer: 0, explanation: "섬나라는 4면이 모두 바다로 둘러싸여 있어 육상 국경이 없는 국가를 말합니다.", hint: "육지가 아닌 바다 위의 영토로만 이루어진 나라입니다." },
+    { q: "아시아 대륙과 유럽 대륙을 나누는 기준이 되는 러시아의 긴 산맥 이름은 무엇일까요?", options: ["우랄산맥", "알프스산맥", "히말라야산맥", "안데스산맥"], answer: 0, explanation: "러시아를 가로지르는 우랄산맥은 전통적으로 아시아와 유럽의 경계로 여겨집니다.", hint: "유럽이 시작되는 동쪽 경계선 역할을 하는 산맥입니다." },
+    { q: "3면이 바다로 둘러싸여 있고, 1면은 육지에 연결된 지형을 무엇이라고 부르나요?", options: ["반도", "섬", "내륙", "대륙"], answer: 0, explanation: "반도는 육지에서 바다 쪽으로 튀어나온 모양의 지형입니다.", hint: "우리나라의 영토 모양을 부르는 말이기도 합니다." },
+    { q: "아프리카 대륙 북부에 넓게 펼쳐져 있는 세계에서 가장 큰 모래 사막의 이름은 무엇인가요?", options: ["사하라 사막", "고비 사막", "모하비 사막", "아타카마 사막"], answer: 0, explanation: "사하라 사막은 아프리카 북부의 대부분을 덮고 있는 세계 최대의 사막입니다.", hint: "이집트 등 여러 아프리카 국가에 걸쳐 있는 뜨거운 사막입니다." },
+    { q: "오세아니아 대륙의 동쪽에는 태평양이 접해 있습니다. 그렇다면 서쪽에는 어떤 대양과 접해 있을까요?", options: ["인도양", "대서양", "북극해", "남극해"], answer: 0, explanation: "오스트레일리아(오세아니아)의 서부 및 남부 해안은 인도양과 접하고 있습니다.", hint: "호주의 서쪽 해안에서 볼 수 있는 바다입니다." },
+    { q: "영토 모양이 역삼각형(▽) 모양을 띠며, 아시아 남쪽 바다를 향해 돌출되어 있는 나라는 어디일까요?", options: ["인도", "말레이시아", "태국", "이란"], answer: 0, explanation: "인도는 거대한 역삼각형 모양의 반도 국가입니다.", hint: "북쪽에는 히말라야 산맥이 있으며 카레가 유명한 나라입니다." },
+    { q: "남극을 둘러싸고 있는 넓은 대양으로, 일년 내내 얼음과 빙산이 떠다니는 바다의 이름은 무엇일까요?", options: ["남극해", "북극해", "대서양", "태평양"], answer: 0, explanation: "남극해는 남극 대륙 주변을 흐르는 대양입니다.", hint: "펭귄들이 서식하는 대륙 주변의 바다입니다." },
+    { q: "세계 지도나 지구본에서 가로로 그어진 가상의 선을 '위선'이라고 합니다. 그렇다면 세로로 그어진 선은 무엇일까요?", options: ["경선", "적도", "날짜변경선", "남회귀선"], answer: 0, explanation: "경선은 북극과 남극을 잇는 세로선으로 동서의 위치를 나눕니다.", hint: "동쪽과 서쪽의 위치를 나타내는 데 쓰이며 영국의 본초 자오선이 기준이 됩니다." },
+    { q: "영토 모양이 'S'자나 용(🐉) 모양과 같이 길게 휘어진 동남아시아의 나라는 어디일까요?", options: ["베트남", "인도네시아", "필리핀", "캄보디아"], answer: 0, explanation: "베트남은 동남아시아 인도차이나 반도 동해안을 따라 S자 형태로 길게 뻗어 있습니다.", hint: "전통 의상 아오자이와 쌀국수로 유명한 나라입니다." },
+    { q: "한 국가의 주권이 미치는 범위를 뜻하며, 크게 영토(땅), 영해(바다), 영공(하늘)으로 이루어진 이것을 무엇이라고 하나요?", options: ["영역", "영해", "국경", "주권"], answer: 0, explanation: "영역은 한 국가의 통치권이 합법적으로 미치는 공간적 범위입니다.", hint: "다른 나라가 함부로 침범할 수 없는 우리 국가의 전체 공간을 뜻합니다." }
+];
+
+let isLowSpec = false, isDemolishMode = false, shuffledQuestions = [], currentQuestionIndex = 0;
+let gameStartTime = 0, firstTryCount = 0, isFirstTry = true; 
+
+const bgmPlayer = document.getElementById('bgm-audio');
+const BGM_TRACK = "https://cdn.jsdelivr.net/gh/mdn/webaudio-examples@main/audio-basics/outfoxing.mp3";
+
+function toggleBGM() {
+    const btn = document.getElementById('bgm-play-btn');
+    if (bgmPlayer.paused) {
+        if (!bgmPlayer.src) bgmPlayer.src = BGM_TRACK;
+        bgmPlayer.play().catch(e => console.log("BGM Play Error:", e));
+        btn.innerText = "⏸ BGM 정지";
+    } else {
+        bgmPlayer.pause();
+        btn.innerText = "🎵 BGM 재생";
+    }
+}
+
+const CATALOG = {
+    facility: [
+        { id: 'park_entrance', name: '공원 입구(필수)', type: 'facility', cost: 2000, income: 0, appeal: 50, size: 2, color: '#aa3333', icon: '🎟️', renderType: 'entrance' },
+        { id: 'park_toilet', name: '화장실', type: 'facility', cost: 300, income: 0, appeal: 10, size: 1, color: '#ffffff', icon: '🚻', renderType: 'toilet' },
+        { id: 'park_info', name: '공원 안내소', type: 'facility', cost: 400, income: 0, appeal: 15, size: 1, color: '#ffeb3b', icon: 'ℹ️', renderType: 'info' },
+        { id: 'park_stroller', name: '유모차 대여소', type: 'facility', cost: 500, income: 10, appeal: 12, size: 1, color: '#f8bbd0', icon: '👶', renderType: 'stroller' },
+        { id: 'park_security', name: '보안 센터', type: 'facility', cost: 800, income: 0, appeal: 20, size: 1, color: '#1976d2', icon: '👮', renderType: 'security' },
+        { id: 'park_firstaid', name: '의무실', type: 'facility', cost: 600, income: 0, appeal: 18, size: 1, color: '#ffffff', icon: '✚', renderType: 'firstaid' },
+        { id: 'park_lostchild', name: '미아 보호소', type: 'facility', cost: 450, income: 0, appeal: 14, size: 1, color: '#ffb74d', icon: '🧸', renderType: 'lostchild' },
+        { id: 'park_atm', name: 'ATM 기기', type: 'facility', cost: 350, income: 20, appeal: 5, size: 1, color: '#4caf50', icon: '🏧', renderType: 'atm' }
+    ],
+    path: [
+        { id: 'path_asphalt', name: '아스팔트 보도', type: 'path', cost: 10, income: 0, appeal: 1, size: 1, color: '#666666', icon: '🛣️' },
+        { id: 'path_brick', name: '벽돌 보도', type: 'path', cost: 15, income: 0, appeal: 2, size: 1, color: '#885544', icon: '🧱' },
+        { id: 'path_wood', name: '나무 보도', type: 'path', cost: 20, income: 0, appeal: 3, size: 1, color: '#aa7744', icon: '🪵' },
+        { id: 'path_stone', name: '돌 보도', type: 'path', cost: 12, income: 0, appeal: 1, size: 1, color: '#999999', icon: '🪨' },
+        { id: 'path_sand', name: '모래 보도', type: 'path', cost: 8, income: 0, appeal: 1, size: 1, color: '#d2b48c', icon: '🏖️' },
+        { id: 'path_grass', name: '잔디 보도', type: 'path', cost: 18, income: 0, appeal: 3, size: 1, color: '#55aa55', icon: '🌱' },
+        { id: 'path_gravel', name: '자갈 보도', type: 'path', cost: 14, income: 0, appeal: 2, size: 1, color: '#bbbbbb', icon: '🪨' },
+        { id: 'path_marble', name: '대리석 보도', type: 'path', cost: 25, income: 0, appeal: 4, size: 1, color: '#f0f8ff', icon: '🏛️' },
+        { id: 'path_neon', name: '네온 보도', type: 'path', cost: 30, income: 0, appeal: 5, size: 1, color: '#00ffff', icon: '💡' },
+        { id: 'path_lava', name: '용암 보도', type: 'path', cost: 35, income: 0, appeal: 6, size: 1, color: '#ff4500', icon: '🌋' },
+        { id: 'path_rainbow', name: '무지개 보도', type: 'path', cost: 40, income: 0, appeal: 8, size: 1, color: '#ff0000', icon: '🌈' },
+        { id: 'path_star', name: '별빛 보도', type: 'path', cost: 45, income: 0, appeal: 9, size: 1, color: '#111133', icon: '✨' },
+        { id: 'path_water', name: '물결 보도', type: 'path', cost: 35, income: 0, appeal: 7, size: 1, color: '#33ccff', icon: '💧' },
+        { id: 'path_ice', name: '얼음 보도', type: 'path', cost: 38, income: 0, appeal: 6, size: 1, color: '#e0ffff', icon: '🧊' },
+        { id: 'path_piano', name: '피아노 보도', type: 'path', cost: 50, income: 0, appeal: 10, size: 1, color: '#ffffff', icon: '🎹' }
+    ],
+    ride: [
+        { id: 'ride_omega', name: '★오메가 퀀텀 차원도약기', type: 'ride', cost: 350000, income: 3500, appeal: 5000, size: 6, color: '#00ffff', icon: '🌀', renderType: 'omega_quantum', god: true },
+        { id: 'ride_genesis', name: '★제네시스 이그드라실', type: 'ride', cost: 330000, income: 3300, appeal: 4800, size: 6, color: '#aaddaa', icon: '🌳', renderType: 'genesis_tree', god: true },
+        { id: 'ride_inferno', name: '★인페르노 볼케이노', type: 'ride', cost: 200000, income: 2000, appeal: 3000, size: 6, color: '#ff2200', icon: '🌋', renderType: 'inferno_volcano', premium: true, ultra: true },
+        { id: 'ride_crystal', name: '★크리스탈 블리자드', type: 'ride', cost: 220000, income: 2200, appeal: 3500, size: 6, color: '#00ffff', icon: '❄️', renderType: 'crystal_blizzard', premium: true, ultra: true },
+        { id: 'ride_wormhole', name: '★블랙홀 웜홀 드롭', type: 'ride', cost: 150000, income: 1500, appeal: 2000, size: 6, color: '#aa00ff', icon: '🌌', renderType: 'wormhole', premium: true, ultra: true },
+        { id: 'ride_skycastle', name: '★천공의 성 매직', type: 'ride', cost: 180000, income: 1800, appeal: 2500, size: 6, color: '#ffffff', icon: '🏰', renderType: 'sky_castle', premium: true, ultra: true },
+        { id: 'ride_giga', name: '★기가 하이퍼 코스터', type: 'ride', cost: 60000, income: 600, appeal: 800, size: 5, color: '#ff00ff', icon: '🎢', renderType: 'giga_coaster', premium: true },
+        { id: 'ride_dragon', name: '★드래곤 플라이트', type: 'ride', cost: 50000, income: 500, appeal: 700, size: 4, color: '#ffaa00', icon: '🐉', renderType: 'dragon', premium: true },
+        { id: 'ride_space', name: '★스페이스 발사 센터', type: 'ride', cost: 45000, income: 450, appeal: 500, size: 3, color: '#aaaaaa', icon: '🚀', renderType: 'space_launch', premium: true },
+        { id: 'ride_volcano', name: '★볼케이노 대탐험', type: 'ride', cost: 40000, income: 400, appeal: 600, size: 4, color: '#ff3300', icon: '🌋', renderType: 'volcano', premium: true },
+        { id: 'ride_cyber', name: '★사이버펑크 스핀', type: 'ride', cost: 35000, income: 350, appeal: 400, size: 3, color: '#00ffff', icon: '🛸', renderType: 'cyber_spin', premium: true },
+        { id: 'ride_giantwheel', name: '★오로라 대관람차', type: 'ride', cost: 30000, income: 300, appeal: 350, size: 4, color: '#ffffff', icon: '🎡', renderType: 'giant_wheel', premium: true },
+        { id: 'ride_coaster_red', name: '레드 루프 코스터', type: 'ride', cost: 5000, income: 150, appeal: 80, size: 3, trackColor: '#ff2222', supportColor: '#aaaaaa', isWooden: false, icon: '🎢', renderType: 'coaster_loop' },
+        { id: 'ride_coaster_blue', name: '블루 하이퍼 코스터', type: 'ride', cost: 6000, income: 180, appeal: 90, size: 3, trackColor: '#2222ff', supportColor: '#8888cc', isWooden: false, icon: '🎢', renderType: 'coaster_hyper' },
+        { id: 'ride_coaster_wood', name: '우든 롤러코스터', type: 'ride', cost: 4500, income: 140, appeal: 75, size: 3, trackColor: '#8b5a2b', supportColor: '#cd853f', isWooden: true, icon: '🎢', renderType: 'coaster_wooden' },
+        { id: 'ride_coaster_mine', name: '마인 트레인', type: 'ride', cost: 4000, income: 120, appeal: 65, size: 3, trackColor: '#555555', supportColor: '#8b4513', isWooden: true, icon: '🚂', renderType: 'coaster_mine' },
+        { id: 'ride_coaster_invert', name: '인버티드 코스터', type: 'ride', cost: 6500, income: 200, appeal: 100, size: 3, trackColor: '#dddd33', supportColor: '#444444', isWooden: false, icon: '🎢', renderType: 'coaster_loop' },
+        { id: 'ride_drop', name: '자이로드롭', type: 'ride', cost: 3500, income: 100, appeal: 50, size: 2, color: '#ffffff', icon: '🗼', renderType: 'droptower' },
+        { id: 'ride_ferris', name: '대관람차', type: 'ride', cost: 4000, income: 120, appeal: 60, size: 3, color: '#ffcc00', icon: '🎡', renderType: 'ferris' },
+        { id: 'ride_merry', name: '회전목마', type: 'ride', cost: 2000, income: 60, appeal: 30, size: 2, color: '#ff88dd', icon: '🎠', renderType: 'merry' },
+        { id: 'ride_pirate', name: '바이킹', type: 'ride', cost: 3000, income: 90, appeal: 45, size: 3, color: '#885533', icon: '🏴‍☠️', renderType: 'pirate' },
+        { id: 'ride_haunted', name: '귀신의 집', type: 'ride', cost: 2500, income: 80, appeal: 40, size: 2, color: '#2a1b38', icon: '👻', renderType: 'haunted' },
+        { id: 'ride_flume', name: '후룸라이드', type: 'ride', cost: 3800, income: 110, appeal: 55, size: 3, color: '#33aaff', icon: '🛶', renderType: 'flume' },
+        { id: 'ride_bumper', name: '범퍼카', type: 'ride', cost: 2200, income: 70, appeal: 35, size: 2, color: '#cc44cc', icon: '🚗', renderType: 'bumper' },
+        { id: 'ride_topspin', name: '탑 스핀', type: 'ride', cost: 3200, income: 95, appeal: 48, size: 2, color: '#ff5500', icon: '🔄', renderType: 'topspin' },
+        { id: 'ride_enterprise', name: '엔터프라이즈', type: 'ride', cost: 3400, income: 105, appeal: 52, size: 2, color: '#ff33ff', icon: '🛸', renderType: 'enterprise' },
+        { id: 'ride_twist', name: '트위스트', type: 'ride', cost: 2100, income: 65, appeal: 32, size: 2, color: '#33ff33', icon: '🌪️', renderType: 'twist' },
+        { id: 'ride_gokart', name: '고카트', type: 'ride', cost: 2800, income: 85, appeal: 42, size: 3, color: '#333333', icon: '🏎️', renderType: 'gokart' },
+        { id: 'ride_teacup', name: '회전 찻잔', type: 'ride', cost: 1800, income: 50, appeal: 25, size: 2, color: '#ffaaaa', icon: '☕', renderType: 'teacup' },
+        { id: 'ride_carpet', name: '마법의 양탄자', type: 'ride', cost: 2600, income: 75, appeal: 38, size: 2, color: '#aa33aa', icon: '🧞', renderType: 'carpet' },
+        { id: 'ride_spacerings', name: '스페이스 링', type: 'ride', cost: 1500, income: 45, appeal: 22, size: 1, color: '#aaaaaa', icon: '🪐', renderType: 'spacerings' },
+        { id: 'ride_swings', name: '회전 그네', type: 'ride', cost: 2300, income: 70, appeal: 36, size: 2, color: '#ddff44', icon: '🎪', renderType: 'swings' },
+        { id: 'ride_monorail', name: '에어로 모노레일', type: 'ride', cost: 4500, income: 120, appeal: 65, size: 4, color: '#ff5555', icon: '🚝', renderType: 'monorail' }, 
+        { id: 'ride_waterslide', name: '워터슬라이드', type: 'ride', cost: 4200, income: 130, appeal: 70, size: 3, color: '#00ffff', icon: '🛝', renderType: 'waterslide' },
+        { id: 'ride_wavepool', name: '인공 파도풀', type: 'ride', cost: 5000, income: 150, appeal: 85, size: 4, color: '#44aaff', icon: '🌊', renderType: 'wavepool' },
+        { id: 'ride_rapids', name: '급류 타기', type: 'ride', cost: 4800, income: 140, appeal: 80, size: 3, color: '#22ccff', icon: '🌊', renderType: 'rapids' }
+    ],
+    shop: [
+        { id: 'shop_stellar', name: '★스텔라 플래티넘 백화점', type: 'shop', cost: 320000, income: 3200, appeal: 4000, size: 5, color: '#ffffff', icon: '💎', renderType: 'stellar_mall', god: true },
+        { id: 'shop_nebula', name: '★네뷸라 초은하 다이닝', type: 'shop', cost: 310000, income: 3100, appeal: 3800, size: 5, color: '#2a0a4a', icon: '🌌', renderType: 'nebula_dining', god: true },
+        { id: 'shop_palace', name: '★로열 골든 팰리스', type: 'shop', cost: 150000, income: 1500, appeal: 1800, size: 4, color: '#ffd700', icon: '👑', renderType: 'golden_palace', premium: true, ultra: true },
+        { id: 'shop_dragon', name: '★신비의 드래곤 둥지', type: 'shop', cost: 160000, income: 1600, appeal: 2000, size: 4, color: '#33ff33', icon: '🐉', renderType: 'dragon_nest', premium: true, ultra: true },
+        { id: 'shop_galaxy', name: '★은하수 스타 미슐랭', type: 'shop', cost: 120000, income: 1200, appeal: 1500, size: 4, color: '#110033', icon: '🛰️', renderType: 'galaxy_restaurant', premium: true, ultra: true },
+        { id: 'shop_oasis', name: '★환상의 오아시스 바', type: 'shop', cost: 100000, income: 1000, appeal: 1300, size: 4, color: '#00ffee', icon: '⛲', renderType: 'oasis_cocktail', premium: true, ultra: true },
+        { id: 'shop_skylounge', name: '★스카이 라운지 바', type: 'shop', cost: 20000, income: 150, appeal: 100, size: 2, color: '#111133', icon: '🍸', renderType: 'sky_lounge', premium: true },
+        { id: 'shop_seafood', name: '★해저 아쿠아 뷔페', type: 'shop', cost: 18000, income: 140, appeal: 90, size: 2, color: '#0044aa', icon: '🦞', renderType: 'seafood', premium: true },
+        { id: 'shop_steak', name: '★최고급 스테이크하우스', type: 'shop', cost: 15000, income: 120, appeal: 80, size: 2, color: '#442211', icon: '🥩', renderType: 'steak', premium: true },
+        { id: 'shop_molecular', name: '★우주 분자 요리', type: 'shop', cost: 14000, income: 110, appeal: 75, size: 2, color: '#6600cc', icon: '🧪', renderType: 'molecular', premium: true },
+        { id: 'shop_potion', name: '★마법 물약 상점', type: 'shop', cost: 12000, income: 90, appeal: 65, size: 2, color: '#33aa33', icon: '🔮', renderType: 'potion', premium: true },
+        { id: 'shop_gold', name: '★24K 순금 아이스크림', type: 'shop', cost: 10000, income: 80, appeal: 60, size: 1, color: '#ffcc00', icon: '🍦', renderType: 'gold_icecream', premium: true },
+        { id: 'shop_cafe', name: '카페', type: 'shop', cost: 600, income: 25, appeal: 12, size: 1, color: '#6F4E37', icon: '☕', renderType: 'shop' },
+        { id: 'shop_tanghulu', name: '탕후루', type: 'shop', cost: 500, income: 20, appeal: 10, size: 1, color: '#ff3333', icon: '🍓', renderType: 'shop' },
+        { id: 'shop_skewer', name: '닭꼬치', type: 'shop', cost: 550, income: 22, appeal: 11, size: 1, color: '#cc5500', icon: '🍢', renderType: 'shop' },
+        { id: 'shop_chicken', name: '치킨', type: 'shop', cost: 900, income: 40, appeal: 18, size: 1, color: '#ddaa33', icon: '🍗', renderType: 'shop' },
+        { id: 'shop_pizza', name: '피자', type: 'shop', cost: 850, income: 38, appeal: 17, size: 1, color: '#ffbb33', icon: '🍕', renderType: 'shop' },
+        { id: 'shop_burger', name: '버거 스탠드', type: 'shop', cost: 800, income: 35, appeal: 15, size: 1, color: '#dd8833', icon: '🍔', renderType: 'shop' },
+        { id: 'shop_icecream', name: '아이스크림', type: 'shop', cost: 600, income: 25, appeal: 12, size: 1, color: '#ffccdd', icon: '🍦', renderType: 'shop' },
+        { id: 'shop_balloon', name: '풍선 가게', type: 'shop', cost: 400, income: 15, appeal: 20, size: 1, color: '#dd4444', icon: '🎈', renderType: 'shop' },
+        { id: 'shop_cotton', name: '솜사탕', type: 'shop', cost: 450, income: 18, appeal: 14, size: 1, color: '#ffb6c1', icon: '☁️', renderType: 'shop' },
+        { id: 'shop_popcorn', name: '팝콘', type: 'shop', cost: 500, income: 20, appeal: 10, size: 1, color: '#ffffff', icon: '🍿', renderType: 'shop' },
+        { id: 'shop_churro', name: '츄러스', type: 'shop', cost: 450, income: 18, appeal: 9, size: 1, color: '#d2b48c', icon: '🥖', renderType: 'shop' },
+        { id: 'shop_souvenir', name: '기념품 가게', type: 'shop', cost: 1000, income: 45, appeal: 25, size: 1, color: '#8a2be2', icon: '🎁', renderType: 'shop' },
+        { id: 'shop_hotdog', name: '핫도그', type: 'shop', cost: 550, income: 22, appeal: 10, size: 1, color: '#ff4500', icon: '🌭', renderType: 'shop' }
+    ],
+    scenery: [
+        { id: 'scenery_tree_round', name: '동그란 나무', type: 'scenery', cost: 50, income: 0, appeal: 5, size: 1, color: '#3a8a3a', icon: '🌳', renderType: 'tree' },
+        { id: 'scenery_tree_pine', name: '소나무', type: 'scenery', cost: 60, income: 0, appeal: 6, size: 1, color: '#2a6a2a', icon: '🌲', renderType: 'pine' },
+        { id: 'scenery_tree_palm', name: '야자수', type: 'scenery', cost: 80, income: 0, appeal: 8, size: 1, color: '#44aa44', icon: '🌴', renderType: 'palm' },
+        { id: 'scenery_tree_birch', name: '자작나무', type: 'scenery', cost: 55, income: 0, appeal: 5, size: 1, color: '#88aa88', icon: '🍃', renderType: 'tree' },
+        { id: 'scenery_tree_maple', name: '단풍나무', type: 'scenery', cost: 70, income: 0, appeal: 7, size: 1, color: '#cc4422', icon: '🍁', renderType: 'tree' },
+        { id: 'scenery_tree_cherry', name: '벚나무', type: 'scenery', cost: 100, income: 0, appeal: 10, size: 1, color: '#ffb7c5', icon: '🌸', renderType: 'tree' },
+        { id: 'scenery_tree_willow', name: '버드나무', type: 'scenery', cost: 85, income: 0, appeal: 8, size: 1, color: '#66aa66', icon: '🌿', renderType: 'willow' },
+        { id: 'scenery_tree_oak', name: '참나무', type: 'scenery', cost: 75, income: 0, appeal: 7, size: 1, color: '#558833', icon: '🌳', renderType: 'tree' },
+        { id: 'scenery_tree_dead', name: '고목', type: 'scenery', cost: 30, income: 0, appeal: 2, size: 1, color: '#8b5a2b', icon: '🪵', renderType: 'dead_tree' },
+        { id: 'scenery_tree_cactus', name: '선인장', type: 'scenery', cost: 40, income: 0, appeal: 4, size: 1, color: '#2e8b57', icon: '🌵', renderType: 'pine' },
+        { id: 'scenery_fountain', name: '분수대', type: 'scenery', cost: 300, income: 5, appeal: 15, size: 1, color: '#aaaaaa', icon: '⛲', renderType: 'fountain' },
+        { id: 'scenery_flowers', name: '꽃단지', type: 'scenery', cost: 100, income: 0, appeal: 12, size: 1, color: '#ff55aa', icon: '🌷', renderType: 'flowers' }
+    ]
+};
+
+const TILE_W = 64, TILE_H = 32, GRID_SIZE = 30;
+let camX = 0, camY = 0, money = 5000, incomePerTick = 0, rating = 0;
+let currentBuildItem = null, parkEntranceBuilt = false, entrancePos = null, playerName = ""; 
+let gridMap = [], entities = [], floatingTexts = [], explosions = [], needsPathWarning = false;
+
+for(let r=0; r<GRID_SIZE; r++){
+    gridMap[r] = [];
+    for(let c=0; c<GRID_SIZE; c++){
+        const isDark = (r+c)%2 === 0;
+        gridMap[r][c] = { type: 'grass', color: isDark ? '#4c8a41' : '#457e3a', obj: null };
+    }
+}
+
+const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+function centerCamera() { camX = 0; camY = window.innerHeight / 2 - (GRID_SIZE * TILE_H / 2); }
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+resize(); centerCamera(); 
+
+function toScreen(r, c) { return { x: (c - r) * (TILE_W / 2) + camX + canvas.width / 2, y: (c + r) * (TILE_H / 2) + camY }; }
+function toGrid(sx, sy) {
+    const adjX = sx - camX - canvas.width / 2; const adjY = sy - camY;
+    return { r: Math.floor((adjY / (TILE_H / 2) - adjX / (TILE_W / 2)) / 2), c: Math.floor((adjX / (TILE_W / 2) + adjY / (TILE_H / 2)) / 2) };
+}
+
+function drawTile(sx, sy, color, highlight = false, isPath = false, tileItem = null, r = 0, c = 0, isDemolishHighlight = false) {
+    let actualColor = color, strokeColor = '#2b5a26', isHsl = false;
+    if (tileItem) {
+        if (tileItem.id === 'path_neon') {
+            let hue = (Date.now() * 0.05 + r * 15 + c * 15) % 360;
+            if(isLowSpec) hue = 180;
+            actualColor = `hsl(${hue}, 100%, 60%)`; strokeColor = `hsl(${hue}, 100%, 40%)`; isHsl = true;
+        } else if (tileItem.id === 'path_lava') {
+            actualColor = '#cc2200'; strokeColor = '#880000'; isHsl = true;
+        } else if (tileItem.id === 'path_rainbow') {
+            let hue = (Date.now() * 0.1 + r * 20 + c * 20) % 360;
+            if(isLowSpec) hue = 0;
+            actualColor = `hsl(${hue}, 100%, 60%)`; strokeColor = `hsl(${(hue + 20) % 360}, 100%, 40%)`; isHsl = true;
+        } else if (tileItem.id === 'path_water') {
+            actualColor = '#33ccff'; strokeColor = '#0099cc'; isHsl = true;
+        } else if (tileItem.id === 'path_ice') {
+            actualColor = '#e0ffff'; strokeColor = '#b0e0e6'; isHsl = true;
+        } else if (tileItem.id === 'path_star') {
+            actualColor = '#111133'; strokeColor = '#000011'; isHsl = true;
+        } else if (tileItem.id === 'path_piano') {
+            actualColor = (r + c) % 2 === 0 ? '#ffffff' : '#222222'; strokeColor = '#555555'; isHsl = true;
+        }
+    }
+    if (isPath && !isHsl) strokeColor = shadeColor(actualColor, -20);
+
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + TILE_W/2, sy + TILE_H/2); ctx.lineTo(sx, sy + TILE_H); ctx.lineTo(sx - TILE_W/2, sy + TILE_H/2); ctx.closePath();
+    ctx.fillStyle = actualColor; ctx.fill(); ctx.strokeStyle = strokeColor; ctx.lineWidth = 1; ctx.stroke();
+
+    if (tileItem && !isLowSpec) {
+        let t = Date.now() * 0.002;
+        if (tileItem.id === 'path_lava') {
+            ctx.fillStyle = '#ff6600'; ctx.beginPath(); ctx.ellipse(sx + Math.sin(t*1.5 + r)*10, sy + TILE_H/2 + Math.cos(t*1.5 + c)*4, 8, 4, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.ellipse(sx + Math.cos(t*2 + c)*12, sy + TILE_H/2 + Math.sin(t*1.8 + r)*3, 4, 2, 0, 0, Math.PI*2); ctx.fill();
+        } else if (tileItem.id === 'path_water') {
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.moveTo(sx - 5, sy + TILE_H/2 + Math.sin(t + r)*3); ctx.lineTo(sx + 5, sy + TILE_H/2 + Math.cos(t + c)*3); ctx.stroke();
+        } else if (tileItem.id === 'path_star') {
+            if (Math.sin(t*3 + r*c) > 0.8) { ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(sx, sy + TILE_H/2, 1.5, 0, Math.PI*2); ctx.fill(); }
+        }
+    }
+    if(highlight) { ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.fill(); }
+    if(isDemolishHighlight) { ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; ctx.fill(); }
+}
+
+function drawIsoCube(sx, sy, w, d, h, colorTop, colorLeft, colorRight) {
+    const hw = (w * TILE_W)/2; const hd = (d * TILE_W)/2;
+    ctx.beginPath(); ctx.moveTo(sx, sy - h); ctx.lineTo(sx + hw, sy + (w*TILE_H)/2 - h); ctx.lineTo(sx + hw - hd, sy + ((w+d)*TILE_H)/2 - h); ctx.lineTo(sx - hd, sy + (d*TILE_H)/2 - h); ctx.closePath();
+    ctx.fillStyle = colorTop; ctx.fill(); if(!isLowSpec) { ctx.strokeStyle='#111'; ctx.lineWidth=0.5; ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(sx - hd, sy + (d*TILE_H)/2 - h); ctx.lineTo(sx + hw - hd, sy + ((w+d)*TILE_H)/2 - h); ctx.lineTo(sx + hw - hd, sy + ((w+d)*TILE_H)/2); ctx.lineTo(sx - hd, sy + (d*TILE_H)/2); ctx.closePath();
+    ctx.fillStyle = colorLeft; ctx.fill(); if(!isLowSpec) ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx + hw - hd, sy + ((w+d)*TILE_H)/2 - h); ctx.lineTo(sx + hw, sy + (w*TILE_H)/2 - h); ctx.lineTo(sx + hw, sy + (w*TILE_H)/2); ctx.lineTo(sx + hw - hd, sy + ((w+d)*TILE_H)/2); ctx.closePath();
+    ctx.fillStyle = colorRight; ctx.fill(); if(!isLowSpec) ctx.stroke();
+}
+
+function drawIsoPyramid(sx, sy, w, d, baseZ, h, colorLeft, colorRight) {
+    const hw = (w * TILE_W)/2, hd = (d * TILE_W)/2;
+    const p1x = sx + hw, p1y = sy + (w*TILE_H)/2 - baseZ, p2x = sx + hw - hd, p2y = sy + ((w+d)*TILE_H)/2 - baseZ, p3x = sx - hd, p3y = sy + (d*TILE_H)/2 - baseZ, ax = sx + hw/2 - hd/2, ay = sy + ((w+d)*TILE_H)/4 - baseZ - h;
+    ctx.beginPath(); ctx.moveTo(p3x, p3y); ctx.lineTo(p2x, p2y); ctx.lineTo(ax, ay); ctx.closePath(); ctx.fillStyle = colorLeft; ctx.fill(); if(!isLowSpec) { ctx.strokeStyle='#111'; ctx.lineWidth=0.5; ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(p2x, p2y); ctx.lineTo(p1x, p1y); ctx.lineTo(ax, ay); ctx.closePath(); ctx.fillStyle = colorRight; ctx.fill(); if(!isLowSpec) ctx.stroke();
+}
+
+function drawIsoCylinder(sx, sy, radius, h, colorTop, colorSide) {
+    ctx.fillStyle = colorSide; ctx.beginPath(); ctx.ellipse(sx, sy, radius, radius/2, 0, 0, Math.PI); ctx.lineTo(sx - radius, sy - h); ctx.ellipse(sx, sy - h, radius, radius/2, 0, Math.PI, 0, true); ctx.lineTo(sx + radius, sy); ctx.closePath(); ctx.fill();
+    if(!isLowSpec){ ctx.strokeStyle = '#111'; ctx.lineWidth = 0.5; ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(sx, sy - h, radius, radius/2, 0, 0, Math.PI*2); ctx.fillStyle = colorTop; ctx.fill(); if(!isLowSpec) ctx.stroke();
+}
+
+function drawProceduralCoaster(cx, cy, size, item, tTime) {
+    const trackPoints = []; const steps = isLowSpec ? 20 : 60;
+    for(let i=0; i<=steps; i++) {
+        let t = (i / steps) * Math.PI * 2; let pR = size * 0.4; let lx = Math.cos(t) * pR; let ly = Math.sin(t) * pR; let lz;
+        if (item.renderType === 'coaster_volcano') {
+            let progress = i / steps; let spiralR = pR * (0.3 + 0.7 * (1 - progress)); 
+            lx = Math.cos(t * 4) * spiralR; ly = Math.sin(t * 4) * spiralR;
+            if (progress < 0.8) lz = 0.5 + Math.pow(progress / 0.8, 2) * 2.5; else lz = 3.0 - Math.pow((progress - 0.8) / 0.2, 2) * 2.5; 
+        } else if (item.renderType === 'coaster_giga_loop') {
+            lx = Math.cos(t * 2) * pR; ly = Math.sin(t * 3) * pR; lz = 0.5 + Math.abs(Math.sin(t * 2.5)) * 2.0; 
+            if (Math.sin(t * 2.5) > 0.8) lx += Math.cos(t * 5) * 0.5; 
+        } else if (item.renderType === 'coaster_cloud') {
+            lx = Math.cos(t * 2) * pR * 1.2; ly = Math.sin(t * 2) * pR * 1.2; lz = 0 + Math.sin(t * 4) * 1.5; 
+        } else if (item.renderType === 'coaster_loop' || item.renderType === 'coaster_hyper') {
+            if (t > Math.PI && t < Math.PI*1.5) lz = Math.sin((t-Math.PI)*2) * 2.5; else lz = Math.abs(Math.sin(t*2)) * 0.8 + 0.3; 
+            if(item.renderType === 'coaster_hyper') lz *= 1.5; 
+        } else if (item.renderType === 'coaster_wooden') {
+            lx = Math.cos(t*3) * pR; ly = Math.sin(t*2) * pR; lz = (Math.sin(t*4) + 1.2) * 0.6; 
+        } else if (item.renderType === 'coaster_mine') {
+            lx = Math.cos(t) * pR + Math.sin(t*3)*0.1; ly = Math.sin(t) * pR + Math.cos(t*4)*0.1; lz = (Math.sin(t*6) + 1) * 0.2 + 0.1;
+        } else lz = 0.5;
+        trackPoints.push({x: lx, y: ly, z: lz});
+    }
+
+    ctx.strokeStyle = item.supportColor; ctx.lineWidth = item.isWooden ? 1 : 2;
+    trackPoints.forEach((p, idx) => {
+        if(idx % (item.isWooden ? 2 : 4) === 0 && idx < steps) {
+            let sx1 = (p.x - p.y) * TILE_W/2 + cx; let sy1 = (p.x + p.y) * TILE_H/2 + cy - p.z * TILE_H * 2;
+            let sx2 = (p.x - p.y) * TILE_W/2 + cx; let sy2 = (p.x + p.y) * TILE_H/2 + cy;
+            ctx.beginPath(); ctx.moveTo(sx1, sy1); ctx.lineTo(sx2, sy2); ctx.stroke();
+            if (item.isWooden && idx > 0 && !isLowSpec) {
+                let prev = trackPoints[idx-1];
+                let px1 = (prev.x - prev.y) * TILE_W/2 + cx; let py1 = (prev.x + prev.y) * TILE_H/2 + cy - prev.z * TILE_H * 2;
+                ctx.beginPath(); ctx.moveTo(sx1, sy1); ctx.lineTo(px1, sy2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(sx2, sy2); ctx.stroke();
+            }
+        }
+    });
+
+    ctx.strokeStyle = item.trackColor; ctx.lineWidth = item.isWooden ? 4 : 3; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    trackPoints.forEach((p, idx) => {
+        let sx1 = (p.x - p.y) * TILE_W/2 + cx; let sy1 = (p.x + p.y) * TILE_H/2 + cy - p.z * TILE_H * 2;
+        if(idx===0) ctx.moveTo(sx1, sy1); else ctx.lineTo(sx1, sy1);
+    });
+    ctx.stroke();
+
+    const ct = (tTime * 0.001) % 1; const cIdx = Math.floor(ct * steps); const np = trackPoints[cIdx];
+    if(np) {
+        let csx = (np.x - np.y) * TILE_W/2 + cx; let csy = (np.x + np.y) * TILE_H/2 + cy - np.z * TILE_H * 2;
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(csx-6, csy-6, 12, 12); ctx.strokeStyle = '#000'; ctx.strokeRect(csx-6, csy-6, 12, 12);
+    }
+}
+
+function drawSplashParticles(cx, cy, time, count, radius, color) {
+    if(isLowSpec) return; 
+    ctx.fillStyle = color || 'rgba(255, 255, 255, 0.7)';
+    for(let i=0; i<count; i++) {
+        let pt = (time * 0.003 + i) % 1; let px = cx + Math.cos(i * 1.3) * radius * pt; let py = cy - pt * 15 + Math.sin(i * 1.7) * (radius/2) * pt;
+        ctx.beginPath(); ctx.arc(px, py, 2 + (1-pt)*3, 0, Math.PI*2); ctx.fill();
+    }
+}
+
+function createExplosion(x, y) {
+    if(isLowSpec) {
+        explosions.push({ particles: Array.from({length: 8}).map(() => ({ x: x, y: y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10 - 2, life: 1.0, decay: Math.random() * 0.05 + 0.02, color: ['#ffaa00', '#ffffff'][Math.floor(Math.random()*2)], size: Math.random() * 8 + 3 })) });
+        return;
+    }
+    explosions.push({ particles: Array.from({length: 25}).map(() => ({ x: x, y: y, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15 - 5, life: 1.0, decay: Math.random() * 0.03 + 0.02, color: ['#ff4444', '#ffaa00', '#ffffff', '#555555'][Math.floor(Math.random()*4)], size: Math.random() * 12 + 5 })) });
+}
+
+function drawEntity(entity) {
+    try {
+        const { x, y } = toScreen(entity.r, entity.c); const item = entity.item; const tTime = Date.now();
+        let bx = x, by = y, cx = x, cy = y + (item.size * TILE_H)/2; 
+
+        if (!item || item.type === 'path') return;
+
+        // [신규] 30만 원대 갓(God) 티어 놀이기구 및 상점 렌더링
+        if (item.renderType === 'omega_quantum') {
+            drawIsoCube(bx, by, 6, 6, 20, '#0a0a1a', '#05050f', '#000000');
+            drawIsoCylinder(cx, cy - 20, 100, 15, '#112233', '#000011');
+            let osc = isLowSpec ? 0 : Math.sin(tTime * 0.002) * 20; let coreY = cy - 120 + osc;
+            if(!isLowSpec) { ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 50; }
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(cx, coreY, 40, 40, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+            ctx.save(); ctx.translate(cx, coreY);
+            for(let i=0; i<3; i++) {
+                let rTime = tTime * 0.001 * (i%2===0?1:-1) + i*(Math.PI/1.5); ctx.rotate(rTime);
+                ctx.strokeStyle = `hsl(${(tTime*0.1 + i*50)%360}, 100%, 60%)`; ctx.lineWidth = 8;
+                if(!isLowSpec) { ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 20; }
+                ctx.beginPath(); ctx.ellipse(0, 0, 90 + i*15, 30 + i*5, 0, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0;
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(90 + i*15, 0, 5, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.restore();
+            ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(0, 255, 255, ${0.3 + Math.sin(tTime*0.01)*0.2})`;
+            ctx.beginPath(); ctx.moveTo(cx-20, cy-20); ctx.lineTo(cx+20, cy-20); ctx.lineTo(cx+80, cy-300); ctx.lineTo(cx-80, cy-300); ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+        }
+        else if (item.renderType === 'genesis_tree') {
+            drawIsoCube(bx, by, 6, 6, 10, '#1a2a1a', '#0a1a0a', '#000000'); ctx.fillStyle = '#aaddaa'; drawIsoCylinder(cx, cy - 10, 30, 80, '#ccffcc', '#aaddaa');
+            let sway = isLowSpec ? 0 : Math.sin(tTime * 0.0015) * 10;
+            ctx.save(); ctx.translate(cx, cy - 120); ctx.globalCompositeOperation = 'lighter';
+            for(let i=0; i<5; i++) {
+                let hue = 120 + i*20 + Math.sin(tTime*0.002)*20; ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.5)`;
+                if(!isLowSpec) { ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 40; }
+                ctx.beginPath(); ctx.ellipse(sway * (i%2?1:-1), -i*30, 120 - i*15, 60 - i*5, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+            }
+            ctx.globalCompositeOperation = 'source-over'; ctx.restore();
+            for(let i=0; i<8; i++) {
+                let a = tTime * 0.001 + (Math.PI*2/8)*i; let pR = 100 + Math.sin(tTime*0.002 + i)*20; let pX = cx + Math.cos(a)*pR; let pY = cy - 80 - Math.sin(a*2)*30;
+                ctx.fillStyle = '#ff00ff'; if(!isLowSpec) { ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 15; }
+                ctx.beginPath(); ctx.moveTo(pX, pY-15); ctx.lineTo(pX+10, pY); ctx.lineTo(pX, pY+15); ctx.lineTo(pX-10, pY); ctx.fill(); ctx.shadowBlur = 0;
+            }
+        }
+        else if (item.renderType === 'stellar_mall') {
+            let baseZ = 20; drawIsoCube(bx, by, 5, 5, baseZ, '#ffffff', '#eeeeee', '#dddddd');
+            drawIsoPyramid(bx, by, 4.5, 4.5, baseZ, 60, 'rgba(200, 240, 255, 0.8)', 'rgba(150, 220, 255, 0.9)');
+            drawIsoPyramid(bx + TILE_W*0.5, by - TILE_H*0.5, 3.5, 3.5, baseZ + 60, 80, 'rgba(255, 250, 200, 0.8)', 'rgba(255, 240, 150, 0.9)');
+            let topY = cy - baseZ - 140; ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx-100, cy-baseZ); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx+100, cy-baseZ); ctx.stroke();
+            let hover = isLowSpec ? 0 : Math.sin(tTime*0.003)*15; ctx.fillStyle = '#ffffff';
+            if(!isLowSpec) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 30; }
+            ctx.beginPath(); ctx.moveTo(cx, topY - 30 + hover); ctx.lineTo(cx+20, topY-10+hover); ctx.lineTo(cx, topY+10+hover); ctx.lineTo(cx-20, topY-10+hover); ctx.fill(); ctx.shadowBlur = 0;
+            if(!isLowSpec) { ctx.fillStyle = '#ffaa00'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.fillText('💎 STELLAR 💎', cx, topY - 60 + hover); }
+        }
+        else if (item.renderType === 'nebula_dining') {
+            let hover = isLowSpec ? 0 : Math.sin(tTime*0.0015)*15; let bY = by - 50 + hover; let cY = cy - 50 + hover;
+            drawIsoPyramid(bx, bY, 5, 5, 0, -40, '#333333', '#222222'); drawIsoCube(bx, bY, 5, 5, 10, '#111122', '#0a0a1a', '#000000');
+            ctx.save(); ctx.translate(cx, cY - 10); ctx.fillStyle = 'rgba(20, 0, 50, 0.6)'; ctx.beginPath(); ctx.ellipse(0, 0, 140, 70, 0, 0, Math.PI*2); ctx.fill();
+            ctx.globalCompositeOperation = 'lighter';
+            for(let i=0; i<4; i++) {
+                let hue = (tTime*0.05 + i*80) % 360; ctx.fillStyle = `hsla(${hue}, 100%, 60%, 0.4)`;
+                ctx.beginPath(); ctx.ellipse(Math.cos(tTime*0.001+i)*40, -30 + Math.sin(tTime*0.002+i)*20, 80-i*10, 40-i*5, Math.sin(tTime*0.0005+i)*Math.PI, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.ellipse(0, 0, 140, 70, 0, 0, Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, -20, 100, 30, 0, Math.PI, Math.PI*2); ctx.stroke(); ctx.restore();
+            if(!isLowSpec) {
+                for(let i=0; i<10; i++) {
+                    let a = tTime*0.002 + (Math.PI*2/10)*i; let sX = cx + Math.cos(a)*160; let sY = cY - 10 + Math.sin(a)*80;
+                    ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(sX, sY, 3 + Math.sin(tTime*0.01+i)*2, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                }
+            }
+        }
+        else if (item.renderType === 'inferno_volcano') {
+            drawIsoCube(bx, by, 6, 6, 15, '#1a0d00', '#110000', '#0a0000'); drawIsoPyramid(bx, by, 5.5, 5.5, 15, 160, '#2a0800', '#1a0400'); 
+            ctx.fillStyle = '#ff3300'; ctx.beginPath(); ctx.moveTo(cx-20, cy-170); ctx.lineTo(cx+10, cy-170); ctx.lineTo(cx-10, cy-80); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(cx, cy-170); ctx.lineTo(cx+25, cy-170); ctx.lineTo(cx+30, cy-60); ctx.fill();
+            if(!isLowSpec) {
+                for(let i=0; i<15; i++) {
+                    let pt = (tTime * 0.002 + i/15) % 1; let px = cx + (Math.random()-0.5)*40*pt; let py = cy - 170 - pt*100;
+                    ctx.fillStyle = `rgba(255, ${Math.floor(100*(1-pt))}, 0, ${1-pt})`; ctx.beginPath(); ctx.arc(px, py, 10*(1-pt), 0, Math.PI*2); ctx.fill();
+                }
+                ctx.shadowColor = '#ff2200'; ctx.shadowBlur = 10; drawProceduralCoaster(cx, cy - 20, 6.5, { renderType: 'coaster_volcano', supportColor: '#333', trackColor: '#ff2200', isWooden: false }, tTime); ctx.shadowBlur = 0;
+            }
+        }
+        else if (item.renderType === 'giga_coaster') {
+            drawIsoCube(bx, by, 5, 5, 10, '#222', '#111', '#000');
+            if(!isLowSpec) { ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 15; }
+            drawProceduralCoaster(cx, cy - 10, 5.5, { renderType: 'coaster_giga_loop', supportColor: '#333', trackColor: '#ff00ff', isWooden: false }, tTime);
+            drawProceduralCoaster(cx, cy - 10, 4.5, { renderType: 'coaster_giga_loop', supportColor: '#555', trackColor: '#00ffff', isWooden: false }, tTime + 1500);
+            ctx.shadowBlur = 0;
+        }
+        else if (item.renderType === 'sky_castle') {
+            let baseLift = cy - 120; let lift = isLowSpec ? baseLift : baseLift + Math.sin(tTime*0.001)*15;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for(let c=0; c<8; c++) {
+                let ca = (Math.PI*2/8)*c; let cxOff = Math.cos(ca)*70; let cyOff = Math.sin(ca)*35;
+                ctx.beginPath(); ctx.ellipse(cx + cxOff, lift + 20 + cyOff, 40 + Math.sin(tTime*0.002+c)*10, 20, 0, 0, Math.PI*2); ctx.fill();
+            }
+            drawIsoCube(cx - TILE_W*1.5, lift - 30, 3, 3, 20, '#f0f0f0', '#dcdcdc', '#c0c0c0'); 
+            let towers = [{x: -40, y: -20}, {x: 40, y: -20}, {x: -40, y: 20}, {x: 40, y: 20}];
+            towers.forEach(t => {
+                drawIsoCylinder(cx + t.x, lift - 30 + t.y, 15, 60, '#fff', '#e0e0e0'); drawIsoPyramid(cx + t.x - TILE_W/4, lift - 90 + t.y + TILE_H/4, 0.5, 0.5, 0, 40, '#00bcd4', '#0097a7');
+            });
+            drawIsoCylinder(cx, lift - 40, 25, 80, '#fff', '#e0e0e0'); drawIsoPyramid(cx - TILE_W*0.4, lift - 120 + TILE_H*0.4, 0.8, 0.8, 0, 60, '#00bcd4', '#0097a7');
+            if(!isLowSpec) {
+                ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15; drawProceduralCoaster(cx, lift + 20, 6, { renderType: 'coaster_cloud', supportColor: 'rgba(255,255,255,0.5)', trackColor: '#00ffff', isWooden: false }, tTime); ctx.shadowBlur = 0;
+            } else { drawProceduralCoaster(cx, lift + 20, 6, { renderType: 'coaster_cloud', supportColor: '#aaa', trackColor: '#00ffff', isWooden: false }, tTime); }
+            ctx.fillStyle = 'rgba(240, 248, 255, 0.9)';
+            for(let c=0; c<5; c++) {
+                let ca = (Math.PI*2/5)*c + Math.PI/4; let cxOff = Math.cos(ca)*80; let cyOff = Math.sin(ca)*40;
+                if (cyOff > 0) { ctx.beginPath(); ctx.ellipse(cx + cxOff, lift + 10 + cyOff, 45, 25, 0, 0, Math.PI*2); ctx.fill(); }
+            }
+        }
+        else if (item.renderType === 'gokart') {
+            drawIsoCube(bx, by, 3, 3, 5, '#333', '#222', '#111'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; 
+            ctx.beginPath(); ctx.ellipse(cx, cy - 5, 50, 25, 0, 0, Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx, cy - 5, 30, 15, 0, 0, Math.PI*2); ctx.stroke();
+            let gTime = tTime * 0.002; let colors = ['#ff0000', '#00ff00', '#0088ff'];
+            for(let i=0; i<3; i++) {
+                let carAngle = gTime + (Math.PI*2/3)*i; let carR = 40 + Math.sin(tTime*0.005 + i)*5; let carX = cx + Math.cos(carAngle)*carR; let carY = cy - 5 + Math.sin(carAngle)*(carR/2);
+                ctx.save(); ctx.translate(carX, carY); if(!isLowSpec) { ctx.shadowColor = colors[i]; ctx.shadowBlur = 10; }
+                ctx.fillStyle = colors[i]; ctx.beginPath(); ctx.ellipse(0, 0, 10, 5, carAngle, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(-2, -2, 4, 4); ctx.restore();
+                if(!isLowSpec && Math.random() < 0.3) { drawSplashParticles(carX - Math.cos(carAngle)*10, carY - Math.sin(carAngle)*5, tTime, 3, 5, '#aaaaaa'); }
+            }
+        }
+        else if (item.renderType === 'monorail') {
+            drawIsoCylinder(cx - 40, cy - 20, 5, 60, '#ddd', '#aaa'); drawIsoCylinder(cx + 40, cy - 20, 5, 60, '#ddd', '#aaa');
+            drawIsoCylinder(cx, cy - 40, 5, 60, '#ddd', '#aaa'); drawIsoCylinder(cx, cy, 5, 60, '#ddd', '#aaa');
+            if(!isLowSpec) { ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15; }
+            ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(cx, cy - 60, 60, 30, 0, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0;
+            let mAngle = tTime * 0.001;
+            for(let i=0; i<3; i++) {
+                let trainAngle = mAngle - i*0.2; let tx = cx + Math.cos(trainAngle)*60; let ty = cy - 60 + Math.sin(trainAngle)*30;
+                ctx.save(); ctx.translate(tx, ty); ctx.fillStyle = i===0 ? '#ff00ff' : '#ffffff';
+                if(!isLowSpec) { ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 10; }
+                ctx.beginPath(); ctx.ellipse(0, -5, 12, 6, trainAngle, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            }
+        }
+        else if (item.renderType === 'waterslide') {
+            drawIsoCube(bx, by, 3, 3, 10, '#00aaff', '#0088cc', '#006699'); drawIsoCylinder(cx - 30, cy - 10, 15, 120, '#ffffff', '#cccccc');
+            ctx.strokeStyle = '#ff00ff'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+            if(!isLowSpec) { ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 15; }
+            ctx.beginPath(); ctx.moveTo(cx - 30, cy - 130); ctx.bezierCurveTo(cx + 40, cy - 100, cx + 50, cy - 50, cx + 10, cy - 15); ctx.stroke();
+            ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 4; ctx.setLineDash([10, 10]); ctx.lineDashOffset = -tTime * 0.05;
+            ctx.beginPath(); ctx.moveTo(cx - 30, cy - 130); ctx.bezierCurveTo(cx + 40, cy - 100, cx + 50, cy - 50, cx + 10, cy - 15); ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
+            if(!isLowSpec) { drawSplashParticles(cx + 10, cy - 10, tTime, 10, 25, 'rgba(255, 255, 255, 0.8)'); drawSplashParticles(cx + 15, cy - 10, tTime+50, 5, 15, 'rgba(0, 255, 255, 0.6)'); }
+        }
+        else if (item.renderType === 'wavepool') {
+            drawIsoCube(bx, by, 4, 4, 8, '#f5deb3', '#d2b48c', '#c3a17a');
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.7)'; ctx.beginPath(); ctx.moveTo(cx - 40, cy + 20); ctx.lineTo(cx + 40, cy - 20); ctx.lineTo(cx + 80, cy); ctx.lineTo(cx, cy + 40); ctx.fill();
+            if(!isLowSpec) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 3; let waveOffset = (tTime * 0.05) % 40;
+                for(let w=0; w<3; w++) {
+                    let wPos = waveOffset + (w * 20); if(wPos > 60) continue;
+                    ctx.beginPath(); let startX = cx - 40 + wPos; let startY = cy + 20 - (wPos*0.5); ctx.moveTo(startX, startY); ctx.quadraticCurveTo(startX + 20, startY - 10 + Math.sin(tTime*0.005)*5, startX + 40, startY + 20); ctx.stroke();
+                }
+                let tubeX = cx + Math.cos(tTime*0.001)*20; let tubeY = cy + Math.sin(tTime*0.001)*10 + Math.sin(tTime*0.005)*3;
+                ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(tubeX, tubeY, 8, 4, 0, 0, Math.PI*2); ctx.stroke();
+            }
+        }
+        else if (item.renderType === 'rapids') { // 급류타기 (높은 파도 풀 애니메이션)
+            drawIsoCube(bx, by, 3, 3, 5, '#44aaff', '#2288dd', '#1166bb');
+            let wavePhase = tTime * 0.003; let waveH = isLowSpec ? 10 : Math.sin(wavePhase) * 40; 
+            ctx.fillStyle = 'rgba(0, 200, 255, 0.7)'; ctx.beginPath(); ctx.moveTo(cx - 40, cy); ctx.quadraticCurveTo(cx, cy - 30 - waveH, cx + 40, cy); ctx.fill();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.beginPath(); ctx.moveTo(cx - 30, cy - 5); ctx.quadraticCurveTo(cx, cy - 35 - waveH, cx + 30, cy - 5); ctx.fill();
+            let boatX = cx + Math.cos(wavePhase * 1.5) * 20; let boatY = cy - 15 - (waveH * 0.5);
+            ctx.fillStyle = '#ffaa00'; ctx.beginPath(); ctx.ellipse(boatX, boatY, 12, 6, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(boatX, boatY-3, 5, 3, 0, 0, Math.PI*2); ctx.fill();
+            if(!isLowSpec) drawSplashParticles(boatX, boatY, tTime, 5, 15, '#fff');
+        }
+        else if (item.renderType === 'crystal_blizzard') {
+            drawIsoCube(bx, by, 6, 6, 10, '#e0ffff', '#b0e0e6', '#add8e6'); drawIsoPyramid(bx, by, 5, 5, 10, 150, 'rgba(0, 255, 255, 0.7)', 'rgba(0, 200, 255, 0.8)');
+            let pTime = tTime * 0.001;
+            for(let i=0; i<4; i++) {
+                let pa = pTime + (Math.PI/2)*i; let px = bx + Math.cos(pa)*50; let py = by - Math.sin(pa)*25;
+                drawIsoPyramid(px, py, 1.5, 1.5, 10, 80 + Math.sin(tTime*0.005 + i)*20, 'rgba(255, 255, 255, 0.8)', 'rgba(200, 255, 255, 0.9)');
+            }
+            if(!isLowSpec) {
+                ctx.fillStyle = '#ffffff';
+                for(let i=0; i<30; i++) {
+                    let st = (tTime * 0.001 + i/30) % 1; let sx = cx + Math.cos(st*10 + i)*80; let sy = cy - 150*st + Math.sin(st*5 + i)*20; ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15; drawProceduralCoaster(cx, cy - 15, 6.2, { renderType: 'coaster_hyper', supportColor: '#add8e6', trackColor: '#ffffff', isWooden: false }, tTime); ctx.shadowBlur = 0;
+            }
+        }
+        else if (item.renderType === 'golden_palace') {
+            drawIsoCube(bx, by, 4, 4, 30, '#ffffff', '#f5f5f5', '#e0e0e0'); 
+            ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.ellipse(cx, cy - 30, 60, 30, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx, cy - 30, 60, 0, Math.PI, true); ctx.fill();
+            let offsets = [{x: -45, y: 0}, {x: 45, y: 0}, {x: 0, y: -25}, {x: 0, y: 25}];
+            offsets.forEach(off => { drawIsoCylinder(cx + off.x, cy - 30 + off.y, 8, 40, '#fff', '#eee'); ctx.fillStyle = '#ffca28'; ctx.beginPath(); ctx.arc(cx + off.x, cy - 70 + off.y, 10, 0, Math.PI*2); ctx.fill(); });
+            if(!isLowSpec) {
+                ctx.shadowColor = '#ffff00'; ctx.shadowBlur = 20; ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center';
+                let bounce = Math.sin(tTime*0.004)*5; ctx.fillText('👑 ROYAL 👑', cx, cy - 110 + bounce); ctx.shadowBlur = 0;
+                if(Math.random() < 0.1) { let fx = cx + (Math.random()-0.5)*100; let fy = cy - 80 - Math.random()*50; drawSplashParticles(fx, fy, tTime, 8, 30, '#ffd700'); }
+            } else { ctx.fillStyle = '#ffaa00'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.fillText('ROYAL', cx, cy - 100); }
+        }
+        else if (item.renderType === 'dragon_nest') {
+            drawIsoCube(bx, by, 4, 4, 15, '#1a1a1a', '#111111', '#000000'); drawIsoCylinder(cx, cy - 15, 60, 10, '#2a2a2a', '#1a1a1a'); 
+            let pulse = isLowSpec ? 0 : Math.sin(tTime * 0.005) * 5; let eggColor = `hsl(120, 100%, ${30 + pulse*2}%)`;
+            ctx.fillStyle = eggColor; if(!isLowSpec) { ctx.shadowColor = '#00ff00'; ctx.shadowBlur = 20 + pulse*2; }
+            ctx.beginPath(); ctx.ellipse(cx, cy - 45 - pulse, 30 + pulse, 45 + pulse, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+            if(!isLowSpec) {
+                ctx.fillStyle = '#33ff33'; ctx.font = '16px Arial';
+                for(let i=0; i<6; i++) {
+                    let ra = tTime * 0.002 + (Math.PI*2/6)*i; let rx = cx + Math.cos(ra)*60; let ry = cy - 20 + Math.sin(ra)*30 - Math.sin(tTime*0.003+i)*20; ctx.fillText('⎈', rx, ry);
+                }
+            }
+        }
+        else if (item.renderType === 'wormhole') {
+            drawIsoCube(bx, by, 6, 6, 20, '#1a1a1a', '#0a0a0a', '#000000'); ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(cx, cy - 80, 100, 50, 0, 0, Math.PI*2); ctx.fill();
+            if(!isLowSpec) {
+                let wt = tTime * 0.002; ctx.globalCompositeOperation = 'lighter';
+                for(let i=0; i<3; i++) {
+                    ctx.strokeStyle = `hsla(${(tTime*0.1 + i*120)%360}, 100%, 60%, 0.8)`; ctx.lineWidth = 15 - i*3; ctx.beginPath(); ctx.ellipse(cx, cy - 80, 90 + i*10, 45 + i*5, wt * (i%2===0?1:-1), 0, Math.PI*2); ctx.stroke();
+                }
+                ctx.globalCompositeOperation = 'source-over';
+                for(let i=0; i<60; i++) {
+                    let pt = (tTime * 0.0005 + i/60) % 1; let radius = 250 * (1 - Math.pow(pt, 2)); let angle = wt * 3 + i * 2.1 + pt * 10; 
+                    let px = cx + Math.cos(angle) * radius; let py = cy - 80 + Math.sin(angle) * (radius * 0.4) - (1-pt)*50;
+                    ctx.fillStyle = `rgba(200, 50, 255, ${pt})`; ctx.beginPath(); ctx.arc(px, py, Math.random()*3 + 1, 0, Math.PI*2); ctx.fill();
+                }
+                drawIsoCylinder(cx, cy - 80, 15, 250, '#333', '#222'); ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy - 80); ctx.lineTo(cx, cy - 330); ctx.stroke();
+                let dropCycle = (tTime * 0.001) % 4; let dropY;
+                if(dropCycle < 1.5) dropY = lerp(0, 250, Math.pow(dropCycle/1.5, 3)); else dropY = lerp(250, 0, (dropCycle - 1.5)/2.5); 
+                ctx.fillStyle = '#ff00ff'; ctx.beginPath(); ctx.ellipse(cx, cy - 330 + dropY, 30, 15, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(cx, cy - 330 + dropY, 20, 10, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#00ffff';
+                for(let k=0; k<6; k++){ let pa = (k/6)*Math.PI*2 + tTime*0.005; ctx.beginPath(); ctx.arc(cx + Math.cos(pa)*25, cy - 330 + dropY + Math.sin(pa)*12.5, 3, 0, Math.PI*2); ctx.fill(); }
+            } else { drawIsoCylinder(cx, cy - 80, 15, 250, '#333', '#222'); }
+        }
+        else if (item.renderType === 'galaxy_restaurant') {
+            drawIsoCube(bx, by, 4, 4, 20, '#0f0f1a', '#05050a', '#000000');
+            let hoverY = isLowSpec ? 0 : Math.sin(tTime * 0.002) * 10; let shipY = cy - 120 + hoverY;
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.15)'; ctx.beginPath(); ctx.moveTo(cx - 30, cy - 20); ctx.lineTo(cx + 30, cy - 20); ctx.lineTo(cx + 120, shipY); ctx.lineTo(cx - 120, shipY); ctx.fill();
+            ctx.fillStyle = '#1a1a2e'; ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(cx, shipY, 130, 65, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#0f0f1a'; ctx.beginPath(); ctx.ellipse(cx, shipY - 10, 130, 65, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(100, 200, 255, 0.4)'; ctx.beginPath(); ctx.ellipse(cx, shipY - 10, 80, 40, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx, shipY - 10, 80, 0, Math.PI, true); ctx.fill();
+            if(!isLowSpec) {
+                let planetAngle = tTime * 0.001; ctx.fillStyle = '#ff00ff'; ctx.shadowColor = '#ff00ff'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(cx, shipY - 50, 20, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(cx, shipY - 50, 40, 10, planetAngle, 0, Math.PI*2); ctx.stroke();
+                let gt = tTime * 0.001; ctx.fillStyle = '#ffffff'; ctx.font = 'bold 22px "Galmuri9", Arial'; ctx.textAlign = 'center'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 10;
+                for(let i=0; i<3; i++) { let textAngle = gt + (Math.PI*2/3)*i; let px = cx + Math.cos(textAngle)*140; let py = shipY - 10 + Math.sin(textAngle)*70; if(Math.sin(textAngle) > 0) ctx.fillText('★ GALAXY ★', px, py); }
+                ctx.shadowBlur = 0;
+            } else { ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px "Galmuri9", Arial'; ctx.textAlign = 'center'; ctx.fillText('GALAXY', cx, shipY - 90); }
+        }
+        else if (item.renderType === 'oasis_cocktail') {
+            drawIsoCube(bx, by, 4, 4, 15, '#1e88e5', '#0277bd', '#01579b'); 
+            ctx.fillStyle = 'rgba(0, 255, 200, 0.7)'; ctx.beginPath(); ctx.ellipse(cx, cy-15, 110, 55, 0, 0, Math.PI*2); ctx.fill();
+            if(!isLowSpec) { let waveT = tTime * 0.002; ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy-15, 90 + Math.sin(waveT)*10, 45 + Math.sin(waveT)*5, 0, 0, Math.PI*2); ctx.stroke(); }
+            let palmOffsets = [ {x: -70, y: -20}, {x: 70, y: -20}, {x: -30, y: 20}, {x: 30, y: 20} ];
+            palmOffsets.forEach((p, idx) => {
+                let swing = isLowSpec ? 0 : Math.sin(tTime*0.002 + idx)*5;
+                ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx+p.x, cy-15+p.y); ctx.quadraticCurveTo(cx+p.x + swing*2, cy-60+p.y, cx+p.x + swing, cy-100+p.y); ctx.stroke();
+                ctx.fillStyle = `hsla(${(tTime*0.1 + idx*50)%360}, 100%, 50%, 0.8)`; if(!isLowSpec) { ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10; }
+                for(let a=0; a<5; a++) { let angle = (a/5)*Math.PI*2 + swing*0.05; ctx.beginPath(); ctx.ellipse(cx+p.x+swing + Math.cos(angle)*15, cy-100+p.y + Math.sin(angle)*10, 20, 5, angle, 0, Math.PI*2); ctx.fill(); }
+                ctx.shadowBlur = 0;
+            });
+            let glassY = cy - 80 + (isLowSpec ? 0 : Math.sin(tTime * 0.003) * 15);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.beginPath(); ctx.moveTo(cx-40, glassY-60); ctx.lineTo(cx+40, glassY-60); ctx.lineTo(cx, glassY); ctx.fill(); ctx.fillRect(cx-4, glassY, 8, 40); ctx.beginPath(); ctx.ellipse(cx, glassY+40, 25, 10, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = `hsla(${(tTime*0.05)%360}, 100%, 60%, 0.8)`; ctx.beginPath(); ctx.moveTo(cx-30, glassY-45); ctx.lineTo(cx+30, glassY-45); ctx.lineTo(cx, glassY); ctx.fill();
+            if(!isLowSpec) { for(let i=0; i<30; i++) { let pt = (tTime * 0.0015 + i/30) % 1; let px = cx + (Math.random()-0.5)*10; let py = cy - 15 - pt*140; ctx.fillStyle = `rgba(0, 255, 255, ${1-pt})`; ctx.fillRect(px, py, 3, 3); } }
+        }
+        else if (item.renderType === 'space_launch') {
+            drawIsoCube(bx, by, 3, 3, 20, '#555', '#444', '#333'); drawIsoCube(bx, by-20, 2, 2, 5, '#ff4400', '#cc2200', '#991100');
+            let seq = (tTime * 0.0005) % (Math.PI * 2); let launchY = Math.abs(Math.sin(seq)) * 250;
+            drawIsoCylinder(cx, cy - 25 - launchY, 20, 100, '#fff', '#eee'); ctx.fillStyle='#ff0000'; ctx.beginPath(); ctx.moveTo(cx-20, cy-125-launchY); ctx.lineTo(cx+20, cy-125-launchY); ctx.lineTo(cx, cy-160-launchY); ctx.fill();
+            if(launchY > 10 && launchY < 240) { drawSplashParticles(cx, cy - 25 - launchY + 100, tTime, 15, 30, '#ff6600'); drawSplashParticles(cx, cy - 25 - launchY + 110, tTime+100, 10, 20, '#ffaa00'); }
+        }
+        else if (item.renderType === 'giant_wheel') {
+            const h = 180; drawIsoCube(bx, by, 4, 4, 15, '#222', '#111', '#000');
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(cx - 60, cy); ctx.lineTo(cx, cy - h); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx + 60, cy); ctx.lineTo(cx, cy - h); ctx.stroke();
+            const t = tTime * 0.0003; let wheelColor = isLowSpec ? '#00ffff' : `hsl(${(tTime*0.05)%360}, 100%, 60%)`;
+            if(!isLowSpec) { ctx.shadowColor = wheelColor; ctx.shadowBlur = 20; }
+            ctx.lineWidth = 5; ctx.strokeStyle = wheelColor; ctx.beginPath(); ctx.ellipse(cx, cy - h, 140, 140, 0, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0;
+            for(let i=0; i<16; i++) {
+                const angle = t + (Math.PI*2/16) * i; const px = cx + Math.cos(angle)*140; const py = cy - h + Math.sin(angle)*140;
+                ctx.strokeStyle = '#888'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx, cy-h); ctx.lineTo(px, py); ctx.stroke();
+                ctx.fillStyle = `hsl(${((i*22) + tTime*0.1)%360}, 100%, 60%)`; ctx.fillRect(px-10, py, 20, 20);
+            }
+        }
+        else if (item.renderType === 'volcano') {
+            drawIsoCube(bx, by, 4, 4, 10, '#332211', '#221100', '#110000'); drawIsoPyramid(bx, by, 3, 3, 10, 120, '#442222', '#221111');
+            ctx.fillStyle='#ff3300'; ctx.beginPath(); ctx.moveTo(cx-15, cy-130); ctx.lineTo(cx+15, cy-130); ctx.lineTo(cx, cy-90); ctx.fill();
+            drawSplashParticles(cx, cy - 130, tTime, 12, 40, '#ffaa00'); drawSplashParticles(cx, cy - 130, tTime+50, 8, 25, '#ff3300');
+            ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 15; ctx.beginPath(); ctx.ellipse(cx, cy - 10, 100, 50, 0, 0, Math.PI*2); ctx.stroke();
+            let bt = tTime * 0.0015; for(let i=0; i<4; i++) { let ba = bt + (Math.PI/2)*i; ctx.fillStyle='#ffeb3b'; ctx.beginPath(); ctx.ellipse(cx + Math.cos(ba)*100, cy - 10 + Math.sin(ba)*50, 15, 8, 0, 0, Math.PI*2); ctx.fill(); }
+        }
+        else if (item.renderType === 'cyber_spin') {
+            drawIsoCube(bx, by, 3, 3, 15, '#111', '#000', '#000'); ctx.save(); ctx.translate(cx, cy - 60);
+            for(let i=1; i<=3; i++) {
+                ctx.rotate(tTime * 0.001 * i); let hue = (tTime*0.1 + i*60) % 360; ctx.strokeStyle = isLowSpec ? '#00ffff' : `hsl(${hue}, 100%, 60%)`; ctx.lineWidth = 6;
+                if(!isLowSpec) { ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 15; }
+                ctx.beginPath(); ctx.ellipse(0, 0, 30*i, 15*i, 0, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0;
+            }
+            ctx.restore(); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx, cy-15); ctx.lineTo(cx, cy-60); ctx.stroke();
+        }
+        else if (item.renderType === 'dragon') {
+            drawIsoCube(bx, by, 4, 4, 10, '#333', '#222', '#111'); drawIsoCylinder(cx, cy-10, 15, 150, '#ffaa00', '#cc8800');
+            let dTime = tTime * 0.002; if(!isLowSpec) { ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 10; }
+            for(let i=0; i<15; i++) {
+                let dt = dTime - (i*0.1); let dX = cx + Math.cos(dt)*80; let dY = cy - 80 + Math.sin(dt*2)*40 + Math.sin(dt)*20;
+                ctx.fillStyle = i===0 ? '#ff0000' : '#ffaa00'; let dSize = i===0 ? 18 : 12 - (i*0.5); ctx.beginPath(); ctx.arc(dX, dY, Math.max(dSize, 4), 0, Math.PI*2); ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+        }
+        else if (item.renderType === 'sky_lounge') {
+            drawIsoCylinder(cx, cy - 10, 15, 120, '#b2ebf2', '#81d4fa'); 
+            let lift = cy - 130;
+            ctx.fillStyle = '#0288d1'; ctx.beginPath(); ctx.ellipse(cx, lift, 70, 35, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#4fc3f7'; ctx.beginPath(); ctx.ellipse(cx, lift - 10, 70, 35, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.beginPath(); ctx.ellipse(cx, lift - 10, 55, 27.5, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx, lift - 10, 55, 0, Math.PI, true); ctx.fill();
+            if(!isLowSpec) {
+                let clTime = tTime * 0.001; ctx.fillStyle = '#ffeb3b';
+                for(let i=0; i<5; i++) { let cA = clTime + i*(Math.PI*2/5); let cxOff = Math.cos(cA)*80; let cyOff = Math.sin(cA)*40; ctx.beginPath(); ctx.arc(cx + cxOff, lift - 5 + cyOff, 4, 0, Math.PI*2); ctx.fill(); }
+            }
+        }
+        else if (item.renderType === 'seafood') {
+            drawIsoCube(bx, by, 2.5, 2.5, 50, 'rgba(0, 200, 255, 0.4)', 'rgba(0, 150, 255, 0.5)', 'rgba(0, 100, 200, 0.6)');
+            if(!isLowSpec) {
+                let fTime = tTime * 0.002;
+                for(let i=0; i<4; i++) {
+                    let fa = fTime * (i%2===0?1:-1) + i*Math.PI/2; let fx = cx + Math.cos(fa) * 20; let fy = cy - 25 + Math.sin(fa*1.5) * 10;
+                    ctx.fillStyle = ['#ff5500', '#ffcc00', '#ff5555', '#ffff00'][i]; ctx.beginPath(); ctx.ellipse(fx, fy, 6, 3, fa, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx - Math.cos(fa)*6, fy - 4); ctx.lineTo(fx - Math.cos(fa)*6, fy + 4); ctx.fill();
+                }
+                drawSplashParticles(cx, cy - 10, tTime, 6, 15, 'rgba(255,255,255,0.6)');
+            }
+        }
+        else if (item.renderType === 'steak') {
+            drawIsoCube(bx, by, 2.5, 2.5, 30, '#3e2723', '#2d1c15', '#1b100c'); drawIsoPyramid(bx, by, 2.7, 2.7, 30, 20, '#d84315', '#bf360c');
+            if(!isLowSpec) {
+                let neonPulse = Math.abs(Math.sin(tTime * 0.005)) > 0.1 ? '#ff1744' : '#550000'; ctx.fillStyle = neonPulse; ctx.shadowColor = neonPulse; ctx.shadowBlur = 10; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.fillText('STEAK', cx, cy - 60); ctx.shadowBlur = 0;
+                ctx.fillStyle = '#111'; ctx.fillRect(cx - 15, cy - 25, 30, 15); ctx.fillStyle = '#b71c1c'; ctx.fillRect(cx - 10, cy - 28, 20, 8); 
+                let fireT = tTime * 0.005; for(let i=0; i<5; i++) { let px = cx - 10 + i*5; let py = cy - 25 - Math.abs(Math.sin(fireT + i))*10; ctx.fillStyle = (i%2===0) ? '#ff5722' : '#ff9800'; ctx.beginPath(); ctx.arc(px, py, 2 + Math.random()*2, 0, Math.PI*2); ctx.fill(); }
+            }
+        }
+        else if (item.renderType === 'molecular') {
+            drawIsoCube(bx, by, 2, 2, 10, '#333', '#222', '#111'); ctx.fillStyle = 'rgba(200, 0, 255, 0.6)'; ctx.beginPath(); ctx.ellipse(cx, cy-30, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx, cy-30, 40, 0, Math.PI, true); ctx.fill();
+            drawSplashParticles(cx, cy - 30, tTime, 12, 25, '#ff00ff'); drawSplashParticles(cx, cy - 30, tTime+200, 8, 15, '#00ffff');
+        }
+        else if (item.renderType === 'potion') {
+            drawIsoCube(bx, by, 2, 2, 25, '#444', '#333', '#222'); drawIsoCylinder(cx, cy-25, 25, 20, '#111', '#000'); ctx.fillStyle = '#33ff33'; ctx.beginPath(); ctx.ellipse(cx, cy-45, 25, 12.5, 0, 0, Math.PI*2); ctx.fill();
+            drawSplashParticles(cx, cy - 45, tTime*0.8, 10, 20, 'rgba(50, 255, 50, 0.6)'); drawSplashParticles(cx, cy - 45, tTime*0.7, 5, 15, 'rgba(200, 50, 255, 0.6)');
+        }
+        else if (item.renderType === 'gold_icecream') {
+            drawIsoCube(bx, by, 1, 1, 20, '#ffcc00', '#cc9900', '#aa6600'); ctx.fillStyle = '#ffea00'; ctx.beginPath(); ctx.moveTo(cx, cy-20); ctx.lineTo(cx-15, cy-45); ctx.lineTo(cx+15, cy-45); ctx.fill();
+            if(!isLowSpec) { ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 10; } ctx.beginPath(); ctx.arc(cx, cy-48, 18, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx, cy-60, 12, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; drawSplashParticles(cx, cy - 45, tTime*1.5, 5, 25, '#ffffff'); 
+        }
+        else if (item.renderType === 'shop') {
+            switch(item.id) {
+                case 'shop_burger': drawIsoCylinder(cx, cy, 22, 10, '#f5deb3', '#d2b48c'); drawIsoCylinder(cx, cy - 10, 24, 6, '#5d4037', '#3e2723'); drawIsoCylinder(cx, cy - 16, 25, 4, '#81c784', '#388e3c'); drawIsoCylinder(cx, cy - 20, 22, 12, '#f5deb3', '#d2b48c'); ctx.fillStyle='#fff'; ctx.fillRect(cx-2, cy-38, 4, 8); break;
+                case 'shop_pizza': drawIsoCube(bx, by, 1.2, 1.2, 10, '#fff3e0', '#ffcc80', '#ffa726'); drawIsoPyramid(bx, by, 1.4, 1.4, 10, 15, '#e53935', '#c62828');
+                    if(!isLowSpec) { let pt = tTime * 0.0015; ctx.save(); ctx.translate(cx, cy - 45); ctx.fillStyle = '#ffb300'; ctx.beginPath(); ctx.ellipse(0, 0, 18, 9, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff9c4'; ctx.beginPath(); ctx.ellipse(0, -1, 15, 7.5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#e53935'; for(let i=0; i<4; i++) { let pa = pt + (Math.PI/2) * i; ctx.beginPath(); ctx.arc(Math.cos(pa) * 10, -1 + Math.sin(pa) * 5, 2.5, 0, Math.PI*2); ctx.fill(); } ctx.restore(); } break;
+                case 'shop_icecream': drawIsoCube(bx, by, 1, 1, 12, '#f8bbd0', '#f48fb1', '#f06292'); drawIsoCube(bx, by-12, 1.1, 1.1, 2, '#fff', '#eee', '#ddd'); ctx.fillStyle = '#ffcc80'; ctx.beginPath(); ctx.moveTo(cx, cy-14); ctx.lineTo(cx-10, cy-30); ctx.lineTo(cx+10, cy-30); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy-32, 12, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ff80ab'; ctx.beginPath(); ctx.arc(cx, cy-40, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke(); break;
+                case 'shop_cafe': drawIsoCube(bx, by, 1.2, 1.2, 12, '#eceff1', '#cfd8dc', '#b0bec5'); drawIsoCube(bx, by-12, 1.3, 1.3, 3, '#d7ccc8', '#bcaaa4', '#a1887f'); drawIsoCylinder(cx, cy - 15, 12, 10, '#ffffff', '#e0e0e0'); ctx.strokeStyle = '#d7ccc8'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(cx + 12, cy - 20, 6, -Math.PI/2, Math.PI/2); ctx.stroke(); 
+                    if(!isLowSpec) { ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; const smokeY1 = Math.sin(tTime*0.003)*5, smokeY2 = Math.cos(tTime*0.004)*4; ctx.beginPath(); ctx.arc(cx - 4, cy - 30 + smokeY1, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx + 4, cy - 33 + smokeY2, 4, 0, Math.PI*2); ctx.fill(); } break;
+                case 'shop_chicken': drawIsoCube(bx, by, 1, 1, 15, '#ffecb3', '#ffb74d', '#ffa726'); drawIsoCube(bx, by-15, 1.1, 1.1, 5, '#e53935', '#d32f2f', '#c62828'); ctx.fillStyle = '#8d6e63'; ctx.beginPath(); ctx.ellipse(cx-10, cy-25, 4, 12, Math.PI/4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ffb300'; ctx.beginPath(); ctx.ellipse(cx+2, cy-35, 12, 8, Math.PI/4, 0, Math.PI*2); ctx.fill(); ctx.stroke(); break;
+                case 'shop_tanghulu': drawIsoCube(bx, by, 0.9, 0.9, 8, '#fff', '#eee', '#ddd'); ctx.globalAlpha = 0.6; drawIsoCube(bx, by-8, 0.9, 0.9, 12, '#e0f7fa', '#b2ebf2', '#81d4fa'); ctx.globalAlpha = 1.0; for(let i=-1; i<=1; i++) { let px = cx + i*10; ctx.strokeStyle = '#a1887f'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(px, cy-8); ctx.lineTo(px, cy-25); ctx.stroke(); ctx.fillStyle = '#e53935'; [12, 17, 22].forEach(h => { ctx.beginPath(); ctx.arc(px, cy-h, 4, 0, Math.PI*2); ctx.fill(); }); } break;
+                case 'shop_balloon': drawIsoCube(bx, by, 0.6, 0.6, 12, '#bbdefb', '#81d4fa', '#4fc3f7'); let colors = ['#f44336', '#4caf50', '#ffeb3b', '#9c27b0', '#ff9800']; let offsets = [{x:-12,y:-35}, {x:0,y:-45}, {x:15,y:-30}, {x:8,y:-40}, {x:-5,y:-28}]; offsets.forEach((off, i) => { ctx.strokeStyle = '#fff'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx, cy-12); ctx.lineTo(cx+off.x, cy+off.y); ctx.stroke(); ctx.fillStyle = colors[i]; ctx.beginPath(); ctx.arc(cx+off.x, cy+off.y, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke(); }); break;
+                case 'shop_cotton': drawIsoCube(bx, by, 0.8, 0.8, 10, '#f8bbd0', '#f48fb1', '#f06292'); drawIsoPyramid(bx, by, 0.9, 0.9, 10, 10, '#ba68c8', '#ab47bc'); ctx.fillStyle = '#f8bbd0'; ctx.beginPath(); ctx.arc(cx, cy-25, 15, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx-12, cy-20, 12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+12, cy-20, 12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx, cy-35, 12, 0, Math.PI*2); ctx.fill(); break;
+                case 'shop_popcorn': drawIsoCube(bx, by, 1, 1, 15, '#fff', '#eee', '#ddd'); ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.moveTo(bx, by-15); ctx.lineTo(bx+16, by-7); ctx.lineTo(bx+16, by+8); ctx.lineTo(bx, by); ctx.fill(); ctx.beginPath(); ctx.moveTo(bx, by-15); ctx.lineTo(bx-16, by-7); ctx.lineTo(bx-16, by+8); ctx.lineTo(bx, by); ctx.fill(); ctx.globalAlpha = 0.5; drawIsoCube(bx, by-15, 0.9, 0.9, 10, '#e0f7fa', '#b2ebf2', '#81d4fa'); ctx.globalAlpha = 1.0; if(!isLowSpec) { ctx.fillStyle = '#fff59d'; for(let i=0; i<15; i++) { ctx.beginPath(); ctx.arc(cx + (Math.random()-0.5)*18, cy - 20 + (Math.random()-0.5)*12, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke(); } } break;
+                case 'shop_churro': drawIsoCube(bx, by, 0.8, 0.8, 12, '#8d6e63', '#795548', '#5d4037'); drawIsoCube(bx, by-12, 0.9, 0.9, 2, '#ffb300', '#ffa000', '#ff8f00'); ctx.strokeStyle = '#a1887f'; ctx.lineWidth = 4; ctx.lineCap = 'round'; for(let i=-1; i<=1; i++) { ctx.beginPath(); ctx.moveTo(cx + i*6, cy-14); ctx.lineTo(cx + i*8, cy-30 + (isLowSpec?0:Math.random()*5)); ctx.stroke(); } break;
+                case 'shop_souvenir': drawIsoCube(bx, by, 1.1, 1.1, 14, '#ce93d8', '#ab47bc', '#8e24aa'); drawIsoCube(bx, by-14, 1.2, 1.2, 3, '#f48fb1', '#f06292', '#e91e63'); ctx.strokeStyle = '#ffeb3b'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx-TILE_W/4, cy-14 + TILE_H/4); ctx.lineTo(cx+TILE_W/4, cy-14 - TILE_H/4); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx-TILE_W/4, cy-14 - TILE_H/4); ctx.lineTo(cx+TILE_W/4, cy-14 + TILE_H/4); ctx.stroke(); ctx.fillStyle = '#ffeb3b'; ctx.beginPath(); ctx.ellipse(cx-8, cy-17, 8, 4, -Math.PI/4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx+8, cy-17, 8, 4, Math.PI/4, 0, Math.PI*2); ctx.fill(); break;
+                case 'shop_hotdog': drawIsoCube(bx, by, 1.4, 0.8, 10, '#ffe082', '#ffb74d', '#ffa726'); drawIsoCylinder(cx, cy - 10, 22, 6, '#d32f2f', '#c62828'); ctx.strokeStyle = '#ffeb3b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx-15, cy-16); ctx.bezierCurveTo(cx-5, cy-10, cx+5, cy-20, cx+15, cy-16); ctx.stroke(); break;
+                case 'shop_skewer': drawIsoCube(bx, by, 1.1, 1.1, 10, '#bcaaa4', '#8d6e63', '#795548'); drawIsoPyramid(bx, by, 1.3, 1.3, 10, 8, '#424242', '#212121'); ctx.strokeStyle = '#d7ccc8'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-10, cy); ctx.lineTo(cx-20, cy-15); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+10, cy); ctx.lineTo(cx+20, cy-10); ctx.stroke(); if(!isLowSpec) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(cx, cy-25 + Math.sin(tTime*0.005)*5, 10, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+10, cy-35 + Math.cos(tTime*0.004)*5, 8, 0, Math.PI*2); ctx.fill(); } break;
+            }
+        }
+        else if (item.renderType === 'entrance') {
+            drawIsoCube(bx, by, 2, 2, 8, '#f8f9fa', '#e0e0e0', '#cccccc'); drawIsoCube(bx, by-8, 1.2, 2, 2, '#ff5252', '#d32f2f', '#b71c1c'); drawIsoCylinder(cx - TILE_W*0.7, cy - 5, 10, 70, '#fff9c4', '#fbc02d'); drawIsoCylinder(cx + TILE_W*0.7, cy - 5, 10, 70, '#fff9c4', '#fbc02d'); drawIsoPyramid(bx - TILE_W*0.6, by - 65, 0.5, 0.5, 0, 40, '#ff4081', '#c2185b'); drawIsoPyramid(bx + TILE_W*0.8, by - 65, 0.5, 0.5, 0, 40, '#00b0ff', '#0091ea'); drawIsoCube(bx, by - 55, 2.4, 0.6, 25, '#ffe082', '#ffca28', '#ffb300'); 
+            if(!isLowSpec) {
+                ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 15; ctx.font = 'bold 18px "Galmuri9", "Noto Sans KR", Arial'; ctx.fillStyle = '#d50000'; ctx.textAlign = 'center';
+                let bounce = Math.sin(tTime*0.003)*3; ctx.fillText('✨ WORLD PARK ✨', cx, cy - 65 + bounce); ctx.shadowBlur = 0; drawSplashParticles(cx, cy - 70, tTime*0.8, 8, 55, '#ffeb3b'); drawSplashParticles(cx, cy - 30, tTime*0.6, 6, 45, '#ffffff');
+            } else { ctx.font = 'bold 16px "Galmuri9", "Noto Sans KR", Arial'; ctx.fillStyle = '#d50000'; ctx.textAlign = 'center'; ctx.fillText('WORLD PARK', cx, cy - 65); }
+            ctx.font = '28px Arial'; ctx.textAlign = 'center'; ctx.fillText('🎟️', cx, cy - 25);
+        }
+        else if (item.renderType === 'toilet') {
+            let hue = isLowSpec ? 180 : (tTime * 0.05 + entity.r * 15 + entity.c * 15) % 360; const colorTop = `hsl(${hue}, 60%, 80%)`; const colorLeft = `hsl(${hue}, 60%, 65%)`; const colorRight = `hsl(${hue}, 60%, 50%)`;
+            drawIsoCube(bx, by, 1, 1, 12, colorTop, colorLeft, colorRight); drawIsoCube(bx, by-12, 1.1, 1.1, 2, '#44aaff', '#2288dd', '#1166bb');
+            const signHue = (hue + 180) % 360; ctx.fillStyle = `hsl(${signHue}, 100%, 60%)`;
+            if(!isLowSpec) { ctx.shadowColor = `hsl(${signHue}, 100%, 50%)`; ctx.shadowBlur = 10; } ctx.font = '16px Arial'; ctx.textAlign = 'center'; let bounce = isLowSpec ? 0 : Math.sin(tTime*0.003)*2; ctx.fillText('🚻', cx, cy - 20 + bounce); ctx.shadowBlur = 0; 
+        }
+        else if (item.renderType === 'info') {
+            drawIsoCube(bx, by, 1, 1, 15, '#fff9c4', '#fff176', '#fbc02d');
+            ctx.fillStyle = '#1976d2'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+            let bounce = isLowSpec ? 0 : Math.sin(tTime*0.005)*3; ctx.fillText('ℹ️', cx, cy - 25 + bounce);
+        }
+        else if (item.renderType === 'stroller') {
+            drawIsoCube(bx, by, 1, 1, 12, '#f8bbd0', '#f48fb1', '#f06292'); drawIsoCylinder(cx, cy - 12, 10, 5, '#e1bee7', '#ce93d8');
+            ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.fillText('👶', cx, cy - 20);
+        }
+        else if (item.renderType === 'security') {
+            drawIsoCube(bx, by, 1, 1, 20, '#bbdefb', '#64b5f6', '#1976d2'); ctx.fillStyle = '#d32f2f'; ctx.beginPath(); ctx.arc(cx, cy - 25, 4, 0, Math.PI*2); ctx.fill();
+            if(!isLowSpec && Math.floor(tTime / 300) % 2 === 0) { ctx.shadowColor = '#d32f2f'; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0; }
+            ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText('👮', cx, cy - 35);
+        }
+        else if (item.renderType === 'firstaid') {
+            drawIsoCube(bx, by, 1, 1, 15, '#ffffff', '#eeeeee', '#dddddd'); ctx.fillStyle = '#d32f2f'; ctx.fillRect(cx - 2, cy - 20, 4, 12); ctx.fillRect(cx - 6, cy - 16, 12, 4);
+        }
+        else if (item.renderType === 'lostchild') {
+            drawIsoCube(bx, by, 1, 1, 12, '#ffe082', '#ffca28', '#ffb300'); drawIsoPyramid(bx, by, 1.1, 1.1, 12, 10, '#ff9800', '#f57c00');
+            ctx.font = '14px Arial'; ctx.textAlign = 'center'; ctx.fillText('🧸', cx, cy - 25);
+        }
+        else if (item.renderType === 'atm') {
+            drawIsoCube(bx, by, 0.8, 0.8, 15, '#c8e6c9', '#81c784', '#388e3c'); ctx.fillStyle = '#111'; ctx.fillRect(cx - 8, cy - 12, 16, 8);
+            ctx.fillStyle = '#4caf50'; ctx.font = '10px Arial'; ctx.fillText('$', cx, cy - 5); if(!isLowSpec) { ctx.fillStyle = '#00ff00'; ctx.fillRect(cx - 6, cy - 10, 12, 4); }
+        }
+        else if (item.renderType && item.renderType.startsWith('coaster')) {
+            drawIsoCube(bx, by, item.size, item.size, 5, '#555', '#444', '#333'); drawProceduralCoaster(cx, cy - 5, item.size, item, tTime);
+        }
+        else if (item.renderType === 'droptower') {
+            const h = 140; drawIsoCube(bx, by, 2, 2, 10, '#aaa', '#888', '#666'); ctx.fillStyle = '#eee'; ctx.fillRect(cx - 6, cy - h, 12, h); 
+            const ringY = cy - h + 20 + Math.abs(Math.sin(tTime*0.002 + entity.r)*100); ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.ellipse(cx, ringY, 24, 10, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(cx, ringY, 16, 6, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#4444ff'; ctx.beginPath(); ctx.ellipse(cx, cy - h, 18, 8, 0, 0, Math.PI*2); ctx.fill();
+        }
+        else if (item.renderType === 'ferris') {
+            const h = 90; drawIsoCube(bx, by, 3, 3, 10, '#888', '#666', '#444'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx - 40, cy); ctx.lineTo(cx, cy - h); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx + 40, cy); ctx.lineTo(cx, cy - h); ctx.stroke();
+            const t = tTime * 0.0005; ctx.lineWidth = 3; ctx.strokeStyle = item.color; ctx.beginPath(); ctx.ellipse(cx, cy - h, 70, 70, 0, 0, Math.PI*2); ctx.stroke();
+            for(let i=0; i<8; i++) {
+                const angle = t + (Math.PI*2/8) * i; const px = cx + Math.cos(angle)*70; const py = cy - h + Math.sin(angle)*70;
+                ctx.beginPath(); ctx.moveTo(cx, cy-h); ctx.lineTo(px, py); ctx.stroke(); ctx.fillStyle = ['#ff4444','#44ff44','#4444ff','#ffffff'][i%4]; ctx.fillRect(px-8, py, 16, 16);
+            }
+        }
+        else if (item.renderType === 'merry') {
+            drawIsoCylinder(cx, cy, 45, 10, '#eebbcc', '#cc99aa'); let mAngle = tTime * 0.0015; let horses = [];
+            for(let i=0; i<6; i++) { let a = mAngle + (Math.PI*2/6)*i; horses.push({x: cx + Math.cos(a)*30, y: cy - 10 + Math.sin(a)*15, z: Math.sin(tTime * 0.003 + i) * 8, depth: Math.sin(a)}); }
+            horses.forEach(h => { if(h.depth < 0) { ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h.x, cy-60); ctx.lineTo(h.x, cy-10); ctx.stroke(); if(!isLowSpec) { ctx.font = '20px Arial'; ctx.textAlign='center'; ctx.fillText('🐎', h.x, h.y - 15 + h.z); } else { ctx.fillStyle='#fff'; ctx.fillRect(h.x-5, h.y-15+h.z, 10, 10); } } });
+            ctx.fillStyle = '#ffaa33'; ctx.fillRect(cx - 4, cy - 70, 8, 65); ctx.strokeStyle = '#222'; ctx.strokeRect(cx - 4, cy - 70, 8, 65);
+            horses.forEach(h => { if(h.depth >= 0) { ctx.strokeStyle = '#ffdd44'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h.x, cy-60); ctx.lineTo(h.x, cy-10); ctx.stroke(); if(!isLowSpec) { ctx.font = '20px Arial'; ctx.textAlign='center'; ctx.fillText('🐎', h.x, h.y - 15 + h.z); } else { ctx.fillStyle='#fff'; ctx.fillRect(h.x-5, h.y-15+h.z, 10, 10); } } });
+            ctx.fillStyle = '#ff88dd'; ctx.strokeStyle = '#ee77cc'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(cx, cy - 65, 48, 24, 0, 0, Math.PI*2); ctx.lineTo(cx, cy - 95); ctx.fill(); ctx.stroke();
+        }
+        else if (item.renderType === 'pirate') {
+            drawIsoCube(bx, by, 3, 3, 5, '#66aa66', '#448844', '#336633'); ctx.strokeStyle = '#fff'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(cx-30, cy-10); ctx.lineTo(cx, cy-100); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+30, cy-10); ctx.lineTo(cx, cy-100); ctx.stroke();
+            const angle = Math.sin(tTime*0.002) * Math.PI/4; ctx.save(); ctx.translate(cx, cy-100); ctx.rotate(angle); ctx.fillStyle = '#8B4513'; ctx.beginPath(); ctx.moveTo(-60, 80); ctx.lineTo(60, 80); ctx.lineTo(40, 100); ctx.lineTo(-40, 100); ctx.fill(); ctx.fillRect(-2, 0, 4, 80); ctx.restore();
+        }
+        else if (item.renderType === 'haunted') {
+            drawIsoCube(bx, by, 2, 2, 70, '#2a1b38', '#1a0b28', '#0a0018'); drawIsoCube(bx, by-70, 2, 2, 40, '#0a0018', '#000000', '#000000'); 
+            const blink = Math.sin(tTime*0.005) > 0 ? '#ff0000' : '#440000'; ctx.fillStyle = blink; ctx.fillRect(cx-20, cy-50, 10, 15); ctx.fillRect(cx+10, cy-50, 10, 15);
+            if(!isLowSpec) { const ghostY1 = Math.sin(tTime*0.003) * 10; const ghostY2 = Math.cos(tTime*0.004) * 8; ctx.font='24px Arial'; ctx.fillText('👻', cx - 25, cy - 90 + ghostY1); ctx.fillText('🧟', cx + 25, cy - 80 + ghostY2); ctx.strokeStyle = '#aa00ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy-70); ctx.quadraticCurveTo(cx+30, cy-100, cx+15, cy-120+ghostY1); ctx.stroke(); }
+        }
+        else if (item.renderType === 'flume') {
+            drawIsoCube(bx, by, 3, 3, 5, '#228822', '#116611', '#004400'); ctx.strokeStyle = '#33aaff'; ctx.lineWidth = 12; ctx.lineJoin='round'; ctx.beginPath(); ctx.moveTo(cx-40, cy-10); ctx.lineTo(cx, cy-80); ctx.lineTo(cx+50, cy-10); ctx.lineTo(cx-40, cy-10); ctx.stroke();
+            ctx.fillStyle='#fff'; let ct = (tTime * 0.0005) % 1; let boatX, boatY;
+            if(ct < 0.3) { boatX = lerp(cx-40, cx, ct/0.3); boatY = lerp(cy-10, cy-80, ct/0.3); } else if (ct < 0.6) { boatX = lerp(cx, cx+50, (ct-0.3)/0.3); boatY = lerp(cy-80, cy-10, (ct-0.3)/0.3); } else { boatX = lerp(cx+50, cx-40, (ct-0.6)/0.4); boatY = cy-10; }
+            ctx.fillRect(boatX-8, boatY-8, 16, 16); if(ct > 0.6) drawSplashParticles(boatX, boatY, tTime, 8, 15);
+        }
+        else if (item.renderType === 'bumper') {
+            drawIsoCube(bx, by, 2, 2, 5, '#888', '#666', '#555'); drawIsoCube(bx, by-40, 2, 2, 5, 'rgba(255,100,200,0.5)', 'rgba(200,50,150,0.5)', 'rgba(150,0,100,0.5)'); 
+            ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-TILE_W, cy-5); ctx.lineTo(cx-TILE_W, cy-40); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+TILE_W, cy-5); ctx.lineTo(cx+TILE_W, cy-40); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx, cy+TILE_H-5); ctx.lineTo(cx, cy+TILE_H-40); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx, cy-TILE_H-5); ctx.lineTo(cx, cy-TILE_H-40); ctx.stroke();
+            const colors = ['#ff0000', '#0000ff', '#00ff00', '#ff00ff']; let cars = [];
+            for(let i=0; i<4; i++) { let t1 = tTime * (0.001 + i*0.0002), t2 = tTime * (0.0013 + i*0.0003); cars.push({x: cx + Math.sin(t1 + i*1.5) * 40, y: cy - 10 + Math.sin(t2 + i*2.5) * 20, c: colors[i]}); }
+            cars.sort((a,b) => a.y - b.y);
+            cars.forEach(car => { ctx.strokeStyle = '#555'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(car.x, car.y - 10); ctx.lineTo(car.x, cy - 40); ctx.stroke(); ctx.fillStyle = car.c; ctx.beginPath(); ctx.ellipse(car.x, car.y - 4, 12, 8, 0, 0, Math.PI*2); ctx.fill(); if(!isLowSpec) ctx.stroke(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.ellipse(car.x, car.y - 6, 6, 3, 0, 0, Math.PI*2); ctx.fill(); });
+        }
+        else if (item.renderType === 'carpet') {
+            const bounce = isLowSpec ? 0 : Math.sin(tTime * 0.002 + entity.r) * 30; const angle = isLowSpec ? 0 : Math.cos(tTime * 0.0015 + entity.c) * 0.3; 
+            drawIsoCube(bx, by, 2, 2, 10, '#aa33aa', '#882288', '#661166'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(cx-20, cy); ctx.lineTo(cx-30, cy - 50 + bounce); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+20, cy); ctx.lineTo(cx+30, cy - 50 + bounce); ctx.stroke();
+            ctx.save(); ctx.translate(cx, cy - 60 + bounce); ctx.rotate(angle); ctx.fillStyle = '#ffaa00'; ctx.beginPath(); ctx.moveTo(-50, 0); ctx.lineTo(0, -20); ctx.lineTo(50, 0); ctx.lineTo(0, 20); ctx.fill(); ctx.strokeStyle = '#cc0000'; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = '#ffff00'; for(let i=-40; i<=40; i+=10) { ctx.beginPath(); ctx.arc(i, 20, 2, 0, Math.PI*2); ctx.fill(); } ctx.restore();
+        }
+        else if (item.renderType === 'spacerings') {
+            drawIsoCube(bx, by, 1, 1, 5, '#555', '#444', '#333'); const r1 = isLowSpec ? 0 : Math.sin(tTime * 0.003 + entity.r); const r2 = isLowSpec ? 0 : Math.cos(tTime * 0.004 + entity.c);
+            ctx.save(); ctx.translate(cx, cy - 40); ctx.rotate(r1); ctx.strokeStyle = '#aaaaaa'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(0, 0, 30, 15, 0, 0, Math.PI*2); ctx.stroke(); ctx.rotate(r2); ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 0, 20, 10, Math.PI/2, 0, Math.PI*2); ctx.stroke(); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            ctx.strokeStyle = '#888'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx-35, cy); ctx.lineTo(cx-30, cy-40); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+35, cy); ctx.lineTo(cx+30, cy-40); ctx.stroke();
+        }
+        else if (item.renderType === 'swings') {
+            const h = 70; drawIsoCube(bx, by, 2, 2, 5, '#aaeeaa', '#88cc88', '#66aa66'); ctx.fillStyle = '#ff5555'; ctx.fillRect(cx - 4, cy - h, 8, h);
+            const spinSpeed = isLowSpec ? 0 : tTime * 0.002 + entity.r; const radius = isLowSpec ? 30 : 30 + Math.sin(tTime*0.001)*10; 
+            ctx.fillStyle = '#ddff44'; ctx.beginPath(); ctx.moveTo(cx-radius-10, cy-h); ctx.lineTo(cx, cy-h-20); ctx.lineTo(cx+radius+10, cy-h); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+            for(let i=0; i<6; i++) {
+                const angle = spinSpeed + (Math.PI*2/6) * i; const px = cx + Math.cos(angle) * radius, py = cy - h + 10 + Math.sin(angle) * (radius*0.3); 
+                ctx.beginPath(); ctx.moveTo(cx, cy-h+5); ctx.lineTo(px, py+30); ctx.stroke(); ctx.fillStyle = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'][i]; ctx.fillRect(px - 5, py + 30, 10, 5);
+            }
+        }
+        else if (item.renderType === 'topspin') {
+            drawIsoCube(bx, by, 2, 2, 20, '#ffaa55', '#ff5500', '#cc4400'); const angle = isLowSpec ? 0 : Math.sin(tTime * 0.003) * Math.PI; 
+            ctx.save(); ctx.translate(cx, cy - 50); ctx.rotate(angle); ctx.fillStyle = '#444'; ctx.fillRect(-30, -5, 60, 10); ctx.fillStyle = '#ff4444'; ctx.fillRect(-25, 5, 50, 20); for(let i=0; i<4; i++) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-15 + i*10, 15, 3, 0, Math.PI*2); ctx.fill(); } ctx.restore();
+            ctx.strokeStyle = '#aaa'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(cx-40, cy); ctx.lineTo(cx-40, cy-50); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx+40, cy); ctx.lineTo(cx+40, cy-50); ctx.stroke();
+        }
+        else if (item.renderType === 'twist') { 
+            const sway = isLowSpec ? 0 : Math.sin(tTime * 0.003 + entity.r) * 30; drawIsoCube(bx, by, 2, 2, 5, '#88ff88', '#33ff33', '#22cc22');
+            ctx.save(); ctx.translate(cx, cy - 5); ctx.transform(1, 0, sway/100, 1, 0, 0); 
+            for(let i=0; i<6; i++) {
+                let trY = -i * 15; let trW = 10 + i * 8; let hue = (tTime * 0.2 + i * 20) % 360;
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`; ctx.beginPath(); ctx.ellipse(0, trY, trW, trW * 0.5, 0, 0, Math.PI*2); ctx.fill();
+                if(!isLowSpec) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); }
+                ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(trW - 5, trY, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-trW + 5, trY, 3, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.restore();
+        }
+        else if (item.renderType === 'enterprise') {
+            drawIsoCube(bx, by, 2, 2, 10, '#ff88ff', '#ff33ff', '#cc22cc'); const lift = isLowSpec ? 20 : Math.abs(Math.sin(tTime * 0.001)) * 40; const spin = isLowSpec ? 0 : tTime * 0.004;
+            ctx.save(); ctx.translate(cx, cy - 10 - lift); const tilt = 1 - (lift/80); ctx.strokeStyle = '#555'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, lift); ctx.lineTo(0, 0); ctx.stroke(); ctx.strokeStyle = '#ffff00'; ctx.lineWidth = 2;
+            for(let i=0; i<12; i++) { const a = spin + (Math.PI*2/12)*i; const px = Math.cos(a)*50, py = Math.sin(a)*50*tilt; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(px, py); ctx.stroke(); ctx.fillStyle = `hsl(${(i*30)%360}, 100%, 60%)`; ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI*2); ctx.fill(); }
+            ctx.restore();
+        }
+        else if (item.renderType === 'teacup') {
+            drawIsoCube(bx, by, 2, 2, 5, '#ffdddd', '#ffaaaa', '#cc8888'); const mainSpin = isLowSpec ? 0 : tTime * 0.001;
+            ctx.save(); ctx.translate(cx, cy - 10); ctx.fillStyle = '#ff88dd'; ctx.beginPath(); ctx.ellipse(0, 0, 50, 25, 0, 0, Math.PI*2); ctx.fill();
+            for(let i=0; i<4; i++) {
+                const a = mainSpin + (Math.PI/2)*i; const px = Math.cos(a)*30, py = Math.sin(a)*15;
+                ctx.save(); ctx.translate(px, py); if(!isLowSpec) ctx.rotate(tTime * 0.003 * (i%2 === 0 ? 1 : -1));
+                ctx.fillStyle = ['#ff4444', '#44ff44', '#4444ff', '#ffff44'][i]; ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI); ctx.fill(); ctx.fillRect(-10, -5, 20, 5); ctx.strokeStyle = '#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(10, -2, 4, -Math.PI/2, Math.PI/2); ctx.stroke(); ctx.restore();
+            }
+            ctx.restore();
+        }
+        else if (item.renderType === 'tree' || item.renderType === 'pine' || item.renderType === 'palm' || item.renderType === 'willow' || item.renderType === 'dead_tree') {
+            ctx.fillStyle = '#5c4033'; ctx.fillRect(cx - 2, cy - 15, 4, 15); ctx.fillStyle = item.color;
+            if (item.renderType === 'pine') {
+                ctx.beginPath(); ctx.moveTo(cx, cy-35); ctx.lineTo(cx+15, cy-10); ctx.lineTo(cx-15, cy-10); ctx.fill(); ctx.beginPath(); ctx.moveTo(cx, cy-45); ctx.lineTo(cx+12, cy-20); ctx.lineTo(cx-12, cy-20); ctx.fill();
+            } else if (item.renderType === 'dead_tree') {
+                ctx.strokeStyle = '#5c4033'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx, cy-15); ctx.lineTo(cx-15, cy-30); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx, cy-10); ctx.lineTo(cx+10, cy-25); ctx.stroke();
+            } else if (item.renderType === 'willow') {
+                ctx.beginPath(); ctx.arc(cx, cy-20, 15, 0, Math.PI*2); ctx.fill(); ctx.fillRect(cx-15, cy-20, 2, 15); ctx.fillRect(cx+13, cy-20, 2, 15); ctx.fillRect(cx-5, cy-15, 2, 12);
+            } else {
+                ctx.beginPath(); ctx.arc(cx, cy-15, 12, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx-8, cy-25, 10, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(cx+8, cy-20, 12, 0, Math.PI*2); ctx.fill();
+            }
+        }
+        else if (item.renderType === 'fountain') {
+            drawIsoCube(bx, by, 1, 1, 10, '#ccc', '#999', '#777'); ctx.fillStyle = '#44aaff'; ctx.beginPath(); ctx.ellipse(cx, cy - 10, 16, 8, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.fillRect(cx-1, cy-25, 2, 15); let fBounce = isLowSpec ? 0 : Math.sin(tTime*0.01)*3; ctx.beginPath(); ctx.arc(cx, cy-25 + fBounce, 4, 0, Math.PI*2); ctx.fill(); drawSplashParticles(cx, cy - 10, tTime, 5, 15);
+        }
+        else if (item.renderType === 'flowers') {
+            ctx.fillStyle = '#228822'; ctx.beginPath(); ctx.ellipse(cx, cy, 20, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.font = '12px Arial'; ctx.textAlign='center'; ctx.fillText('🌸🌷', cx, cy-5);
+        }
+
+        if (item.type === 'ride' && entity.queue !== undefined) {
+            let qLen = entity.queue.length;
+            if (qLen > 0) { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(cx - 25, cy - 100 - 12, 50, 16); ctx.fillStyle = qLen >= 30 ? '#ff4444' : '#44ff44'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.fillText(`🚶 ${qLen}/30`, cx, cy - 100); }
+        }
+    } catch(err) { console.error("Rendering error for entity: ", err); }
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function shadeColor(color, percent) {
+    if(isLowSpec) return color; let R = parseInt(color.substring(1,3),16); let G = parseInt(color.substring(3,5),16); let B = parseInt(color.substring(5,7),16);
+    R = parseInt(R * (100 + percent) / 100); G = parseInt(G * (100 + percent) / 100); B = parseInt(B * (100 + percent) / 100);
+    R = (R<255)?R:255; G = (G<255)?G:255; B = (B<255)?B:255;
+    const RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16)); const GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16)); const BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16)); return "#"+RR+GG+BB;
+}
+
+let guestsList = [];
+function spawnGuestAt(r, c) {
+    const hairColors = ['#1a1a1a', '#4a2511', '#6b4226', '#d4af37', '#8b0000', '#555555'], pantsColors = ['#1e3a8a', '#333333', '#8b5a2b', '#2f4f4f', '#111111', '#4b0082'], skinColors = ['#ffccaa', '#ffbba0', '#eebbaa', '#ddaa88', '#d2b48c'];
+    guestsList.push({ r: r, c: c, target: {r: r, c: c}, lastPos: {r: r, c: c}, status: 'wandering', targetRide: null, targetToilet: null, nausea: 0, toiletUrge: 0, timer: 0, color: ['#ef4444', '#3b82f6', '#eab308', '#ffffff', '#d946ef', '#22c55e'][Math.floor(Math.random()*6)], hairColor: hairColors[Math.floor(Math.random()*hairColors.length)], pantsColor: pantsColors[Math.floor(Math.random()*pantsColors.length)], skinColor: skinColors[Math.floor(Math.random()*skinColors.length)], walkPhase: Math.random() * Math.PI * 2, isMoving: false, dirX: 1 });
+}
+
+function getTargetGuestCount() {
+    if (!parkEntranceBuilt) return 0;
+    let rCount = entities.filter(e => e.item.type === 'ride').length, sCount = entities.filter(e => e.item.type === 'shop').length, decCount = entities.filter(e => e.item.type === 'scenery').length;
+    let target = 5 + (rCount * 80) + (sCount * 20) + (decCount * 5); let maxGuests = isLowSpec ? 150 : 1000; return Math.min(target, maxGuests); 
+}
+
+function update() {
+    try {
+        for (let i = explosions.length - 1; i >= 0; i--) {
+            let exp = explosions[i]; let allDead = true;
+            exp.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= p.decay; if (p.life > 0) allDead = false; });
+            if (allDead) explosions.splice(i, 1);
+        }
+
+        guestsList.forEach(g => {
+            if (Math.random() < 0.005) { g.toiletUrge += 1.0; g.nausea += 0.2; }
+            if (g.status === 'vomiting') { g.timer--; if (g.timer <= 0) g.status = 'wandering'; return; }
+            if (g.status === 'in_toilet') {
+                g.timer--;
+                if (g.timer <= 0) {
+                    g.status = 'wandering'; g.toiletUrge = 0; let adjacentPaths = [];
+                    if (g.targetToilet) {
+                        for(let ir = g.targetToilet.r - 1; ir <= g.targetToilet.r + g.targetToilet.item.size; ir++) {
+                            for(let ic = g.targetToilet.c - 1; ic <= g.targetToilet.c + g.targetToilet.item.size; ic++) {
+                                if(ir>=0 && ir<GRID_SIZE && ic>=0 && ic<GRID_SIZE) { if(gridMap[ir][ic].type === 'path') adjacentPaths.push({r: ir, c: ic}); }
+                            }
+                        }
+                    }
+                    if (adjacentPaths.length > 0) { let outPath = adjacentPaths[Math.floor(Math.random() * adjacentPaths.length)]; g.r = outPath.r; g.c = outPath.c; g.target = {r: outPath.r, c: outPath.c}; } else { g.target = {r: Math.floor(g.r), c: Math.floor(g.c)}; }
+                    g.targetToilet = null;
+                }
+                return;
+            }
+
+            if (g.status === 'wandering') {
+                if (g.nausea > 100) { g.status = 'vomiting'; g.timer = 80; g.nausea = 0; return; } else if (g.toiletUrge > 100) { g.status = 'seek_toilet'; }
+            }
+
+            if (g.status === 'seek_toilet') {
+                if (!g.targetToilet) {
+                    let toilets = entities.filter(e => e.item.renderType === 'toilet');
+                    if (toilets.length > 0) {
+                        toilets.sort((a,b) => (Math.abs(a.r-g.r)+Math.abs(a.c-g.c)) - (Math.abs(b.r-g.r)+Math.abs(b.c-g.c))); g.targetToilet = toilets[0];
+                    } else {
+                        if (Math.random() < 0.05) { const {x, y} = toScreen(g.r, g.c); showFloatingText(x, y - 30, "🗯️ 화장실 가고싶어!", "255, 200, 0"); }
+                        g.toiletUrge = 70; g.status = 'wandering'; return;
+                    }
+                }
+                if (g.targetToilet) {
+                    g.target = { r: g.targetToilet.r + 0.5, c: g.targetToilet.c + 0.5 };
+                    let dx = g.target.c - g.c; let dy = g.target.r - g.r; let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 0.1) { g.status = 'in_toilet'; g.timer = 120; return; } else { g.c += (dx / dist) * 0.015; g.r += (dy / dist) * 0.015; g.walkPhase += 0.3; g.isMoving = true; g.dirX = (dx - dy) >= 0 ? 1 : -1; }
+                }
+                return;
+            }
+
+            if (g.status === 'queue') {
+                let idx = g.targetRide.queue.indexOf(g); if (idx === -1) { g.status = 'wandering'; return; }
+                let rsize = g.targetRide.item.size; let baseR = g.targetRide.r + rsize - 0.2; let baseC = g.targetRide.c + rsize - 0.2;
+                let qOffsetR = (idx % 6) * 0.15; let qOffsetC = Math.floor(idx / 6) * 0.15; g.target = { r: baseR - qOffsetR, c: baseC - qOffsetC };
+                let dx = g.target.c - g.c; let dy = g.target.r - g.r; let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist > 0.05) { g.c += (dx / dist) * 0.015; g.r += (dy / dist) * 0.015; g.walkPhase += 0.25; g.isMoving = true; g.dirX = (dx - dy) >= 0 ? 1 : -1; } else { g.r = g.target.r; g.c = g.target.c; g.isMoving = false; }
+                return; 
+            }
+
+            if (!g.target) g.target = {r: Math.floor(g.r), c: Math.floor(g.c)};
+            let dx = g.target.c - g.c; let dy = g.target.r - g.r; let dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist < 0.05) {
+                g.r = g.target.r; g.c = g.target.c; g.isMoving = false; let tr = Math.round(g.r); let tc = Math.round(g.c);
+                let adjacentRides = [];
+                [[ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ]].forEach(dir => {
+                    let nr = tr + dir[0]; let nc = tc + dir[1];
+                    if(nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                        let tile = gridMap[nr][nc];
+                        if (tile.obj && tile.obj.item.type === 'ride') { if (!adjacentRides.includes(tile.obj)) adjacentRides.push(tile.obj); } else if (tile.obj && tile.obj.item.type === 'shop') { if (Math.random() < 0.2) g.toiletUrge += 30; }
+                    }
+                });
+
+                if (adjacentRides.length > 0 && Math.random() < 0.4) {
+                    let ride = adjacentRides[Math.floor(Math.random() * adjacentRides.length)];
+                    if (ride.queue.length < 30) { g.status = 'queue'; g.targetRide = ride; ride.queue.push(g); return; }
+                }
+
+                let neighbors = [];
+                const isValid = (nr, nc) => {
+                    if(nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) return false;
+                    let tile = gridMap[nr][nc]; if(tile.type === 'path') return true; if(tile.obj && tile.obj.item.id === 'park_entrance') return true; return false;
+                };
+
+                if(isValid(tr-1, tc)) neighbors.push({r: tr-1, c: tc}); if(isValid(tr+1, tc)) neighbors.push({r: tr+1, c: tc}); if(isValid(tr, tc-1)) neighbors.push({r: tr, c: tc-1}); if(isValid(tr, tc+1)) neighbors.push({r: tr, c: tc+1});
+
+                if(neighbors.length > 0) {
+                    if(neighbors.length > 1 && g.lastPos) { let filtered = neighbors.filter(n => n.r !== g.lastPos.r || n.c !== g.lastPos.c); if(filtered.length > 0) neighbors = filtered; }
+                    let next = neighbors[Math.floor(Math.random() * neighbors.length)]; g.lastPos = {r: tr, c: tc}; g.target = next;
+                }
+            } else {
+                g.c += (dx / dist) * 0.015; g.r += (dy / dist) * 0.015; g.walkPhase += 0.25; g.isMoving = true; g.dirX = (dx - dy) >= 0 ? 1 : -1;
+            }
+        });
+
+        for(let i=floatingTexts.length-1; i>=0; i--) { let ft = floatingTexts[i]; ft.y -= 1; ft.alpha -= 0.01; if(ft.alpha <= 0) floatingTexts.splice(i, 1); }
+    } catch(err) { console.error("Update loop error: ", err); }
+}
+
+function drawDetailedGuest(ctx, g, sx, sy) {
+    ctx.save(); ctx.translate(sx, sy);
+    if (isLowSpec) { ctx.fillStyle = g.color; ctx.fillRect(-4, -10, 8, 10); ctx.fillStyle = g.skinColor; ctx.fillRect(-3, -15, 6, 5); if (g.status === 'vomiting') { ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText('🤢', 0, -20); } ctx.restore(); return; }
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, 5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    let bounce = g.isMoving ? Math.abs(Math.sin(g.walkPhase)) * 1.5 : 0; let swing = g.isMoving ? Math.sin(g.walkPhase) * 3 : 0; ctx.translate(0, -bounce); 
+    if (g.status === 'vomiting') {
+        ctx.fillStyle = '#88cc44'; ctx.beginPath(); ctx.ellipse(-8*g.dirX, 5, 8, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.translate(0, 5); ctx.rotate(g.dirX * 0.5); ctx.font = '16px Arial'; ctx.textAlign = 'center'; ctx.fillText('🤢', 0, -20);
+    } else if (g.status === 'seek_toilet') { bounce = Math.abs(Math.sin(g.walkPhase * 2)) * 2; ctx.translate(0, -bounce); }
+    ctx.scale(g.dirX, 1);
+    const headS = 6, bodyW = 5, bodyH = 6, limbW = 2, limbH = 4;
+    ctx.fillStyle = g.pantsColor; ctx.fillRect(-bodyW/2 + 1 + swing, -limbH, limbW, limbH); ctx.fillStyle = g.skinColor; ctx.fillRect(-bodyW/2 - swing, -bodyH - limbH + 1, limbW, limbH); ctx.fillStyle = g.color; ctx.fillRect(-bodyW/2, -bodyH - limbH, bodyW, bodyH); ctx.fillStyle = g.skinColor; ctx.fillRect(-headS/2, -bodyH - limbH - headS + 1, headS, headS - 1); ctx.fillStyle = g.hairColor; ctx.fillRect(-headS/2 - 0.5, -bodyH - limbH - headS - 0.5, headS + 1, 2.5); ctx.fillRect(headS/2 - 1.5, -bodyH - limbH - headS + 2, 2, 3); 
+    ctx.fillStyle = g.pantsColor; ctx.fillRect(bodyW/2 - limbW - 1 - swing, -limbH, limbW, limbH); ctx.fillStyle = g.color; ctx.fillRect(bodyW/2 - limbW + 0.5 + swing, -bodyH - limbH + 1, limbW, 2.5); ctx.fillStyle = g.skinColor; ctx.fillRect(bodyW/2 - limbW + 0.5 + swing, -bodyH - limbH + 3.5, limbW, 2.5); 
+    ctx.restore();
+}
+
+let currentScale = 1.0, initialPinchDistance = null, initialScale = 1.0, mouseX = 0, mouseY = 0, isDragging = false, dragStartX, dragStartY, camStartX, camStartY;
+function getPinchDistance(e) { return Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); }
+
+canvas.addEventListener('mousedown', e => { if(e.button === 2) { cancelModes(); return; } isDragging = true; dragStartX = e.clientX; dragStartY = e.clientY; camStartX = camX; camStartY = camY; });
+canvas.addEventListener('mousemove', e => { mouseX = (e.clientX - canvas.width/2) / currentScale + canvas.width/2; mouseY = (e.clientY - canvas.height/2) / currentScale + canvas.height/2; if(isDragging) { camX = camStartX + (e.clientX - dragStartX) / currentScale; camY = camStartY + (e.clientY - dragStartY) / currentScale; } });
+canvas.addEventListener('mouseup', e => {
+    if(e.button === 2) return; isDragging = false;
+    if(Math.abs(e.clientX - dragStartX) < 5 && Math.abs(e.clientY - dragStartY) < 5) {
+        const adjX = (e.clientX - canvas.width/2) / currentScale + canvas.width/2; const adjY = (e.clientY - canvas.height/2) / currentScale + canvas.height/2;
+        if(currentBuildItem) buildItemAt(adjX, adjY); else if(isDemolishMode) demolishItemAt(adjX, adjY);
+    }
+});
+canvas.addEventListener('wheel', e => { e.preventDefault(); const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1; currentScale = Math.min(Math.max(0.3, currentScale * zoomAmount), 3.0); }, { passive: false });
+canvas.addEventListener('contextmenu', e => { e.preventDefault(); cancelModes(); });
+
+canvas.addEventListener('touchstart', e => {
+    if(e.target !== canvas) return; e.preventDefault(); 
+    if (e.touches.length === 1) {
+        isDragging = true; const t = e.touches[0]; dragStartX = t.clientX; dragStartY = t.clientY; mouseX = (t.clientX - canvas.width/2) / currentScale + canvas.width/2; mouseY = (t.clientY - canvas.height/2) / currentScale + canvas.height/2; camStartX = camX; camStartY = camY;
+    } else if (e.touches.length === 2) { isDragging = false; initialPinchDistance = getPinchDistance(e); initialScale = currentScale; }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+    if(e.target !== canvas) return; e.preventDefault();
+    if (e.touches.length === 1 && isDragging) {
+        const t = e.touches[0]; mouseX = (t.clientX - canvas.width/2) / currentScale + canvas.width/2; mouseY = (t.clientY - canvas.height/2) / currentScale + canvas.height/2; camX = camStartX + (t.clientX - dragStartX) / currentScale; camY = camStartY + (t.clientY - dragStartY) / currentScale; 
+    } else if (e.touches.length === 2 && initialPinchDistance) {
+        const currentDistance = getPinchDistance(e); const scaleModifier = currentDistance / initialPinchDistance; currentScale = Math.min(Math.max(0.3, initialScale * scaleModifier), 3.0);
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+    if(e.target !== canvas) return; e.preventDefault();
+    if (e.touches.length < 2) { initialPinchDistance = null; }
+    if (e.touches.length === 0) {
+        if(isDragging) {
+            isDragging = false; const t = e.changedTouches[0];
+            if(Math.abs(t.clientX - dragStartX) < 5 && Math.abs(t.clientY - dragStartY) < 5) {
+                const adjX = (t.clientX - canvas.width/2) / currentScale + canvas.width/2; const adjY = (t.clientY - canvas.height/2) / currentScale + canvas.height/2;
+                if(currentBuildItem) buildItemAt(adjX, adjY); else if(isDemolishMode) demolishItemAt(adjX, adjY);
+            }
+        }
+    }
+}, { passive: false });
+
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.scale(currentScale, currentScale); ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    
+    let renderList = []; let hoverRC = toGrid(mouseX, mouseY); let demolishObj = null;
+    if(isDemolishMode && hoverRC && hoverRC.r >= 0 && hoverRC.c >= 0 && hoverRC.r < GRID_SIZE && hoverRC.c < GRID_SIZE) { demolishObj = gridMap[hoverRC.r][hoverRC.c].obj; }
+
+    for(let r=0; r<GRID_SIZE; r++){
+        for(let c=0; c<GRID_SIZE; c++){
+            const { x, y } = toScreen(r, c); const tile = gridMap[r][c]; let highlight = false; let isDemolishHighlight = false;
+            if(currentBuildItem && hoverRC && r >= hoverRC.r && r < hoverRC.r + currentBuildItem.size && c >= hoverRC.c && c < hoverRC.c + currentBuildItem.size) { highlight = true; } else if (isDemolishMode && demolishObj && tile.obj === demolishObj) { isDemolishHighlight = true; }
+            let color = tile.color; let isPath = false; if (tile.type === 'path') { color = tile.item.color; isPath = true; }
+            drawTile(x, y, color, highlight, isPath, isPath ? tile.item : null, r, c, isDemolishHighlight);
+            if (tile.obj && tile.obj.r === r && tile.obj.c === c && tile.obj.item.type !== 'path') { renderList.push({ type: 'entity', entity: tile.obj, z: tile.obj.r + tile.obj.c + (tile.obj.item.size * 0.5) }); }
+        }
+    }
+
+    guestsList.forEach(g => { if (g.status !== 'in_toilet') { const { x, y } = toScreen(g.r, g.c); renderList.push({ type: 'guest', guestRef: g, x: x, y: y, z: g.r + g.c }); } });
+    renderList.sort((a, b) => a.z - b.z);
+    renderList.forEach(item => { if (item.type === 'entity') drawEntity(item.entity); else if (item.type === 'guest') drawDetailedGuest(ctx, item.guestRef, item.x, item.y); });
+
+    explosions.forEach(exp => { exp.particles.forEach(p => { if (p.life > 0) { ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * Math.max(p.life, 0), 0, Math.PI*2); ctx.fill(); } }); }); ctx.globalAlpha = 1.0;
+    floatingTexts.forEach(ft => { ctx.fillStyle = `rgba(${ft.colorRgb}, ${ft.alpha})`; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; if(!isLowSpec) { ctx.shadowColor = '#000'; ctx.shadowBlur = 2; } ctx.fillText(ft.text, ft.x, ft.y); ctx.shadowBlur = 0; });
+
+    if (needsPathWarning && parkEntranceBuilt && entrancePos) {
+        const { x, y } = toScreen(entrancePos.r + 2, entrancePos.c + 1);
+        ctx.fillStyle = '#ffaaaa'; ctx.fillRect(x - 5, y - 10, 10, 15); ctx.fillStyle = '#ffccaa'; ctx.fillRect(x - 5, y - 20, 10, 10); ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000000'; ctx.lineWidth = 1; ctx.beginPath(); ctx.rect(x - 55, y - 55, 110, 25); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y - 30); ctx.lineTo(x - 5, y - 30); ctx.lineTo(x, y - 20); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ff0000'; ctx.font = 'bold 12px "Noto Sans KR", Arial'; ctx.textAlign = 'center'; ctx.fillText("보도 만들어 주세요!", x, y - 38);
+    }
+    ctx.restore();
+}
+
+function loop() { update(); render(); requestAnimationFrame(loop); }
+
+function toggleDemolishMode() {
+    let wasDemolish = isDemolishMode; cancelModes();
+    if (!wasDemolish) { isDemolishMode = true; document.getElementById('btn-demolish').classList.add('selected'); document.getElementById('build-cursor-tip').innerHTML = "철거할 대상을 클릭하세요<br>(취소: 빈 곳 우클릭 또는 철거 버튼 재클릭)"; document.getElementById('build-cursor-tip').style.display = 'block'; document.getElementById('build-window').style.display = 'none'; }
+}
+
+function cancelModes() { currentBuildItem = null; isDemolishMode = false; document.getElementById('btn-demolish').classList.remove('selected'); document.getElementById('build-cursor-tip').style.display = 'none'; document.querySelectorAll('.build-item').forEach(el => el.classList.remove('selected')); }
+
+function demolishItemAt(sx, sy) {
+    const { r, c } = toGrid(sx, sy); if(r < 0 || c < 0 || r >= GRID_SIZE || c >= GRID_SIZE) return;
+    const targetCell = gridMap[r][c]; if (!targetCell.obj) return;
+    const entityToDestroy = targetCell.obj; const item = entityToDestroy.item;
+    money += item.cost; rating -= (item.appeal || 0); incomePerTick -= (item.income || 0);
+    for(let ir = entityToDestroy.r; ir < entityToDestroy.r + item.size; ir++) {
+        for(let ic = entityToDestroy.c; ic < entityToDestroy.c + item.size; ic++) {
+            if (gridMap[ir] && gridMap[ir][ic] && gridMap[ir][ic].obj === entityToDestroy) { gridMap[ir][ic].obj = null; if(gridMap[ir][ic].type === 'path') { gridMap[ir][ic].type = 'grass'; gridMap[ir][ic].item = null; } }
+        }
+    }
+    if (entityToDestroy.queue) { entityToDestroy.queue.forEach(g => { g.status = 'wandering'; g.targetRide = null; }); }
+    if (item.id === 'park_entrance') { parkEntranceBuilt = false; entrancePos = null; document.getElementById('entrance-warning').style.display = 'inline-block'; }
+    const idx = entities.indexOf(entityToDestroy); if(idx > -1) entities.splice(idx, 1);
+    updateTopHUD(); const { x: ex, y: ey } = toScreen(entityToDestroy.r + (item.size-1)/2, entityToDestroy.c + (item.size-1)/2); createExplosion(ex, ey); showFloatingText(ex, ey - 40, `+₩${formatMoney(item.cost)} (철거)`, "68, 255, 68");
+}
+
+function buildItemAt(sx, sy) {
+    const { r, c } = toGrid(sx, sy); const size = currentBuildItem.size; if(r < 0 || c < 0 || r + size > GRID_SIZE || c + size > GRID_SIZE) return;
+    if (currentBuildItem.id === 'park_entrance') {
+        if (parkEntranceBuilt) { showFloatingText(sx, sy, "입구는 하나만 건설 가능합니다!", "255,68,68"); return; }
+        if (r !== 0 && c !== 0 && r + size !== GRID_SIZE && c + size !== GRID_SIZE) { showFloatingText(sx, sy, "입구는 맵의 가장자리에만 건설할 수 있습니다!", "255,68,68"); return; }
+    }
+    for(let ir = r; ir < r + size; ir++) { for(let ic = c; ic < c + size; ic++) { if(gridMap[ir][ic].obj !== null || gridMap[ir][ic].type === 'path') { return; } } }
+    if(money < currentBuildItem.cost) { showFloatingText(sx, sy, "잔액 부족!", "255,68,68"); return; }
+    money -= currentBuildItem.cost; const newObj = { r, c, item: currentBuildItem, queue: [] }; entities.push(newObj);
+    for(let ir = r; ir < r + size; ir++) { for(let ic = c; ic < c + size; ic++) { gridMap[ir][ic].obj = newObj; if(currentBuildItem.type === 'path') { gridMap[ir][ic].type = 'path'; gridMap[ir][ic].item = currentBuildItem; } } }
+    if (currentBuildItem.id === 'park_entrance') { parkEntranceBuilt = true; entrancePos = {r: r, c: c}; document.getElementById('entrance-warning').style.display = 'none'; }
+    rating += currentBuildItem.appeal || 0; incomePerTick += currentBuildItem.income; updateTopHUD(); showFloatingText(sx, sy, `-₩${formatMoney(currentBuildItem.cost)}`, "255,68,68");
+}
+
+function closeBuildWindow() { document.getElementById('build-window').style.display = 'none'; cancelModes(); }
+
+function toggleBuildWindow(category) {
+    cancelModes(); const win = document.getElementById('build-window'); win.style.display = 'flex'; document.getElementById('build-window-title').innerText = category === 'path' ? '보도 설치' : category === 'ride' ? '놀이기구 건설' : category === 'shop' ? '상점 건설' : category === 'facility' ? '공원 시설' : '조경 배치';
+    const catalog = document.getElementById('build-catalog'); catalog.innerHTML = '';
+    CATALOG[category].forEach(item => {
+        const div = document.createElement('div'); div.className = 'build-item'; let costClass = 'item-cost';
+        if(item.god) costClass = 'item-cost god'; else if(item.ultra) costClass = 'item-cost ultra'; else if(item.premium) costClass = 'item-cost premium';
+        div.innerHTML = `<div class="item-icon">${item.icon}</div><div class="item-name">${item.name}</div><div class="${costClass}">₩${formatMoney(item.cost)}</div>`;
+        div.onclick = () => { document.querySelectorAll('.build-item').forEach(el => el.classList.remove('selected')); div.classList.add('selected'); currentBuildItem = item; document.getElementById('build-cursor-tip').innerHTML = "건설할 위치를 클릭하세요<br>(취소: 빈 곳 우클릭 또는 도구모음 재클릭)"; document.getElementById('build-cursor-tip').style.display = 'block'; };
+        catalog.appendChild(div);
+    });
+}
+
+function showFloatingText(sx, sy, text, colorRgb) { floatingTexts.push({ x: sx, y: sy, text: text, alpha: 1, colorRgb: colorRgb }); }
+function formatMoney(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function formatTime(ms) { let totalSeconds = Math.floor(ms / 1000); return `${Math.floor(totalSeconds / 60)}분 ${totalSeconds % 60}초`; }
+function updateTopHUD() { document.getElementById('money-count').textContent = `₩ ${formatMoney(money)}`; document.getElementById('rating-count').textContent = rating; document.getElementById('guest-count').textContent = guestsList.length; }
+
+setInterval(() => {
+    if(document.getElementById('intro-modal').style.display !== 'none' || document.getElementById('quiz-modal-overlay').style.display === 'flex') return;
+    if(incomePerTick > 0 && guestsList.length > 0) {
+        money += incomePerTick; updateTopHUD(); const incomeEntities = entities.filter(e => e.item.income > 0);
+        if(incomeEntities.length > 0) { const e = incomeEntities[Math.floor(Math.random() * incomeEntities.length)]; const { x, y } = toScreen(e.r, e.c); showFloatingText(x, y - 50, `+₩${formatMoney(e.item.income)}`, "68, 255, 68"); }
+    }
+    entities.forEach(e => {
+        if (e.item.type === 'ride' && e.queue && e.queue.length > 0) {
+            let count = Math.min(e.queue.length, Math.floor(Math.random() * 2) + 1);
+            for(let i=0; i<count; i++) {
+                let guest = e.queue.shift(); guest.status = 'wandering'; guest.targetRide = null; guest.nausea += Math.random() * 40 + 30; 
+                let adjacentPaths = [];
+                for(let ir = e.r - 1; ir <= e.r + e.item.size; ir++) { for(let ic = e.c - 1; ic <= e.c + e.item.size; ic++) { if(ir>=0 && ir<GRID_SIZE && ic>=0 && ic<GRID_SIZE) { if(gridMap[ir][ic].type === 'path') adjacentPaths.push({r: ir, c: ic}); } } }
+                if (adjacentPaths.length > 0) { let outPath = adjacentPaths[Math.floor(Math.random() * adjacentPaths.length)]; guest.r = outPath.r; guest.c = outPath.c; guest.target = {r: outPath.r, c: outPath.c}; } else { guest.target = {r: Math.round(guest.r), c: Math.round(guest.c)}; }
+                let incomeFromGuest = Math.floor(e.item.cost / 100); money += incomeFromGuest; let { x, y } = toScreen(guest.r, guest.c); showFloatingText(x, y - 20, `+₩${incomeFromGuest}`, "68, 255, 68");
+            }
+            updateTopHUD();
+        }
+    });
+    if(parkEntranceBuilt) {
+        let hasPath = entities.some(e => e.item.type === 'path'); needsPathWarning = !hasPath;
+        if(!needsPathWarning) { let target = getTargetGuestCount(); if(guestsList.length < target) { let spawnCount = Math.min(3, target - guestsList.length); for(let i=0; i<spawnCount; i++){ spawnGuestAt(entrancePos.r + 1, entrancePos.c + 1); } updateTopHUD(); } }
+    }
+}, 2000);
+
+function shuffleQuestions() { shuffledQuestions = [...QUESTIONS]; currentQuestionIndex = 0; firstTryCount = 0; }
+function openQuiz() {
+    if (currentQuestionIndex >= 30) { showFloatingText(canvas.width/2, canvas.height/2, "모든 연구 과제(보너스 포함)를 완료했습니다!", "255, 200, 0"); return; }
+    if(shuffledQuestions.length === 0 || currentQuestionIndex >= shuffledQuestions.length) shuffleQuestions();
+    isFirstTry = true; const qData = shuffledQuestions[currentQuestionIndex];
+    document.getElementById('quiz-no').innerText = currentQuestionIndex >= 20 ? `🌟 보너스 과제 - ${currentQuestionIndex + 1 - 20} / 10 🌟` : `연구 과제 (위치와 영토 모습) - ${currentQuestionIndex + 1} / 30`;
+    document.getElementById('quiz-text').innerHTML = qData.q;
+    const optionsDiv = document.getElementById('quiz-options'); optionsDiv.innerHTML = '';
+    let options = qData.options.map((opt, i) => ({ text: opt, index: i })); options.sort(() => Math.random() - 0.5); 
+    options.forEach((opt) => {
+        const btn = document.createElement('button'); btn.className = 'retro-button quiz-option'; btn.innerText = opt.text;
+        btn.onclick = () => checkAnswer(opt.index, qData.answer, qData.explanation, qData.hint, btn); optionsDiv.appendChild(btn);
+    });
+    document.getElementById('quiz-feedback').style.display = 'none'; document.getElementById('btn-next-quiz').style.display = 'none'; document.getElementById('quiz-modal-overlay').style.display = 'flex';
+}
+
+function checkAnswer(selectedIndex, correctAnswerIndex, explanation, hint, btnClicked) {
+    if(selectedIndex === correctAnswerIndex) {
+        if(isFirstTry) firstTryCount++; isFirstTry = false; 
+        document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); btnClicked.style.background = '#44ff44'; btnClicked.style.color = '#000';
+        const reward = 3000 + Math.floor(Math.random()*2000); money += reward; updateTopHUD();
+        const feedback = document.getElementById('quiz-feedback'); feedback.style.display = 'block'; feedback.innerHTML = `<span style="color: #00aa00;">✅ 정답입니다! 연구기금 ₩${formatMoney(reward)}을 획득했습니다.</span><br><br>${explanation}`; document.getElementById('btn-next-quiz').style.display = 'block';
+    } else {
+        isFirstTry = false; btnClicked.style.background = '#ff4444'; btnClicked.style.color = '#fff'; document.getElementById('hint-text').innerText = hint || "다시 한번 곰곰이 생각해보세요!"; document.getElementById('hint-modal-overlay').style.display = 'flex';
+        setTimeout(() => { btnClicked.style.background = '#e0e0e0'; btnClicked.style.color = '#000'; }, 1000);
+    }
+}
+function closeHintModal() { document.getElementById('hint-modal-overlay').style.display = 'none'; }
+function nextQuiz() {
+    currentQuestionIndex++; document.getElementById('quiz-modal-overlay').style.display = 'none';
+    if (currentQuestionIndex === 20) alert("🎉 정규 20문제를 모두 풀었습니다!\n이어서 추가 자금 획득을 위한 '보너스 10문제'가 시작됩니다. 🎉");
+    if(currentQuestionIndex >= 30) showOutroModal();
+}
+
+function showNicknameInput() { isLowSpec = document.getElementById('low-spec-toggle').checked; document.getElementById('intro-modal').style.display = 'none'; document.getElementById('nickname-modal').style.display = 'flex'; }
+function submitNickname() { playerName = document.getElementById('player-nickname').value.trim() || "익명"; document.getElementById('nickname-modal').style.display = 'none'; startGame(); }
+function showOutroModal() {
+    document.getElementById('outro-name').innerText = `${playerName} 원장님`; document.getElementById('outro-time').innerText = formatTime(Date.now() - gameStartTime); document.getElementById('outro-first-try').innerText = `${firstTryCount} 개`; document.getElementById('outro-guests').innerText = `${guestsList.length} 명`; document.getElementById('outro-money').innerText = `₩ ${formatMoney(money)}`; document.getElementById('outro-modal').style.display = 'flex';
+}
+function continueGame() { document.getElementById('outro-modal').style.display = 'none'; }
+function startGame() { gameStartTime = Date.now(); document.getElementById('entrance-warning').style.display = 'inline-block'; shuffleQuestions(); updateTopHUD(); setTimeout(centerCamera, 100); requestAnimationFrame(loop); }
+</script>
+</body>
+</html>

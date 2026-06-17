@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>에듀런: 부피와 겉넓이 대모험</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+  :root {
+    --bg-color: #0d0e15;
+    --primary: #00f3ff;
+    --secondary: #ff007c;
+    --accent: #ffeb3b;
+    --panel-bg: rgba(20, 22, 35, 0.9);
+    --font-title: 'Jua', sans-serif;
+    --font-main: 'Noto Sans KR', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-touch-callout: none; }
+  
+  html, body {
+    background-color: #000;
+    color: white;
+    font-family: var(--font-main);
+    overflow: hidden;
+    touch-action: none;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #game-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1280px;
+    height: 720px;
+    transform-origin: center center;
+    background-color: var(--bg-color);
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  @keyframes pulse-neon {
+    0% { box-shadow: 0 0 5px var(--primary); }
+    50% { box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary); }
+    100% { box-shadow: 0 0 5px var(--primary); }
+  }
+  @keyframes pulse-special {
+    0% { box-shadow: inset 0 0 10px #ffeb3b, 0 0 5px #ffeb3b; border-color: #ffeb3b; }
+    50% { box-shadow: inset 0 0 20px #ff9800, 0 0 15px #ff9800; border-color: #ff9800; }
+    100% { box-shadow: inset 0 0 10px #ffeb3b, 0 0 5px #ffeb3b; border-color: #ffeb3b; }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+  }
+
+  .screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, #1a1c29 0%, #0d0e15 100%);
+    z-index: 10; transition: opacity 0.3s;
+  }
+  .hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+  .title-text {
+    font-family: var(--font-title); font-size: 3.5rem; color: #fff;
+    text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary);
+    margin-bottom: 5px; text-align: center; animation: float 3s ease-in-out infinite;
+  }
+  .title-text span { font-size: 2.5rem !important; }
+  .subtitle { font-size: 1.2rem; color: var(--accent); margin-bottom: 15px; font-family: var(--font-title); text-align: center; line-height: 1.5; }
+
+  .panel {
+    background: var(--panel-bg); border: 2px solid var(--primary); border-radius: 15px;
+    padding: 20px 30px; width: 95%; max-width: 600px; max-height: 85%; overflow-y: auto;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); text-align: center;
+  }
+  .panel::-webkit-scrollbar { width: 8px; }
+  .panel::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+  input[type="text"] {
+    width: 100%; padding: 10px; font-size: 1.3rem; font-family: var(--font-main);
+    border: 2px solid #333; border-radius: 8px; background: #000; color: #fff;
+    margin-bottom: 15px; text-align: center; outline: none;
+  }
+  input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+  .btn-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+  .btn {
+    flex: 1; padding: 10px; font-family: var(--font-title); font-size: 1.3rem;
+    border: none; border-radius: 8px; cursor: pointer; color: white; background: #333;
+    transition: all 0.2s;
+  }
+  .btn.active { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); transform: scale(1.05); }
+
+  .char-select { 
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px; font-size: 2rem; 
+    max-height: 120px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid #333;
+  }
+  .char-select::-webkit-scrollbar { width: 10px; }
+  .char-select::-webkit-scrollbar-track { background: transparent; }
+  .char-select::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 5px; }
+  .char-item {
+    cursor: pointer; opacity: 0.5; transition: all 0.2s;
+    background: rgba(255,255,255,0.1); border-radius: 50%; width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid transparent;
+  }
+  .char-item.active { opacity: 1; background: rgba(0, 243, 255, 0.3); transform: scale(1.15); border: 2px solid var(--primary); }
+  
+  .char-item.special-char { animation: pulse-special 2s infinite; opacity: 0.8; }
+  .char-item.special-char.active { opacity: 1; border-color: var(--accent); background: rgba(255, 235, 59, 0.2); }
+
+  .opt-group { margin-bottom: 15px; font-size: 1.1rem; color: #fff; text-align: center; }
+  .opt-group label { cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: #333; padding: 8px 15px; border-radius: 8px; transition: all 0.2s; }
+  .opt-group label:hover { background: #444; }
+  .opt-group input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--secondary); }
+
+  .start-btn {
+    width: 100%; padding: 15px; font-family: var(--font-title); font-size: 1.6rem;
+    background: linear-gradient(45deg, var(--primary), #0099ff); color: white;
+    border: none; border-radius: 8px; cursor: pointer; animation: pulse-neon 2s infinite;
+  }
+
+  #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  canvas { display: block; width: 100%; height: 100%; }
+  
+  #hud {
+    position: absolute; top: 20px; left: 20px; right: 20px; z-index: 5;
+    display: flex; justify-content: space-between; pointer-events: none;
+  }
+  .hud-left, .hud-right { display: flex; flex-direction: column; gap: 10px; width: 30%; max-width: 250px; }
+  
+  #hud-center {
+    position: absolute; left: 50%; transform: translateX(-50%); top: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .progress-badge {
+    background: rgba(0, 0, 0, 0.7); border: 2px solid var(--primary); border-radius: 20px;
+    padding: 6px 20px; font-family: var(--font-title); font-size: 1.4rem; color: #fff;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); white-space: nowrap; text-shadow: 1px 1px 2px #000;
+  }
+
+  .revive-badge {
+    background: rgba(0, 0, 0, 0.7); border: 2px solid #555; border-radius: 20px;
+    padding: 4px 15px; font-family: var(--font-title); font-size: 1.1rem; color: #aaa;
+    white-space: nowrap; transition: all 0.3s;
+  }
+  .revive-badge.active {
+    border-color: var(--secondary); color: #fff; 
+    box-shadow: 0 0 15px var(--secondary); animation: pulse-revive 1.5s infinite;
+  }
+  @keyframes pulse-revive {
+    0% { box-shadow: 0 0 5px var(--secondary); }
+    50% { box-shadow: 0 0 20px var(--secondary); }
+    100% { box-shadow: 0 0 5px var(--secondary); }
+  }
+
+  .bar-container { background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 10px; height: 30px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; width: 100%; transition: width 0.1s; }
+  .hp-fill { background: linear-gradient(90deg, #ff0000, #ff4d4d); }
+  .dash-fill { background: linear-gradient(90deg, #ffeb3b, #ff9800); width: 0%; }
+  .quiz-fill { background: linear-gradient(90deg, #00f3ff, #0088ff); width: 0%; }
+  .bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-title); font-size: 1.1rem; text-shadow: 1px 1px 2px #000; }
+  
+  .score-display { font-family: var(--font-title); font-size: 2.5rem; color: var(--accent); text-shadow: 2px 2px 0 #000; text-align: right; line-height: 1; }
+
+  #controls {
+    position: absolute; bottom: 40px; left: 0; width: 100%; height: 100px;
+    display: none; justify-content: space-between; padding: 0 50px; z-index: 5;
+    pointer-events: none; 
+  }
+  .d-pad, .action-btns { 
+    display: flex; gap: 20px; align-items: flex-end; pointer-events: auto; 
+  }
+  .ctrl-btn {
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    color: rgba(255,255,255,0.5);
+    font-size: 2rem; font-family: var(--font-title); font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+    box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 5px 15px rgba(0,0,0,0.3);
+    transition: all 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ctrl-btn:active, .ctrl-btn.pressed {
+    transform: scale(0.9);
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
+    color: rgba(255,255,255,0.9);
+  }
+  .btn-dash { color: rgba(0, 243, 255, 0.6); border-color: rgba(0, 243, 255, 0.2); }
+  .btn-dash:active, .btn-dash.pressed { background: radial-gradient(circle, rgba(0, 243, 255, 0.3) 0%, rgba(0, 243, 255, 0.1) 100%); color: var(--primary); }
+
+  #quiz-modal, #revive-modal {
+    position: absolute; top:0; left:0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 20; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+  }
+  
+  .quiz-box {
+    background: linear-gradient(135deg, #1a1025, #0f172a); border: 3px solid var(--primary);
+    border-radius: 15px; width: 90%; max-width: 800px; padding: 30px; text-align: center;
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); max-height: 90%; overflow-y: auto;
+  }
+  .quiz-q { font-size: 1.6rem; font-weight: bold; margin-bottom: 20px; line-height: 1.4; color: #fff; }
+  .quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .quiz-choice {
+    background: #2a2d3e; border: 2px solid #4a4d5e; border-radius: 12px;
+    padding: 15px; font-size: 1.2rem; color: #fff; cursor: pointer; transition: all 0.2s;
+    font-family: var(--font-main);
+  }
+  .quiz-choice:active { transform: scale(0.95); }
+  .quiz-choice.correct { background: #4CAF50; border-color: #81C784; }
+  .quiz-choice.wrong { background: #F44336; border-color: #E57373; animation: shake 0.4s; }
+  
+  .hint-box {
+    margin-top: 25px; padding: 20px; background: rgba(255, 235, 59, 0.15); border: 1px dashed var(--accent);
+    border-radius: 8px; color: var(--accent); font-size: 1.3rem; display: none; line-height: 1.5;
+  }
+  
+  .next-btn {
+    margin-top: 30px; padding: 15px 40px; background: var(--primary); color: #000;
+    border: none; border-radius: 8px; font-family: var(--font-title); font-size: 1.6rem;
+    display: none; cursor: pointer; width: 100%;
+  }
+
+  .result-num { font-size: 4rem; color: var(--primary); font-family: var(--font-title); margin: 10px 0; }
+</style>
+</head>
+<body>
+
+  <div id="game-wrapper">
+
+    <!-- Start Screen -->
+    <div id="screen-start" class="screen">
+      <div class="title-text">에듀런<br><span style="color:#fff;">부피와 겉넓이 대모험</span></div>
+      <div class="subtitle">
+        6학년 1학기 수학 마스터하기! (초고속 모드)<br>
+        <span style="font-size:1rem; color:#aaa;">모바일: 빈 화면을 터치하면 점프해요! (따닥! 누르면 2단 점프)</span>
+      </div>
+      
+      <div class="panel">
+        <input type="text" id="input-nick" placeholder="너의 닉네임은?" maxlength="8" autocomplete="off">
+        
+        <div style="font-family:var(--font-title); color:#aaa; margin-bottom:10px; font-size:1.2rem;">난이도 선택</div>
+        <div class="btn-group" id="diff-group">
+          <button class="btn active" data-val="low">하 (개념)</button>
+          <button class="btn" data-val="mid">중 (비교)</button>
+          <button class="btn" data-val="high">상 (응용)</button>
+        </div>
+
+        <div style="font-family:var(--font-title); color:#aaa; margin-bottom:10px; font-size:1.2rem;">캐릭터 선택</div>
+        <div class="char-select" id="char-group">
+          <div class="char-item active" data-char="🦊">🦊</div>
+          <div class="char-item" data-char="🐧">🐧</div>
+          <div class="char-item" data-char="👻">👻</div>
+          <div class="char-item" data-char="🐉">🐉</div>
+          <div class="char-item" data-char="🐰">🐰</div>
+          <div class="char-item" data-char="🐹">🐹</div>
+          <div class="char-item" data-char="🐼">🐼</div>
+          <div class="char-item" data-char="🐨">🐨</div>
+          <div class="char-item" data-char="🐯">🐯</div>
+          <div class="char-item" data-char="🦁">🦁</div>
+          <div class="char-item" data-char="🐶">🐶</div>
+          <div class="char-item" data-char="🐱">🐱</div>
+          <div class="char-item" data-char="🐸">🐸</div>
+          <div class="char-item" data-char="🐵">🐵</div>
+          <div class="char-item" data-char="🦄">🦄</div>
+          <div class="char-item" data-char="🦉">🦉</div>
+          <div class="char-item" data-char="🦇">🦇</div>
+          <div class="char-item" data-char="🐝">🐝</div>
+          <div class="char-item" data-char="🐞">🐞</div>
+          <div class="char-item" data-char="🐢">🐢</div>
+          <div class="char-item special-char" data-char="🚄" title="히든 고속열차">🚄</div>
+        </div>
+        
+        <div class="opt-group">
+          <label><input type="checkbox" id="chk-lowend"> ⚡ 저사양 모드 (배경/이펙트 줄임)</label>
+        </div>
+
+        <button class="start-btn" onclick="startGame()">게임 시작!</button>
+      </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <div id="game-container" class="hidden">
+      <canvas id="gameCanvas"></canvas>
+      
+      <div id="hud">
+        <div class="hud-left">
+          <div class="bar-container">
+            <div class="bar-fill hp-fill" id="hp-bar"></div>
+            <div class="bar-text">체력 (HP)</div>
+          </div>
+          <div class="bar-container">
+            <div class="bar-fill dash-fill" id="dash-bar"></div>
+            <div class="bar-text" style="color:#000;">대쉬 게이지 ⚡ (Z키 Hold)</div>
+          </div>
+          <div class="bar-container">
+            <div class="bar-fill quiz-fill" id="quiz-bar"></div>
+            <div class="bar-text" style="color:#000;">퀴즈 출현 ⏰</div>
+          </div>
+        </div>
+        
+        <div id="hud-center">
+          <div class="progress-badge">
+            📝 문제: <span id="hud-quiz-progress" style="color: var(--accent);">0 / 10</span>
+          </div>
+          <div id="hud-revive" class="revive-badge">
+            🔥 콤보 0/3 (부활권 0개)
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="score-display"><span id="hud-score">0</span> 점</div>
+          <div style="text-align:right; color:#fff; font-size:1.2rem; opacity:0.8;">
+            <span id="hud-nick">Player</span> | <span id="hud-diff">하</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="controls">
+        <div class="d-pad">
+          <div class="ctrl-btn" id="btn-left">◀</div>
+          <div class="ctrl-btn" id="btn-right">▶</div>
+        </div>
+        <div class="action-btns">
+          <div class="ctrl-btn btn-dash" id="btn-dash">Z</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="hidden">
+      <div class="quiz-box">
+        <div style="color:var(--primary); font-family:var(--font-title); font-size:1.8rem; margin-bottom:15px;">🚨 퀴즈 타임! 🚨</div>
+        <div class="quiz-q" id="q-text">문제 내용이 여기에 표시됩니다.</div>
+        <div class="quiz-grid" id="q-choices">
+          <!-- Choices generated by JS -->
+        </div>
+        <div class="hint-box" id="q-hint">💡 선생님의 힌트: 다시 한 번 생각해보자!</div>
+        <button class="next-btn" id="btn-next" onclick="closeQuiz()">계속 달리기 🏃</button>
+      </div>
+    </div>
+
+    <!-- 부활 확인 Modal -->
+    <div id="revive-modal" class="hidden" style="z-index: 25;">
+      <div class="panel" style="background: rgba(20, 0, 10, 0.95); border-color: var(--secondary);">
+        <div style="font-size:2.5rem; color:var(--secondary); font-family:var(--font-title); margin-bottom:10px;">💀 체력 소진!</div>
+        <div style="font-size:1.3rem; margin-bottom:25px; line-height:1.5;">
+          보유하신 부활권이 있습니다.<br>
+          <span style="color: var(--accent);">현재 위치에서 체력을 100% 채우고<br>다시 달리겠습니까?</span>
+        </div>
+        <div class="btn-group" style="gap: 20px;">
+          <button class="btn" style="background: var(--secondary); font-size: 1.5rem; animation: pulse-revive 1.5s infinite;" onclick="useRevive()">💖 부활하기</button>
+          <button class="btn" style="background: #555;" onclick="endGameFromRevive()">포기하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="screen-result" class="screen hidden">
+      <div class="title-text" style="font-size:4rem;">게임 오버</div>
+      <div class="panel">
+        <div style="font-size:1.5rem; color:#aaa;">최종 점수</div>
+        <div class="result-num" id="res-score">0</div>
+        <div style="font-size:1.5rem; color:#aaa; margin-top:30px;">맞춘 문제 수</div>
+        <div class="result-num" style="color:var(--secondary);" id="res-correct">0</div>
+        <button class="start-btn" style="margin-top:40px;" onclick="location.reload()">처음으로 돌아가기</button>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* =========================================
+   0. 화면 최적화 (Scaling) 및 프레임 고정 변수
+========================================= */
+const LOGICAL_W = 1280;
+const LOGICAL_H = 720;
+let isLowEndMode = false; 
+let lastTime = 0; 
+const fpsInterval = 1000 / 60; 
+
+function resizeScreen() {
+  const wrapper = document.getElementById('game-wrapper');
+  const winW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+  const winH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const scale = Math.min(winW / LOGICAL_W, winH / LOGICAL_H);
+  wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+window.addEventListener('resize', resizeScreen);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeScreen);
+resizeScreen(); 
+
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.getElementById('controls').style.display = 'flex';
+}
+
+/* =========================================
+   1. 오디오 합성 시스템 (Web Audio API)
+========================================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+
+  if (type === 'jump') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.start(now); osc.stop(now + 0.1);
+  } else if (type === 'coin') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.setValueAtTime(1600, now + 0.05);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+    osc.start(now); osc.stop(now + 0.1);
+  } else if (type === 'dash') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+    osc.start(now); osc.stop(now + 0.2);
+  } else if (type === 'correct') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(440, now); 
+    osc.frequency.setValueAtTime(554.37, now + 0.1); 
+    osc.frequency.setValueAtTime(659.25, now + 0.2); 
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+    osc.start(now); osc.stop(now + 0.4);
+  } else if (type === 'wrong') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+    osc.start(now); osc.stop(now + 0.3);
+  } else if (type === 'hit') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+    gainNode.gain.setValueAtTime(0.4, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+    osc.start(now); osc.stop(now + 0.2);
+  }
+}
+
+/* =========================================
+   2. 퀴즈 데이터베이스 (도형 이미지 SVG 추가)
+========================================= */
+const getBoxSvg = (w, d, h) => `<br><svg viewBox='0 0 160 130' width='100%' height='130' style='margin:10px auto; display:block; max-width:200px;'><polygon points='40,50 100,50 100,100 40,100' fill='rgba(255,255,255,0.1)' stroke='#00f3ff' stroke-width='2'/><polygon points='100,50 130,30 130,80 100,100' fill='rgba(255,255,255,0.05)' stroke='#00f3ff' stroke-width='2'/><polygon points='40,50 70,30 130,30 100,50' fill='rgba(255,255,255,0.2)' stroke='#00f3ff' stroke-width='2'/><polyline points='40,100 70,80 130,80' fill='none' stroke='#00f3ff' stroke-width='1.5' stroke-dasharray='4,4' opacity='0.5'/><line x1='70' y1='30' x2='70' y2='80' stroke='#00f3ff' stroke-width='1.5' stroke-dasharray='4,4' opacity='0.5'/><text x='70' y='120' fill='#ffeb3b' font-size='14' text-anchor='middle' font-weight='bold' font-family='sans-serif'>${w}</text><text x='125' y='105' fill='#ffeb3b' font-size='14' text-anchor='middle' font-weight='bold' font-family='sans-serif'>${d}</text><text x='140' y='60' fill='#ffeb3b' font-size='14' font-weight='bold' font-family='sans-serif'>${h}</text></svg>`;
+
+const Q_DB = {
+  low: [
+    { q: "가로가 3cm, 세로가 4cm, 높이가 2cm인 📦직육면체 상자의 부피는 얼마일까요?" + getBoxSvg('3cm', '4cm', '2cm'), choices: ["24 cm³", "18 cm³", "36 cm³", "9 cm³"], ans: 0, hint: "부피는 '가로 × 세로 × 높이'로 계산해요." },
+    { q: "1 cm³ 란 무엇을 의미할까요?", choices: ["한 변이 1cm인 정사각형 넓이", "한 모서리가 1cm인 정육면체 부피", "1cm를 3번 더한 길이", "모든 모서리가 3cm인 상자"], ans: 1, hint: "부피의 기본 단위는 한 모서리가 1cm인 '정육면체'의 크기입니다." },
+    { q: "한 모서리가 3cm인 정육면체 모양 🎲장난감 주사위가 있습니다. 이 주사위의 부피는?" + getBoxSvg('3cm', '3cm', '3cm'), choices: ["9 cm³", "12 cm³", "18 cm³", "27 cm³"], ans: 3, hint: "정육면체의 부피는 '한 모서리 × 한 모서리 × 한 모서리' 입니다." },
+    { q: "1 m³ 는 부피가 1 cm³ 인 정육면체 장난감이 몇 개 모인 것과 같을까요?", choices: ["100개", "10,000개", "1,000,000개", "10,000,000개"], ans: 2, hint: "1m = 100cm 이므로, 100 × 100 × 100을 계산해보세요." },
+    { q: "가로 5m, 세로 2m, 높이 3m인 🚢대형 컨테이너의 부피는 몇 m³ 일까요?" + getBoxSvg('5m', '2m', '3m'), choices: ["30 m³", "10 m³", "15 m³", "25 m³"], ans: 0, hint: "가로, 세로, 높이를 모두 곱해주세요." },
+    { q: "부피 2 m³ 를 cm³ 단위로 바르게 나타낸 것은 어느 것인가요?", choices: ["20,000 cm³", "2,000,000 cm³", "200,000 cm³", "20,000,000 cm³"], ans: 1, hint: "1 m³ = 1,000,000 cm³ 라는 것을 기억하세요." },
+    { q: "직육면체의 겉넓이를 구하려면 직육면체를 둘러싼 면들의 넓이를 모두 더해야 합니다. 면은 총 몇 개인가요?", choices: ["4개", "5개", "8개", "6개"], ans: 3, hint: "주사위를 떠올려보세요. 주사위의 면은 몇 개일까요?" },
+    { q: "한 모서리가 2cm인 정육면체의 겉넓이는 몇 cm² 일까요?" + getBoxSvg('2cm', '2cm', '2cm'), choices: ["12 cm²", "16 cm²", "24 cm²", "8 cm²"], ans: 2, hint: "한 면의 넓이(2×2)를 구한 뒤, 면의 개수(6개)를 곱하세요." },
+    { q: "3,000,000 cm³ 는 몇 m³ 와 같을까요?", choices: ["3 m³", "30 m³", "300 m³", "0.3 m³"], ans: 0, hint: "0이 6개 지워지면 단위를 m³로 바꿀 수 있어요." },
+    { q: "한 면의 넓이가 25 cm² 인 정육면체의 겉넓이는 얼마일까요?", choices: ["100 cm²", "150 cm²", "125 cm²", "200 cm²"], ans: 1, hint: "정육면체는 넓이가 같은 면이 6개 있습니다." }
+  ],
+  mid: [
+    { q: "가로 5cm, 세로 4cm인 직육면체의 부피가 60 cm³ 입니다. 높이는 몇 cm일까요?" + getBoxSvg('5cm', '4cm', '? cm'), choices: ["3 cm", "4 cm", "5 cm", "6 cm"], ans: 0, hint: "밑면의 넓이(5×4=20)에 얼마를 곱해야 60이 되는지 생각해보세요." },
+    { q: "영희는 가로 4cm, 세로 5cm, 높이 6cm인 🎁직육면체 선물 상자를 샀습니다. 이 상자의 부피는?" + getBoxSvg('4cm', '5cm', '6cm'), choices: ["100 cm³", "120 cm³", "150 cm³", "90 cm³"], ans: 1, hint: "4 × 5 × 6 을 차례대로 계산해보세요." },
+    { q: "가로 10cm, 세로 8cm, 높이 5cm인 🍫벽돌 모양 초콜릿을 겹치는 부분 없이 포장할 때 필요한 포장지의 최소 넓이는?" + getBoxSvg('10cm', '8cm', '5cm'), choices: ["280 cm²", "300 cm²", "340 cm²", "400 cm²"], ans: 2, hint: "세 쌍의 면의 넓이 (80, 50, 40)를 구해서 모두 더한 후 2배를 하세요." },
+    { q: "전개도를 접어 직육면체를 만들었습니다. 밑면의 가로 3cm, 세로 2cm, 높이 4cm일 때 이 도형의 겉넓이는?" + getBoxSvg('3cm', '2cm', '4cm'), choices: ["48 cm²", "50 cm²", "60 cm²", "52 cm²"], ans: 3, hint: "보이는 세 면의 넓이 (3×2) + (2×4) + (3×4) 를 더하고 2를 곱하세요." },
+    { q: "다음 중 부피가 가장 큰 것은 어느 것일까요?", choices: ["가로 1m, 세로 2m, 높이 1m 상자", "2,500,000 cm³", "한 모서리가 1m인 정육면체 3개", "1.5 m³"], ans: 2, hint: "모두 m³ 단위로 바꿔서 비교해보세요. (1번:2, 2번:2.5, 3번:3, 4번:1.5)" },
+    { q: "가로 2m, 세로 300cm, 높이 4m인 방의 부피는 몇 m³ 일까요?", choices: ["240 m³", "24 m³", "2400 m³", "12 m³"], ans: 1, hint: "단위를 m로 통일하세요. 300cm는 3m 입니다." },
+    { q: "부피가 64 cm³ 인 정육면체의 한 모서리 길이는 몇 cm일까요?", choices: ["4 cm", "8 cm", "6 cm", "16 cm"], ans: 0, hint: "똑같은 숫자를 3번 곱해서 64가 되는 수를 찾으세요." },
+    { q: "밑면의 넓이가 24 cm² 이고 높이가 5cm인 직육면체의 부피는 몇 cm³ 일까요?", choices: ["120 cm³", "100 cm³", "144 cm³", "96 cm³"], ans: 0, hint: "직육면체의 부피는 '(밑면의 넓이) × 높이'로도 구할 수 있어요." },
+    { q: "직육면체의 겉넓이를 구하는 방법으로 틀린 것은?", choices: ["여섯 면의 넓이의 합", "전개도의 전체 넓이", "한 면의 넓이 × 6", "합동인 세 면의 넓이의 합 × 2"], ans: 2, hint: "직육면체는 모든 면의 넓이가 같지 않을 수 있어요. 한 면만 6번 곱하는 건 정육면체입니다." },
+    { q: "한 모서리가 4cm인 정육면체 모양 🧊얼음 큐브의 겉넓이는 몇 cm² 일까요?" + getBoxSvg('4cm', '4cm', '4cm'), choices: ["64 cm²", "80 cm²", "100 cm²", "96 cm²"], ans: 3, hint: "정육면체는 넓이가 같은 면이 6개 있습니다. (4×4) × 6" }
+  ],
+  high: [
+    { q: "철수는 [가로 20cm, 세로 15cm, 높이 10cm인 🐟어항]의 물을 [한 모서리가 10cm인 🧊정육면체 그릇]에 가득 차게 옮기려고 합니다. 그릇은 몇 개가 꽉 찰까요?" + getBoxSvg('20cm', '15cm', '10cm'), choices: ["2개", "3개", "4개", "5개"], ans: 1, hint: "어항의 부피(3000)를 그릇 하나의 부피(1000)로 나누어보세요." },
+    { q: "겉넓이가 150 cm² 인 정육면체의 부피는 몇 cm³ 일까요?", choices: ["125 cm³", "100 cm³", "150 cm³", "216 cm³"], ans: 0, hint: "먼저 겉넓이를 6으로 나누어 한 면의 넓이(25)를 구한 뒤, 모서리 길이를 알아내세요." },
+    { q: "부피가 360 cm³ 인 찰흙으로 한 모서리가 4cm인 정육면체를 최대 몇 개 만들 수 있나요?", choices: ["4개", "6개", "5개", "7개"], ans: 2, hint: "만들려는 정육면체 1개의 부피는 64 cm³ 입니다. 360 안에 64가 몇 번 들어갈까요?" },
+    { q: "가로 8cm, 세로 5cm인 직육면체의 겉넓이가 236 cm² 일 때, 이 직육면체의 높이는 몇 cm일까요?" + getBoxSvg('8cm', '5cm', '? cm'), choices: ["5 cm", "6 cm", "7 cm", "8 cm"], ans: 1, hint: "밑면 2개의 넓이 합은 80입니다. 236 - 80 = 156이 옆면 4개의 넓이 합이 됩니다." },
+    { q: "[가로 6m, 세로 4m, 높이 3m인 🏭대형 창고]에 부피가 8,000,000 cm³ 인 📦상자를 최대 몇 개 쌓을 수 있을까요?", choices: ["9개", "10개", "8개", "12개"], ans: 0, hint: "창고의 부피를 구한 뒤, 상자의 부피를 m³ 단위로(8 m³) 바꿔서 나누어보세요." },
+    { q: "직육면체의 가로, 세로, 높이를 각각 2배로 늘리면 부피는 처음의 몇 배가 될까요?", choices: ["2배", "4배", "6배", "8배"], ans: 3, hint: "부피 = 가로 × 세로 × 높이 입니다. (2 × 2 × 2)를 계산해보세요." },
+    { q: "세 모서리가 2cm, 4cm, 8cm인 직육면체와 부피가 똑같은 '정육면체'가 있습니다. 이 정육면체의 겉넓이는?" + getBoxSvg('2cm', '4cm', '8cm'), choices: ["64 cm²", "80 cm²", "96 cm²", "128 cm²"], ans: 2, hint: "직육면체의 부피(64)와 똑같은 부피를 가진 정육면체의 한 모서리는 4cm입니다." },
+    { q: "한 모서리가 6cm인 정육면체는 '부피'와 '겉넓이'를 계산했을 때 나오는 숫자가 똑같습니다. 이 숫자는 무엇일까요?", choices: ["144", "216", "256", "128"], ans: 1, hint: "6 × 6 × 6 과 (6 × 6) × 6 의 결과를 계산해보세요." },
+    { q: "정육면체의 한 모서리의 길이를 3배로 늘리면 겉넓이는 처음의 몇 배가 될까요?", choices: ["3배", "6배", "8배", "9배"], ans: 3, hint: "겉넓이는 면의 넓이와 관련이 있습니다. 정사각형의 한 변이 3배가 되면 넓이는 3×3배가 됩니다." },
+    { q: "겉넓이가 54 cm² 인 정육면체 장난감 2개를 딱 맞게 이어 붙여 긴 직육면체를 만들었습니다. 이 직육면체의 겉넓이는?", choices: ["108 cm²", "96 cm²", "81 cm²", "90 cm²"], ans: 3, hint: "정육면체 1개의 한 면 넓이는 9 cm² 입니다. 두 개를 붙이면 숨겨지는 면이 2개 생겨 총 10개의 면만 보입니다." }
+  ]
+};
+
+/* =========================================
+   3. 게임 변수 및 초기화 
+========================================= */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = LOGICAL_W;
+canvas.height = LOGICAL_H;
+
+let gameState = 'MENU';
+let animationId;
+
+let player, obstacles = [], particles = [], coins = [];
+let cameraX = 0, score = 0, correctCount = 0;
+let diffData = { val: 'low', text: '하' };
+let nickname = 'Player', selectedChar = '🦊';
+let questionList = [], currentQuizIndex = 0;
+
+let comboCount = 0;
+let reviveCount = 0;
+
+const GRAVITY = 0.8; 
+const JUMP_FORCE = -16;
+// 🔥 최대 속도 20% 상향 (36 -> 43)
+const MAX_SPEED = 43; 
+const keys = { left:false, right:false, up:false, dash:false };
+
+/* =========================================
+   4. 클래스 정의
+========================================= */
+class Player {
+  constructor() {
+    this.w = 60; this.h = 60;
+    this.x = 200; this.y = LOGICAL_H/2;
+    this.vx = 0; this.vy = 0;
+    this.hp = 100; 
+    this.dashGauge = 0; 
+    this.quizGauge = 0; 
+    this.emoji = selectedChar;
+    this.isJumping = false;
+    this.jumpCount = 0;
+    this.invincibleTimer = 0;
+    this.isDashing = false; 
+    this.dashSoundTimer = 0;
+  }
+
+  update() {
+    let canDash = keys.dash && ((!this.isDashing && this.dashGauge >= 20) || (this.isDashing && this.dashGauge > 0));
+
+    if (canDash) {
+      this.isDashing = true;
+      // 🔥 대쉬 속도 20% 상향 (60 -> 72)
+      this.vx = 72; 
+      this.vy = 0; 
+      this.dashGauge -= 1.0; 
+      if(this.dashGauge < 0) this.dashGauge = 0;
+      this.invincibleTimer = 10; 
+      createParticle(this.x, this.y + this.h/2, '#ff007c');
+      
+      if(this.dashSoundTimer === 0) {
+        playSound('dash');
+        this.dashSoundTimer = 10;
+      } else {
+        this.dashSoundTimer--;
+      }
+    } else {
+      this.isDashing = false;
+      this.dashSoundTimer = 0;
+      
+      // 🔥 기본 가속도 20% 상향 (2.6 -> 3.1)
+      if (keys.right) this.vx += 3.1; 
+      else if (keys.left) this.vx -= 3.1;
+      else this.vx *= 0.8;
+      
+      if (this.vx > MAX_SPEED) this.vx = MAX_SPEED;
+      if (this.vx < -MAX_SPEED/2) this.vx = -MAX_SPEED/2;
+
+      this.vy += GRAVITY;
+      
+      // 🔥 자동 전진 가속도 20% 상향 (1.1 -> 1.3)
+      if(!keys.left && !keys.right) this.vx += 1.3; 
+      
+      if (this.dashGauge < 100) this.dashGauge += 0.1;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    const floorY = LOGICAL_H - 120;
+    if (this.y + this.h > floorY) {
+      this.y = floorY - this.h;
+      this.vy = 0;
+      this.jumpCount = 0;
+      this.isJumping = false;
+    }
+
+    if (this.x < cameraX + 50) {
+      this.x = cameraX + 50;
+      this.vx = 0;
+    }
+
+    if (this.invincibleTimer > 0) this.invincibleTimer--;
+
+    if (this.quizGauge < 100) this.quizGauge += 0.03; 
+    if(this.quizGauge >= 100) triggerQuiz();
+  }
+
+  jump() {
+    if (this.jumpCount < 2) {
+      this.vy = JUMP_FORCE;
+      this.jumpCount++;
+      this.isJumping = true;
+      playSound('jump'); 
+      createParticle(this.x, this.y+this.h, '#00f3ff', 10);
+    }
+  }
+
+  draw() {
+    ctx.save();
+    if (this.invincibleTimer > 0 && Math.floor(Date.now() / 100) % 2 === 0) {
+      ctx.globalAlpha = 0.5;
+    }
+    
+    ctx.font = "60px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    
+    let bobbing = 0;
+    let rotation = 0;
+
+    if (this.isDashing) {
+      rotation = Math.PI / 6; 
+      bobbing = (Math.random() - 0.5) * 6; 
+    } else if (this.isJumping) {
+      if (this.jumpCount === 2) {
+        rotation = (Date.now() % 500) / 500 * Math.PI * 2; 
+      } else {
+        rotation = this.vy * 0.03; 
+      }
+    } else if (this.vx > 5) {
+      bobbing = Math.sin(Date.now() / 60) * 8; 
+      rotation = Math.sin(Date.now() / 120) * 0.1; 
+    }
+
+    ctx.translate(this.x - cameraX, this.y + this.h / 2 + bobbing);
+    ctx.rotate(rotation);
+    
+    if (this.emoji === '🚄') {
+      ctx.scale(-1, 1);
+    }
+    
+    ctx.fillText(this.emoji, 0, 0);
+    ctx.restore();
+  }
+}
+
+class Obstacle {
+  constructor(x) {
+    this.x = x;
+    const types = ['spike', 'block', 'moving', 'vertical', 'tall'];
+    this.type = types[Math.floor(Math.random() * types.length)];
+    this.w = 50; this.h = 50;
+    
+    if (this.type === 'tall') { this.w = 60; this.h = 160; }
+    else if (this.type === 'vertical') {
+      this.w = 60; this.h = 60; this.phase = Math.random() * Math.PI * 2;
+      this.speedY = 0.04 + Math.random() * 0.03;
+      this.startY = LOGICAL_H - 120 - this.h - 80;
+    } else if (this.type === 'moving') { this.speedX = 4 + Math.random() * 5; }
+    
+    this.y = LOGICAL_H - 120 - this.h;
+    if (this.type === 'vertical') this.y = this.startY;
+  }
+  
+  update() {
+    if (this.type === 'moving') this.x -= this.speedX; 
+    else if (this.type === 'vertical') {
+      this.y = this.startY + Math.sin(this.phase) * 80; 
+      this.phase += this.speedY;
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x - cameraX, this.y);
+    if (this.type === 'spike') {
+      ctx.fillStyle = '#ff003c'; ctx.beginPath();
+      ctx.moveTo(0, this.h); ctx.lineTo(this.w/2, 0); ctx.lineTo(this.w, this.h); ctx.fill();
+    } else if (this.type === 'block') {
+      ctx.fillStyle = '#112233'; ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, this.w, this.h); ctx.strokeRect(0, 0, this.w, this.h);
+    } else if (this.type === 'tall') {
+      ctx.fillStyle = '#2a0a18'; ctx.strokeStyle = '#ff007c'; ctx.lineWidth = 4;
+      ctx.fillRect(0, 0, this.w, this.h); ctx.strokeRect(0, 0, this.w, this.h);
+      ctx.beginPath(); ctx.moveTo(0, this.h * 0.33); ctx.lineTo(this.w, this.h * 0.33);
+      ctx.moveTo(0, this.h * 0.66); ctx.lineTo(this.w, this.h * 0.66); ctx.stroke();
+    } else if (this.type === 'moving') {
+      ctx.fillStyle = '#6b0000'; ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, this.w, this.h); ctx.strokeRect(0, 0, this.w, this.h);
+      ctx.fillStyle = '#ffeb3b';
+      ctx.beginPath(); ctx.moveTo(10, 15); ctx.lineTo(20, 20); ctx.lineTo(10, 25); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(40, 15); ctx.lineTo(30, 20); ctx.lineTo(40, 25); ctx.fill();
+    } else if (this.type === 'vertical') {
+      ctx.fillStyle = '#113311'; ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(this.w/2, 0); ctx.lineTo(this.w, this.h/2);
+      ctx.lineTo(this.w/2, this.h); ctx.lineTo(0, this.h/2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+class Coin {
+  constructor(x, y) {
+    this.x = x; this.y = y; this.r = 20; this.collected = false;
+    this.basePhase = x * 0.015;
+  }
+  draw() {
+    if(this.collected) return;
+    ctx.save();
+    let offset = Math.sin(this.basePhase + performance.now() * 0.003) * 6;
+    ctx.translate(this.x - cameraX, this.y + offset);
+    ctx.fillStyle = '#ffeb3b'; 
+    
+    if (!isLowEndMode) {
+      ctx.shadowColor = '#ffeb3b'; ctx.shadowBlur = 15;
+    } else {
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#b8860b'; ctx.font = "bold 20px Arial";
+    ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("C", 0, 0);
+    ctx.restore();
+  }
+}
+
+class Particle {
+  constructor(x, y, color, speedScale=1) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 15 * speedScale;
+    this.vy = (Math.random() - 0.5) * 15 * speedScale;
+    this.life = 1.0; this.color = color; this.size = Math.random() * 6 + 3;
+  }
+  update() { this.x += this.vx; this.y += this.vy; this.life -= 0.05; }
+  draw() {
+    ctx.globalAlpha = Math.max(0, this.life); ctx.fillStyle = this.color;
+    ctx.beginPath(); ctx.arc(this.x - cameraX, this.y, this.size, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1.0;
+  }
+}
+
+function createParticle(x, y, color, count=7) {
+  if (isLowEndMode) count = Math.floor(count / 3) || 1;
+  for(let i=0; i<count; i++) particles.push(new Particle(x, y, color));
+}
+
+/* =========================================
+   5. 게임 로직
+========================================= */
+function initGame() {
+  player = new Player(); obstacles = []; coins = []; particles = [];
+  cameraX = 0; score = 0; correctCount = 0; 
+  comboCount = 0; reviveCount = 0; 
+  
+  questionList = [...Q_DB[diffData.val]].sort(() => Math.random() - 0.5); 
+  currentQuizIndex = 0;
+
+  for(let i=1; i<10; i++) spawnWorldEntities(i * 1200); 
+  updateHUD();
+  updateReviveUI(); 
+}
+
+function spawnWorldEntities(xPos) {
+  if(Math.random() > 0.3) obstacles.push(new Obstacle(xPos));
+  
+  if(Math.random() > 0.2) {
+    let heightType = Math.floor(Math.random() * 3);
+    let cy;
+    if(heightType === 0) cy = LOGICAL_H - 180; 
+    else if(heightType === 1) cy = LOGICAL_H - 260; 
+    else cy = LOGICAL_H - 360; 
+    
+    // 🔥 코인 생성량 1.5배 증가 (9~12개), 겹치지 않게 간격 80 설정
+    let coinCount = 9 + Math.floor(Math.random() * 4); 
+    let spacing = 80; 
+    let startX = xPos + 300; 
+    
+    for(let i=0; i<coinCount; i++) coins.push(new Coin(startX + (i * spacing), cy));
+  }
+}
+
+function checkCollisions() {
+  const pRect = {x: player.x - 25, y: player.y - 25, w: 50, h: 50}; 
+
+  for(let i=obstacles.length-1; i>=0; i--) {
+    let obs = obstacles[i];
+    if (pRect.x < obs.x + obs.w && pRect.x + pRect.w > obs.x &&
+        pRect.y < obs.y + obs.h && pRect.y + pRect.h > obs.y) {
+      if(player.invincibleTimer === 0) {
+        playSound('hit'); 
+        player.hp -= 20;
+        player.invincibleTimer = 60;
+        createParticle(player.x, player.y, '#ff0000', 30);
+        player.vx = -10; player.vy = -10;
+        
+        if(player.hp <= 0) triggerDeath();
+      }
+    }
+    if(obs.x < cameraX - 200) obstacles.splice(i, 1);
+  }
+
+  for(let i=coins.length-1; i>=0; i--) {
+    let c = coins[i];
+    if (!c.collected && pRect.x < c.x + c.r && pRect.x + pRect.w > c.x - c.r &&
+        pRect.y < c.y + c.r && pRect.y + pRect.h > c.y - c.r) {
+      c.collected = true;
+      score += 10;
+      playSound('coin'); 
+      player.dashGauge = Math.min(100, player.dashGauge + 0.5); 
+      player.quizGauge = Math.min(100, player.quizGauge + 0.6); 
+      createParticle(c.x, c.y, '#ffeb3b', 8);
+    }
+    if(c.x < cameraX - 200) coins.splice(i, 1);
+  }
+}
+
+function drawBackground() {
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
+  ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+  
+  if (!isLowEndMode) {
+    ctx.strokeStyle = 'rgba(0, 243, 255, 0.1)'; ctx.lineWidth = 3;
+    const gridS = 150; let offsetX = cameraX % gridS;
+    
+    ctx.beginPath();
+    for(let x = -offsetX; x < LOGICAL_W; x += gridS) { ctx.moveTo(x, 0); ctx.lineTo(x, LOGICAL_H); }
+    for(let y = 0; y < LOGICAL_H; y += gridS) { ctx.moveTo(0, y); ctx.lineTo(LOGICAL_W, y); }
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#111'; ctx.fillRect(0, LOGICAL_H-120, LOGICAL_W, 120);
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(0, LOGICAL_H-120); ctx.lineTo(LOGICAL_W, LOGICAL_H-120); ctx.stroke();
+}
+
+function updateHUD() {
+  document.getElementById('hud-score').innerText = score;
+  document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
+  document.getElementById('dash-bar').style.width = Math.min(100, player.dashGauge) + '%';
+  document.getElementById('quiz-bar').style.width = Math.min(100, player.quizGauge) + '%';
+  document.getElementById('hud-quiz-progress').innerText = currentQuizIndex + ' / ' + questionList.length;
+}
+
+function updateReviveUI() {
+  const reviveBadge = document.getElementById('hud-revive');
+  reviveBadge.innerText = `🔥 콤보 ${comboCount}/3 (부활권 ${reviveCount}개)`;
+  
+  if (reviveCount > 0) {
+    reviveBadge.classList.add('active'); 
+  } else {
+    reviveBadge.classList.remove('active');
+  }
+}
+
+function triggerDeath() {
+  keys.dash = false;
+  if (reviveCount > 0) {
+    gameState = 'REVIVE'; 
+    document.getElementById('revive-modal').classList.remove('hidden');
+  } else {
+    endGame();
+  }
+}
+
+function useRevive() {
+  reviveCount--;
+  updateReviveUI();
+  
+  player.hp = 100;
+  player.invincibleTimer = 120; 
+  
+  document.getElementById('revive-modal').classList.add('hidden');
+  gameState = 'PLAY';
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function endGameFromRevive() {
+  document.getElementById('revive-modal').classList.add('hidden');
+  endGame();
+}
+
+function gameLoop(currentTime) {
+  if (gameState !== 'PLAY') return; 
+  
+  animationId = requestAnimationFrame(gameLoop);
+
+  if (!currentTime) currentTime = performance.now();
+  const deltaTime = currentTime - lastTime;
+  
+  if (deltaTime < fpsInterval) return;
+  lastTime = currentTime - (deltaTime % fpsInterval);
+
+  ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+  player.update();
+  let targetCamX = player.x - LOGICAL_W * 0.3; 
+  cameraX += (targetCamX - cameraX) * 0.15;
+
+  if(obstacles.length > 0 && obstacles[obstacles.length-1].x < cameraX + LOGICAL_W * 1.5) {
+    spawnWorldEntities(obstacles[obstacles.length-1].x + 1200 + Math.random()*800);
+  } else if (obstacles.length === 0) {
+    spawnWorldEntities(cameraX + LOGICAL_W);
+  }
+
+  checkCollisions(); updateHUD(); drawBackground();
+  
+  obstacles.forEach(o => { if(o.update) o.update(); o.draw(); });
+  coins.forEach(c => c.draw());
+  
+  for(let i=particles.length-1; i>=0; i--) {
+    particles[i].update(); particles[i].draw();
+    if(particles[i].life <= 0) particles.splice(i, 1);
+  }
+
+  player.draw();
+  score++; 
+}
+
+/* =========================================
+   6. 퀴즈 시스템 
+========================================= */
+function triggerQuiz() {
+  gameState = 'QUIZ'; player.quizGauge = 0; keys.dash = false; 
+  
+  const modal = document.getElementById('quiz-modal');
+  const qText = document.getElementById('q-text');
+  const qChoices = document.getElementById('q-choices');
+  const qHint = document.getElementById('q-hint');
+  const btnNext = document.getElementById('btn-next');
+
+  qHint.style.display = 'none'; btnNext.style.display = 'none'; qChoices.innerHTML = '';
+
+  if(currentQuizIndex >= questionList.length) {
+    currentQuizIndex = 0; 
+  }
+  const qData = questionList[currentQuizIndex];
+  
+  qText.innerHTML = `Q. ${qData.q}`;
+
+  qData.choices.forEach((choice, idx) => {
+    let btn = document.createElement('div');
+    btn.className = 'quiz-choice'; btn.innerText = choice;
+    btn.onclick = () => handleAnswer(idx, qData.ans, btn, qData.hint);
+    qChoices.appendChild(btn);
+  });
+
+  modal.classList.remove('hidden');
+}
+
+function handleAnswer(selectedIdx, ansIdx, btnElement, hintText) {
+  const choices = document.querySelectorAll('.quiz-choice');
+  const btnNext = document.getElementById('btn-next');
+  const qHint = document.getElementById('q-hint');
+
+  if(selectedIdx === ansIdx) {
+    choices.forEach(c => c.style.pointerEvents = 'none');
+    btnElement.classList.add('correct');
+    
+    playSound('correct'); 
+    correctCount++; score += 500;
+    player.hp = Math.min(100, player.hp + 30); 
+    
+    comboCount++;
+    if(comboCount >= 3) {
+      comboCount = 0;
+      reviveCount++;
+    }
+    updateReviveUI();
+
+    qHint.style.display = 'none'; 
+    btnNext.innerText = "정답! 계속 달리기 🏃"; btnNext.style.display = 'block';
+  } else {
+    btnElement.classList.add('wrong');
+    btnElement.style.pointerEvents = 'none'; 
+    
+    playSound('wrong'); 
+    player.hp -= 15; 
+    
+    comboCount = 0;
+    updateReviveUI();
+    
+    qHint.innerText = `💡 선생님의 힌트: ${hintText}\n(다시 한 번 생각해서 다른 답을 골라보세요!)`;
+    qHint.style.display = 'block';
+    
+    if(player.hp <= 0) {
+      choices.forEach(c => c.style.pointerEvents = 'none'); 
+      btnNext.innerText = "체력 소진... 결과 보기 💀"; 
+      btnNext.onclick = closeQuiz; 
+      btnNext.style.display = 'block';
+    }
+  }
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-modal').classList.add('hidden');
+  currentQuizIndex++;
+  
+  if(player.hp <= 0) {
+    triggerDeath(); 
+  } else {
+    player.invincibleTimer = 60; gameState = 'PLAY'; 
+    lastTime = performance.now(); 
+    animationId = requestAnimationFrame(gameLoop);
+  }
+}
+
+/* =========================================
+   7. UI 이벤트 및 입력 처리
+========================================= */
+document.querySelectorAll('#diff-group .btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#diff-group .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    diffData = { val: btn.dataset.val, text: btn.innerText.charAt(0) };
+  }
+});
+
+document.querySelectorAll('#char-group .char-item').forEach(item => {
+  item.onclick = () => {
+    document.querySelectorAll('#char-group .char-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    selectedChar = item.dataset.char;
+  }
+});
+
+function startGame() {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const nickInput = document.getElementById('input-nick').value.trim();
+  nickname = nickInput || '학생';
+  
+  isLowEndMode = document.getElementById('chk-lowend').checked;
+  
+  document.getElementById('hud-nick').innerText = nickname;
+  document.getElementById('hud-diff').innerText = diffData.text;
+
+  document.getElementById('screen-start').classList.add('hidden');
+  document.getElementById('game-container').classList.remove('hidden');
+
+  initGame(); gameState = 'PLAY'; 
+  
+  lastTime = performance.now();
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  gameState = 'OVER'; keys.dash = false;
+  cancelAnimationFrame(animationId);
+  
+  document.getElementById('game-container').classList.add('hidden');
+  document.getElementById('screen-result').classList.remove('hidden');
+  document.getElementById('res-score').innerText = score;
+  document.getElementById('res-correct').innerText = correctCount;
+}
+
+window.addEventListener('keydown', e => {
+  if(gameState !== 'PLAY') return;
+  if(e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+  if(e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+  if(e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') { e.preventDefault(); player.jump(); }
+  if(e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z') keys.dash = true;
+});
+
+window.addEventListener('keyup', e => {
+  if(e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+  if(e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+  if(e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z') keys.dash = false;
+});
+
+const bindTouch = (id, keyName, action) => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('touchstart', e => {
+    e.preventDefault(); 
+    e.stopPropagation(); 
+    el.classList.add('pressed');
+    if(keyName) keys[keyName] = true;
+    if(action) action();
+  }, {passive:false});
+  
+  el.addEventListener('touchend', e => {
+    e.preventDefault(); 
+    e.stopPropagation();
+    el.classList.remove('pressed');
+    if(keyName) keys[keyName] = false;
+  }, {passive:false});
+  
+  el.addEventListener('touchcancel', e => {
+    e.preventDefault(); 
+    e.stopPropagation();
+    el.classList.remove('pressed');
+    if(keyName) keys[keyName] = false;
+  }, {passive:false});
+};
+
+bindTouch('btn-left', 'left', null);
+bindTouch('btn-right', 'right', null);
+bindTouch('btn-dash', 'dash', null); 
+
+canvas.addEventListener('touchstart', (e) => {
+  if (gameState === 'PLAY') {
+    e.preventDefault(); 
+    player.jump();
+  }
+}, {passive: false});
+
+</script>
+</body>
+</html>
