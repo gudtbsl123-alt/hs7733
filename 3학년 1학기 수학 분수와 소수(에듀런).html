@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>에듀런: 분수와 소수 대모험</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+  :root {
+    --bg-color: #0d0e15;
+    --primary: #00f3ff;
+    --secondary: #ff007c;
+    --accent: #ffeb3b;
+    --panel-bg: rgba(20, 22, 35, 0.9);
+    --font-title: 'Jua', sans-serif;
+    --font-main: 'Noto Sans KR', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-touch-callout: none; }
+  
+  html, body {
+    background-color: #000;
+    color: white;
+    font-family: var(--font-main);
+    overflow: hidden;
+    touch-action: none;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  #game-wrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1280px;
+    height: 720px;
+    transform-origin: center center;
+    background-color: var(--bg-color);
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  @keyframes pulse-neon {
+    0% { box-shadow: 0 0 5px var(--primary); }
+    50% { box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary); }
+    100% { box-shadow: 0 0 5px var(--primary); }
+  }
+  @keyframes pulse-special {
+    0% { box-shadow: inset 0 0 10px #ffeb3b, 0 0 5px #ffeb3b; border-color: #ffeb3b; }
+    50% { box-shadow: inset 0 0 20px #ff9800, 0 0 15px #ff9800; border-color: #ff9800; }
+    100% { box-shadow: inset 0 0 10px #ffeb3b, 0 0 5px #ffeb3b; border-color: #ffeb3b; }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+  }
+
+  .screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, #1a1c29 0%, #0d0e15 100%);
+    z-index: 10; transition: opacity 0.3s;
+  }
+  .hidden { display: none !important; opacity: 0; pointer-events: none; }
+
+  .title-text {
+    font-family: var(--font-title); font-size: 3.5rem; color: #fff;
+    text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary);
+    margin-bottom: 5px; text-align: center; animation: float 3s ease-in-out infinite;
+  }
+  .title-text span { font-size: 2.5rem !important; }
+  .subtitle { font-size: 1.2rem; color: var(--accent); margin-bottom: 15px; font-family: var(--font-title); text-align: center; line-height: 1.5; }
+
+  .panel {
+    background: var(--panel-bg); border: 2px solid var(--primary); border-radius: 15px;
+    padding: 20px 30px; width: 95%; max-width: 600px; max-height: 85%; overflow-y: auto;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); text-align: center;
+  }
+  .panel::-webkit-scrollbar { width: 8px; }
+  .panel::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+  input[type="text"] {
+    width: 100%; padding: 10px; font-size: 1.3rem; font-family: var(--font-main);
+    border: 2px solid #333; border-radius: 8px; background: #000; color: #fff;
+    margin-bottom: 15px; text-align: center; outline: none;
+  }
+  input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+  .btn-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+  .btn {
+    flex: 1; padding: 10px; font-family: var(--font-title); font-size: 1.3rem;
+    border: none; border-radius: 8px; cursor: pointer; color: white; background: #333;
+    transition: all 0.2s;
+  }
+  .btn.active { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); transform: scale(1.05); }
+
+  .char-select { 
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px; font-size: 2rem; 
+    max-height: 120px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid #333;
+  }
+  .char-select::-webkit-scrollbar { width: 10px; }
+  .char-select::-webkit-scrollbar-track { background: transparent; }
+  .char-select::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 5px; }
+  .char-item {
+    cursor: pointer; opacity: 0.5; transition: all 0.2s;
+    background: rgba(255,255,255,0.1); border-radius: 50%; width: 50px; height: 50px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid transparent;
+  }
+  .char-item.active { opacity: 1; background: rgba(0, 243, 255, 0.3); transform: scale(1.15); border: 2px solid var(--primary); }
+  
+  .char-item.special-char { animation: pulse-special 2s infinite; opacity: 0.8; }
+  .char-item.special-char.active { opacity: 1; border-color: var(--accent); background: rgba(255, 235, 59, 0.2); }
+
+  .start-btn {
+    width: 100%; padding: 15px; font-family: var(--font-title); font-size: 1.6rem;
+    background: linear-gradient(45deg, var(--primary), #0099ff); color: white;
+    border: none; border-radius: 8px; cursor: pointer; animation: pulse-neon 2s infinite;
+  }
+
+  #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  canvas { display: block; width: 100%; height: 100%; }
+  
+  #hud {
+    position: absolute; top: 20px; left: 20px; right: 20px; z-index: 5;
+    display: flex; justify-content: space-between; pointer-events: none;
+  }
+  .hud-left, .hud-right { display: flex; flex-direction: column; gap: 10px; width: 35%; max-width: 300px; }
+  
+  #hud-center {
+    position: absolute; left: 50%; transform: translateX(-50%); top: 0;
+    display: flex; align-items: flex-start;
+  }
+  .progress-badge {
+    background: rgba(0, 0, 0, 0.7); border: 2px solid var(--primary); border-radius: 20px;
+    padding: 6px 20px; font-family: var(--font-title); font-size: 1.5rem; color: #fff;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); white-space: nowrap; text-shadow: 1px 1px 2px #000;
+  }
+
+  .bar-container { background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 10px; height: 30px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; width: 100%; transition: width 0.1s; }
+  .hp-fill { background: linear-gradient(90deg, #ff0000, #ff4d4d); }
+  .dash-fill { background: linear-gradient(90deg, #ffeb3b, #ff9800); width: 0%; }
+  .quiz-fill { background: linear-gradient(90deg, #00f3ff, #0088ff); width: 0%; }
+  .bar-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: var(--font-title); font-size: 1.2rem; text-shadow: 1px 1px 2px #000; }
+  
+  .score-display { font-family: var(--font-title); font-size: 2.5rem; color: var(--accent); text-shadow: 2px 2px 0 #000; text-align: right; line-height: 1; }
+
+  #controls {
+    position: absolute; bottom: 40px; left: 0; width: 100%; height: 100px;
+    display: none; justify-content: space-between; padding: 0 50px; z-index: 5;
+    pointer-events: none; 
+  }
+  .d-pad, .action-btns { 
+    display: flex; gap: 20px; align-items: flex-end; pointer-events: auto; 
+  }
+  .ctrl-btn {
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    color: rgba(255,255,255,0.5);
+    font-size: 2rem; font-family: var(--font-title); font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+    box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 5px 15px rgba(0,0,0,0.3);
+    transition: all 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ctrl-btn:active, .ctrl-btn.pressed {
+    transform: scale(0.9);
+    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
+    color: rgba(255,255,255,0.9);
+  }
+  .btn-dash { color: rgba(0, 243, 255, 0.6); border-color: rgba(0, 243, 255, 0.2); }
+  .btn-dash:active, .btn-dash.pressed { background: radial-gradient(circle, rgba(0, 243, 255, 0.3) 0%, rgba(0, 243, 255, 0.1) 100%); color: var(--primary); }
+
+  #quiz-modal {
+    position: absolute; top:0; left:0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 20; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+  }
+  .quiz-box {
+    background: linear-gradient(135deg, #1a1025, #0f172a); border: 3px solid var(--primary);
+    border-radius: 15px; width: 90%; max-width: 800px; padding: 30px; text-align: center;
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.4); max-height: 90%; overflow-y: auto;
+  }
+  .quiz-q { font-size: 1.6rem; font-weight: bold; margin-bottom: 20px; line-height: 1.4; color: #fff; }
+  .quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .quiz-choice {
+    background: #2a2d3e; border: 2px solid #4a4d5e; border-radius: 12px;
+    padding: 15px; font-size: 1.2rem; color: #fff; cursor: pointer; transition: all 0.2s;
+    font-family: var(--font-main);
+  }
+  .quiz-choice:active { transform: scale(0.95); }
+  .quiz-choice.correct { background: #4CAF50; border-color: #81C784; }
+  .quiz-choice.wrong { background: #F44336; border-color: #E57373; animation: shake 0.4s; }
+  
+  .hint-box {
+    margin-top: 25px; padding: 20px; background: rgba(255, 235, 59, 0.15); border: 1px dashed var(--accent);
+    border-radius: 8px; color: var(--accent); font-size: 1.3rem; display: none; line-height: 1.5;
+  }
+  
+  .next-btn {
+    margin-top: 30px; padding: 15px 40px; background: var(--primary); color: #000;
+    border: none; border-radius: 8px; font-family: var(--font-title); font-size: 1.6rem;
+    display: none; cursor: pointer; width: 100%;
+  }
+
+  .result-num { font-size: 4rem; color: var(--primary); font-family: var(--font-title); margin: 10px 0; }
+</style>
+</head>
+<body>
+
+  <div id="game-wrapper">
+
+    <!-- Start Screen -->
+    <div id="screen-start" class="screen">
+      <div class="title-text">에듀런<br><span style="color:#fff;">분수와 소수 대모험</span></div>
+      <div class="subtitle">
+        3학년 1학기 수학 마스터하기! (초고속 모드)<br>
+        <span style="font-size:1rem; color:#aaa;">모바일: 빈 화면을 터치하면 점프해요! (따닥! 누르면 2단 점프)</span>
+      </div>
+      
+      <div class="panel">
+        <input type="text" id="input-nick" placeholder="너의 닉네임은?" maxlength="8" autocomplete="off">
+        
+        <div style="font-family:var(--font-title); color:#aaa; margin-bottom:10px; font-size:1.2rem;">난이도 선택</div>
+        <div class="btn-group" id="diff-group">
+          <button class="btn active" data-val="low">하 (개념)</button>
+          <button class="btn" data-val="mid">중 (비교)</button>
+          <button class="btn" data-val="high">상 (응용)</button>
+        </div>
+
+        <div style="font-family:var(--font-title); color:#aaa; margin-bottom:10px; font-size:1.2rem;">캐릭터 선택</div>
+        <div class="char-select" id="char-group">
+          <div class="char-item active" data-char="🦊">🦊</div>
+          <div class="char-item" data-char="🐧">🐧</div>
+          <div class="char-item" data-char="👻">👻</div>
+          <div class="char-item" data-char="🐉">🐉</div>
+          <div class="char-item" data-char="🐰">🐰</div>
+          <div class="char-item" data-char="🐹">🐹</div>
+          <div class="char-item" data-char="🐼">🐼</div>
+          <div class="char-item" data-char="🐨">🐨</div>
+          <div class="char-item" data-char="🐯">🐯</div>
+          <div class="char-item" data-char="🦁">🦁</div>
+          <div class="char-item" data-char="🐶">🐶</div>
+          <div class="char-item" data-char="🐱">🐱</div>
+          <div class="char-item" data-char="🐸">🐸</div>
+          <div class="char-item" data-char="🐵">🐵</div>
+          <div class="char-item" data-char="🦄">🦄</div>
+          <div class="char-item" data-char="🦉">🦉</div>
+          <div class="char-item" data-char="🦇">🦇</div>
+          <div class="char-item" data-char="🐝">🐝</div>
+          <div class="char-item" data-char="🐞">🐞</div>
+          <div class="char-item" data-char="🐢">🐢</div>
+          <div class="char-item special-char" data-char="🚄" title="히든 고속열차">🚄</div>
+        </div>
+
+        <button class="start-btn" onclick="startGame()">게임 시작!</button>
+      </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <div id="game-container" class="hidden">
+      <canvas id="gameCanvas"></canvas>
+      
+      <div id="hud">
+        <div class="hud-left">
+          <div class="bar-container">
+            <div class="bar-fill hp-fill" id="hp-bar"></div>
+            <div class="bar-text">체력 (HP)</div>
+          </div>
+          <div class="bar-container">
+            <div class="bar-fill dash-fill" id="dash-bar"></div>
+            <div class="bar-text" style="color:#000;">대쉬 게이지 ⚡ (Z키 Hold)</div>
+          </div>
+          <div class="bar-container">
+            <div class="bar-fill quiz-fill" id="quiz-bar"></div>
+            <div class="bar-text" style="color:#000;">퀴즈 출현 ⏰</div>
+          </div>
+        </div>
+        
+        <!-- 상단 중앙 퀴즈 진행도 -->
+        <div id="hud-center">
+          <div class="progress-badge">
+            📝 문제 진행: <span id="hud-quiz-progress" style="color: var(--accent);">0 / 10</span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="score-display"><span id="hud-score">0</span> 점</div>
+          <div style="text-align:right; color:#fff; font-size:1.2rem; opacity:0.8;">
+            <span id="hud-nick">Player</span> | <span id="hud-diff">하</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="controls">
+        <div class="d-pad">
+          <div class="ctrl-btn" id="btn-left">◀</div>
+          <div class="ctrl-btn" id="btn-right">▶</div>
+        </div>
+        <div class="action-btns">
+          <div class="ctrl-btn btn-dash" id="btn-dash">Z</div>
+          <!-- 점프 버튼은 화면 터치로 대체되어 삭제됨 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="hidden">
+      <div class="quiz-box">
+        <div style="color:var(--primary); font-family:var(--font-title); font-size:1.8rem; margin-bottom:15px;">🚨 퀴즈 타임! 🚨</div>
+        <div class="quiz-q" id="q-text">문제 내용이 여기에 표시됩니다.</div>
+        <div class="quiz-grid" id="q-choices">
+          <!-- Choices generated by JS -->
+        </div>
+        <div class="hint-box" id="q-hint">💡 선생님의 힌트: 다시 한 번 생각해보자!</div>
+        <button class="next-btn" id="btn-next" onclick="closeQuiz()">계속 달리기 🏃</button>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="screen-result" class="screen hidden">
+      <div class="title-text" style="font-size:4rem;">게임 오버</div>
+      <div class="panel">
+        <div style="font-size:1.5rem; color:#aaa;">최종 점수</div>
+        <div class="result-num" id="res-score">0</div>
+        <div style="font-size:1.5rem; color:#aaa; margin-top:30px;">맞춘 문제 수</div>
+        <div class="result-num" style="color:var(--secondary);" id="res-correct">0</div>
+        <button class="start-btn" style="margin-top:40px;" onclick="location.reload()">처음으로 돌아가기</button>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* =========================================
+   0. 화면 최적화 (Scaling)
+========================================= */
+const LOGICAL_W = 1280;
+const LOGICAL_H = 720;
+
+function resizeScreen() {
+  const wrapper = document.getElementById('game-wrapper');
+  const winW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+  const winH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const scale = Math.min(winW / LOGICAL_W, winH / LOGICAL_H);
+  wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+window.addEventListener('resize', resizeScreen);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeScreen);
+resizeScreen(); 
+
+if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  document.getElementById('controls').style.display = 'flex';
+}
+
+/* =========================================
+   1. 오디오 합성 시스템 (Web Audio API)
+========================================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+
+  if (type === 'jump') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.start(now); osc.stop(now + 0.1);
+  } else if (type === 'coin') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.setValueAtTime(1600, now + 0.05);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+    osc.start(now); osc.stop(now + 0.1);
+  } else if (type === 'dash') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+    osc.start(now); osc.stop(now + 0.2);
+  } else if (type === 'correct') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(440, now); 
+    osc.frequency.setValueAtTime(554.37, now + 0.1); 
+    osc.frequency.setValueAtTime(659.25, now + 0.2); 
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+    osc.start(now); osc.stop(now + 0.4);
+  } else if (type === 'wrong') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+    osc.start(now); osc.stop(now + 0.3);
+  } else if (type === 'hit') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+    gainNode.gain.setValueAtTime(0.4, now);
+    gainNode.gain.linearRampToValueAtTime(0, now + 0.2);
+    osc.start(now); osc.stop(now + 0.2);
+  }
+}
+
+/* =========================================
+   2. 퀴즈 데이터베이스
+========================================= */
+const Q_DB = {
+  low: [
+    { q: "1을 4개로 똑같이 나눈 것 중의 1을 무엇이라고 할까요?", choices: ["1/2", "1/3", "1/5", "1/4"], ans: 3, hint: "전체를 4로 나누었으니 분모가 4가 되어야 해요." },
+    { q: "분수 1/2 에서 '분모'는 어느 숫자인가요?", choices: ["2", "1", "3", "0"], ans: 0, hint: "분모는 아래에 있는 숫자를 말해요." },
+    { q: "0.1이 3개 모이면 얼마가 될까요?", choices: ["0.1", "0.3", "0.2", "3"], ans: 1, hint: "0.1, 0.2, 다음은 무엇일까요?" },
+    { q: "색종이를 반으로 똑같이 접어 자른 1조각은 전체의 얼마인가요?", choices: ["1/3", "1/4", "1/2", "1"], ans: 2, hint: "전체를 '2'개로 나눈 것 중 '1'개 랍니다." },
+    { q: "분모가 5, 분자가 3인 분수는?", choices: ["5/3", "1/5", "5/5", "3/5"], ans: 3, hint: "분모는 아래, 분자는 위에 씁니다." },
+    { q: "10밀리미터(mm)는 몇 센티미터(cm)와 같을까요?", choices: ["1cm", "0.1cm", "10cm", "100cm"], ans: 0, hint: "자에서 작은 눈금 10개가 모이면 큰 숫자 1개가 되죠!" },
+    { q: "0.8은 0.1이 몇 개 모인 것일까요?", choices: ["1개", "8개", "4개", "10개"], ans: 1, hint: "숫자 8을 잘 생각해보세요." },
+    { q: "분수 1/3을 바르게 읽은 것은?", choices: ["일 분의 삼", "삼 일", "삼 분의 일", "일 삼"], ans: 2, hint: "아래에 있는 분모부터 먼저 읽어주세요." },
+    { q: "다음 중 분수가 아닌 것은 어느 것인가요?", choices: ["1/2", "3/4", "5/8", "1"], ans: 3, hint: "가운데에 선(-)이 없는 숫자를 찾아보세요." },
+    { q: "'영 점 칠'을 숫자로 바르게 쓴 것은?", choices: ["0.7", "07", "7.0", "0.07"], ans: 0, hint: "점(.)의 위치를 잘 확인하세요." }
+  ],
+  mid: [
+    { q: "1/4과 3/4 중에서 더 큰 분수는 어느 것인가요?", choices: ["1/4", "같다", "알수없다", "3/4"], ans: 3, hint: "분모가 같을 때는 분자(위의 수)가 큰 쪽이 더 커요." },
+    { q: "0.5와 0.8 중에서 더 작은 소수는?", choices: ["0.5", "0.8", "크기가 같다", "알수없다"], ans: 0, hint: "0.1이 5개인 것과 8개인 중 어느 것이 적을까요?" },
+    { q: "피자 1판을 8조각으로 나누어 3조각을 먹었습니다. 남은 피자는 전체의 얼마인가요?", choices: ["3/8", "5/8", "8/8", "1/8"], ans: 1, hint: "전체 8조각에서 3조각을 빼면 몇 조각이 남을까요?" },
+    { q: "1cm 5mm를 소수로 나타내면 몇 cm일까요?", choices: ["15cm", "0.15cm", "1.5cm", "5.1cm"], ans: 2, hint: "5mm는 0.5cm와 같아요." },
+    { q: "0.1이 10개 모이면 어떤 수가 되나요?", choices: ["1", "0.1", "10", "100"], ans: 0, hint: "0.1이 10개 모이면 자연수 1이 됩니다." },
+    { q: "길이가 2.4cm인 지우개가 있습니다. 0.1cm가 몇 개인 길이인가요?", choices: ["2개", "4개", "42개", "24개"], ans: 3, hint: "2cm는 0.1이 20개, 0.4cm는 4개입니다." },
+    { q: "분모가 7인 분수 중 4/7보다 크고 6/7보다 작은 분수는?", choices: ["3/7", "5/7", "7/7", "1/7"], ans: 1, hint: "4와 6 사이에 있는 숫자를 분자에 올려보세요." },
+    { q: "0.3과 0.5 사이에 있는 소수를 고르세요.", choices: ["0.1", "1.0", "0.4", "0.6"], ans: 2, hint: "3과 5 사이에 있는 숫자가 무엇인지 생각해보세요." },
+    { q: "1/5이 4개 모인 수는 얼마인가요?", choices: ["1/5", "3/5", "5/5", "4/5"], ans: 3, hint: "1/5이 4개면 분자가 4가 됩니다." },
+    { q: "'영 점 구'는 0.1이 몇 개 모인 수인가요?", choices: ["9개", "1개", "5개", "10개"], ans: 0, hint: "영 점 구는 0.9를 말합니다." }
+  ],
+  high: [
+    { q: "수직선에서 0과 1 사이를 10칸으로 똑같이 나눈 7번째 눈금은 소수로 얼마일까요?", choices: ["0.1", "0.7", "1.7", "7"], ans: 1, hint: "10칸 중 1칸은 0.1입니다. 7칸은 얼마일까요?" },
+    { q: "1/3과 1/5 중에서 '더 작은 분수'는 어느 것인가요?", choices: ["1/3", "같다", "1/5", "알수없다"], ans: 2, hint: "단위분수는 피자를 더 많은 사람(분모)이 나눌수록 내 몫이 작아져요." },
+    { q: "0.1이 15개인 수(A)와 1.3(B) 중에서 더 큰 수는 무엇일까요?", choices: ["B", "같다", "비교불가", "A"], ans: 3, hint: "0.1이 10개면 1.0, 15개면 1.5입니다." },
+    { q: "수들을 큰 수부터 차례대로 나열할 때 두 번째에 오는 수는? [0.4, 0.9, 0.2, 0.7]", choices: ["0.7", "0.9", "0.4", "0.2"], ans: 0, hint: "가장 큰 수는 0.9입니다. 그 다음은?" },
+    { q: "1보다 0.2만큼 더 작은 소수는 얼마일까요?", choices: ["0.2", "0.8", "1.2", "8"], ans: 1, hint: "1은 0.1이 10개입니다. 여기서 0.1이 2개인 양을 빼보세요." },
+    { q: "길이가 1인 끈을 10칸으로 똑같이 나눈 것 중 4칸의 길이입니다. 이를 소수로 나타내면?", choices: ["0.04", "4", "0.4", "40"], ans: 2, hint: "전체를 10칸으로 나눈 1칸은 0.1입니다." },
+    { q: "1/8이 5개인 수(A)와 1/8이 3개인 수(B)가 있습니다. 설명으로 옳은 것은?", choices: ["B가 크다", "같다", "비교불가", "A가 크다"], ans: 3, hint: "조각의 수가 많을수록 더 큽니다." },
+    { q: "테이프 1m를 10등분 하여 그 중 3도막을 썼습니다. 남은 테이프는 몇 m인가요?", choices: ["0.7m", "0.3m", "0.5m", "1m"], ans: 0, hint: "전체 10도막 중 7도막이 남았습니다. 7도막은 소수로 얼마일까요?" },
+    { q: "분모가 9인 두 분수 3/9과 7/9 사이에 들어갈 수 있는 분수는 모두 몇 개인가요?", choices: ["2개", "3개", "4개", "5개"], ans: 1, hint: "분자가 3과 7 사이인 자연수를 세어보세요. (4, 5, 6)" },
+    { q: "1부터 9까지의 숫자 중 네모 안에 들어갈 수 있는 숫자는 모두 몇 개인가요? [ 0.□ < 0.6 ]", choices: ["4개", "6개", "5개", "7개"], ans: 2, hint: "6보다 작은 숫자는 1, 2, 3, 4, 5 입니다." }
+  ]
+};
+
+/* =========================================
+   3. 게임 변수 및 초기화
+========================================= */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = LOGICAL_W;
+canvas.height = LOGICAL_H;
+
+let gameState = 'MENU';
+let animationId;
+
+let player, obstacles = [], particles = [], coins = [];
+let cameraX = 0, score = 0, correctCount = 0;
+let diffData = { val: 'low', text: '하' };
+let nickname = 'Player', selectedChar = '🦊';
+let questionList = [], currentQuizIndex = 0;
+
+const GRAVITY = 0.8; 
+const JUMP_FORCE = -16;
+const MAX_SPEED = 36; 
+const keys = { left:false, right:false, up:false, dash:false };
+
+/* =========================================
+   4. 클래스 정의
+========================================= */
+class Player {
+  constructor() {
+    this.w = 60; this.h = 60;
+    this.x = 200; this.y = LOGICAL_H/2;
+    this.vx = 0; this.vy = 0;
+    this.hp = 100; 
+    this.dashGauge = 0; 
+    this.quizGauge = 0; 
+    this.emoji = selectedChar;
+    this.isJumping = false;
+    this.jumpCount = 0;
+    this.invincibleTimer = 0;
+    this.isDashing = false; 
+    this.dashSoundTimer = 0;
+  }
+
+  update() {
+    let canDash = keys.dash && ((!this.isDashing && this.dashGauge >= 20) || (this.isDashing && this.dashGauge > 0));
+
+    if (canDash) {
+      this.isDashing = true;
+      this.vx = 60; 
+      this.vy = 0; 
+      this.dashGauge -= 1.0; 
+      if(this.dashGauge < 0) this.dashGauge = 0;
+      this.invincibleTimer = 10; 
+      createParticle(this.x, this.y + this.h/2, '#ff007c');
+      
+      if(this.dashSoundTimer === 0) {
+        playSound('dash');
+        this.dashSoundTimer = 10;
+      } else {
+        this.dashSoundTimer--;
+      }
+    } else {
+      this.isDashing = false;
+      this.dashSoundTimer = 0;
+      
+      if (keys.right) this.vx += 2.6; 
+      else if (keys.left) this.vx -= 2.6;
+      else this.vx *= 0.8;
+      
+      if (this.vx > MAX_SPEED) this.vx = MAX_SPEED;
+      if (this.vx < -MAX_SPEED/2) this.vx = -MAX_SPEED/2;
+
+      this.vy += GRAVITY;
+      if(!keys.left && !keys.right) this.vx += 1.1; 
+      if (this.dashGauge < 100) this.dashGauge += 0.1;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    const floorY = LOGICAL_H - 120;
+    if (this.y + this.h > floorY) {
+      this.y = floorY - this.h;
+      this.vy = 0;
+      this.jumpCount = 0;
+      this.isJumping = false;
+    }
+
+    if (this.x < cameraX + 50) {
+      this.x = cameraX + 50;
+      this.vx = 0;
+    }
+
+    if (this.invincibleTimer > 0) this.invincibleTimer--;
+
+    if (this.quizGauge < 100) this.quizGauge += 0.03; 
+    if(this.quizGauge >= 100) triggerQuiz();
+  }
+
+  jump() {
+    if (this.jumpCount < 2) {
+      this.vy = JUMP_FORCE;
+      this.jumpCount++;
+      this.isJumping = true;
+      playSound('jump'); 
+      createParticle(this.x, this.y+this.h, '#00f3ff', 10);
+    }
+  }
+
+  draw() {
+    ctx.save();
+    if (this.invincibleTimer > 0 && Math.floor(Date.now() / 100) % 2 === 0) {
+      ctx.globalAlpha = 0.5;
+    }
+    
+    ctx.font = "60px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    
+    let bobbing = 0;
+    let rotation = 0;
+
+    if (this.isDashing) {
+      rotation = Math.PI / 6; 
+      bobbing = (Math.random() - 0.5) * 6; 
+    } else if (this.isJumping) {
+      if (this.jumpCount === 2) {
+        rotation = (Date.now() % 500) / 500 * Math.PI * 2; 
+      } else {
+        rotation = this.vy * 0.03; 
+      }
+    } else if (this.vx > 5) {
+      bobbing = Math.sin(Date.now() / 60) * 8; 
+      rotation = Math.sin(Date.now() / 120) * 0.1; 
+    }
+
+    ctx.translate(this.x - cameraX, this.y + this.h / 2 + bobbing);
+    ctx.rotate(rotation);
+    
+    if (this.emoji === '🚄') {
+      ctx.scale(-1, 1);
+    }
+    
+    ctx.fillText(this.emoji, 0, 0);
+    ctx.restore();
+  }
+}
+
+class Obstacle {
+  constructor(x) {
+    this.x = x;
+    const types = ['spike', 'block', 'moving', 'vertical', 'tall'];
+    this.type = types[Math.floor(Math.random() * types.length)];
+    this.w = 50; this.h = 50;
+    
+    if (this.type === 'tall') { this.w = 60; this.h = 160; }
+    else if (this.type === 'vertical') {
+      this.w = 60; this.h = 60; this.phase = Math.random() * Math.PI * 2;
+      this.speedY = 0.04 + Math.random() * 0.03;
+      this.startY = LOGICAL_H - 120 - this.h - 80;
+    } else if (this.type === 'moving') { this.speedX = 4 + Math.random() * 5; }
+    
+    this.y = LOGICAL_H - 120 - this.h;
+    if (this.type === 'vertical') this.y = this.startY;
+  }
+  
+  update() {
+    if (this.type === 'moving') this.x -= this.speedX; 
+    else if (this.type === 'vertical') {
+      this.y = this.startY + Math.sin(this.phase) * 80; 
+      this.phase += this.speedY;
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x - cameraX, this.y);
+    if (this.type === 'spike') {
+      ctx.fillStyle = '#ff003c'; ctx.beginPath();
+      ctx.moveTo(0, this.h); ctx.lineTo(this.w/2, 0); ctx.lineTo(this.w, this.h); ctx.fill();
+    } else if (this.type === 'block') {
+      ctx.fillStyle = '#112233'; ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, this.w, this.h); ctx.strokeRect(0, 0, this.w, this.h);
+    } else if (this.type === 'tall') {
+      ctx.fillStyle = '#2a0a18'; ctx.strokeStyle = '#ff007c'; ctx.lineWidth = 4;
+      ctx.fillRect(0, 0, this.w, this.h); ctx.strokeRect(0, 0, this.w, this.h);
+      ctx.beginPath(); ctx.moveTo(0, this.h * 0.33); ctx.lineTo(this.w, this.h * 0.33);
+      ctx.moveTo(0, this.h * 0.66); ctx.lineTo(this.w, this.h * 0.66); ctx.stroke();
+    } else if (this.type === 'moving') {
+      ctx.fillStyle = '#6b0000'; ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 3;
+      ctx.fillRect(0, 0, this.w, this.h); ctx.strokeRect(0, 0, this.w, this.h);
+      ctx.fillStyle = '#ffeb3b';
+      ctx.beginPath(); ctx.moveTo(10, 15); ctx.lineTo(20, 20); ctx.lineTo(10, 25); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(40, 15); ctx.lineTo(30, 20); ctx.lineTo(40, 25); ctx.fill();
+    } else if (this.type === 'vertical') {
+      ctx.fillStyle = '#113311'; ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(this.w/2, 0); ctx.lineTo(this.w, this.h/2);
+      ctx.lineTo(this.w/2, this.h); ctx.lineTo(0, this.h/2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+class Coin {
+  constructor(x, y) {
+    this.x = x; this.y = y; this.r = 20; this.collected = false;
+    this.basePhase = x * 0.015;
+  }
+  draw() {
+    if(this.collected) return;
+    ctx.save();
+    let offset = Math.sin(this.basePhase + performance.now() * 0.003) * 6;
+    ctx.translate(this.x - cameraX, this.y + offset);
+    ctx.fillStyle = '#ffeb3b'; ctx.shadowColor = '#ffeb3b'; ctx.shadowBlur = 15;
+    ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#b8860b'; ctx.font = "bold 20px Arial";
+    ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("C", 0, 0);
+    ctx.restore();
+  }
+}
+
+class Particle {
+  constructor(x, y, color, speedScale=1) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 15 * speedScale;
+    this.vy = (Math.random() - 0.5) * 15 * speedScale;
+    this.life = 1.0; this.color = color; this.size = Math.random() * 6 + 3;
+  }
+  update() { this.x += this.vx; this.y += this.vy; this.life -= 0.05; }
+  draw() {
+    ctx.globalAlpha = Math.max(0, this.life); ctx.fillStyle = this.color;
+    ctx.beginPath(); ctx.arc(this.x - cameraX, this.y, this.size, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1.0;
+  }
+}
+
+function createParticle(x, y, color, count=7) {
+  for(let i=0; i<count; i++) particles.push(new Particle(x, y, color));
+}
+
+/* =========================================
+   5. 게임 로직
+========================================= */
+function initGame() {
+  player = new Player(); obstacles = []; coins = []; particles = [];
+  cameraX = 0; score = 0; correctCount = 0;
+  questionList = [...Q_DB[diffData.val]].sort(() => Math.random() - 0.5); 
+  currentQuizIndex = 0;
+
+  for(let i=1; i<10; i++) spawnWorldEntities(i * 1200); 
+  updateHUD();
+}
+
+function spawnWorldEntities(xPos) {
+  if(Math.random() > 0.3) obstacles.push(new Obstacle(xPos));
+  
+  if(Math.random() > 0.2) {
+    let heightType = Math.floor(Math.random() * 3);
+    let cy;
+    if(heightType === 0) cy = LOGICAL_H - 180; 
+    else if(heightType === 1) cy = LOGICAL_H - 260; 
+    else cy = LOGICAL_H - 360; 
+    
+    let coinCount = 6 + Math.floor(Math.random() * 3); 
+    let spacing = 90; let startX = xPos + 300; 
+    
+    for(let i=0; i<coinCount; i++) coins.push(new Coin(startX + (i * spacing), cy));
+  }
+}
+
+function checkCollisions() {
+  const pRect = {x: player.x - 25, y: player.y - 25, w: 50, h: 50}; 
+
+  for(let i=obstacles.length-1; i>=0; i--) {
+    let obs = obstacles[i];
+    if (pRect.x < obs.x + obs.w && pRect.x + pRect.w > obs.x &&
+        pRect.y < obs.y + obs.h && pRect.y + pRect.h > obs.y) {
+      if(player.invincibleTimer === 0) {
+        playSound('hit'); 
+        player.hp -= 20;
+        player.invincibleTimer = 60;
+        createParticle(player.x, player.y, '#ff0000', 30);
+        player.vx = -10; player.vy = -10;
+        if(player.hp <= 0) endGame();
+      }
+    }
+    if(obs.x < cameraX - 200) obstacles.splice(i, 1);
+  }
+
+  for(let i=coins.length-1; i>=0; i--) {
+    let c = coins[i];
+    if (!c.collected && pRect.x < c.x + c.r && pRect.x + pRect.w > c.x - c.r &&
+        pRect.y < c.y + c.r && pRect.y + pRect.h > c.y - c.r) {
+      c.collected = true;
+      score += 10;
+      playSound('coin'); 
+      player.dashGauge = Math.min(100, player.dashGauge + 0.5); 
+      player.quizGauge = Math.min(100, player.quizGauge + 0.6); 
+      createParticle(c.x, c.y, '#ffeb3b', 8);
+    }
+    if(c.x < cameraX - 200) coins.splice(i, 1);
+  }
+}
+
+function drawBackground() {
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
+  ctx.fillRect(0,0,LOGICAL_W,LOGICAL_H);
+  
+  ctx.strokeStyle = 'rgba(0, 243, 255, 0.1)'; ctx.lineWidth = 3;
+  const gridS = 150; let offsetX = cameraX % gridS;
+  
+  ctx.beginPath();
+  for(let x = -offsetX; x < LOGICAL_W; x += gridS) { ctx.moveTo(x, 0); ctx.lineTo(x, LOGICAL_H); }
+  for(let y = 0; y < LOGICAL_H; y += gridS) { ctx.moveTo(0, y); ctx.lineTo(LOGICAL_W, y); }
+  ctx.stroke();
+
+  ctx.fillStyle = '#111'; ctx.fillRect(0, LOGICAL_H-120, LOGICAL_W, 120);
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(0, LOGICAL_H-120); ctx.lineTo(LOGICAL_W, LOGICAL_H-120); ctx.stroke();
+}
+
+function updateHUD() {
+  document.getElementById('hud-score').innerText = score;
+  document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
+  document.getElementById('dash-bar').style.width = Math.min(100, player.dashGauge) + '%';
+  document.getElementById('quiz-bar').style.width = Math.min(100, player.quizGauge) + '%';
+  document.getElementById('hud-quiz-progress').innerText = currentQuizIndex + ' / ' + questionList.length;
+}
+
+function gameLoop() {
+  if(gameState !== 'PLAY') return;
+
+  ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+  player.update();
+  let targetCamX = player.x - LOGICAL_W * 0.3; 
+  cameraX += (targetCamX - cameraX) * 0.15;
+
+  if(obstacles.length > 0 && obstacles[obstacles.length-1].x < cameraX + LOGICAL_W * 1.5) {
+    spawnWorldEntities(obstacles[obstacles.length-1].x + 1200 + Math.random()*800);
+  } else if (obstacles.length === 0) {
+    spawnWorldEntities(cameraX + LOGICAL_W);
+  }
+
+  checkCollisions(); updateHUD(); drawBackground();
+  
+  obstacles.forEach(o => { if(o.update) o.update(); o.draw(); });
+  coins.forEach(c => c.draw());
+  
+  for(let i=particles.length-1; i>=0; i--) {
+    particles[i].update(); particles[i].draw();
+    if(particles[i].life <= 0) particles.splice(i, 1);
+  }
+
+  player.draw();
+  score++; 
+  animationId = requestAnimationFrame(gameLoop);
+}
+
+/* =========================================
+   6. 퀴즈 시스템
+========================================= */
+function triggerQuiz() {
+  gameState = 'QUIZ'; player.quizGauge = 0; keys.dash = false; 
+  
+  const modal = document.getElementById('quiz-modal');
+  const qText = document.getElementById('q-text');
+  const qChoices = document.getElementById('q-choices');
+  const qHint = document.getElementById('q-hint');
+  const btnNext = document.getElementById('btn-next');
+
+  qHint.style.display = 'none'; btnNext.style.display = 'none'; qChoices.innerHTML = '';
+
+  if(currentQuizIndex >= questionList.length) {
+    currentQuizIndex = 0; 
+  }
+  const qData = questionList[currentQuizIndex];
+  
+  qText.innerText = `Q. ${qData.q}`;
+
+  qData.choices.forEach((choice, idx) => {
+    let btn = document.createElement('div');
+    btn.className = 'quiz-choice'; btn.innerText = choice;
+    btn.onclick = () => handleAnswer(idx, qData.ans, btn, qData.hint);
+    qChoices.appendChild(btn);
+  });
+
+  modal.classList.remove('hidden');
+}
+
+function handleAnswer(selectedIdx, ansIdx, btnElement, hintText) {
+  const choices = document.querySelectorAll('.quiz-choice');
+  const btnNext = document.getElementById('btn-next');
+  const qHint = document.getElementById('q-hint');
+
+  if(selectedIdx === ansIdx) {
+    choices.forEach(c => c.style.pointerEvents = 'none');
+    btnElement.classList.add('correct');
+    
+    playSound('correct'); 
+    correctCount++; score += 500;
+    player.hp = Math.min(100, player.hp + 30); 
+    
+    qHint.style.display = 'none'; 
+    btnNext.innerText = "정답! 계속 달리기 🏃"; btnNext.style.display = 'block';
+  } else {
+    btnElement.classList.add('wrong');
+    btnElement.style.pointerEvents = 'none'; 
+    
+    playSound('wrong'); 
+    player.hp -= 15; 
+    
+    qHint.innerText = `💡 선생님의 힌트: ${hintText}\n(다시 한 번 생각해서 다른 답을 골라보세요!)`;
+    qHint.style.display = 'block';
+    
+    if(player.hp <= 0) {
+      choices.forEach(c => c.style.pointerEvents = 'none'); 
+      btnNext.innerText = "체력 소진... 결과 보기 💀"; btnNext.style.display = 'block';
+    }
+  }
+  updateHUD();
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-modal').classList.add('hidden');
+  currentQuizIndex++;
+  
+  if(player.hp <= 0) endGame();
+  else {
+    player.invincibleTimer = 60; gameState = 'PLAY'; gameLoop();
+  }
+}
+
+/* =========================================
+   7. UI 이벤트 및 입력 처리
+========================================= */
+document.querySelectorAll('#diff-group .btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#diff-group .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    diffData = { val: btn.dataset.val, text: btn.innerText.charAt(0) };
+  }
+});
+
+document.querySelectorAll('#char-group .char-item').forEach(item => {
+  item.onclick = () => {
+    document.querySelectorAll('#char-group .char-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    selectedChar = item.dataset.char;
+  }
+});
+
+function startGame() {
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const nickInput = document.getElementById('input-nick').value.trim();
+  nickname = nickInput || '학생';
+  
+  document.getElementById('hud-nick').innerText = nickname;
+  document.getElementById('hud-diff').innerText = diffData.text;
+
+  document.getElementById('screen-start').classList.add('hidden');
+  document.getElementById('game-container').classList.remove('hidden');
+
+  initGame(); gameState = 'PLAY'; gameLoop();
+}
+
+function endGame() {
+  gameState = 'OVER'; keys.dash = false;
+  cancelAnimationFrame(animationId);
+  
+  document.getElementById('game-container').classList.add('hidden');
+  document.getElementById('screen-result').classList.remove('hidden');
+  document.getElementById('res-score').innerText = score;
+  document.getElementById('res-correct').innerText = correctCount;
+}
+
+window.addEventListener('keydown', e => {
+  if(gameState !== 'PLAY') return;
+  if(e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+  if(e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+  if(e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') { e.preventDefault(); player.jump(); }
+  if(e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z') keys.dash = true;
+});
+
+window.addEventListener('keyup', e => {
+  if(e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+  if(e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+  if(e.code === 'KeyZ' || e.key === 'z' || e.key === 'Z') keys.dash = false;
+});
+
+// 컨트롤 버튼 터치 이벤트 할당
+const bindTouch = (id, keyName, action) => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('touchstart', e => {
+    e.preventDefault(); 
+    e.stopPropagation(); // 버튼 터치가 캔버스 터치로 인식되지 않도록 차단
+    el.classList.add('pressed');
+    if(keyName) keys[keyName] = true;
+    if(action) action();
+  }, {passive:false});
+  
+  el.addEventListener('touchend', e => {
+    e.preventDefault(); 
+    e.stopPropagation();
+    el.classList.remove('pressed');
+    if(keyName) keys[keyName] = false;
+  }, {passive:false});
+  
+  el.addEventListener('touchcancel', e => {
+    e.preventDefault(); 
+    e.stopPropagation();
+    el.classList.remove('pressed');
+    if(keyName) keys[keyName] = false;
+  }, {passive:false});
+};
+
+bindTouch('btn-left', 'left', null);
+bindTouch('btn-right', 'right', null);
+bindTouch('btn-dash', 'dash', null); 
+
+// 🔥 화면 아무 곳이나 터치하면 점프 (2단 점프 포함)
+canvas.addEventListener('touchstart', (e) => {
+  if (gameState === 'PLAY') {
+    e.preventDefault(); // 화면 스크롤, 줌인 등 방지
+    player.jump();
+  }
+}, {passive: false});
+
+</script>
+</body>
+</html>
