@@ -66,13 +66,14 @@
       <button class="tab-btn" onclick="filterGrade('6학년')">6학년</button>
     </div>
 
-<div class="category-tabs subject-tabs" id="subjectTabs">
+    <div class="category-tabs subject-tabs" id="subjectTabs">
       <button class="subject-btn active" onclick="filterSubject('all')">전체과목</button>
       <button class="subject-btn" onclick="filterSubject('국어')">국어</button>
       <button class="subject-btn" onclick="filterSubject('수학')">수학</button>
       <button class="subject-btn" onclick="filterSubject('사회')">사회</button>
       <button class="subject-btn" onclick="filterSubject('과학')">과학</button>
-      <button class="subject-btn" onclick="filterSubject('창체')">창체</button> <button class="subject-btn" onclick="filterSubject('기타')">기타</button>
+      <button class="subject-btn" onclick="filterSubject('창체')">창체</button>
+      <button class="subject-btn" onclick="filterSubject('기타')">기타</button>
     </div>
 
     <main>
@@ -103,10 +104,9 @@
     let selectedGrade = 'all';
     let selectedSubject = 'all'; 
     
-    // 강제 버전 동기화 번호 상향 조정 (버전 8)
-    const CURRENT_DATA_VERSION = 8; 
+    // 강제 버전 동기화 번호 상향 조정 (버전 10)
+    const CURRENT_DATA_VERSION = 10; 
 
-    // 다시 실제 깃허브에 올라가 있는 '한글 파일명' 그대로 매칭되도록 되돌렸습니다.
     const initialGames = [
       { id: 1, icon: "📊", title: "6학년 수학 에듀런(여러 가지 그래프)", url: "./6학년 수학 에듀런(여러 가지 그래프).html" },
       { id: 2, icon: "🧪", title: "5학년 과학 용해 용액 단어", url: "./5학년 과학 용해 용액 단어.html" },
@@ -122,6 +122,10 @@
       { id: 12, icon: "🎨", title: "5학년 창체 캐치 2", url: "./catch2.html" },
       { id: 13, icon: "🎨", title: "5학년 창체 캐치 3", url: "./catch3.html" },
       { id: 14, icon: "🎨", title: "5학년 창체 캐치 4", url: "./catch4.html" },
+      { id: 15, icon: "🎢", title: "3학년 수학 코스터 타이쿤", url: "./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html" },
+      { id: 16, icon: "🌍", title: "6학년 사회 세계 여러 국가", url: "./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모험.html" },
+      { id: 17, icon: "📦", title: "6학년 수학 직육면체 에듀런", url: "./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html" },
+      { id: 18, icon: "🔢", title: "3학년 수학 분수와 소수 에듀런", url: "./3학년 1학기 수학 분수와 소수(에듀런).html" }
     ];
 
     let currentGames = [];
@@ -145,12 +149,12 @@
       return match ? `${match[1]}학년` : '기타';
     }
 
-function getSubjectFromTitle(title) {
+    function getSubjectFromTitle(title) {
       if (title.includes('국어')) return '국어';
       if (title.includes('수학')) return '수학';
       if (title.includes('사회')) return '사회';
       if (title.includes('과학')) return '과학';
-      if (title.includes('창체')) return '창체'; // 👇 이 줄을 추가하세요
+      if (title.includes('창체')) return '창체';
       return '기타';
     }
 
