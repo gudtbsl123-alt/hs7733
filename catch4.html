@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>초등학생 그림 넌센스 퀴즈 4탄 (1.5배 확대판)</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 구글 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <!-- Tone.js 로드 (효과음용) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Canvas Confetti 로드 (폭죽 효과용) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(-45deg, #FFB6C1, #FFE4E1, #E0FFFF, #87CEFA, #DDA0DD);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(0); }
+        }
+
+        .animate-bounce-subtle {
+            animation: bounce-subtle 2s infinite;
+        }
+
+        /* 이모티콘 1.5배 이상 스케일업 */
+        .emoji-art {
+            font-size: 5.5rem; 
+            text-shadow: 3px 3px 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff;
+            letter-spacing: 0.1em;
+            white-space: nowrap; /* 이모티콘이 여러 개일 때 줄바꿈되는 현상 방지 */
+        }
+
+        @media (min-width: 400px) { .emoji-art { font-size: 7.5rem; } }
+        @media (min-width: 640px) { .emoji-art { font-size: 10rem; } }
+
+        .timer-warning {
+            color: #ef4444;
+            animation: pulse-fast 0.5s infinite;
+        }
+
+        @keyframes pulse-fast {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 5px rgba(250, 204, 21, 0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .combo-text {
+            animation: pop 0.3s ease-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .hint-circle {
+            color: #cbd5e1; /* slate-300 */
+            letter-spacing: 0.3em;
+        }
+
+        /* 피버 타임 이펙트 */
+        .fever-mode {
+            animation: feverBorder 0.8s infinite alternate !important;
+            border-color: transparent !important;
+        }
+        @keyframes feverBorder {
+            from { box-shadow: 0 0 20px 8px #fbbf24, inset 0 0 20px 8px #fbbf24; border: 5px solid #fbbf24; }
+            to { box-shadow: 0 0 35px 8px #ef4444, inset 0 0 35px 8px #ef4444; border: 5px solid #ef4444; }
+        }
+    </style>
+</head>
+<body class="min-h-[100dvh] w-full flex items-center justify-center p-4 sm:p-6">
+
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="screen active flex-col items-center max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 sm:p-12 text-center border-[6px] border-yellow-400 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-6 bg-yellow-400"></div>
+        <h1 class="text-5xl sm:text-6xl md:text-7xl text-blue-600 mb-6 drop-shadow-md animate-bounce-subtle mt-4">
+            🎨 그림 넌센스<br><span class="text-yellow-500 text-7xl sm:text-8xl">QUIZ</span>
+        </h1>
+        
+        <div class="bg-blue-50 rounded-full px-6 py-2 mb-6 border-2 border-blue-200 shadow-sm">
+            <span class="text-gray-600 text-xl sm:text-2xl font-bold">👑 나의 최고 점수: <span id="best-score-display" class="text-blue-600 text-2xl sm:text-3xl">0</span>점</span>
+        </div>
+        
+        <div class="bg-gray-100 rounded-2xl p-5 sm:p-8 mb-6 text-left border-4 border-dashed border-gray-300 w-full">
+            <h2 class="text-2xl sm:text-3xl text-gray-800 mb-4 text-center border-b-[3px] pb-3">📌 게임 알아두기</h2>
+            <ul class="text-xl sm:text-2xl text-gray-700 space-y-3">
+                <li><span class="bg-yellow-300 px-3 rounded-full mr-2">1</span> <b>20문제</b>가 랜덤으로 등장해요!</li>
+                <li><span class="bg-yellow-300 px-3 rounded-full mr-2">2</span> 제한 시간은 <b>30초</b>!</li>
+                <li><span class="bg-yellow-300 px-3 rounded-full mr-2">3</span> 3연속 정답 시 <b>🔥피버 타임! (보너스)</b></li>
+                <li><span class="bg-yellow-300 px-3 rounded-full mr-2">4</span> 위급할 땐 <b>찬스 아이템</b>을 써보세요!</li>
+            </ul>
+        </div>
+
+        <label class="flex items-center justify-center gap-4 mb-8 cursor-pointer bg-blue-50 py-4 px-6 sm:px-8 rounded-2xl border-[3px] border-blue-200 hover:bg-blue-100 transition-colors w-full">
+            <input type="checkbox" id="use-hint-checkbox" class="w-8 h-8 sm:w-10 sm:h-10 accent-blue-500 cursor-pointer" checked>
+            <span class="text-2xl sm:text-3xl text-gray-800 font-bold select-none">💡 초성 힌트 보기</span>
+        </label>
+
+        <button onclick="startGame()" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-3xl sm:text-4xl py-6 rounded-2xl shadow-[0_8px_0_#2563eb] hover:shadow-[0_3px_0_#2563eb] hover:translate-y-2 transition-all font-bold">
+            게임 시작하기 🚀
+        </button>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="game-screen" class="screen flex-col items-center w-full max-w-4xl">
+        
+        <div class="w-full flex justify-between items-center mb-5 sm:mb-8 px-2 gap-2 sm:gap-4">
+            <div class="bg-yellow-400 text-blue-900 text-2xl sm:text-3xl md:text-5xl px-4 sm:px-8 py-2 sm:py-4 rounded-t-2xl sm:rounded-t-3xl rounded-br-2xl sm:rounded-br-3xl shadow-lg border-2 border-yellow-500 flex flex-col sm:flex-row items-center justify-center flex-1 sm:flex-none">
+                <span class="font-bold whitespace-nowrap"><span id="question-number">1</span>/20</span>
+                <span id="difficulty-badge" class="sm:ml-4 text-sm sm:text-xl md:text-2xl px-3 py-1 sm:py-2 rounded-full text-white font-bold bg-green-500 shadow-sm border-2 border-white/50 whitespace-nowrap mt-2 sm:mt-0">하</span>
+            </div>
+            
+            <div class="relative flex flex-col items-center justify-center bg-white px-4 sm:px-8 h-20 sm:h-24 md:h-28 rounded-2xl sm:rounded-3xl shadow-md border-[3px] border-blue-200 min-w-[160px] sm:min-w-[220px] md:min-w-[320px] flex-1 sm:flex-none">
+                <div class="text-lg sm:text-2xl md:text-3xl font-bold text-gray-700 relative z-10 flex items-center gap-2">
+                    점수: <span id="score-display" class="text-blue-600 text-2xl sm:text-3xl md:text-5xl">0</span>
+                </div>
+                <div id="combo-display" class="absolute bottom-1 sm:bottom-2 text-xs sm:text-base md:text-xl font-extrabold text-red-500 transition-all opacity-0 whitespace-nowrap"></div>
+            </div>
+
+            <div class="flex items-center justify-center bg-white px-4 sm:px-6 md:px-8 py-2 sm:py-4 rounded-full shadow-md border-[3px] border-gray-200 flex-1 sm:flex-none">
+                <span class="text-2xl sm:text-3xl md:text-4xl mr-2">⏳</span>
+                <span id="timer" class="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-800 w-12 sm:w-16 text-center">30</span>
+            </div>
+        </div>
+
+        <div id="game-container" class="w-full bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl p-6 sm:p-10 md:p-12 border-[6px] border-white flex flex-col items-center transition-all duration-300">
+            
+            <div class="w-full h-64 sm:h-80 md:h-[28rem] bg-blue-50 rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center mb-6 sm:mb-10 relative border-4 border-blue-100 overflow-hidden">
+                <div id="picture-emoji" class="emoji-art">🪟🚪</div>
+            </div>
+
+            <div class="w-full bg-gray-50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl flex flex-col items-center border-2 border-gray-200">
+                <div id="hint-container" class="text-yellow-500 text-3xl sm:text-5xl mb-4 flex items-center gap-3">
+                    💡 <span id="hint-text" class="tracking-[0.2em] text-blue-600 font-bold">ㅊㅁ</span>
+                </div>
+                
+                <form id="answer-form" class="w-full max-w-lg sm:max-w-2xl flex flex-col gap-3 mt-4" onsubmit="submitAnswer(event)">
+                    <div class="flex gap-3 w-full">
+                        <input type="text" id="answer-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="정답 입력" 
+                               class="w-full text-center text-3xl sm:text-4xl py-4 sm:py-6 rounded-2xl border-[3px] border-gray-300 bg-white text-gray-800 placeholder-gray-400 shadow-inner transition-transform">
+                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-2xl sm:text-4xl px-8 sm:px-12 rounded-2xl shadow-[0_6px_0_#16a34a] hover:shadow-[0_2px_0_#16a34a] hover:translate-y-1 transition-all whitespace-nowrap font-bold">
+                            확인
+                        </button>
+                    </div>
+                    <div id="wrong-message" class="text-red-500 text-center text-lg sm:text-2xl font-bold h-6 sm:h-8 opacity-0 transition-opacity mt-1">
+                        오답입니다! 다시 시도해 보세요.
+                    </div>
+                </form>
+
+                <!-- 찬스 아이템 버튼 -->
+                <div class="flex gap-3 w-full mt-4 sm:mt-6 justify-center">
+                    <button id="btn-item-time" onclick="useTimeItem()" type="button" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-xl sm:text-2xl font-bold py-4 rounded-xl shadow-lg border-b-4 border-purple-700 active:border-b-0 active:translate-y-1 transition-all">
+                        ⏰ +10초 (남음: <span id="cnt-item-time">3</span>)
+                    </button>
+                    <button id="btn-item-hint" onclick="useHintItem()" type="button" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xl sm:text-2xl font-bold py-4 rounded-xl shadow-lg border-b-4 border-orange-700 active:border-b-0 active:translate-y-1 transition-all">
+                        🔍 한 글자 (남음: <span id="cnt-item-hint">3</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="w-full max-w-4xl mt-6 sm:mt-10 bg-white/50 rounded-full h-4 sm:h-6 shadow-inner overflow-hidden border-2 border-white/60">
+            <div id="progress-bar" class="bg-green-400 h-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- 결과 피드백 화면 -->
+    <div id="feedback-screen" class="screen flex-col items-center max-w-2xl w-full">
+        <div id="feedback-box" class="w-full bg-white rounded-3xl shadow-2xl p-10 sm:p-14 text-center border-[6px]">
+            <div id="feedback-icon" class="text-8xl sm:text-9xl mb-4 sm:mb-6">⭕</div>
+            <h2 id="feedback-title" class="text-5xl sm:text-6xl mb-4 sm:mb-6">정답입니다!</h2>
+            <div class="bg-gray-100 rounded-2xl p-5 sm:p-8 mb-8 sm:mb-10">
+                <p class="text-gray-600 mb-2 text-xl sm:text-2xl">정답은</p>
+                <p id="correct-answer-text" class="text-5xl sm:text-6xl text-blue-600 font-bold">-</p>
+            </div>
+            <button onclick="nextQuestion()" class="w-full bg-blue-500 text-white text-3xl sm:text-4xl py-5 sm:py-6 rounded-2xl shadow-[0_8px_0_#2563eb] hover:translate-y-2 transition-all font-bold">
+                다음 문제 👉
+            </button>
+        </div>
+    </div>
+
+    <!-- 최종 결과 화면 -->
+    <div id="result-screen" class="screen flex-col items-center max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 sm:p-12 text-center border-[6px] border-blue-400 overflow-hidden relative">
+        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎉</text></svg>'); background-size: 80px;"></div>
+        
+        <h1 class="text-5xl sm:text-6xl text-blue-600 mb-6 z-10 relative font-bold">게임 종료!</h1>
+        
+        <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-full py-4 sm:py-5 px-8 sm:px-12 mb-8 sm:mb-10 z-10 relative border-4 border-yellow-300 shadow-lg inline-block transform transition-transform hover:scale-105">
+            <p id="rank-badge" class="text-3xl sm:text-4xl md:text-5xl mb-0 font-black drop-shadow-md whitespace-nowrap">👑 넌센스 마스터 👑</p>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 sm:gap-6 w-full mb-8 sm:mb-10 relative z-10">
+            <div class="bg-gray-50 rounded-2xl p-4 sm:p-6 border-[3px] border-gray-200 shadow-sm flex flex-col justify-center">
+                <span class="block text-gray-500 text-lg sm:text-xl mb-2">맞힌 문제</span>
+                <span id="result-correct" class="font-bold text-blue-600 text-2xl sm:text-3xl">0개</span>
+            </div>
+            <div class="bg-gray-50 rounded-2xl p-4 sm:p-6 border-[3px] border-gray-200 shadow-sm flex flex-col justify-center">
+                <span class="block text-gray-500 text-lg sm:text-xl mb-2">정답률</span>
+                <span id="result-accuracy" class="font-bold text-green-600 text-2xl sm:text-3xl">0%</span>
+            </div>
+            <div class="bg-gray-50 rounded-2xl p-4 sm:p-6 border-[3px] border-gray-200 shadow-sm col-span-2 flex flex-col justify-center">
+                <span class="block text-gray-500 text-lg sm:text-xl mb-2">걸린 소요시간</span>
+                <span id="result-time" class="font-bold text-purple-600 text-2xl sm:text-3xl">0초</span>
+            </div>
+        </div>
+        
+        <div class="bg-yellow-100 rounded-3xl w-full p-6 sm:p-8 mb-8 sm:mb-10 border-[6px] border-yellow-400 z-10 relative shadow-inner">
+            <p class="text-gray-600 mb-2 font-bold text-xl sm:text-2xl">최종 점수</p>
+            <div class="flex items-center justify-center">
+                <span class="text-6xl sm:text-7xl text-yellow-600 font-black" id="final-score">0</span>
+                <span class="text-2xl sm:text-3xl text-yellow-700 font-bold mt-2 sm:mt-4 ml-2">점</span>
+            </div>
+        </div>
+
+        <button onclick="initGame()" class="w-full bg-green-500 hover:bg-green-600 text-white text-3xl sm:text-4xl py-5 sm:py-6 rounded-2xl shadow-[0_8px_0_#16a34a] hover:shadow-[0_3px_0_#16a34a] hover:translate-y-2 transition-all z-10 relative font-bold">
+            다시 하기 🔄
+        </button>
+    </div>
+
+    <script>
+        // 전면 수정된 창의력 넌센스 20문제!
+        const originalQuizData = [
+            // 🎈 난이도 하 (5개)
+            { emojis: '💯🐦', hint: 'ㅂㅈ', answer: '백조', difficulty: '하' }, 
+            { emojis: '🌙💨', hint: 'ㅁㅂㄱ', answer: '문방구', difficulty: '하' }, 
+            { emojis: '🦶🎵', hint: 'ㅂㄹㄷ', answer: '발라드', difficulty: '하' }, 
+            { emojis: '🐻🛁', hint: 'ㄱㅌ', answer: '곰탕', difficulty: '하' }, 
+            { emojis: '🍯🌰', hint: 'ㄲㅂ', answer: '꿀밤', difficulty: '하' }, 
+            
+            // 🤣 난이도 중 (10개)
+            { emojis: '💀🧊', hint: 'ㄷㅇㅂ', answer: '다이빙', difficulty: '중' }, // 6번
+            { emojis: '🔥🌊', hint: 'ㅇㅂㄷ', answer: '열바다', difficulty: '중' }, // 7번 교체 (열바다)
+            { emojis: '👦👦👦', hint: 'ㅎㄷㅅ', answer: '헤드셋', difficulty: '중' }, // 8번 교체 (헤드셋)
+            { emojis: '⭐💩⭐', hint: 'ㅂㄸㅂ', answer: '별똥별', difficulty: '중' }, 
+            { emojis: '🚽🏃', hint: 'ㅇㅂㅅㄹ', answer: '일본사람', difficulty: '중' }, 
+            { emojis: '🔥🐶', hint: 'ㅎㄷㄱ', answer: '핫도그', difficulty: '중' }, 
+            { emojis: '🏃🍡', hint: 'ㅎㄹㅂㄸ', answer: '헐레벌떡', difficulty: '중' }, 
+            { emojis: '🍚🏃', hint: 'ㅂㄷㄷ', answer: '밥도둑', difficulty: '중' },  
+            { emojis: '⏳🏫', hint: 'ㄹㄷㅈ', answer: '로딩중', difficulty: '중' }, // 14번 교체 (로딩중)
+            { emojis: '☀️📄', hint: 'ㅎㄹㅍㅌ', answer: '해리포터', difficulty: '중' }, 
+
+            // 🤯 난이도 상 (5개)
+            { emojis: '🕳️🍎', hint: 'ㅍㅇㅇㅍ', answer: '파인애플', difficulty: '상' }, 
+            { emojis: '⭕😭', hint: 'ㅇㅌ', answer: '원통', difficulty: '상' }, 
+            { emojis: '🍕😆', hint: 'ㅍㅈㅎ', answer: '피자헛', difficulty: '상' }, // 18번 교체 (피자헛)
+            { emojis: '☀️💧🍲', hint: 'ㅎㅁㅌ', answer: '해물탕', difficulty: '상' }, 
+            { emojis: '🐍🔥', hint: 'ㅂㅍㅇㅇ', answer: '뱀파이어', difficulty: '상' }  
+        ];
+
+        let quizData = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentCombo = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        let correctAnswersCount = 0;
+        let gameStartTime = 0;
+        let useHint = true;
+        let isFeverMode = false;
+
+        // 아이템 관련 변수
+        let timeItemCount = 3;
+        let hintItemCount = 3;
+        let revealedLetters = []; 
+
+        // 최고 점수 불러오기
+        let bestScore = localStorage.getItem('catchmindBestScore') || 0;
+        document.getElementById('best-score-display').innerText = bestScore;
+
+        const sounds = {
+            correct: null,
+            wrong: null,
+            init: function() {
+                if (!this.correct) {
+                    this.correct = new Tone.PolySynth(Tone.Synth).toDestination();
+                    this.wrong = new Tone.Synth().toDestination();
+                    this.correct.volume.value = -5;
+                    this.wrong.volume.value = -5;
+                }
+            },
+            playCorrect: function() {
+                if(Tone.context.state !== 'running') Tone.context.resume();
+                this.correct.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n");
+            },
+            playWrong: function() {
+                if(Tone.context.state !== 'running') Tone.context.resume();
+                this.wrong.triggerAttackRelease("C3", "16n");
+            }
+        };
+
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+            feedback: document.getElementById('feedback-screen'),
+            result: document.getElementById('result-screen')
+        };
+
+        const elements = {
+            questionNumber: document.getElementById('question-number'),
+            difficultyBadge: document.getElementById('difficulty-badge'),
+            scoreDisplay: document.getElementById('score-display'),
+            comboDisplay: document.getElementById('combo-display'),
+            timer: document.getElementById('timer'),
+            pictureEmoji: document.getElementById('picture-emoji'),
+            hintContainer: document.getElementById('hint-container'),
+            hintText: document.getElementById('hint-text'),
+            answerInput: document.getElementById('answer-input'),
+            wrongMessage: document.getElementById('wrong-message'),
+            progressBar: document.getElementById('progress-bar'),
+            feedbackBox: document.getElementById('feedback-box'),
+            feedbackIcon: document.getElementById('feedback-icon'),
+            feedbackTitle: document.getElementById('feedback-title'),
+            correctAnswerText: document.getElementById('correct-answer-text'),
+            finalScore: document.getElementById('final-score'),
+            rankBadge: document.getElementById('rank-badge'),
+            resultCorrect: document.getElementById('result-correct'),
+            resultAccuracy: document.getElementById('result-accuracy'),
+            resultTime: document.getElementById('result-time'),
+            useHintCheckbox: document.getElementById('use-hint-checkbox'),
+            gameContainer: document.getElementById('game-container')
+        };
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenName].classList.add('active');
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function fireConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                zIndex: 9999
+            });
+        }
+
+        function updateScoreBoard() {
+            elements.scoreDisplay.innerText = score;
+            
+            if (currentCombo >= 3) {
+                isFeverMode = true;
+                elements.gameContainer.classList.add('fever-mode');
+                elements.comboDisplay.innerText = `${currentCombo} COMBO! 🔥 피버 타임!`;
+                elements.comboDisplay.classList.remove('opacity-0');
+                elements.comboDisplay.classList.add('opacity-100', 'combo-text');
+                void elements.comboDisplay.offsetWidth; 
+            } else {
+                isFeverMode = false;
+                elements.gameContainer.classList.remove('fever-mode');
+                if (currentCombo > 0) {
+                    elements.comboDisplay.innerText = `${currentCombo} COMBO!`;
+                    elements.comboDisplay.classList.remove('opacity-0', 'text-red-500');
+                    elements.comboDisplay.classList.add('opacity-100', 'text-orange-500');
+                } else {
+                    elements.comboDisplay.innerText = '';
+                    elements.comboDisplay.classList.remove('opacity-100');
+                    elements.comboDisplay.classList.add('opacity-0');
+                }
+            }
+        }
+
+        async function startGame() {
+            await Tone.start();
+            sounds.init();
+
+            quizData = shuffleArray(originalQuizData);
+            score = 0;
+            currentCombo = 0;
+            currentQuestionIndex = 0;
+            correctAnswersCount = 0;
+            gameStartTime = Date.now();
+            useHint = elements.useHintCheckbox.checked;
+            
+            timeItemCount = 3;
+            hintItemCount = 3;
+            document.getElementById('cnt-item-time').innerText = timeItemCount;
+            document.getElementById('cnt-item-hint').innerText = hintItemCount;
+            document.getElementById('btn-item-time').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('btn-item-hint').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            loadQuestion();
+            showScreen('game');
+        }
+
+        function loadQuestion() {
+            const q = quizData[currentQuestionIndex];
+            revealedLetters = []; 
+            
+            elements.questionNumber.innerText = currentQuestionIndex + 1;
+            elements.difficultyBadge.innerText = `난이도: ${q.difficulty}`;
+            
+            elements.difficultyBadge.className = 'sm:ml-4 text-sm sm:text-xl md:text-2xl px-3 py-1 sm:py-2 rounded-full text-white font-bold shadow-sm border-2 border-white/50 whitespace-nowrap mt-2 sm:mt-0';
+            if (q.difficulty === '하') elements.difficultyBadge.classList.add('bg-green-500');
+            else if (q.difficulty === '중') elements.difficultyBadge.classList.add('bg-orange-500');
+            else if (q.difficulty === '상') elements.difficultyBadge.classList.add('bg-red-500');
+
+            elements.pictureEmoji.innerText = q.emojis;
+            
+            renderHintText(); 
+
+            elements.answerInput.value = '';
+            elements.answerInput.classList.remove('animate-shake');
+            elements.wrongMessage.style.opacity = '0';
+            elements.answerInput.focus();
+            
+            updateScoreBoard();
+            
+            const progress = ((currentQuestionIndex) / quizData.length) * 100;
+            elements.progressBar.style.width = `${progress}%`;
+
+            resetTimer();
+        }
+
+        function renderHintText() {
+            const q = quizData[currentQuestionIndex];
+            let displayText = '';
+            
+            for(let i=0; i<q.answer.length; i++) {
+                if(revealedLetters.includes(i)) {
+                    displayText += q.answer[i]; 
+                } else {
+                    displayText += useHint ? q.hint[i] : '◯';
+                }
+            }
+            
+            elements.hintText.innerText = displayText;
+            elements.hintText.className = useHint && revealedLetters.length === 0 ? 'tracking-[0.2em] text-blue-600 font-bold' : 'hint-circle font-bold';
+            if(revealedLetters.length > 0) elements.hintText.classList.add('text-orange-500');
+        }
+
+        function useTimeItem() {
+            if(timeItemCount > 0) {
+                timeItemCount--;
+                timeLeft += 10;
+                elements.timer.innerText = timeLeft;
+                elements.timer.classList.remove('timer-warning');
+                document.getElementById('cnt-item-time').innerText = timeItemCount;
+                
+                if(timeItemCount === 0) document.getElementById('btn-item-time').classList.add('opacity-50', 'cursor-not-allowed');
+                elements.answerInput.focus();
+            }
+        }
+
+        function useHintItem() {
+            if(hintItemCount > 0) {
+                const q = quizData[currentQuestionIndex];
+                let unrevealed = [];
+                for(let i=0; i<q.answer.length; i++) {
+                    if(!revealedLetters.includes(i)) unrevealed.push(i);
+                }
+                
+                if(unrevealed.length > 0) {
+                    revealedLetters.push(unrevealed[0]);
+                    hintItemCount--;
+                    document.getElementById('cnt-item-hint').innerText = hintItemCount;
+                    
+                    if(hintItemCount === 0) document.getElementById('btn-item-hint').classList.add('opacity-50', 'cursor-not-allowed');
+                    renderHintText();
+                }
+                elements.answerInput.focus();
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            elements.timer.innerText = timeLeft;
+            elements.timer.classList.remove('timer-warning');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                elements.timer.innerText = timeLeft;
+
+                if (timeLeft <= 3) elements.timer.classList.add('timer-warning');
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    currentCombo = 0;
+                    updateScoreBoard();
+                    processAnswer(false, true);
+                }
+            }, 1000);
+        }
+
+        function submitAnswer(event) {
+            event.preventDefault();
+            if(elements.answerInput.value.trim() === '') return;
+            
+            const userAnswer = elements.answerInput.value.trim().replace(/\s/g, "");
+            const correctAnswer = quizData[currentQuestionIndex].answer.replace(/\s/g, "");
+            
+            if (userAnswer === correctAnswer) {
+                sounds.playCorrect();
+                correctAnswersCount++;
+                clearInterval(timerInterval);
+                
+                currentCombo++;
+                
+                let earnedPoints = 100;
+                if (isFeverMode) earnedPoints += 50; 
+                if (currentCombo >= 3) earnedPoints += 100;
+                
+                score += earnedPoints;
+                updateScoreBoard();
+                fireConfetti(); 
+                
+                processAnswer(true, false);
+            } else {
+                sounds.playWrong();
+                currentCombo = 0;
+                updateScoreBoard();
+                
+                elements.answerInput.classList.remove('animate-shake');
+                void elements.answerInput.offsetWidth; 
+                elements.answerInput.classList.add('animate-shake');
+                
+                elements.answerInput.value = '';
+                elements.answerInput.focus();
+                
+                elements.wrongMessage.style.opacity = '1';
+                setTimeout(() => { elements.wrongMessage.style.opacity = '0'; }, 1500);
+            }
+        }
+
+        function processAnswer(isCorrect, isTimeout) {
+            const q = quizData[currentQuestionIndex];
+            elements.correctAnswerText.innerText = q.answer;
+
+            if (isCorrect) {
+                elements.feedbackIcon.innerText = '⭕';
+                elements.feedbackTitle.innerText = '정답입니다!';
+                elements.feedbackTitle.className = 'text-5xl sm:text-6xl mb-4 sm:mb-6 text-green-500 font-bold';
+                elements.feedbackBox.className = 'w-full bg-white rounded-3xl shadow-2xl p-10 sm:p-14 text-center border-[6px] border-green-400';
+            } else {
+                elements.feedbackIcon.innerText = isTimeout ? '⏰' : '❌';
+                elements.feedbackTitle.innerText = isTimeout ? '시간 초과!' : '아쉽네요, 땡!';
+                elements.feedbackTitle.className = 'text-5xl sm:text-6xl mb-4 sm:mb-6 text-red-500 font-bold';
+                elements.feedbackBox.className = 'w-full bg-white rounded-3xl shadow-2xl p-10 sm:p-14 text-center border-[6px] border-red-400';
+            }
+
+            showScreen('feedback');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+                showScreen('game');
+            } else {
+                showFinalResult();
+            }
+        }
+
+        function showFinalResult() {
+            elements.finalScore.innerText = score;
+            
+            if(score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('catchmindBestScore', bestScore);
+                document.getElementById('best-score-display').innerText = bestScore;
+            }
+            
+            const timeTakenSec = Math.floor((Date.now() - gameStartTime) / 1000);
+            const minutes = Math.floor(timeTakenSec / 60);
+            const seconds = timeTakenSec % 60;
+            const timeString = minutes > 0 ? `${minutes}분 ${seconds}초` : `${seconds}초`;
+            
+            const totalQuestions = quizData.length;
+            const accuracy = Math.round((correctAnswersCount / totalQuestions) * 100);
+            
+            elements.resultCorrect.innerText = `${correctAnswersCount}개 / ${totalQuestions}문제`;
+            elements.resultAccuracy.innerText = `${accuracy}%`;
+            elements.resultTime.innerText = timeString;
+
+            let rankName = "";
+            let rankColor = "";
+            
+            if (correctAnswersCount >= 18) {
+                rankName = "👑 넌센스 마스터 👑";
+                rankColor = "text-pink-600";
+                setTimeout(fireConfetti, 500);
+                setTimeout(fireConfetti, 1000);
+            } else if (correctAnswersCount >= 13) {
+                rankName = "🌟 센스쟁이 기대주 🌟";
+                rankColor = "text-blue-600";
+                setTimeout(fireConfetti, 500);
+            } else if (correctAnswersCount >= 8) {
+                rankName = "👍 노력파 넌센서 👍";
+                rankColor = "text-green-600";
+            } else {
+                rankName = "🌱 넌센스 새싹 🌱";
+                rankColor = "text-orange-600";
+            }
+            
+            elements.rankBadge.className = `text-3xl sm:text-4xl md:text-5xl mb-0 font-black drop-shadow-md combo-text whitespace-nowrap ${rankColor}`;
+            elements.rankBadge.innerText = rankName;
+            
+            showScreen('result');
+        }
+
+        function initGame() {
+            showScreen('start');
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
