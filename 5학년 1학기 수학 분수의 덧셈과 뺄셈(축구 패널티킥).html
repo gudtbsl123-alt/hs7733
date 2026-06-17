@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>상암 스타디움 페널티킥(PK) 챌린지</title>
+  <style>
+    :root {
+      --panel: rgba(9, 20, 28, 0.95);
+      --line: rgba(255, 255, 255, 0.25);
+      --text: #f7fbff;
+      --muted: #b8c8d9;
+      --accent: #ffdf4d;
+      --accent2: #28d4ff;
+      --danger: #ff4d6d;
+      --good: #39ff88;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      color: var(--text); font-family: "Segoe UI", "Noto Sans KR", system-ui, sans-serif;
+      background: #030a0d; touch-action: none;
+    }
+
+    body { display: grid; place-items: stretch; }
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #06151b; z-index: 1; }
+
+    .hud {
+      position: fixed; inset: 0; pointer-events: none; display: grid;
+      grid-template-rows: auto 1fr auto; padding: clamp(10px, 2vw, 20px); gap: 10px; z-index: 10;
+    }
+
+    .topbar {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: start; gap: 10px;
+    }
+
+    .scorebox, .kickerbox, .powerbox, .mobile-pad, .roster-strip {
+      background: var(--panel); border: 1px solid var(--line);
+      box-shadow: 0 14px 45px rgba(0, 0, 0, 0.5); backdrop-filter: blur(14px);
+    }
+
+    .scorebox { 
+      min-height: 72px; padding: 12px 14px; border-radius: 8px; position: relative; 
+      z-index: 10; overflow: hidden;
+    }
+    
+    .scorebox strong, .kickerbox strong {
+      display: block; font-size: clamp(16px, 2vw, 22px); line-height: 1.1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
+    }
+    
+    .kickerbox span {
+      display: block; margin-top: 5px; color: var(--muted);
+      font-size: clamp(12px, 1.4vw, 14px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .score-stats {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    }
+    .score-stats span {
+      display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 4px 8px; border-radius: 6px; font-size: clamp(11px, 1.3vw, 13px);
+      color: #e8f2fb; font-weight: 700; white-space: nowrap;
+    }
+    .score-stats b { margin-left: 5px; font-weight: 900; font-size: 1.1em; }
+
+    .combo-badge {
+      position: absolute; top: -14px; left: -8px;
+      color: #000; font-weight: 900; padding: 5px 12px; border-radius: 12px;
+      font-size: 13px; transform: scale(0); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 2px solid #fff; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 11;
+    }
+    .combo-badge.show { transform: scale(1) rotate(-4deg); }
+    
+    .combo-badge.fire { background: linear-gradient(135deg, #ff4d6d, #ffdf4d); animation: pulse-fire 0.8s infinite alternate; }
+    .combo-badge.banana { background: linear-gradient(135deg, #ffdf4d, #39ff88); animation: pulse-banana 0.8s infinite alternate; }
+    .combo-badge.tornado { background: linear-gradient(135deg, #28d4ff, #ffffff); animation: pulse-tornado 0.8s infinite alternate; }
+
+    @keyframes pulse-fire { from { box-shadow: 0 0 10px #ff4d6d; transform: scale(1) rotate(-4deg); } to { box-shadow: 0 0 25px #ffdf4d; transform: scale(1.05) rotate(-2deg); } }
+    @keyframes pulse-banana { from { box-shadow: 0 0 10px #ffdf4d; transform: scale(1) rotate(-4deg); } to { box-shadow: 0 0 25px #39ff88; transform: scale(1.05) rotate(-2deg); } }
+    @keyframes pulse-tornado { from { box-shadow: 0 0 10px #28d4ff; transform: scale(1) rotate(-4deg); } to { box-shadow: 0 0 25px #ffffff; transform: scale(1.05) rotate(-2deg); } }
+
+    .broadcast {
+      align-self: start; justify-self: center; display: inline-flex; align-items: center; gap: 8px;
+      min-height: 34px; padding: 7px 12px; border-radius: 999px; background: rgba(255, 30, 66, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 10px 28px rgba(255, 30, 66, 0.24);
+      font-size: clamp(11px, 1.7vw, 13px); font-weight: 800; letter-spacing: 0; text-transform: uppercase;
+    }
+
+    .live-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); animation: pulse 1.1s infinite; }
+    .kickerbox { justify-self: end; min-height: 72px; min-width: min(38vw, 360px); padding: 12px 14px; border-radius: 8px; text-align: right; }
+    
+    .center-stage { 
+      display: flex; flex-direction: column; justify-content: center; align-items: center; 
+      min-height: 0; padding: 5px; overflow: hidden; position: relative; z-index: 20;
+    }
+
+    .screen {
+      pointer-events: auto; width: 100%; max-width: 880px; max-height: 100%; overflow-y: auto;
+      background: linear-gradient(180deg, rgba(12, 30, 39, 0.98), rgba(5, 14, 20, 0.98));
+      border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8);
+      padding: clamp(18px, 4vw, 34px);
+    }
+
+    .screen h1 {
+      margin: 0 0 8px; font-size: clamp(28px, 6vw, 62px); line-height: 1.1; letter-spacing: 0;
+      background: linear-gradient(to right, #ffffff, #b8c8d9); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .screen p { color: #d8e5f0; font-size: clamp(14px, 2.2vw, 18px); line-height: 1.55; margin: 0 0 18px; word-break: keep-all; }
+
+    .features-list { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .feature-tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .feature-tag.fire { color: #ffdf4d; border-color: rgba(255, 223, 77, 0.5); }
+    .feature-tag.target { color: #28d4ff; border-color: rgba(40, 212, 255, 0.5); }
+
+    .nickname-row { display: grid; grid-template-columns: 1fr 230px auto; gap: 10px; margin-top: 18px; }
+    input, select, button { font: inherit; }
+    input, select { width: 100%; min-height: 48px; color: #06151b; background: #f7fbff; border: 0; border-radius: 8px; padding: 0 14px; font-weight: 800; font-size: 14px; outline: none; }
+    select { cursor: pointer; appearance: none; background-image: linear-gradient(45deg, transparent 50%, #06151b 50%), linear-gradient(135deg, #06151b 50%, transparent 50%); background-position: calc(100% - 18px) 21px, calc(100% - 12px) 21px; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; text-overflow: ellipsis; }
+    
+    button {
+      min-height: 44px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; color: #06151b;
+      background: linear-gradient(180deg, #fff17a, #ffbf2f); font-weight: 900; cursor: pointer;
+      box-shadow: 0 12px 28px rgba(255, 204, 44, 0.22); transition: transform 0.1s;
+    }
+    button:active { transform: translateY(2px); }
+
+    .player-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 8px; margin: 14px 0 4px; }
+    .player-card { min-height: 92px; padding: 10px; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; background: radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.22), transparent 34%), rgba(255, 255, 255, 0.07); cursor: pointer; transition: all 0.2s ease; }
+    .player-card:hover { background: rgba(255, 255, 255, 0.15); }
+    .player-card.selected { border-color: var(--accent); box-shadow: inset 0 0 0 2px rgba(255, 223, 77, 0.5), 0 0 15px rgba(255, 223, 77, 0.3); transform: translateY(-2px); }
+    .player-face { width: 36px; height: 36px; margin-bottom: 7px; border-radius: 50%; background: linear-gradient(145deg, #ffd0a6, #9c5f30); border: 2px solid rgba(255, 255, 255, 0.55); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25); overflow: hidden; display: grid; place-items: center; color: #07131d; font-weight: 1000; font-size: 13px; }
+    .player-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .player-card b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-card small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .prompt { 
+      pointer-events: auto; width: 100%; max-width: 1120px; max-height: 100%; overflow-y: auto; 
+      border-radius: 12px; padding: clamp(16px, 4vw, 34px); box-shadow: 0 30px 80px rgba(0,0,0,0.8); 
+      background: linear-gradient(180deg, rgba(12, 30, 39, 0.98), rgba(5, 14, 20, 0.98));
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(14px); display: flex; flex-direction: column;
+    }
+    .prompt.hidden, .screen.hidden, .mobile-pad.hidden, .powerbox.hidden, .roster-strip.hidden { display: none !important; }
+    
+    .question-kicker { display: flex; justify-content: space-between; gap: 14px; color: var(--accent2); font-size: clamp(15px, 2vw, 22px); font-weight: 800; margin-bottom: clamp(12px, 2vw, 20px); text-shadow: 0 2px 10px rgba(40, 212, 255, 0.4); }
+    .question-text { font-size: clamp(24px, 5vw, 56px); line-height: 1.3; font-weight: 900; margin-bottom: clamp(16px, 3vw, 30px); color: #ffffff; text-shadow: 0 3px 15px rgba(0, 0, 0, 0.6); word-break: keep-all; text-align: center; }
+
+    .math-line { display: inline; }
+    .mixed { display: inline-flex; align-items: center; gap: 0.14em; white-space: nowrap; vertical-align: middle; }
+    .fraction { display: inline-grid; grid-template-rows: auto 0 auto; align-items: center; justify-items: center; min-width: 0.9em; margin: 0 0.12em; vertical-align: middle; line-height: 1; transform: translateY(-0.04em); }
+    .fraction .top, .fraction .bottom { display: block; padding: 0 0.16em; font-size: 0.78em; line-height: 0.9; font-weight: 1000; }
+    .fraction .bar { display: block; width: 100%; min-width: 0.82em; height: 0.095em; margin: 0.1em 0; border-radius: 999px; background: currentColor; }
+    .answers .fraction .top, .answers .fraction .bottom { font-size: 0.84em; }
+
+    .answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(10px, 2vw, 16px); }
+    .answers button { 
+      min-height: clamp(64px, 10vh, 100px); color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08)); 
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 8px 20px rgba(0,0,0,0.3); text-align: center; 
+      padding: 10px 14px; font-size: clamp(20px, 3.5vw, 38px); line-height: 1.2; font-weight: 1000; 
+      display: grid; place-items: center; border-color: rgba(255, 255, 255, 0.3); border-radius: 12px; transition: all 0.2s; 
+    }
+    .answers button:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+    .answers button.correct { background: rgba(57, 255, 136, 0.3); border-color: rgba(57, 255, 136, 0.9); box-shadow: 0 0 25px rgba(57, 255, 136, 0.4); }
+    .answers button.wrong { background: rgba(255, 77, 109, 0.3); border-color: rgba(255, 77, 109, 0.9); box-shadow: 0 0 25px rgba(255, 77, 109, 0.4); }
+
+    .lower { display: grid; grid-template-columns: minmax(180px, 320px) 1fr minmax(180px, 320px); align-items: end; gap: 10px; }
+    .powerbox { padding: 12px; border-radius: 8px; position: relative; }
+    .power-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-weight: 800; margin-bottom: 8px; }
+    .power-track { height: 18px; border-radius: 999px; overflow: hidden; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+    .power-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #28d4ff, #39ff88 50%, #ffdf4d 80%, #ff4d6d); box-shadow: 0 0 20px rgba(255, 223, 77, 0.6); }
+
+    .fire-glow { position: absolute; inset: 0; border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    .powerbox.fire-active .fire-glow { box-shadow: inset 0 0 20px rgba(255, 107, 0, 0.6); animation: pulse-fire 0.8s infinite alternate; opacity: 1; }
+    .powerbox.banana-active .fire-glow { box-shadow: inset 0 0 20px rgba(255, 223, 77, 0.6); animation: pulse-banana 0.8s infinite alternate; opacity: 1; }
+    .powerbox.tornado-active .fire-glow { box-shadow: inset 0 0 20px rgba(40, 212, 255, 0.6); animation: pulse-tornado 0.8s infinite alternate; opacity: 1; }
+
+    .roster-strip { justify-self: center; width: min(94vw, 560px); border-radius: 8px; padding: 9px 10px; text-align: center; font-size: 13px; color: var(--muted); font-weight: bold; }
+    .mobile-pad { pointer-events: auto; justify-self: end; display: grid; grid-template-columns: 58px 58px 88px; gap: 8px; padding: 10px; border-radius: 8px; }
+    .mobile-pad button { min-width: 0; min-height: 58px; color: var(--text); background: rgba(255, 255, 255, 0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 22px; border-radius: 8px;}
+    .mobile-pad .shoot { color: #06151b; background: linear-gradient(180deg, #fff17a, #ffbf2f); font-size: 16px; box-shadow: 0 4px 15px rgba(255, 204, 44, 0.3); }
+
+    .toast {
+      position: fixed; left: 50%; top: 45%; transform: translate(-50%, -50%) scale(0.8);
+      width: min(86vw, 680px); pointer-events: none; text-align: center;
+      font-size: clamp(38px, 9vw, 86px); line-height: 1.1; font-weight: 1000;
+      text-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 2px 5px rgba(0,0,0,0.5);
+      opacity: 0; transition: opacity 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .toast small { display: block; margin-top: 12px; font-size: clamp(16px, 3vw, 24px); color: #ffdf4d; line-height: 1.4; text-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+
+    .tip-modal { position: fixed; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(2, 7, 10, 0.8); pointer-events: auto; z-index: 100; backdrop-filter: blur(5px); }
+    .tip-modal.hidden { display: none; }
+    .tip-card { width: min(92vw, 520px); padding: clamp(20px, 4vw, 30px); border-radius: 12px; background: linear-gradient(180deg, rgba(20, 45, 60, 0.98), rgba(8, 20, 28, 0.98)); border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 30px 100px rgba(0, 0, 0, 0.8); }
+    .tip-card h2 { margin: 0 0 12px; font-size: clamp(22px, 4vw, 34px); color: #ffdf4d; }
+    /* 힌트 텍스트 모바일 최적화 */
+    .tip-card p { margin: 0 0 20px; color: #d8e5f0; line-height: 1.6; font-weight: 700; font-size: clamp(15px, 2.5vw, 18px); word-break: keep-all; }
+    .tip-card button { width: 100%; font-size: 16px; }
+
+    @media (max-width: 720px) {
+      .hud { padding: 8px; }
+      .topbar { grid-template-columns: 1fr 1fr; }
+      .broadcast { grid-column: 1 / -1; grid-row: 1; justify-self: center; }
+      .scorebox { grid-column: 1; grid-row: 2; }
+      .kickerbox { grid-column: 2; grid-row: 2; min-width: 0; }
+      .scorebox, .kickerbox { min-height: 62px; padding: 10px; }
+      .nickname-row { grid-template-columns: 1fr; }
+      .answers { grid-template-columns: 1fr; }
+      .prompt { padding: 16px; width: 94vw; }
+      .question-kicker { font-size: 14px; flex-wrap: wrap; margin-bottom: 10px;}
+      .question-text { font-size: 24px; margin-bottom: 16px; }
+      .answers button { min-height: 60px; font-size: 20px; padding: 10px; }
+      .lower { grid-template-columns: 1fr; }
+      .mobile-pad { justify-self: stretch; grid-template-columns: 1fr 1fr 1.4fr; }
+      .roster-strip { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div class="hud">
+    <div class="topbar">
+      <div class="scorebox">
+        <div id="comboBadge" class="combo-badge"></div>
+        <strong id="scoreName">상암 스타디움</strong>
+        <div class="score-stats" id="scoreMeta">
+          <span>대기 중</span>
+        </div>
+      </div>
+      <div class="broadcast"><i class="live-dot"></i> LIVE PENALTY CAM</div>
+      <div class="kickerbox">
+        <strong id="kickerName">대기 중</strong>
+        <span id="kickerMeta">22명 랜덤 키커 라인업</span>
+      </div>
+    </div>
+
+    <div class="center-stage">
+      <section class="screen" id="startScreen">
+        <h1>상암 스타디움<br />페널티킥(PK) 챌린지</h1>
+        <div class="features-list">
+          <span class="feature-tag fire">🔥 3콤보 불꽃슛 / 🍌 5콤보 바나나슛 / 🌪️ 7콤보 회오리슛!</span>
+          <span class="feature-tag target">🎯 더 작아진 타깃 명중 시 +2골! (선방 조심)</span>
+          <span class="feature-tag target">🥷 10% 확률로 골키퍼 그림자 분신술 발동!</span>
+        </div>
+        <p>
+          초등 5학년 수학 문제를 맞히면 슛 기회가 열립니다. <br/>
+          정답을 맞히고, 살아 움직이는 타깃을 노려 최고의 스코어에 도전하세요!
+        </p>
+        <div class="nickname-row">
+          <input id="nickname" maxlength="12" placeholder="전광판에 표시할 닉네임" autocomplete="off" />
+          <select id="difficulty" aria-label="문제 난이도">
+            <option value="low">하 (기본 연산)</option>
+            <option value="mid" selected>중 (응용 및 1단계 문장제)</option>
+            <option value="high">상 (혼합 계산 및 2단계 문장제)</option>
+          </select>
+          <button id="startBtn">입장하기</button>
+        </div>
+        <p style="margin-top:18px;margin-bottom:8px;font-weight:900;color:#fff;">히든 카드 포함 응원 선수 선택</p>
+        <div class="player-grid" id="favoriteGrid"></div>
+      </section>
+
+      <section class="prompt hidden" id="questionPanel">
+        <div class="question-kicker">
+          <span id="questionRound">ROUND 1 / 22</span>
+          <span id="questionSubject">수학</span>
+        </div>
+        <div class="question-text" id="questionText">문제</div>
+        <div class="answers" id="answers"></div>
+      </section>
+    </div>
+
+    <div class="lower">
+      <div class="powerbox hidden" id="powerBox">
+        <div class="fire-glow"></div>
+        <div class="power-label">
+          <span id="powerDesc">D키 또는 슛 버튼 길게 누르기</span>
+          <span id="powerText">0%</span>
+        </div>
+        <div class="power-track"><div class="power-fill" id="powerFill"></div></div>
+      </div>
+      <div class="roster-strip hidden" id="rosterStrip">다음 키커 대기 중</div>
+      <div class="mobile-pad hidden" id="mobilePad">
+        <button id="leftBtn" aria-label="왼쪽 이동">◀</button>
+        <button id="rightBtn" aria-label="오른쪽 이동">▶</button>
+        <button class="shoot" id="shootBtn">슛</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="tip-modal hidden" id="tipModal">
+    <div class="tip-card">
+      <h2>앗, 다시 생각해 볼까요?</h2>
+      <p id="tipText">분모가 다르면 공배수로 통분한 뒤 계산하세요.</p>
+      <button id="tipClose">문제로 돌아가기</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const startScreen = document.getElementById("startScreen");
+      const questionPanel = document.getElementById("questionPanel");
+      const favoriteGrid = document.getElementById("favoriteGrid");
+      const nicknameInput = document.getElementById("nickname");
+      const difficultySelect = document.getElementById("difficulty");
+      const startBtn = document.getElementById("startBtn");
+      const scoreName = document.getElementById("scoreName");
+      const scoreMeta = document.getElementById("scoreMeta");
+      const kickerName = document.getElementById("kickerName");
+      const kickerMeta = document.getElementById("kickerMeta");
+      const questionRound = document.getElementById("questionRound");
+      const questionSubject = document.getElementById("questionSubject");
+      const questionText = document.getElementById("questionText");
+      const answers = document.getElementById("answers");
+      const powerBox = document.getElementById("powerBox");
+      const powerFill = document.getElementById("powerFill");
+      const powerText = document.getElementById("powerText");
+      const powerDesc = document.getElementById("powerDesc");
+      const mobilePad = document.getElementById("mobilePad");
+      const leftBtn = document.getElementById("leftBtn");
+      const rightBtn = document.getElementById("rightBtn");
+      const shootBtn = document.getElementById("shootBtn");
+      const rosterStrip = document.getElementById("rosterStrip");
+      const toast = document.getElementById("toast");
+      const tipModal = document.getElementById("tipModal");
+      const tipText = document.getElementById("tipText");
+      const comboBadge = document.getElementById("comboBadge");
+
+      const players = [
+        ["손흥민", "대한민국", "#e53935"], ["박지성", "대한민국", "#0d47a1"], ["차범근", "대한민국", "#fdd835"],
+        ["담임 선생님 (히든)", "응원단", "#ff6b00"], ["우리 반 반장 (히든)", "응원단", "#28d4ff"],
+        ["리오넬 메시", "아르헨티나", "#64b5f6"], ["크리스티아누 호날두", "포르투갈", "#2e7d32"],
+        ["킬리안 음바페", "프랑스", "#1e40af"], ["네이마르", "브라질", "#fdd835"], ["엘링 홀란", "노르웨이", "#81d4fa"],
+        ["케빈 더브라위너", "벨기에", "#ff8a65"], ["모하메드 살라", "이집트", "#c62828"], ["루카 모드리치", "크로아티아", "#f5f5f5"],
+        ["레반도프스키", "폴란드", "#ef5350"], ["해리 케인", "잉글랜드", "#fafafa"], ["비니시우스", "브라질", "#fff176"],
+        ["주드 벨링엄", "잉글랜드", "#5d4037"], ["앙투안 그리즈만", "프랑스", "#ec407a"], ["안드레스 이니에스타", "스페인", "#b71c1c"],
+        ["사비 에르난데스", "스페인", "#1565c0"], ["지네딘 지단", "프랑스", "#eeeeee"], ["호나우지뉴", "브라질", "#ffeb3b"]
+      ].map((p, index) => ({ name: p[0], country: p[1], color: p[2], photo: p[3] || "", id: index }));
+
+      let W = 0, H = 0, DPR = 1, t = 0;
+      let nickname = "", favorite = players[0];
+      let lineup = [], generatedQuestions = [];
+      let selectedDifficulty = "mid";
+      let round = 0, goals = 0, attempts = 0, combo = 0, correctCount = 0, wrongClicks = 0;
+      let state = "start", current = null, currentQuestion = null;
+      let aim = 0, power = 0, charging = false, keys = new Set();
+      let shot = null, shotMode = "normal", isClone = false; 
+      let fireworks = [], confetti = [], particleTrail = [];
+      let grassWave = 0, cameraShake = 0, slowMo = 1, replayTimer = 0;
+      let answerLocked = false, audio = null, crowdLevel = 0.15;
+      
+      let movingTargets = [];
+      let hitTarget = null;
+
+      function q(subject, text, correct, options, tip) {
+        return { subject, text, correct, options: shuffle(options.slice()), tip };
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, ch => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"}[ch]));
+      }
+
+      function renderMath(value) {
+        try {
+          return `<span class="math-line">${String(value).split(/(\d+\s+\d+\/\d+|\d+\/\d+)/g).map(part => {
+            if (/^\d+\s+\d+\/\d+$/.test(part)) {
+              const [whole, frac] = part.split(/\s+/);
+              const [top, bottom] = frac.split("/");
+              return `<span class="mixed"><span>${whole}</span>${fractionHtml(top, bottom)}</span>`;
+            }
+            if (/^\d+\/\d+$/.test(part)) {
+              const [top, bottom] = part.split("/");
+              return fractionHtml(top, bottom);
+            }
+            return escapeHtml(part);
+          }).join("")}</span>`;
+        } catch(e) {
+          return escapeHtml(value);
+        }
+      }
+
+      function fractionHtml(top, bottom) {
+        return `<span class="fraction"><span class="top">${top}</span><span class="bar"></span><span class="bottom">${bottom}</span></span>`;
+      }
+
+      function shuffle(items) {
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+      }
+
+      function generateQuestions(level) {
+        const qData = {
+          low: [
+            q("수학", "1/2 + 1/4 = ?", "3/4", ["1/4", "2/4", "3/4", "4/4"], "2와 4의 최소공배수는 4예요. 1/2를 분모가 4인 분수로 바꿔보세요!"),
+            q("수학", "1/3 + 2/9 = ?", "5/9", ["3/9", "4/9", "5/9", "6/9"], "3과 9의 공통분모를 찾아야 해요. 9로 통분하면 어떨까요?"),
+            q("수학", "2/5 + 3/10 = ?", "7/10", ["5/10", "6/10", "7/10", "8/10"], "2/5의 분모 분자에 2를 곱해서 분모를 10으로 맞춰보세요."),
+            q("수학", "1/6 + 5/12 = ?", "7/12", ["5/12", "6/12", "7/12", "8/12"], "6은 12의 약수예요. 1/6을 12가 분모인 분수로 통분해 봐요."),
+            q("수학", "3/8 + 1/4 = ?", "5/8", ["3/8", "4/8", "5/8", "6/8"], "1/4을 분모가 8인 분수로 바꾸면 2/8가 되죠. 이제 더해볼까요?"),
+            q("수학", "1/2 - 1/6 = ?", "1/3", ["1/6", "1/3", "1/2", "2/3"], "1/2은 3/6과 같아요. 3/6에서 1/6을 뺀 다음 기약분수로 나타내세요."),
+            q("수학", "3/4 - 3/8 = ?", "3/8", ["1/8", "1/4", "3/8", "5/8"], "3/4을 분모가 8인 분수로 통분하면 6/8입니다!"),
+            q("수학", "5/6 - 1/3 = ?", "1/2", ["1/6", "1/2", "2/3", "5/6"], "1/3을 2/6로 바꿔서 빼보세요. 그리고 약분하는 것도 잊지 마세요!"),
+            q("수학", "7/10 - 1/5 = ?", "1/2", ["3/10", "1/2", "7/10", "9/10"], "1/5은 2/10와 같습니다. 뺀 후에 기약분수로 만들어주세요."),
+            q("수학", "8/9 - 2/3 = ?", "2/9", ["1/9", "2/9", "4/9", "5/9"], "2/3의 분모와 분자에 3을 곱해서 9로 통분해보세요."),
+            q("수학", "1 1/5 + 2 3/10 = ?", "3 1/2", ["3 1/10", "3 3/10", "3 1/2", "3 5/10"], "자연수는 자연수끼리 더하고, 1/5을 2/10로 통분해서 분수끼리 더해보세요."),
+            q("수학", "2 1/4 + 1 1/8 = ?", "3 3/8", ["3 1/8", "3 3/8", "3 5/8", "4 3/8"], "2와 1을 먼저 더하고, 1/4을 2/8로 바꿔서 더해줍니다."),
+            q("수학", "3 1/6 + 2 5/12 = ?", "5 7/12", ["5 1/12", "5 5/12", "5 7/12", "6 7/12"], "1/6을 2/12로 통분하고 자연수는 자연수끼리 계산하세요."),
+            q("수학", "4 1/3 + 1 4/9 = ?", "5 7/9", ["5 1/9", "5 4/9", "5 7/9", "6 7/9"], "1/3을 분모가 9인 분수로 바꾸면 3/9입니다. 차근차근 더해보세요."),
+            q("수학", "1 3/8 + 2 1/4 = ?", "3 5/8", ["3 1/8", "3 3/8", "3 5/8", "4 5/8"], "1/4을 2/8로 통분한 뒤 3/8과 더해주세요."),
+            q("수학", "3 1/2 - 1 1/4 = ?", "2 1/4", ["1 1/4", "2 1/4", "2 3/4", "3 1/4"], "자연수 부분은 3-1을 하고, 1/2은 2/4로 통분해서 빼면 됩니다."),
+            q("수학", "4 5/6 - 2 1/3 = ?", "2 1/2", ["2 1/6", "2 1/3", "2 1/2", "3 1/2"], "1/3을 2/6로 바꾼 뒤 빼고, 마지막에 약분까지 해주세요!"),
+            q("수학", "2 7/8 - 1 1/4 = ?", "1 5/8", ["1 3/8", "1 5/8", "1 7/8", "2 5/8"], "1/4은 2/8와 같아요. 자연수와 분수를 각각 빼주세요."),
+            q("수학", "5 9/10 - 3 2/5 = ?", "2 1/2", ["2 3/10", "2 1/2", "2 7/10", "3 1/2"], "2/5를 4/10로 통분한 후 계산하고, 5/10는 약분하세요!"),
+            q("수학", "3 3/4 - 1 1/2 = ?", "2 1/4", ["1 1/4", "2 1/4", "2 3/4", "3 1/4"], "1/2을 2/4로 통분해서 빼면 아주 쉽게 풀 수 있습니다.")
+          ],
+          mid: [
+            q("수학", "2/3 + 1/4 = ?", "11/12", ["9/12", "10/12", "11/12", "1 1/12"], "3과 4의 최소공배수인 12로 두 분수를 통분해서 더해보세요."),
+            q("수학", "3/5 + 1/2 = ?", "1 1/10", ["9/10", "1 1/10", "1 3/10", "1 1/5"], "분모를 10으로 통분하면 6/10 + 5/10가 됩니다. 가분수는 대분수로!"),
+            q("수학", "5/6 + 3/8 = ?", "1 5/24", ["1 1/24", "1 5/24", "1 7/24", "2 5/24"], "6과 8의 최소공배수인 24로 통분하세요. 20/24 + 9/24입니다."),
+            q("수학", "4/7 + 2/3 = ?", "1 5/21", ["1 1/21", "1 2/21", "1 5/21", "1 8/21"], "7과 3의 공통분모는 21이에요. 통분 후 더하면 가분수가 나오니 대분수로 바꿔주세요."),
+            q("수학", "7/9 + 5/6 = ?", "1 11/18", ["1 7/18", "1 11/18", "1 13/18", "2 1/18"], "9와 6의 최소공배수 18을 이용하세요. 계산 결과가 1을 넘습니다!"),
+            q("수학", "4/5 - 1/3 = ?", "7/15", ["6/15", "7/15", "8/15", "11/15"], "5와 3의 공통분모인 15로 두 분수를 맞춰서 빼주세요."),
+            q("수학", "5/6 - 3/8 = ?", "11/24", ["9/24", "11/24", "13/24", "15/24"], "6과 8은 24로 통분할 수 있습니다. 20/24에서 9/24를 빼보세요."),
+            q("수학", "7/10 - 1/4 = ?", "9/20", ["7/20", "9/20", "11/20", "13/20"], "10과 4의 최소공배수 20으로 분모를 맞춰보세요!"),
+            q("수학", "8/9 - 5/6 = ?", "1/18", ["1/18", "3/18", "5/18", "7/18"], "9와 6을 18로 통분하면 16/18 - 15/18가 됩니다."),
+            q("수학", "3/4 - 2/5 = ?", "7/20", ["5/20", "7/20", "9/20", "11/20"], "4와 5의 곱인 20으로 통분해서 빼보세요."),
+            q("수학", "1 2/3 + 1 4/5 = ?", "3 7/15", ["2 7/15", "3 4/15", "3 7/15", "3 11/15"], "분모를 15로 통분하면 분수 부분의 합이 가분수가 돼요. 1을 자연수로 올려주세요."),
+            q("수학", "2 3/4 + 1 5/6 = ?", "4 7/12", ["3 7/12", "4 5/12", "4 7/12", "4 11/12"], "4와 6의 최소공배수 12로 통분하고, 받아올림에 주의하세요."),
+            q("수학", "3 5/8 + 2 5/6 = ?", "6 11/24", ["5 11/24", "6 7/24", "6 11/24", "6 15/24"], "분모를 24로 통분하여 계산한 뒤, 가분수를 대분수로 정리하세요."),
+            q("수학", "무게가 3/8 kg인 가방에 1/4 kg 책을 넣었습니다. 전체 무게는?", "5/8 kg", ["4/8 kg", "5/8 kg", "6/8 kg", "7/8 kg"], "'넣었습니다'는 덧셈을 뜻해요! 1/4을 2/8로 통분해서 더해주세요."),
+            q("수학", "어제 5/6 시간, 오늘 1/3 시간 독서했습니다. 어제가 몇 시간 더 독서했나요?", "1/2 시간", ["1/6 시간", "1/3 시간", "1/2 시간", "2/3 시간"], "'몇 시간 더'를 물어보니 뺄셈이에요. 5/6 - 1/3을 계산하고 약분하세요!"),
+            q("수학", "3 1/4 - 1 2/3 = ?", "1 7/12", ["1 5/12", "1 7/12", "1 11/12", "2 7/12"], "분수 부분(1/4 - 2/3)을 뺄 수 없으니, 자연수 3에서 1을 빌려와야(받아내림) 해요!"),
+            q("수학", "4 1/5 - 2 3/4 = ?", "1 9/20", ["1 7/20", "1 9/20", "1 11/20", "2 9/20"], "20으로 통분하고, 4/20에서 15/20를 뺄 수 없으니 4에서 1을 받아내림 하세요."),
+            q("수학", "5 2/9 - 1 5/6 = ?", "3 7/18", ["3 5/18", "3 7/18", "3 11/18", "4 7/18"], "18로 통분한 후, 분수끼리 못 빼면 자연수 5를 4로 만들고 18/18을 빌려옵니다."),
+            q("수학", "6 1/6 - 3 3/8 = ?", "2 19/24", ["2 17/24", "2 19/24", "2 23/24", "3 19/24"], "24로 통분하고 받아내림에 주의해서 계산해 보세요."),
+            q("수학", "4 3/10 - 2 7/8 = ?", "1 17/40", ["1 13/40", "1 17/40", "1 21/40", "2 17/40"], "10과 8의 최소공배수인 40으로 통분하고 받아내림을 적용하세요.")
+          ],
+          high: [
+            q("수학", "지민 2 1/4 kg, 수현은 1 2/5 kg 더 캤습니다. 모두 몇 kg?", "5 9/20 kg", ["4 9/20 kg", "5 9/20 kg", "5 11/20 kg", "6 9/20 kg"], "수현이의 양을 먼저 구하고(지민+1 2/5), 다시 지민이의 양을 더해야 합니다 (2단계 문제)."),
+            q("수학", "5 1/6 m 끈에서 A가 2 3/4 m, B가 1 4/5 m 사용했습니다. 남은 끈은?", "37/60 m", ["31/60 m", "37/60 m", "43/60 m", "47/60 m"], "전체에서 A와 B가 쓴 양을 모두 빼거나, A와 B의 합을 먼저 구한 뒤 전체에서 빼세요."),
+            q("수학", "3 1/4 m, 2 5/6 m 테이프를 1 1/8 m 겹치게 이었습니다. 전체 길이는?", "4 23/24 m", ["4 11/24 m", "4 23/24 m", "5 1/24 m", "5 23/24 m"], "두 테이프의 길이를 더한 뒤, '겹친 부분의 길이'를 한 번 빼주어야 전체 길이가 나옵니다!"),
+            q("수학", "1 4/5 + 2 1/3 보다 크고 6 1/4 보다 작은 자연수는?", "5, 6", ["4, 5", "5, 6", "6, 7", "4, 5, 6"], "먼저 덧셈을 계산해 보세요. 4 2/15 보다 크고 6 1/4 보다 작은 자연수를 찾으면 됩니다."),
+            q("수학", "4 1/6 - 1 3/4 + 2 5/8 = ?", "5 1/24", ["4 23/24", "5 1/24", "5 5/24", "6 1/24"], "앞에서부터 차례대로 두 개씩 계산하세요. 뺄셈에서 받아내림 조심!"),
+            q("수학", "어떤 수에 1 2/3 를 더할 것을 뺐더니 5/6 가 되었습니다. 바르게 계산하면?", "4 1/6", ["2 1/2", "3 1/3", "4 1/6", "4 5/6"], "먼저 (어떤 수) - 1 2/3 = 5/6 를 통해 어떤 수를 구하고, 바르게 다시 더하세요."),
+            q("수학", "3 4/7 + 2 2/3 - 1 5/6 = ?", "4 17/42", ["3 17/42", "4 11/42", "4 17/42", "4 23/42"], "앞의 두 수를 먼저 21로 통분해 더한 뒤, 뒤의 수와 42로 통분해 빼주세요."),
+            q("수학", "(3 1/4 - 1 5/6) 와 (4 1/3 - 2 7/8) 중 더 큰 식은?", "4 1/3 - 2 7/8", ["3 1/4 - 1 5/6", "4 1/3 - 2 7/8", "알 수 없음", "두 식의 값은 같음"], "양쪽 괄호를 각각 계산한 후, 값을 통분해서 크기를 비교해야 합니다."),
+            q("수학", "분모가 12인 진분수 중 1/4 보다 크고 5/6 보다 작은 수의 합은?", "3 1/4", ["2 3/4", "3 1/4", "3 1/2", "4 1/4"], "1/4은 3/12, 5/6는 10/12입니다. 그 사이의 분수들을 모두 찾아서 더해보세요."),
+            q("수학", "4 2/5 m 막대가 진흙 1 1/4 m, 물 1 2/3 m에 잠겼습니다. 밖으로 나온 길이는?", "1 29/60 m", ["1 19/60 m", "1 29/60 m", "1 39/60 m", "2 29/60 m"], "진흙에 잠긴 부분과 물에 잠긴 부분을 더해서 전체 길이에서 빼주면 됩니다!"),
+            q("수학", "가득 찬 수조 8 1/4 kg, 물을 절반 덜어내니 4 5/8 kg. 빈 수조의 무게는?", "1 kg", ["1 kg", "1 1/4 kg", "1 1/2 kg", "2 kg"], "(가득 찬 무게)에서 (반 덜어낸 무게)를 빼면 물 절반의 무게가 나와요. 그걸 이용해 빈 수조를 구하세요."),
+            q("수학", "5 1/8 - X = 2 5/6 일 때, X는?", "2 7/24", ["2 1/24", "2 7/24", "2 11/24", "3 7/24"], "X를 구하려면 전체인 5 1/8 에서 남은 2 5/6 를 빼주면 됩니다. 받아내림 필수!"),
+            q("수학", "A~B는 3 3/4 km, A~C는 7 1/10 km입니다. B~C의 거리는?", "3 7/20 km", ["3 3/20 km", "3 7/20 km", "3 11/20 km", "4 7/20 km"], "전체 거리 A~C에서 A~B까지의 거리를 빼면 B~C 거리가 나와요!"),
+            q("수학", "1 5/6, 2 3/4, 3 1/2 중 가장 큰 수와 가장 작은 수의 차이는?", "1 2/3", ["1 1/3", "1 2/3", "1 5/6", "2 1/6"], "가장 큰 수는 3 1/2 이고 가장 작은 수는 1 5/6 입니다. 두 수를 빼보세요."),
+            q("수학", "어제 낮 14 1/6 시간. 오늘 1/12 시간 짧아짐. 오늘 밤의 길이는?", "9 11/12 시간", ["9 5/12 시간", "9 11/12 시간", "10 1/12 시간", "10 11/12 시간"], "먼저 오늘 낮의 길이를 구하고, 하루(24시간)에서 오늘 낮을 빼야 오늘 밤이 됩니다!"),
+            q("수학", "A = 3 1/5 - 1 3/4, B = 1 5/6 + 7/10. A+B는?", "3 59/60", ["3 49/60", "3 59/60", "4 1/60", "4 11/60"], "A의 뺄셈(받아내림)과 B의 덧셈(받아올림)을 각각 계산한 후 두 개를 더해야 하는 긴 문제입니다."),
+            q("수학", "3/8 과 7/12 의 합에서 차를 뺀 값은?", "3/4", ["1/2", "5/8", "3/4", "7/8"], "(7/12 + 3/8)을 구하고, (7/12 - 3/8)을 구해서 두 값을 빼보세요."),
+            q("수학", "밭의 2/5 에 배추, 1/3 에 무. 비워둔 밭은 전체의 얼마?", "4/15", ["2/15", "4/15", "7/15", "8/15"], "전체를 '1'로 생각하세요. 1에서 (2/5 + 1/3)을 빼면 남은 밭이 나옵니다."),
+            q("수학", "철사 6 1/4 m, 3/8 m로 정사각형, 2 5/6 m로 삼각형. 남은 길이는?", "3 1/24 m", ["2 23/24 m", "3 1/24 m", "3 5/24 m", "4 1/24 m"], "사용한 철사의 길이(3/8 + 2 5/6)를 더해서 전체 길이인 6 1/4에서 빼주세요."),
+            q("수학", "1/2 + 1/4 + 1/8 + 1/16 = ?", "15/16", ["7/8", "13/16", "15/16", "17/16"], "모든 분모를 16으로 통분해 보세요. 8/16 + 4/16 + 2/16 + 1/16을 계산하면 끝!")
+          ]
+        };
+        
+        let pool = qData[level] ? qData[level].slice() : qData.mid.slice();
+        pool = shuffle(pool);
+        const questions = [];
+        for (let i = 0; i < 22; i++) questions.push(pool[i % pool.length]);
+        return questions;
+      }
+
+      function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+      function lerp(a, b, p) { return a + (b - a) * p; }
+
+      function resize() {
+        DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        W = Math.floor(window.innerWidth);
+        H = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(W * DPR);
+        canvas.height = Math.floor(H * DPR);
+        canvas.style.width = W + "px";
+        canvas.style.height = H + "px";
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+
+      function initMovingTargets() {
+        const gw = W * 0.42;
+        const gh = H * 0.2;
+        const gy = H * 0.29;
+        
+        movingTargets = [
+            { id: 'left', x: W/2 - gw/4, y: gy + gh/2, vx: W*0.12, vy: H*0.08, active: true, locked: false },
+            { id: 'right', x: W/2 + gw/4, y: gy + gh/2, vx: -W*0.1, vy: -H*0.06, active: true, locked: false }
+        ];
+      }
+
+      function setupCards() {
+        favoriteGrid.innerHTML = "";
+        players.forEach((player) => {
+          const card = document.createElement("div");
+          card.className = "player-card" + (player === favorite ? " selected" : "");
+          const face = player.photo
+            ? `<div class="player-face"><img src="${player.photo}" alt="${player.name}" referrerpolicy="no-referrer" onerror="this.remove();this.parentElement.textContent='${player.name.slice(0, 1)}';" /></div>`
+            : `<div class="player-face" style="background:linear-gradient(145deg,#ffd7b8,${player.color})">${player.name.slice(0, 1)}</div>`;
+          card.innerHTML = `${face}<b>${player.name}</b><small>${player.country}</small>`;
+          card.addEventListener("click", () => {
+            favorite = player;
+            document.querySelectorAll(".player-card").forEach((el) => el.classList.remove("selected"));
+            card.classList.add("selected");
+            playBlip(540, 0.05);
+          });
+          favoriteGrid.appendChild(card);
+        });
+      }
+
+      function startGame() {
+        initAudio();
+        nickname = (nicknameInput.value || "상암 에이스").trim().slice(0, 12);
+        selectedDifficulty = difficultySelect.value;
+        generatedQuestions = generateQuestions(selectedDifficulty);
+        lineup = shuffle(players.slice());
+        round = 0; goals = 0; attempts = 0; combo = 0; correctCount = 0; wrongClicks = 0;
+        shotMode = "normal"; isClone = false;
+        power = 0; aim = 0; state = "question";
+        startScreen.classList.add("hidden");
+        mobilePad.classList.remove("hidden");
+        rosterStrip.classList.remove("hidden");
+        
+        updateComboUI();
+        showToast("킥오프!", `${favorite.name} 카드 응원 | 화이팅!`);
+        whistle();
+        nextQuestion();
+      }
+
+      function nextQuestion() {
+        if (round >= lineup.length) { finishGame(); return; }
+        current = lineup[round];
+        currentQuestion = generatedQuestions[round];
+        answerLocked = false; state = "question";
+        power = 0; aim = 0; charging = false; shot = null; hitTarget = null;
+        isClone = false;
+        
+        initMovingTargets();
+        updateHud();
+        questionPanel.classList.remove("hidden");
+        powerBox.classList.add("hidden");
+        questionRound.textContent = `ROUND ${round + 1} / ${lineup.length}`;
+        questionSubject.textContent = currentQuestion.subject;
+        questionText.innerHTML = renderMath(currentQuestion.text);
+        answers.innerHTML = "";
+        currentQuestion.options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.dataset.option = option;
+          btn.innerHTML = renderMath(option);
+          btn.addEventListener("click", () => chooseAnswer(btn, option));
+          answers.appendChild(btn);
+        });
+      }
+
+      function chooseAnswer(button, option) {
+        if (answerLocked) return;
+        answerLocked = true;
+        const ok = option === currentQuestion.correct;
+        
+        if (!ok) {
+          combo = 0;
+          shotMode = "normal";
+          wrongClicks++; 
+          updateComboUI();
+          button.classList.add("wrong");
+          boo();
+          showTip(currentQuestion.tip);
+          setTimeout(() => { button.classList.remove("wrong"); answerLocked = false; }, 450);
+          return;
+        }
+
+        correctCount++; 
+        combo++;
+        
+        if (combo >= 7) shotMode = "tornado";
+        else if (combo >= 5) shotMode = "banana";
+        else if (combo >= 3) shotMode = "fire";
+        else shotMode = "normal";
+
+        isClone = Math.random() < 0.10; // 분신술 10%
+
+        updateComboUI();
+
+        Array.from(answers.children).forEach((btn) => {
+          if (btn.dataset.option === currentQuestion.correct) btn.classList.add("correct");
+        });
+        button.classList.add("correct");
+        playBlip(880, 0.1);
+        setTimeout(() => {
+          state = "aim";
+          questionPanel.classList.add("hidden");
+          powerBox.classList.remove("hidden");
+          
+          powerBox.classList.remove("fire-active", "banana-active", "tornado-active");
+          if(shotMode !== "normal") {
+            powerBox.classList.add(`${shotMode}-active`);
+            let desc = shotMode === "fire" ? "🔥 불꽃슛" : (shotMode === "banana" ? "🍌 바나나슛" : "🌪️ 회오리슛");
+            powerDesc.textContent = `${desc} 장전 완료! (방어불가)`;
+            powerDesc.style.color = shotMode === "fire" ? "#ffdf4d" : (shotMode === "banana" ? "#39ff88" : "#28d4ff");
+          } else {
+            powerDesc.textContent = "D키 또는 슛 버튼 길게 누르기";
+            powerDesc.style.color = "";
+          }
+          
+          let toastMsg = shotMode !== "normal" ? `${shotMode.toUpperCase()} SHOT 타임!` : "찬스!";
+          let subMsg = "좌우로 조준하고 움직이는 타깃을 노리세요!";
+          
+          if(isClone) {
+              toastMsg = "🥷 그림자 분신술 발동!!";
+              subMsg = "골키퍼가 두 명입니다! 빈틈을 노리세요!";
+          }
+          
+          showToast(toastMsg, subMsg);
+          updateHud();
+        }, 650);
+      }
+
+      function updateComboUI() {
+        comboBadge.className = "combo-badge"; 
+        if(combo > 0) {
+          comboBadge.classList.add("show");
+          if (shotMode === "tornado") {
+              comboBadge.textContent = "🌪️ 회오리슛 장전!";
+              comboBadge.classList.add("tornado");
+          } else if (shotMode === "banana") {
+              comboBadge.textContent = "🍌 바나나슛 장전!";
+              comboBadge.classList.add("banana");
+          } else if (shotMode === "fire") {
+              comboBadge.textContent = "🔥 불꽃슛 장전!";
+              comboBadge.classList.add("fire");
+          } else {
+              comboBadge.textContent = `${combo} 콤보!`;
+          }
+        }
+      }
+
+      function updateHud() {
+        scoreName.textContent = nickname ? `${nickname} 선수` : "기록판";
+        
+        let statsHtml = `<span>정답: <b style="color:#28d4ff">${correctCount} / ${lineup.length}</b></span>`;
+        statsHtml += `<span>득점: <b style="color:#39ff88">${goals}</b></span>`;
+        if (combo > 0) {
+          let comboColor = "#ffdf4d";
+          if (combo >= 7) comboColor = "#28d4ff"; 
+          else if (combo >= 5) comboColor = "#39ff88"; 
+          else if (combo >= 3) comboColor = "#ff4d6d"; 
+          statsHtml += `<span>콤보: <b style="color:${comboColor}">${combo}</b></span>`;
+        }
+        
+        document.getElementById("scoreMeta").innerHTML = statsHtml;
+
+        kickerName.textContent = current ? current.name : "경기 종료";
+        kickerMeta.textContent = current ? `${current.country} | ${round + 1}번째 키커` : "최종 결과 확인";
+        const upcoming = lineup.slice(round + 1, round + 5).map((p) => p.name).join(" · ");
+        rosterStrip.textContent = upcoming ? `다음 키커: ${upcoming}` : "마지막 키커입니다";
+      }
+
+      function shoot() {
+        if (state !== "aim") return;
+        charging = false; state = "shot"; attempts++;
+        whistle();
+        
+        let saved1 = Math.random() < 0.35;
+        let saved2 = isClone ? Math.random() < 0.35 : false;
+        
+        let goalX = W / 2 + aim * W * 0.19 + (Math.random() - 0.5) * 34;
+        let targetY = H * 0.29 + (100 - power) * 0.35;
+        const tgRadius = Math.max(25, W * 0.025) * 0.7; // 크기 30% 축소
+        
+        movingTargets.forEach(tg => {
+            // 기준 1.5배 이내로 강화
+            if (tg.active && !tg.locked && Math.hypot(goalX - tg.x, targetY - tg.y) < tgRadius * 1.5) {
+                hitTarget = tg;
+            }
+        });
+
+        if (hitTarget) {
+            hitTarget.locked = true;
+            goalX = hitTarget.x;
+            targetY = hitTarget.y;
+        }
+
+        if (shotMode !== "normal") {
+            saved1 = false;
+            saved2 = false;
+        }
+
+        const saved = isClone ? (saved1 || saved2) : saved1;
+        const goal = !saved;
+        const x0 = W / 2 + aim * W * 0.23;
+        const y0 = H * 0.79;
+        
+        let initialAimCurve = aim > 0 ? -1 : 1;
+        if(Math.abs(aim) < 0.2) initialAimCurve = Math.random() < 0.5 ? -1 : 1;
+
+        let saveType1 = Math.random() < 0.52 ? "catch" : "parry";
+        let saveType2 = Math.random() < 0.52 ? "catch" : "parry";
+        
+        let saveDive1 = clamp(aim + (Math.random() - 0.5) * 0.8, -1, 1);
+        let saveDive2 = clamp(aim + (Math.random() - 0.5) * 0.8, -1, 1);
+        if(!isClone && saved) saveDive1 = aim || (Math.random() < 0.5 ? -0.7 : 0.7);
+        if(isClone) {
+           if(saved1 && !saved2) saveDive1 = aim || (Math.random() < 0.5 ? -0.7 : 0.7);
+           if(!saved1 && saved2) saveDive2 = aim || (Math.random() < 0.5 ? -0.7 : 0.7);
+        }
+
+        if(shotMode !== "normal") {
+            saveDive1 = Math.random() < 0.5 ? -0.8 : 0.8;
+            saveDive2 = Math.random() < 0.5 ? -0.8 : 0.8;
+        }
+        
+        if (hitTarget && saved) {
+            let targetDive = (hitTarget.x - W/2) / (W * 0.19);
+            if (!isClone && saved1) saveDive1 = targetDive;
+            if (isClone) {
+                if (saved1) saveDive1 = targetDive;
+                if (saved2) saveDive2 = targetDive;
+            }
+        }
+        
+        shot = {
+          x0, y0, x: x0, y: y0,
+          targetX: saved ? (isClone ? (saved1 ? W/2 - W*0.1 : W/2 + W*0.1) : W/2 + saveDive1 * W*0.17) : goalX,
+          targetY: saved ? H * 0.39 : targetY,
+          p: 0, power, aim, goal, saved, 
+          saved1, saved2, saveType: saved1 ? saveType1 : saveType2,
+          saveType1, saveType2,
+          mode: shotMode,
+          isClone: isClone,
+          curveDir: initialAimCurve,
+          keeperX: W / 2,
+          keeperDive: saveDive1,
+          keeperDive1: saveDive1,
+          keeperDive2: saveDive2,
+          done: false
+        };
+        
+        cameraShake = shotMode !== "normal" ? 18 : 9;
+        powerBox.classList.add("hidden");
+        
+        if(shotMode === "fire") showToast("🔥 퐈이어어어어!!!", "화염이 골대를 가릅니다!");
+        else if(shotMode === "banana") showToast("🍌 바나나 슈우웃!", "아름다운 곡선을 그립니다!");
+        else if(shotMode === "tornado") showToast("🌪️ 회오리 슈우웃!", "골키퍼가 정신을 차릴 수 없습니다!");
+        else if(shotMode === "normal" && !isClone) showToast("슈우우웃!", "공이 골문을 향해 날아갑니다");
+      }
+
+      function resolveShot() {
+        if (!shot || shot.done) return;
+        shot.done = true;
+
+        if (shot.goal) {
+          goals += hitTarget ? 2 : 1;
+          state = "goal";
+          cameraShake = shot.mode !== "normal" ? 25 : 16;
+          crowdLevel = 0.8;
+          netBlast();
+          goalSound();
+          spawnFireworks();
+          
+          if (hitTarget) {
+            hitTarget.active = false; 
+            showToast("🎯 스페셜 타깃 명중!", `+2 골 획득! 완벽한 조준입니다!`);
+          } else {
+            let winMsg = `${current.name} 환상적인 마무리!`;
+            if (shot.mode === "fire") winMsg = "골망을 찢어버릴 듯한 파워!";
+            else if (shot.mode === "banana") winMsg = "마법처럼 휘어지는 예술적인 골!";
+            else if (shot.mode === "tornado") winMsg = "수비수들을 얼어붙게 만든 회오리 궤적!";
+            showToast("GOAL!", winMsg);
+          }
+        } else {
+          state = "replay";
+          slowMo = 0.36; replayTimer = 0; cameraShake = 5;
+          combo = 0; 
+          updateComboUI();
+          keeperSaveSound(shot.saveType);
+          const reason = shot.saveType === "catch" ? "골키퍼가 공을 꽉 잡았습니다!" : "골키퍼가 튕겨냈습니다!";
+          showToast("실패", shot.isClone ? `분신술 골키퍼의 엄청난 선방!` : `아쉽게 막혔습니다: ${reason}`);
+          
+          if (hitTarget) {
+              hitTarget.locked = false; // 막혔으므로 록온 해제
+          }
+        }
+        
+        if(shot.mode !== "normal") {
+          shotMode = "normal"; 
+          // 바나나슛, 회오리슛으로 넘어갈 수 있도록 특수 슛을 성공시켰을 때는 콤보를 초기화하지 않습니다!
+          updateComboUI();
+        }
+
+        updateHud();
+        setTimeout(() => {
+          slowMo = 1; crowdLevel = 0.22; round++; nextQuestion();
+        }, shot.goal ? 2800 : 3300);
+      }
+
+      function finishGame() {
+        state = "finished";
+        questionPanel.classList.add("hidden");
+        powerBox.classList.add("hidden");
+        mobilePad.classList.add("hidden");
+        rosterStrip.classList.add("hidden");
+        comboBadge.classList.remove("show");
+        
+        kickerName.textContent = "경기 종료";
+        kickerMeta.textContent = "결과 정산 중...";
+        
+        const mathAcc = Math.round((22 / (22 + wrongClicks)) * 100);
+        const goalAcc = attempts > 0 ? Math.round((goals / attempts) * 100) : 0;
+        let evaluation = "";
+        
+        if(mathAcc === 100 && goalAcc > 80) evaluation = "🏆 완벽한 지덕체(智德體)의 결정체! 당신이 챔피언!";
+        else if(mathAcc > 80 && goalAcc > 50) evaluation = "✨ 훌륭한 수학 실력과 멋진 슈팅 감각을 가졌네요!";
+        else evaluation = "🔥 앞으로의 눈부신 성장이 더욱 기대되는 유망주입니다!";
+
+        startScreen.classList.remove("hidden");
+        startScreen.querySelector("h1").innerHTML = `최종 스탯 보고서`;
+        startScreen.querySelector(".features-list").innerHTML = "";
+        
+        startScreen.querySelector("p").innerHTML = `
+          <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; font-size:16px; line-height:1.8; text-align:left;">
+            <div style="text-align:center; font-size:18px; color:#ffdf4d; font-weight:900; margin-bottom:12px;">${evaluation}</div>
+            🧠 <b>수학 두뇌 스탯</b><br>
+            - 총 문제 수: <b>22문제</b><br>
+            - 오답 횟수: <b style="color:#ff4d6d">${wrongClicks}회</b> 틀렸어요 😢<br>
+            - 수학 정답률: <b style="color:#28d4ff">${mathAcc}%</b><br><br>
+            ⚽ <b>피지컬 스탯</b><br>
+            - 총 슈팅 수: <b>${attempts}번</b><br>
+            - 기록한 골: <b style="color:#ffdf4d">${goals} 골</b> (스페셜 타깃 포함)<br>
+            - 슛 정확도: <b style="color:#39ff88">${goalAcc}%</b>
+          </div>
+          <p style="margin-top:15px; font-size:14px; text-align:center; color:#fff;">다시 도전하여 100% 정답과 더 많은 골을 기록해 보세요!</p>
+        `;
+        
+        startBtn.textContent = "다시 도전하기";
+        showToast("최종 결과", `${nickname} 선수의 성적이 도착했습니다.`);
+      }
+
+      function spawnParticleTrail(x, y, colors) {
+        particleTrail.push({
+          x: x + (Math.random() - 0.5) * 20,
+          y: y + (Math.random() - 0.5) * 20,
+          vx: (Math.random() - 0.5) * 35,
+          vy: (Math.random() - 0.5) * 35 + (shot && shot.mode === "fire" ? 25 : 0),
+          life: 0.6, maxLife: 0.6,
+          size: 6 + Math.random() * 12,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+
+      function update(dt) {
+        t += dt * slowMo;
+        grassWave += dt;
+
+        if (state !== "start" && state !== "finished") {
+            const gw = W * 0.42;
+            const gh = H * 0.2;
+            const gy = H * 0.29;
+            const tgRadius = Math.max(25, W * 0.025) * 0.7; // 30% 축소
+            const minX = W/2 - gw/2 + tgRadius;
+            const maxX = W/2 + gw/2 - tgRadius;
+            const minY = gy + tgRadius;
+            const maxY = gy + gh - tgRadius;
+
+            movingTargets.forEach(tg => {
+                if (!tg.active || tg.locked) return;
+                tg.x += tg.vx * dt;
+                tg.y += tg.vy * dt;
+                
+                if (tg.x < minX) { tg.x = minX; tg.vx *= -1; }
+                if (tg.x > maxX) { tg.x = maxX; tg.vx *= -1; }
+                if (tg.y < minY) { tg.y = minY; tg.vy *= -1; }
+                if (tg.y > maxY) { tg.y = maxY; tg.vy *= -1; }
+            });
+        }
+
+        if (state === "aim") {
+          const left = keys.has("ArrowLeft") || keys.has("left");
+          const right = keys.has("ArrowRight") || keys.has("right");
+          if (left) aim -= dt * 1.35;
+          if (right) aim += dt * 1.35;
+          aim = clamp(aim, -1, 1);
+          
+          let chargeSpeed = 58;
+          if(shotMode === "fire") chargeSpeed = 90;
+          if(shotMode === "banana") chargeSpeed = 75;
+          if(shotMode === "tornado") chargeSpeed = 85;
+
+          if (charging) power = clamp(power + dt * chargeSpeed, 0, 100);
+          else power = Math.max(0, power - dt * 8);
+          
+          powerFill.style.width = `${power}%`;
+          powerText.textContent = `${Math.round(power)}%`;
+        }
+
+        if (shot && state === "shot") {
+          const shotSpeed = shot.mode === "tornado" ? 1.1 : (shot.mode === "fire" ? 1.4 : (shot.mode === "banana" ? 0.9 : (0.72 + shot.power / 125)));
+          shot.p += dt * shotSpeed;
+          
+          const p = clamp(shot.p, 0, 1);
+          const arc = Math.sin(p * Math.PI) * (85 + shot.power * 0.45);
+          
+          let baseX = lerp(shot.x0, shot.targetX, p);
+          let baseY = lerp(shot.y0, shot.targetY, p) - arc;
+
+          if (shot.mode === "banana") {
+              // 바나나슛의 생동감 있는 궤적: 후반부에 더 급격히 휘어지도록 곡률 조정
+              const curveForce = W * 0.28 * shot.curveDir;
+              baseX += Math.sin(Math.pow(p, 0.7) * Math.PI) * curveForce;
+          } else if (shot.mode === "tornado") {
+              baseX += Math.sin(p * Math.PI * 15) * W * 0.08 * (1 - p);
+              baseY += Math.cos(p * Math.PI * 15) * H * 0.08 * (1 - p);
+          }
+
+          shot.x = baseX;
+          shot.y = baseY;
+          
+          if(!shot.isClone) {
+             shot.keeperX = lerp(W / 2, W / 2 + shot.keeperDive * W * 0.19, clamp(p * 1.35, 0, 1));
+          }
+          
+          if(p < 1) {
+             if (shot.mode === "fire") spawnParticleTrail(shot.x, shot.y, ["#ff6b00", "#ffdf4d", "#ff4d6d"]);
+             if (shot.mode === "banana") spawnParticleTrail(shot.x, shot.y, ["#ffeb3b", "#cddc39", "#8bc34a"]);
+             if (shot.mode === "tornado") spawnParticleTrail(shot.x, shot.y, ["#ffffff", "#e0f7fa", "#81d4fa"]);
+          }
+
+          if (p >= 1) resolveShot();
+        }
+
+        if (state === "replay") replayTimer += dt;
+        
+        fireworks.forEach((f) => { f.life -= dt; f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 90 * dt; });
+        fireworks = fireworks.filter((f) => f.life > 0);
+        
+        confetti.forEach((c) => { c.life -= dt; c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.vr * dt; c.vy += 45 * dt; });
+        confetti = confetti.filter((c) => c.life > 0);
+
+        particleTrail.forEach((pt) => { pt.life -= dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.size *= 0.95; });
+        particleTrail = particleTrail.filter((pt) => pt.life > 0);
+
+        cameraShake *= Math.pow(0.01, dt);
+      }
+
+      function draw() {
+        const shakeX = (Math.random() - 0.5) * cameraShake;
+        const shakeY = (Math.random() - 0.5) * cameraShake;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+        drawSky();
+        drawStadium();
+        drawCrowd();
+        drawPitch();
+        drawGoal();
+        drawTargets();
+        drawKeeper();
+        drawPlayer();
+        drawBall();
+        drawEffects();
+        drawVignette();
+        ctx.restore();
+      }
+
+      function drawSky() {
+        const g = ctx.createLinearGradient(0, 0, 0, H * 0.55);
+        g.addColorStop(0, "#020813"); g.addColorStop(0.5, "#0b2535"); g.addColorStop(1, "#123b40");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        
+        for (let i = 0; i < 5; i++) {
+          const x = W * (0.2 + i * 0.15);
+          const y = H * 0.05 + Math.sin(t * 1.5 + i) * 5;
+          const rg = ctx.createRadialGradient(x, y, 2, x, y, W * 0.15);
+          rg.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+          rg.addColorStop(0.2, "rgba(200, 240, 255, 0.2)");
+          rg.addColorStop(1, "rgba(200, 240, 255, 0)");
+          ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(x, y, W * 0.15, 0, Math.PI*2); ctx.fill();
+        }
+      }
+
+      function drawStadium() {
+        const top = H * 0.16;
+        const standH = H * 0.24;
+        ctx.fillStyle = "#18252e";
+        ctx.beginPath();
+        ctx.moveTo(0, top + standH); ctx.quadraticCurveTo(W / 2, top - H * 0.1, W, top + standH);
+        ctx.lineTo(W, H * 0.5); ctx.lineTo(0, H * 0.5); ctx.closePath(); ctx.fill();
+
+        for (let i = 0; i < 10; i++) {
+          const y = top + i * (standH / 9);
+          ctx.fillStyle = i % 2 ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.2)";
+          ctx.fillRect(0, y, W, standH / 10);
+        }
+
+        ctx.fillStyle = "rgba(4, 10, 15, 0.9)";
+        ctx.fillRect(W * 0.3, H * 0.07, W * 0.4, H * 0.1);
+        ctx.strokeStyle = "rgba(40, 212, 255, 0.5)";
+        ctx.lineWidth = 3; ctx.strokeRect(W * 0.3, H * 0.07, W * 0.4, H * 0.1);
+        
+        ctx.fillStyle = "#e9fbff"; ctx.shadowColor = "#28d4ff"; ctx.shadowBlur = 10;
+        ctx.font = `900 ${clamp(W * 0.025, 18, 36)}px 'Noto Sans KR'`; ctx.textAlign = "center";
+        ctx.fillText("상암 스타디움", W / 2, H * 0.115); ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = "#ffdf4d"; ctx.font = `800 ${clamp(W * 0.015, 12, 20)}px Segoe UI`;
+        ctx.fillText(`SCORE: ${goals} POINTS`, W / 2, H * 0.15);
+      }
+
+      function drawCrowd() {
+        const rows = 8;
+        const cols = Math.ceil(W / 20);
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = c * 20 + (r % 2) * 10;
+            const y = H * 0.19 + r * H * 0.026 + Math.sin(t * (2 + crowdLevel * 5) + c + r) * (1 + crowdLevel * 4);
+            const hue = (c * 41 + r * 23) % 360;
+            ctx.fillStyle = `hsla(${hue}, 80%, ${50 + r * 2}%, 0.9)`;
+            ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI*2); ctx.fill();
+          }
+        }
+      }
+
+      function drawPitch() {
+        const horizon = H * 0.42;
+        const g = ctx.createLinearGradient(0, horizon, 0, H);
+        g.addColorStop(0, "#1c6b32"); g.addColorStop(1, "#0a3a18");
+        ctx.fillStyle = g; ctx.fillRect(0, horizon, W, H - horizon);
+
+        for (let i = 0; i < 15; i++) {
+          const x1 = W / 2 + (i - 7.5) * W * 0.06;
+          const x2 = W / 2 + (i - 7.5) * W * 0.16;
+          ctx.fillStyle = i % 2 ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.06)";
+          ctx.beginPath();
+          ctx.moveTo(x1, horizon); ctx.lineTo(x1 + W * 0.06, horizon);
+          ctx.lineTo(x2 + W * 0.16, H); ctx.lineTo(x2, H); ctx.closePath(); ctx.fill();
+        }
+
+        ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = Math.max(3, W * 0.005);
+        ctx.beginPath(); ctx.ellipse(W / 2, H * 0.82, W * 0.32, H * 0.11, 0, Math.PI, Math.PI * 2); ctx.stroke();
+        
+        ctx.beginPath(); ctx.arc(W / 2, H * 0.79, 6, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fill();
+      }
+
+      function drawGoal() {
+        const gx = W / 2; const gy = H * 0.29; const gw = W * 0.42; const gh = H * 0.2;
+        const left = gx - gw / 2; const right = gx + gw / 2; const bottom = gy + gh;
+        
+        ctx.save();
+        ctx.lineWidth = Math.max(5, W * 0.008); ctx.strokeStyle = "#ffffff";
+        ctx.shadowColor = "rgba(200, 240, 255, 0.8)"; ctx.shadowBlur = 12;
+        ctx.strokeRect(left, gy, gw, gh);
+        
+        ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255,255,255,0.25)"; ctx.lineWidth = 1.5;
+        const netWave = state === "goal" ? Math.sin(t * 18) * 8 : 0;
+        
+        for (let i = 1; i < 12; i++) {
+          const x = left + (gw / 12) * i + netWave * Math.sin(i);
+          ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + netWave, bottom); ctx.stroke();
+        }
+        for (let i = 1; i < 8; i++) {
+          const y = gy + (gh / 8) * i + netWave * 0.3;
+          ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y + netWave * 0.3); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawTargets() {
+        const tgRadius = Math.max(25, W * 0.025) * 0.7; // 크기 30% 축소
+        const pulse = Math.sin(t * 5) * 0.08 + 1;
+
+        movingTargets.forEach(tg => {
+            if (!tg.active) return;
+            if(tg.locked && state === 'goal' && shot && shot.done) return; 
+
+            ctx.save();
+            ctx.translate(tg.x, tg.y);
+            ctx.scale(pulse, pulse);
+            
+            ctx.beginPath(); ctx.arc(0, 0, tgRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = tg.locked ? "#ffdf4d" : "#28d4ff";
+            ctx.lineWidth = 4;
+            ctx.shadowColor = tg.locked ? "#ffdf4d" : "#28d4ff";
+            ctx.shadowBlur = 15;
+            ctx.stroke();
+            
+            ctx.beginPath(); ctx.arc(0, 0, tgRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = tg.locked ? "rgba(255, 223, 77, 0.4)" : "rgba(40, 212, 255, 0.4)";
+            ctx.fill();
+            
+            ctx.fillStyle = "#fff";
+            ctx.font = `${tgRadius}px Arial`;
+            ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.shadowBlur = 5;
+            ctx.fillText("⭐", 0, 0);
+            
+            if(tg.locked) {
+                const r = tgRadius * 1.5;
+                ctx.strokeStyle = "#ff4d6d"; ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(-r, -r); ctx.lineTo(-r*0.5, -r); ctx.moveTo(-r, -r); ctx.lineTo(-r, -r*0.5);
+                ctx.moveTo(r, -r); ctx.lineTo(r*0.5, -r); ctx.moveTo(r, -r); ctx.lineTo(r, -r*0.5);
+                ctx.moveTo(-r, r); ctx.lineTo(-r*0.5, r); ctx.moveTo(-r, r); ctx.lineTo(-r, r*0.5);
+                ctx.moveTo(r, r); ctx.lineTo(r*0.5, r); ctx.moveTo(r, r); ctx.lineTo(r, r*0.5);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        });
+      }
+
+      function drawSingleKeeper(gx, gy, dive, isCatch) {
+        ctx.save();
+        ctx.translate(gx, gy); ctx.rotate(dive * 0.5);
+        
+        ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.ellipse(0, 5, 30, 10, 0, 0, Math.PI*2); ctx.fill();
+        
+        // 다리 (바지/양말/신발 강화)
+        ctx.strokeStyle = "#ffe0b2"; ctx.lineWidth = 9; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(-12, -5); ctx.lineTo(-20, 20); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(12, -5); ctx.lineTo(20, 20); ctx.stroke();
+        
+        ctx.strokeStyle = "#37474f"; ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.moveTo(-20, 20); ctx.lineTo(-25, 45); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(20, 20); ctx.lineTo(25, 45); ctx.stroke();
+        
+        ctx.fillStyle = "#263238";
+        ctx.beginPath(); ctx.ellipse(-27, 45, 9, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(27, 45, 9, 6, 0, 0, Math.PI*2); ctx.fill();
+        
+        ctx.fillStyle = "#212121";
+        ctx.beginPath(); ctx.roundRect(-22, -25, 44, 25, 5); ctx.fill();
+        
+        // 몸통 디테일
+        ctx.fillStyle = "#ff5722";
+        ctx.beginPath(); 
+        ctx.moveTo(-20, -50); ctx.lineTo(20, -50);
+        ctx.quadraticCurveTo(24, -50, 24, -45); 
+        ctx.lineTo(22, -20); ctx.lineTo(-22, -20);
+        ctx.lineTo(-24, -45); ctx.quadraticCurveTo(-24, -50, -20, -50);
+        ctx.fill();
+        
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath(); ctx.moveTo(22, -20); ctx.lineTo(-22, -20); ctx.lineTo(-24, -45); ctx.lineTo(-10, -45); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = `900 16px Segoe UI`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("1", 0, -32);
+
+        const lHandX = isCatch ? -12 : -55 - dive * 20;
+        const lHandY = isCatch ? -60 : -40 - Math.abs(dive) * 25;
+        const rHandX = isCatch ? 12 : 55 - dive * 20;
+        const rHandY = isCatch ? -60 : -40 + Math.abs(dive) * 25;
+
+        // 팔 (소매 + 살구색)
+        ctx.strokeStyle = "#ff9800"; ctx.lineWidth = 10; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(-18, -45); ctx.lineTo(lHandX, lHandY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(18, -45); ctx.lineTo(rHandX, rHandY); ctx.stroke();
+
+        if (isCatch) {
+          ctx.fillStyle = "#eceff1"; ctx.beginPath();
+          ctx.arc(lHandX, lHandY, 10, 0, Math.PI * 2);
+          ctx.arc(rHandX, rHandY, 10, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = "#eceff1"; ctx.beginPath();
+          ctx.arc(lHandX, lHandY, 10, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(rHandX, rHandY, 10, 0, Math.PI * 2); ctx.fill();
+        }
+        
+        // 머리 디테일 추가
+        ctx.fillStyle = "#d7ccc8"; ctx.fillRect(-4, -55, 8, 10);
+        ctx.fillStyle = "#ffccbc"; ctx.beginPath(); ctx.arc(0, -65, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#212121"; ctx.fillRect(-12, -70, 24, 6);
+        ctx.fillStyle = "#3e2723"; 
+        ctx.beginPath(); ctx.arc(0, -70, 15, Math.PI, Math.PI*2); ctx.fill();
+        
+        ctx.restore();
+      }
+
+      function drawKeeper() {
+        const isAction = shot && (state === "shot" || state === "replay");
+        const gy = H * 0.43;
+        const showClones = isAction ? shot.isClone : isClone;
+
+        if(!showClones) {
+            const gx = isAction ? shot.keeperX : W / 2 + Math.sin(t * 2) * W * 0.04;
+            const dive = isAction ? shot.keeperDive * clamp(shot.p * 1.6, 0, 1) : 0;
+            const catchPose = isAction && shot.saved && shot.saveType === "catch" && shot.p > 0.72;
+            const parryPose = isAction && shot.saved && shot.saveType === "parry" && shot.p > 0.72;
+            drawSingleKeeper(gx, gy, dive, catchPose || parryPose);
+            
+            if (catchPose || parryPose) {
+                ctx.save(); ctx.translate(gx, gy); ctx.rotate(dive*0.5);
+                ctx.fillStyle = "#ffdf4d"; ctx.font = `900 ${clamp(W * 0.018, 16, 26)}px Segoe UI`;
+                ctx.textAlign = "center"; ctx.fillText(catchPose ? "CATCH!" : "PARRY!", 0, -100);
+                ctx.restore();
+            }
+        } else {
+            const baseY1 = gy; const baseY2 = gy;
+            let gx1 = W/2 - W*0.08 + Math.sin(t*2)*W*0.02;
+            let gx2 = W/2 + W*0.08 + Math.cos(t*2)*W*0.02;
+            let dive1 = 0; let dive2 = 0;
+            let cPose1 = false; let pPose1 = false;
+            let cPose2 = false; let pPose2 = false;
+
+            if(isAction) {
+                const pClamp = clamp(shot.p * 1.6, 0, 1);
+                dive1 = shot.keeperDive1 * pClamp;
+                dive2 = shot.keeperDive2 * pClamp;
+                gx1 = lerp(W/2 - W*0.08, W/2 - W*0.08 + shot.keeperDive1 * W*0.19, pClamp);
+                gx2 = lerp(W/2 + W*0.08, W/2 + W*0.08 + shot.keeperDive2 * W*0.19, pClamp);
+                
+                cPose1 = shot.saved1 && shot.saveType1 === "catch" && shot.p > 0.72;
+                pPose1 = shot.saved1 && shot.saveType1 === "parry" && shot.p > 0.72;
+                cPose2 = shot.saved2 && shot.saveType2 === "catch" && shot.p > 0.72;
+                pPose2 = shot.saved2 && shot.saveType2 === "parry" && shot.p > 0.72;
+            }
+
+            drawSingleKeeper(gx1, baseY1, dive1, cPose1 || pPose1);
+            drawSingleKeeper(gx2, baseY2, dive2, cPose2 || pPose2);
+
+            if (cPose1 || pPose1) {
+                ctx.save(); ctx.translate(gx1, baseY1); ctx.rotate(dive1*0.5);
+                ctx.fillStyle = "#ffdf4d"; ctx.font = `900 ${clamp(W * 0.018, 16, 26)}px Segoe UI`;
+                ctx.textAlign = "center"; ctx.fillText(cPose1 ? "CATCH!" : "PARRY!", 0, -100);
+                ctx.restore();
+            }
+            if (cPose2 || pPose2) {
+                ctx.save(); ctx.translate(gx2, baseY2); ctx.rotate(dive2*0.5);
+                ctx.fillStyle = "#ffdf4d"; ctx.font = `900 ${clamp(W * 0.018, 16, 26)}px Segoe UI`;
+                ctx.textAlign = "center"; ctx.fillText(cPose2 ? "CATCH!" : "PARRY!", 0, -100);
+                ctx.restore();
+            }
+        }
+      }
+
+      function drawPlayer() {
+        if (!current) return;
+        let px = W / 2 + aim * W * 0.23; let py = H * 0.82; let leaving = 0;
+        if (state === "exit") { leaving = Math.min(1, (t % 2)); px += leaving * W * 0.28; py += Math.sin(leaving * Math.PI) * 15; }
+        
+        ctx.save(); ctx.translate(px, py);
+        
+        // 그림자
+        ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.beginPath(); ctx.ellipse(0, 45, 40, 12, 0, 0, Math.PI * 2); ctx.fill();
+        
+        // 바지 및 다리 강화
+        ctx.strokeStyle = "#ffe0b2"; ctx.lineWidth = 9; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(-12, 5); ctx.lineTo(-20, 25); ctx.stroke();
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.moveTo(-20, 25); ctx.lineTo(-25, 48); ctx.stroke();
+        
+        ctx.strokeStyle = "#ffe0b2"; ctx.lineWidth = 9;
+        const kickKnee = state === "shot" ? -10 : 25;
+        const kickFoot = state === "shot" ? -35 : 48;
+        const kickFootX = state === "shot" ? 30 : 25;
+        ctx.beginPath(); ctx.moveTo(12, 5); ctx.lineTo(18, kickKnee); ctx.stroke();
+        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.moveTo(18, kickKnee); ctx.lineTo(kickFootX, kickFoot); ctx.stroke();
+
+        ctx.fillStyle = "#ff4d6d";
+        ctx.beginPath(); ctx.ellipse(-27, 48, 9, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(kickFootX + (state==="shot"?5:2), kickFoot, 9, 6, state==="shot"?-Math.PI/4:0, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.roundRect(-24, -15, 48, 25, 5); ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(-24, -15, 48, 5); ctx.fillRect(0, -15, 2, 25);
+
+        // 유니폼 그라데이션
+        ctx.fillStyle = current.color; 
+        ctx.beginPath(); 
+        ctx.moveTo(-22, -55); ctx.lineTo(22, -55);
+        ctx.quadraticCurveTo(26, -55, 26, -50); 
+        ctx.lineTo(24, -10); ctx.lineTo(-24, -10); 
+        ctx.lineTo(-26, -50); ctx.quadraticCurveTo(-26, -55, -22, -55);
+        ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath(); ctx.moveTo(24, -10); ctx.lineTo(-24, -10); ctx.lineTo(-26, -50); ctx.lineTo(-10, -50); ctx.closePath(); ctx.fill();
+        
+        ctx.fillStyle = "#ffffff"; ctx.font = `900 ${clamp(W * 0.016, 14, 20)}px Segoe UI`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 4;
+        ctx.fillText(String(current.id + 7).slice(-2), 0, -32); ctx.shadowBlur = 0;
+
+        // 팔 (소매 추가)
+        ctx.strokeStyle = "#ffe0b2"; ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.moveTo(-24, -45); ctx.lineTo(-45, -20 + Math.sin(t * 8) * 5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(24, -45); ctx.lineTo(45, -20 - Math.sin(t * 8) * 5); ctx.stroke();
+        
+        ctx.strokeStyle = current.color; ctx.lineWidth = 12;
+        ctx.beginPath(); ctx.moveTo(-24, -48); ctx.lineTo(-35, -35); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(24, -48); ctx.lineTo(35, -35); ctx.stroke();
+
+        // 머리 디테일 추가
+        ctx.fillStyle = "#d7ccc8"; ctx.fillRect(-4, -62, 8, 10);
+        ctx.fillStyle = "#ffe0b2"; ctx.beginPath(); ctx.arc(0, -72, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3e2723"; 
+        ctx.beginPath(); ctx.arc(0, -75, 17, Math.PI, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-17, -75); ctx.quadraticCurveTo(-10, -65, -8, -75); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(17, -75); ctx.quadraticCurveTo(10, -65, 8, -75); ctx.fill();
+        
+        ctx.restore();
+
+        if (state === "aim") {
+          ctx.save();
+          let guideColor = "rgba(255,223,77,0.7)";
+          if (power >= 80) guideColor = "rgba(255,77,109,0.8)";
+          if (shotMode === "fire") guideColor = "rgba(255,107,0,0.8)";
+          if (shotMode === "banana") guideColor = "rgba(139, 195, 74, 0.8)";
+          if (shotMode === "tornado") guideColor = "rgba(40, 212, 255, 0.8)";
+          
+          ctx.strokeStyle = guideColor;
+          ctx.lineWidth = shotMode !== "normal" ? 5 : 3;
+          if(shotMode !== "normal") {
+             ctx.shadowColor = guideColor; ctx.shadowBlur = 10;
+          } else {
+             ctx.setLineDash([8, 8]);
+          }
+          ctx.beginPath(); ctx.moveTo(px, H * 0.77);
+          ctx.quadraticCurveTo(W / 2 + aim * W * 0.1, H * 0.56, W / 2 + aim * W * 0.19, H * 0.35);
+          ctx.stroke(); ctx.restore();
+        }
+      }
+
+      function drawBall() {
+        let bx = W / 2 + aim * W * 0.23; let by = H * 0.79; let r = clamp(W * 0.02, 15, 25);
+        
+        if (shot && (state === "shot" || state === "goal" || state === "replay")) {
+          bx = shot.x; by = shot.y;
+          if (shot.saved && shot.p > 0.78) {
+             let defKeeperX = shot.keeperX;
+             if(shot.isClone) defKeeperX = shot.saved1 ? (W/2 - W*0.1) : (W/2 + W*0.1);
+
+             if (shot.saveType === "catch") { 
+                 bx = defKeeperX; by = H * 0.375; 
+             } else {
+                 const deflect = clamp((shot.p - 0.78) / 0.22, 0, 1);
+                 let kDive = shot.isClone ? (shot.saved1 ? shot.keeperDive1 : shot.keeperDive2) : shot.keeperDive;
+                 bx = defKeeperX + kDive * W * 0.18 * deflect;
+                 by = H * 0.38 - H * 0.1 * deflect;
+             }
+          }
+          r = lerp(clamp(W * 0.02, 15, 25), clamp(W * 0.01, 8, 15), clamp(shot.p, 0, 1));
+          
+          let trailColor = "rgba(255,255,255,0.3)";
+          if(shot.mode === "fire") trailColor = "rgba(255, 107, 0, 0.6)";
+          if(shot.mode === "banana") trailColor = "rgba(205, 220, 57, 0.6)";
+          if(shot.mode === "tornado") trailColor = "rgba(129, 212, 250, 0.6)";
+
+          ctx.strokeStyle = trailColor;
+          ctx.lineWidth = shot.mode !== "normal" ? 6 : 3;
+          ctx.beginPath(); ctx.moveTo(shot.x0, shot.y0);
+          
+          // 바나나슛 궤적 제어점을 크게 바깥으로 빼서 휘어짐 강조
+          let cpX = (shot.x0 + bx) / 2;
+          let cpY = Math.min(shot.y0, by) - 120;
+          if (shot.mode === "banana") {
+              cpX += W * 0.35 * shot.curveDir;
+          }
+          ctx.quadraticCurveTo(cpX, cpY, bx, by);
+          ctx.stroke();
+        }
+        
+        ctx.save(); ctx.translate(bx, by);
+        
+        if (shot && state === "shot") {
+           ctx.fillStyle = "rgba(0,0,0,0.4)";
+           ctx.beginPath(); ctx.ellipse(0, (H*0.79 - by)*0.8 + r, r, r*0.4, 0, 0, Math.PI*2); ctx.fill();
+        }
+
+        // 바나나슛일 때는 공의 회전(Spin) 속도를 더욱 가속시킴
+        ctx.rotate(t * (shot && shot.mode === "banana" && !shot.done ? 25 : 12));
+        
+        let ballColor = "#f4f4ec";
+        if(shot && shot.mode !== "normal" && !shot.done) {
+             if(shot.mode === "fire") { ctx.shadowColor = "#ff6b00"; ballColor = "#ffe082"; }
+             else if(shot.mode === "banana") { ctx.shadowColor = "#8bc34a"; ballColor = "#fff59d"; }
+             else if(shot.mode === "tornado") { ctx.shadowColor = "#28d4ff"; ballColor = "#e1f5fe"; }
+             ctx.shadowBlur = 20;
+        }
+
+        ctx.fillStyle = ballColor;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+        
+        ctx.save();
+        ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+        for(let i=0; i<3; i++) {
+            ctx.rotate(Math.PI * 2 / 3);
+
+            ctx.fillStyle = "#cca93e";
+            ctx.beginPath();
+            ctx.moveTo(0, -r*0.1);
+            ctx.lineTo(r*0.6, -r*0.4);
+            ctx.lineTo(r*0.4, 0);
+            ctx.lineTo(r*0.8, r*0.4);
+            ctx.lineTo(0, r*0.2);
+            ctx.fill();
+
+            ctx.strokeStyle = "#d12229";
+            ctx.lineWidth = Math.max(1.5, r*0.08);
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(r*0.2, -r*0.15);
+            ctx.lineTo(r*0.5, -r*0.3);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(r*0.2, r*0.1);
+            ctx.lineTo(r*0.65, r*0.3);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = Math.max(1, r*0.03);
+        ctx.beginPath(); ctx.arc(0, r*1.5, r*1.6, Math.PI*1.2, Math.PI*1.8); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, -r*1.5, r*1.6, Math.PI*0.2, Math.PI*0.8); ctx.stroke();
+
+        ctx.strokeStyle = "rgba(0,0,0,0.5)"; 
+        ctx.lineWidth = Math.max(1.5, r * 0.05);
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawEffects() {
+        ctx.globalCompositeOperation = "screen";
+        particleTrail.forEach((pt) => {
+          const alpha = pt.life / pt.maxLife;
+          const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, pt.size);
+          grad.addColorStop(0, pt.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba'));
+          grad.addColorStop(1, pt.color.replace(')', `, 0)`).replace('rgb', 'rgba'));
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalCompositeOperation = "source-over";
+
+        fireworks.forEach((f) => {
+          ctx.globalAlpha = clamp(f.life, 0, 1); ctx.fillStyle = f.color;
+          ctx.beginPath(); ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+        });
+        
+        confetti.forEach((c) => {
+          ctx.save(); ctx.globalAlpha = clamp(c.life, 0, 1);
+          ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = c.color;
+          ctx.fillRect(-5, -3, 10, 6); ctx.restore();
+        });
+        
+        if (state === "replay") {
+          ctx.fillStyle = "rgba(255,255,255,0.15)";
+          ctx.font = `900 ${clamp(W * 0.045, 32, 70)}px Segoe UI`; ctx.textAlign = "center";
+          ctx.fillText("SLOW MOTION REPLAY", W / 2, H * 0.22);
+        }
+      }
+
+      function drawVignette() {
+        const g = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.15, W / 2, H * 0.5, Math.max(W, H) * 0.75);
+        g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.6)");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      }
+
+      function spawnFireworks() {
+        let colors = ["#ffdf4d", "#39ff88", "#28d4ff", "#ff4d6d", "#ffffff"];
+        if(hitTarget) colors = ["#28d4ff", "#ffffff", "#0055ff"];
+        else if(shot && shot.mode === "fire") colors = ["#ff6b00", "#ffdf4d", "#ff0000"];
+        else if(shot && shot.mode === "banana") colors = ["#ffeb3b", "#8bc34a", "#ffffff"];
+        else if(shot && shot.mode === "tornado") colors = ["#28d4ff", "#ffffff", "#81d4fa"];
+        
+        const count = hitTarget || (shot && shot.mode !== "normal") ? 8 : 5;
+        
+        for (let burst = 0; burst < count; burst++) {
+          const ox = W * (0.15 + Math.random() * 0.7);
+          const oy = H * (0.1 + Math.random() * 0.3);
+          for (let i = 0; i < 40; i++) {
+            const a = (Math.PI * 2 * i) / 40; const sp = 80 + Math.random() * 200;
+            fireworks.push({
+              x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+              life: 1.0 + Math.random() * 0.8, size: 3 + Math.random() * 5,
+              color: colors[(i + burst) % colors.length]
+            });
+          }
+        }
+        for (let i = 0; i < 120; i++) {
+          confetti.push({
+            x: Math.random() * W, y: -50 - Math.random() * H * 0.2,
+            vx: -50 + Math.random() * 100, vy: 100 + Math.random() * 200,
+            rot: Math.random() * 6.28, vr: -10 + Math.random() * 20,
+            life: 2.5 + Math.random() * 2.0, color: colors[i % colors.length]
+          });
+        }
+      }
+
+      function netBlast() {
+        const cx = hitTarget ? hitTarget.x : W/2;
+        const cy = hitTarget ? hitTarget.y : H*0.35;
+        let pColor = "rgba(255,255,255,0.95)";
+        if(shot && shot.mode === "fire") pColor = "#ff6b00";
+        if(shot && shot.mode === "banana") pColor = "#ffeb3b";
+        if(shot && shot.mode === "tornado") pColor = "#28d4ff";
+
+        for (let i = 0; i < 40; i++) {
+          fireworks.push({
+            x: cx + (Math.random() - 0.5) * W * 0.15, y: cy + (Math.random() - 0.5) * H * 0.15,
+            vx: (Math.random() - 0.5) * 200, vy: -50 + Math.random() * 100,
+            life: 0.5 + Math.random() * 0.6, size: 2 + Math.random() * 5,
+            color: pColor
+          });
+        }
+      }
+
+      function showToast(main, sub) {
+        toast.innerHTML = `${main}<small>${sub || ""}</small>`;
+        toast.classList.add("show"); clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+      }
+
+      function showTip(text) { tipText.textContent = text; tipModal.classList.remove("hidden"); }
+      
+      function initAudio() {
+        if (audio) return; const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return; audio = new AC();
+      }
+
+      function tone(freq, duration, type, gainValue) {
+        if (!audio) return;
+        const osc = audio.createOscillator(); const gain = audio.createGain();
+        osc.type = type || "sine"; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(gainValue || 0.08, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + duration);
+        osc.connect(gain); gain.connect(audio.destination);
+        osc.start(); osc.stop(audio.currentTime + duration);
+      }
+
+      function playBlip(freq, dur) { tone(freq, dur, "triangle", 0.06); }
+      function whistle() { tone(1400, 0.12, "sine", 0.08); setTimeout(() => tone(1720, 0.14, "sine", 0.06), 70); }
+      function goalSound() { [330, 440, 660, 880, 1100].forEach((f, i) => setTimeout(() => tone(f, 0.25, "square", 0.06), i * 80)); }
+      
+      function keeperSaveSound(type) {
+        if (type === "catch") { tone(72, 0.12, "square", 0.09); setTimeout(() => tone(118, 0.16, "triangle", 0.05), 60); }
+        else { tone(180, 0.08, "sawtooth", 0.07); setTimeout(() => tone(95, 0.18, "square", 0.055), 80); }
+      }
+      function boo() { tone(120, 0.35, "sawtooth", 0.05); setTimeout(() => tone(95, 0.3, "sawtooth", 0.04), 140); }
+
+      function loop(now) {
+        const dt = Math.min(0.033, ((now - loop.last) || 16) / 1000); loop.last = now;
+        update(dt); draw(); requestAnimationFrame(loop);
+      }
+
+      function downKey(key) {
+        if (key === "ArrowLeft") keys.add("ArrowLeft"); if (key === "ArrowRight") keys.add("ArrowRight");
+        if ((key === "d" || key === "D") && state === "aim") charging = true;
+      }
+      function upKey(key) {
+        if (key === "ArrowLeft") keys.delete("ArrowLeft"); if (key === "ArrowRight") keys.delete("ArrowRight");
+        if ((key === "d" || key === "D") && state === "aim") shoot();
+      }
+
+      function bindHold(button, keyName, onRelease) {
+        const start = (e) => { e.preventDefault(); if (keyName === "shoot") charging = true; else keys.add(keyName); };
+        const end = (e) => { e.preventDefault(); if (keyName === "shoot") { if (onRelease) onRelease(); } else keys.delete(keyName); };
+        button.addEventListener("pointerdown", start); button.addEventListener("pointerup", end);
+        button.addEventListener("pointercancel", end); button.addEventListener("pointerleave", end);
+      }
+
+      window.addEventListener("resize", resize);
+      
+      // 입력창에서는 띄어쓰기 차단 안 함
+      window.addEventListener("keydown", (e) => { 
+          if(e.target.tagName === "INPUT") return;
+          if (["ArrowLeft", "ArrowRight", " ", "d", "D"].includes(e.key)) { e.preventDefault(); downKey(e.key); }
+      });
+      window.addEventListener("keyup", (e) => { 
+          if(e.target.tagName === "INPUT") return;
+          if (["ArrowLeft", "ArrowRight", " ", "d", "D"].includes(e.key)) upKey(e.key);
+      });
+      
+      startBtn.addEventListener("click", startGame);
+      tipClose.addEventListener("click", () => tipModal.classList.add("hidden"));
+      nicknameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
+      bindHold(leftBtn, "left"); bindHold(rightBtn, "right"); bindHold(shootBtn, "shoot", shoot);
+
+      setupCards(); resize(); requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
