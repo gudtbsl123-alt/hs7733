@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>시크릿 에이전트: 코드 브레이커 (4학년 수학 심화)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Jua&family=Share+Tech+Mono&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+  :root {
+    --bg-dark: #0a0f0d;
+    --neon-green: #00ff66;
+    --neon-blue: #00e5ff;
+    --alert-red: #ff0055;
+    --panel-bg: rgba(10, 25, 20, 0.85);
+    --font-title: 'Jua', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-main: 'Noto Sans KR', sans-serif;
+  }
+
+  /* 브라우저 간섭 완벽 차단 */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html {
+    width: 100%; height: 100%;
+    background-color: var(--bg-dark); color: white;
+    font-family: var(--font-main);
+    overflow: hidden;
+    touch-action: none; 
+    user-select: none; 
+    -webkit-user-drag: none;
+  }
+
+  input, select { user-select: auto; touch-action: auto; }
+
+  /* 게임 배경 */
+  #app-container {
+    position: relative; width: 100%; max-width: 800px; height: 100%;
+    margin: 0 auto; 
+    background: 
+      linear-gradient(rgba(0, 255, 102, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 102, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    display: flex; flex-direction: column; overflow: hidden;
+    border-left: 1px solid rgba(0,255,102,0.2);
+    border-right: 1px solid rgba(0,255,102,0.2);
+  }
+
+  .screen {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10; padding: 20px;
+  }
+  .screen.active { display: flex; }
+
+  /* 타이틀 & 패널 */
+  h1.title { 
+    font-family: var(--font-title); font-size: 3rem; color: var(--neon-green); 
+    text-shadow: 0 0 15px var(--neon-green); margin-bottom: 5px; text-align: center;
+  }
+  .subtitle { font-family: var(--font-mono); color: var(--neon-blue); margin-bottom: 20px; letter-spacing: 2px; text-align: center; }
+  
+  .panel { 
+    background: var(--panel-bg); border: 2px solid var(--neon-green); 
+    border-radius: 10px; padding: 25px; width: 100%; max-width: 500px; 
+    box-shadow: 0 0 20px rgba(0,255,102,0.2);
+  }
+
+  /* 아바타 및 입력 */
+  .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; max-height: 150px; overflow-y: auto;}
+  .avatar-item { font-size: 2rem; text-align: center; cursor: pointer; padding: 5px; border-radius: 8px; transition: 0.2s; border: 1px solid transparent; filter: grayscale(100%);}
+  .avatar-item.selected { filter: grayscale(0%); border-color: var(--neon-green); transform: scale(1.1); background: rgba(0,255,102,0.1); box-shadow: 0 0 10px var(--neon-green); }
+
+  .input-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; color: var(--neon-blue); font-weight: bold; }
+  .input-group input, .input-group select { 
+    padding: 12px; font-size: 1.2rem; border: 1px solid var(--neon-blue); border-radius: 5px; 
+    background: rgba(0,0,0,0.8); color: var(--neon-green); text-align: center; 
+    font-family: var(--font-main); outline: none; transition: 0.3s;
+  }
+  .input-group input:focus, .input-group select:focus { box-shadow: 0 0 15px var(--neon-blue); }
+  .input-group select option { background: #0a0f0d; color: var(--neon-green); }
+  
+  .btn { 
+    padding: 15px; font-size: 1.5rem; font-family: var(--font-title); 
+    background: rgba(0,255,102,0.2); color: var(--neon-green); 
+    border: 2px solid var(--neon-green); border-radius: 5px; 
+    cursor: pointer; transition: 0.2s; width: 100%; letter-spacing: 2px;
+  }
+  .btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 20px var(--neon-green); }
+  .btn:active { transform: scale(0.95); }
+
+  /* HUD */
+  #top-hud { 
+    position: absolute; top: 0; left: 0; right: 0; padding: 15px; 
+    display: flex; justify-content: space-between; align-items: flex-start; 
+    z-index: 5; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); pointer-events: none;
+  }
+  .hud-stats { display: flex; flex-direction: column; gap: 5px; font-size: 1.1rem; font-family: var(--font-mono); color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue);}
+  .hud-controls { display: flex; gap: 10px; pointer-events: auto;}
+  .ctrl-btn { 
+    background: rgba(0,229,255,0.1); border: 1px solid var(--neon-blue); color: white; 
+    padding: 6px 10px; border-radius: 5px; cursor: pointer; font-family: var(--font-main); font-size: 0.8rem;
+  }
+  .ctrl-btn:hover { background: var(--neon-blue); color: #000; }
+
+  /* 게임 영역 */
+  #game-area { flex: 1; display: flex; flex-direction: column; padding: 80px 20px 20px 20px; align-items: center; justify-content: flex-start; width: 100%;}
+  
+  #target-safe { font-size: 3.5rem; text-shadow: 0 0 20px var(--neon-blue); margin-bottom: 10px; transition: 0.3s; }
+  .unlocked { animation: unlock 0.5s ease-out; }
+  
+  #question-box {
+    width: 100%; max-width: 500px; background: rgba(0,0,0,0.8); border: 1px solid var(--neon-blue);
+    border-radius: 8px; padding: 15px 20px; font-size: 1.1rem; line-height: 1.5; text-align: center;
+    color: white; box-shadow: 0 0 15px rgba(0,229,255,0.2); margin-bottom: 15px;
+    white-space: pre-wrap; word-break: keep-all; min-height: 110px; display: flex; align-items: center; justify-content: center;
+  }
+
+  #display-box {
+    width: 100%; max-width: 300px; font-family: var(--font-mono); font-size: 2.2rem;
+    color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); text-align: center;
+    border-bottom: 2px solid var(--neon-green); margin-bottom: 20px; padding: 5px; height: 50px;
+  }
+
+  /* 가상 키패드 */
+  #numpad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 320px; margin: 0 auto;
+  }
+  .num-btn {
+    background: rgba(0,255,102,0.1); border: 1px solid var(--neon-green); color: white;
+    font-size: 1.5rem; font-family: var(--font-mono); padding: 12px 0; border-radius: 8px;
+    cursor: pointer; transition: 0.1s;
+  }
+  .num-btn:active, .num-btn.active { background: var(--neon-green); color: #000; transform: scale(0.9); }
+  .num-btn.btn-clear { color: var(--alert-red); border-color: var(--alert-red); background: rgba(255,0,85,0.1); }
+  .num-btn.btn-clear:active, .num-btn.btn-clear.active { background: var(--alert-red); color: #fff; }
+  .num-btn.btn-enter { grid-column: 1 / -1; background: rgba(0,229,255,0.2); border-color: var(--neon-blue); color: var(--neon-blue); font-weight: bold;}
+  .num-btn.btn-enter:active, .num-btn.btn-enter.active { background: var(--neon-blue); color: #000; }
+
+  /* 암호 해독 미니게임 슬롯 & 버튼 */
+  .d-slot { 
+    width: 60px; height: 60px; border: 2px dashed var(--neon-blue); border-radius: 8px; 
+    font-size: 2rem; font-family: var(--font-title); display: flex; align-items: center; 
+    justify-content: center; color: var(--neon-green); background: rgba(0,0,0,0.8); 
+  }
+  .d-btn { 
+    width: 60px; height: 60px; font-size: 2rem; font-family: var(--font-title);
+    background: rgba(0,255,102,0.2); border: 2px solid var(--neon-green); color: white; 
+    border-radius: 8px; cursor: pointer; transition: 0.1s; box-shadow: 0 0 10px rgba(0,255,102,0.2);
+  }
+  .d-btn:active { background: var(--neon-green); color: black; transform: scale(0.9); }
+  .d-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* 힌트 모달 */
+  #hint-modal {
+    position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%) scale(0);
+    background: rgba(255,0,85,0.95); color: white; padding: 20px; border-radius: 10px;
+    font-weight: bold; font-size: 1.2rem; text-align: center; z-index: 20;
+    box-shadow: 0 0 30px var(--alert-red); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 80%; max-width: 400px; line-height: 1.5; pointer-events: none;
+  }
+  #hint-modal.show { transform: translate(-50%, -50%) scale(1); }
+
+  #combo-text {
+    position: absolute; top: 20%; right: 5%; font-family: var(--font-title); font-size: 2.5rem;
+    color: #ffea00; text-shadow: 0 0 20px #ffea00; opacity: 0; pointer-events: none;
+  }
+
+  /* 파티클 */
+  #pool-layer { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden;}
+  .particle { 
+    position: absolute; font-family: var(--font-mono); font-size: 1.2rem; font-weight: bold;
+    color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); display: none; 
+  }
+
+  @keyframes unlock { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.5); filter: brightness(2); } 100% { transform: scale(0); opacity: 0; } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
+  .shake-anim { animation: shake 0.3s ease-in-out; }
+
+  /* 반응형 높이 조절 */
+  @media (max-height: 700px) {
+    h1.title { font-size: 2.2rem; }
+    #question-box { font-size: 1rem; padding: 10px; min-height: 80px; margin-bottom: 10px;}
+    #target-safe { font-size: 2.5rem; margin-bottom: 5px; }
+    .num-btn { padding: 8px 0; font-size: 1.3rem; }
+    #game-area { padding-top: 70px; }
+    #display-box { height: 40px; font-size: 1.8rem; margin-bottom: 15px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app-container">
+  
+  <div id="top-hud">
+    <div class="hud-stats" id="hud-stats" style="display:none;">
+      <div id="hud-agent">AGENT: </div>
+      <div id="hud-progress">SYSTEM: 0 / 20</div>
+      <div id="hud-score">SCORE: 0000</div>
+    </div>
+    <div class="hud-controls">
+      <button class="ctrl-btn" id="btn-pause">PAUSE</button>
+      <button class="ctrl-btn" id="btn-mute">SOUND: ON</button>
+    </div>
+  </div>
+
+  <div id="screen-lobby" class="screen active">
+    <h1 class="title">CODE BREAKER</h1>
+    <div class="subtitle">▶ MATH 4-1 CH.6 (규칙과 관계) ◀</div>
+    
+    <div class="panel">
+      <div style="text-align:center; margin-bottom:15px; color:var(--accent); font-size: 0.95rem; line-height: 1.4;">
+        금고의 암호를 해독하고 시스템을 장악하라.<br>
+        <span style="color:var(--neon-green)">4문제 클리어마다 시스템 해독 화면이 등장합니다!</span>
+      </div>
+      
+      <div class="input-group">
+        <label>요원 코드네임 (빈칸 시 자동 부여)</label>
+        <input type="text" id="input-nickname" placeholder="이름을 입력하세요" maxlength="8">
+      </div>
+      
+      <div class="input-group">
+        <label>요원 아바타 선택</label>
+        <div class="avatar-grid" id="avatar-grid"></div>
+      </div>
+
+      <div class="input-group">
+        <label>시스템 난이도 설정 (20문제)</label>
+        <select id="select-difficulty">
+          <option value="easy">EASY 모드 (수 배열과 기본 계산식)</option>
+          <option value="hard" selected>HARD 모드 (도형 규칙과 심화 계산식)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:20px; font-size: 0.9rem; color: #ccc;">
+        <input type="checkbox" id="low-spec-toggle" style="width:18px; height:18px;">
+        <label for="low-spec-toggle">저사양 모드 (파티클 끄기)</label>
+      </div>
+
+      <button class="btn" id="btn-start">작전 시작 (START)</button>
+    </div>
+  </div>
+
+  <div id="screen-game" class="screen">
+    <div id="game-area">
+      <div id="target-safe">🔒</div>
+      <div id="question-box">문제 데이터를 불러오는 중...</div>
+      <div id="display-box"></div>
+      
+      <div id="numpad">
+        <button class="num-btn" data-val="1">1</button>
+        <button class="num-btn" data-val="2">2</button>
+        <button class="num-btn" data-val="3">3</button>
+        <button class="num-btn" data-val="4">4</button>
+        <button class="num-btn" data-val="5">5</button>
+        <button class="num-btn" data-val="6">6</button>
+        <button class="num-btn" data-val="7">7</button>
+        <button class="num-btn" data-val="8">8</button>
+        <button class="num-btn" data-val="9">9</button>
+        <button class="num-btn btn-clear" data-val="c" id="btn-clear">C</button>
+        <button class="num-btn" data-val="0">0</button>
+        <button class="num-btn" data-val="-">삭제</button>
+        <button class="num-btn btn-enter" data-val="enter" id="btn-enter">해독 (ENTER)</button>
+      </div>
+    </div>
+    
+    <div id="hint-modal">힌트가 표시됩니다.</div>
+    <div id="combo-text"></div>
+    <div id="pool-layer"></div>
+  </div>
+
+  <div id="screen-decrypt" class="screen">
+    <div class="panel" style="text-align:center;">
+      <h1 class="title" style="font-size:2.5rem; color:#ffeb3b; text-shadow:0 0 15px #ffeb3b; margin-bottom:5px;">SYSTEM DECRYPT</h1>
+      <p style="color:var(--neon-blue); margin-bottom:15px; font-weight:bold; font-size:1.1rem;">획득한 4개의 암호 조각을 알맞게 조립하세요.</p>
+      
+      <div id="decrypt-desc" style="background:rgba(0,0,0,0.6); border: 1px solid var(--neon-green); padding:15px; border-radius:8px; margin-bottom:20px; font-weight:bold; word-break:keep-all; color:#fff; font-size:1.1rem; line-height:1.4;">
+        힌트가 출력됩니다.
+      </div>
+      
+      <div id="decrypt-slots" style="display:flex; justify-content:center; gap:15px; margin-bottom:25px;">
+        <div class="d-slot"></div><div class="d-slot"></div><div class="d-slot"></div><div class="d-slot"></div>
+      </div>
+      
+      <div id="decrypt-btns" style="display:flex; justify-content:center; gap:15px; margin-bottom:20px;">
+        </div>
+      
+      <button class="btn btn-clear" style="font-size:1.2rem; padding:12px; background:rgba(255,0,85,0.2); border-color:var(--alert-red); color:var(--alert-red);" onclick="clearDecrypt()">다시 조립하기 (CLEAR)</button>
+    </div>
+  </div>
+
+  <div id="screen-result" class="screen">
+    <h1 class="title">MISSION CLEARED</h1>
+    <div class="panel" style="text-align: center;">
+      <div id="res-avatar" style="font-size: 4rem; margin-bottom: 10px;">🕵️</div>
+      <h2 id="res-name" style="margin-bottom: 20px; color: var(--neon-blue); font-family: var(--font-title); font-size: 2rem;">요원</h2>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; text-align:left; background:rgba(0,0,0,0.5); padding:20px; border-radius:10px; font-size:1.1rem; font-family: var(--font-mono);">
+        <div>SCORE: <span id="res-score" style="color:var(--neon-green); font-weight:bold;">0</span></div>
+        <div>MAX COMBO: <span id="res-combo" style="color:#ffea00; font-weight:bold;">0</span></div>
+        <div>ACCURACY: <span id="res-acc" style="color:var(--neon-blue); font-weight:bold;">0%</span></div>
+        <div>TIME: <span id="res-time" style="color:white; font-weight:bold;">00:00</span></div>
+        <div style="grid-column: 1 / 3; text-align: center; margin-top: 10px; color: #ffeb3b; font-family: var(--font-main);" id="res-rank">평가: </div>
+      </div>
+
+      <button class="btn" id="btn-restart" style="margin-top: 25px;">본부로 귀환 (LOBBY)</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   [1] 문제 데이터
+========================================================================= */
+var QUIZ_DATA_EASY = [
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 100, 200, 300, 400, ? ]", a: "500", hint: "앞의 수에서 100씩 커지는 덧셈 규칙입니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 55, 60, 65, 70, ? ]", a: "75", hint: "앞의 수에서 5씩 커지는 규칙입니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 120, 110, 100, 90, ? ]", a: "80", hint: "앞의 수에서 10씩 작아지는 규칙입니다." },
+  { q: "수 배열표에서 오른쪽으로 갈수록 10씩 커집니다.\n'350'의 오른쪽 칸에 들어갈 수는 무엇일까요?", a: "360", hint: "350에 10을 더해 보세요." },
+  { q: "수 배열표에서 아래쪽으로 갈수록 100씩 커집니다.\n'405'의 아래쪽 칸에 들어갈 수는 무엇일까요?", a: "505", hint: "405에 100을 더해 보세요." },
+  { q: "도형이 첫째에 1개, 둘째에 3개, 셋째에 5개 놓여 있습니다.\n넷째에 놓일 도형은 몇 개인가요?", a: "7", hint: "도형의 수가 2개씩 늘어나고 있습니다. 5에 2를 더해보세요." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n11 + 11 = 22\n22 + 22 = 44\n33 + 33 = 66\n44 + 44 = ?", a: "88", hint: "단순히 44와 44를 더하거나, 각 자리 숫자가 2배가 되는 규칙을 써보세요." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n2 x 2 = 4\n20 x 20 = 400\n200 x 200 = 40000\n2000 x 2000 = ?", a: "4000000", hint: "곱하는 두 수에 있는 '0'의 개수를 모두 합친 것만큼 결과값에 '0'이 생깁니다." },
+  { q: "수 배열표에서 아래쪽으로 갈수록 20씩 커집니다.\n'130'의 아래쪽 칸에 들어갈 수는 무엇일까요?", a: "150", hint: "130에 20을 더해보세요." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n1 x 9 = 9\n11 x 9 = 99\n111 x 9 = 999\n1111 x 9 = ?", a: "9999", hint: "1이 하나 늘어날 때마다 결과에 9가 하나씩 늘어납니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 1000, 2000, 3000, 4000, ? ]", a: "5000", hint: "앞의 수에서 1000씩 커지는 규칙입니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 21, 32, 43, 54, ? ]", a: "65", hint: "앞의 수에서 11씩 커지는 규칙입니다." },
+  { q: "바둑돌이 첫째에 2개, 둘째에 4개, 셋째에 6개 놓여 있습니다.\n다섯째에 놓일 바둑돌의 수는?", a: "10", hint: "2씩 늘어나는 규칙(구구단 2단)입니다. 넷째는 8개, 다섯째는 몇 개일까요?" },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 900, 800, 700, 600, ? ]", a: "500", hint: "100씩 작아지는 뺄셈 규칙입니다." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n100 - 10 = 90\n200 - 20 = 180\n300 - 30 = 270\n400 - 40 = ?", a: "360", hint: "결과값이 90씩 커지고 있습니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 10, 15, 20, 25, ? ]", a: "30", hint: "5씩 커지는 규칙입니다." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n5 x 5 = 25\n50 x 5 = 250\n500 x 5 = 2500\n5000 x 5 = ?", a: "25000", hint: "곱해지는 수에 0이 하나 늘어나면, 결과에도 0이 똑같이 하나 늘어납니다." },
+  { q: "도형이 첫째에 10개, 둘째에 20개, 셋째에 30개 있습니다.\n여섯째에 필요한 도형은 몇 개인가요?", a: "60", hint: "10씩 차례대로 늘어나는 규칙(10의 배수)입니다." },
+  { q: "수의 배열표에서 오른쪽으로 갈수록 8씩 커집니다.\n'24'의 오른쪽 옆 칸에 들어갈 수는 무엇일까요?", a: "32", hint: "24에 8을 더해보세요." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n12 ÷ 3 = 4\n120 ÷ 3 = 40\n1200 ÷ 3 = 400\n12000 ÷ 3 = ?", a: "4000", hint: "나누어지는 수에 0이 늘어나는 만큼 몫에도 0이 똑같이 늘어납니다." }
+];
+
+// 발문 오류(오른쪽 아래)를 "네 번째(마지막) 수"로 수정한 HARD 모드 데이터
+var QUIZ_DATA_HARD = [
+  { q: "수 배열표의 대각선 아래쪽으로 갈수록 110씩 커집니다.\n'415'에서 대각선 아래쪽으로 2칸 이동한 곳에 있는 수는 무엇일까요?\n(415 ➔ 1칸 ➔ 2칸)", a: "635", hint: "110씩 두 번 커져야 합니다. 415에 220을 더해보세요." },
+  { q: "네 수 묶음의 규칙입니다.\n(1, 2, 6, 3) ➔ (2, 4, 12, 6) ➔ (4, 8, 24, 12)\n넷째 묶음에서 네 번째(마지막)에 있는 수는 무엇일까요?", a: "24", hint: "각 묶음의 네 번째 수는 3, 6, 12로, 앞 묶음의 수에 2를 곱하는 규칙입니다." },
+  { q: "바둑돌로 정사각형 모양을 만듭니다.\n첫째 1개, 둘째 4개, 셋째 9개, 넷째 16개입니다.\n바둑돌이 64개인 것은 몇째일까요?", a: "8", hint: "순서를 두 번 곱한 수(예: 3x3=9)가 바둑돌의 수입니다. 어떤 수를 두 번 곱해야 64가 될까요?" },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n848 ÷ 4 = 212\n8448 ÷ 4 = 2112\n84448 ÷ 4 = 21112\n? ÷ 4 = 211112", a: "844448", hint: "결과값의 '1'이 하나 늘어날 때마다, 나누어지는 수의 가운데 있는 '4'도 하나씩 늘어납니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 2, 6, 12, 20, 30, ? ]", a: "42", hint: "더해지는 수가 4, 6, 8, 10으로 2씩 커집니다. 30에는 12를 더해야 합니다." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n9 x 9 = 81\n99 x 99 = 9801\n999 x 999 = 998001\n99999 x 99999 = ?", a: "9999800001", hint: "가운데 9와 0의 개수가 하나씩 늘어납니다. 99999는 9가 5개이므로, 결과는 9가 4개, 0이 4개 들어갑니다." },
+  { q: "어떤 규칙에 따라 수를 늘어놓았습니다.\n[ 11, 33, 99, 297, ? ]", a: "891", hint: "앞의 수에 3을 곱해야 다음 수가 나옵니다. 297 x 3을 계산해보세요." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n111 ÷ 3 = 37\n222 ÷ 6 = 37\n333 ÷ 9 = 37\n? ÷ 27 = 37", a: "999", hint: "나누는 수가 3, 6, 9로 커질 때 나누어지는 수는 111, 222, 333으로 함께 커집니다." },
+  { q: "정육각형을 1개씩 이어 붙여 만듭니다.\n1개일 때 변 6개, 2개일 때 변 11개, 3개일 때 변 16개입니다.\n변이 31개인 모양은 정육각형을 몇 개 이어 붙인 것일까요?", a: "6", hint: "처음 6개에서 1개 이어 붙일 때마다 변이 5개씩만 늘어납니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 100, 99, 97, 94, 90, ? ]", a: "85", hint: "빼는 수가 1, 2, 3, 4, 5로 점점 커집니다. 90에서는 5를 빼보세요." },
+  { q: "긴 리본을 가위로 1번 자르면 2도막, 2번 자르면 3도막이 됩니다.\n리본을 15도막으로 나누려면 가위질을 몇 번 해야 할까요?", a: "14", hint: "자른 횟수는 항상 도막의 수보다 1만큼 적습니다." },
+  { q: "색종이를 반으로 접습니다. 1번 접으면 2칸, 2번 접으면 4칸, 3번 접으면 8칸이 됩니다.\n칸이 128칸이 되려면 몇 번 접어야 할까요?", a: "7", hint: "접을 때마다 칸의 수가 2배가 됩니다. 8에서 계속 2배씩 늘려보세요." },
+  { q: "계산식의 규칙을 찾으세요.\n11 x 11 = 121\n111 x 111 = 12321\n결과가 12345654321 일 때, 곱하는 두 수는 각각 '1'이 몇 개 있는 수일까요?", a: "6", hint: "결과값에서 한가운데 있는 가장 큰 숫자가 바로 곱하는 수의 '1'의 개수입니다." },
+  { q: "계산식의 규칙을 찾으세요.\n2 x 5 = 10\n22 x 5 = 110\n결과가 1111110 이 되려면 '2'를 몇 개 쓴 수에 5를 곱해야 할까요?", a: "6", hint: "결과값에서 '1'의 개수를 세어보면, 곱해지는 수에 있는 '2'의 개수와 같습니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 1, 2, 4, 7, 11, ? ]", a: "16", hint: "더해지는 수가 1, 2, 3, 4로 1씩 커지며 늘어납니다." },
+  { q: "아빠와 나의 나이 차이는 변하지 않습니다.\n5년 전 아빠는 35살, 나는 5살이었습니다.\n현재 아빠가 45살이라면, 현재 나는 몇 살일까요?", a: "15", hint: "두 사람의 나이 차이는 시간이 지나도 항상 30살입니다." },
+  { q: "계산식의 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n3 x 4 = 12\n33 x 34 = 1122\n333 x 334 = 111222\n33333 x 33334 = ?", a: "1111122222", hint: "곱하는 두 수의 자릿수만큼 1과 2가 나타납니다. 5자리 수끼리의 곱이므로 1이 5개, 2가 5개입니다." },
+  { q: "수의 배열에서 규칙을 찾아 빈칸에 알맞은 수를 구하세요.\n[ 3, 4, 6, 9, 13, ? ]", a: "18", hint: "더해지는 수가 1, 2, 3, 4, 5로 점점 커집니다." },
+  { q: "계산식의 규칙을 찾으세요.\n1+2+1 = 4\n1+2+3+2+1 = 9\n합이 64가 되는 식에서 가장 가운데 있는 가장 큰 수는 무엇일까요?", a: "8", hint: "가운데 있는 수를 두 번 곱한 값(예: 3x3=9)이 전체의 합이 됩니다. 어떤 수를 두 번 곱해야 64가 될까요?" },
+  { q: "어떤 수 배열표에서 아래쪽으로 한 칸 내려갈 때마다 100, 200, 300씩 점점 더 큰 수를 더하는 규칙이 있습니다.\n첫 번째 칸의 수가 83일 때, 네 번째 칸의 수는 무엇일까요?\n(83 ➔ 183 ➔ 383 ➔ ?)", a: "683", hint: "세 번째 칸인 383에서 이번에는 300을 더해야 합니다." }
+];
+
+/* 사자성어 미니게임 데이터 */
+var DECRYPT_PASSWORDS = [
+  { word: "일취월장", desc: "날마다 달마다 발전하고 나아짐." },
+  { word: "동문서답", desc: "묻는 말에 대하여 전혀 엉뚱한 대답을 함." },
+  { word: "칠전팔기", desc: "일곱 번 넘어져도 여덟 번 일어난다는 뜻으로, 실패에도 굴하지 않고 다시 일어남." },
+  { word: "금상첨화", desc: "비단 위에 꽃을 더한다는 뜻으로, 좋은 일에 좋은 일이 더 일어남." },
+  { word: "대기만성", desc: "큰 그릇은 늦게 이루어진다는 뜻으로, 크게 될 사람은 늦게 성공함." }
+];
+
+var AVATARS = ["🕵️", "👩‍💻", "👨‍💻", "🤖", "👽", "👾", "🥷", "🧙", "🐱‍💻", "🐺"];
+
+var gameState = {
+  playerName: "",
+  playerAvatar: "🕵️",
+  isLowSpec: false,
+  isMuted: false,
+  isPaused: false,
+  isPlaying: false,
+  isDecrypting: false,
+  questionQueue: [],
+  currentQIdx: 0,
+  currentQ: null,
+  currentInput: "",
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  totalAttempts: 0,
+  correctAttempts: 0,
+  startTime: 0,
+  playTime: 0,
+  timerInterval: null,
+  decryptInputArr: []
+};
+
+/* =========================================================================
+   [2] 핵심 기능 (오디오, 풀링, 제어)
+========================================================================= */
+var AudioCtx = window.AudioContext || window.webkitAudioContext;
+var actx;
+
+function playSound(type) {
+  if (gameState.isMuted) return;
+  if (!actx) actx = new AudioCtx();
+  if (actx.state === 'suspended') actx.resume();
+
+  var osc = actx.createOscillator();
+  var gain = actx.createGain();
+  osc.connect(gain);
+  gain.connect(actx.destination);
+
+  var now = actx.currentTime;
+  if (type === 'type') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.start(now); osc.stop(now + 0.05);
+  } else if (type === 'success') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.setValueAtTime(600, now + 0.1);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.start(now); osc.stop(now + 0.3);
+  } else if (type === 'error') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(150, now + 0.2);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+    osc.start(now); osc.stop(now + 0.2);
+  }
+}
+
+var POOL_SIZE = 30;
+var particlePool = [];
+
+function initPool() {
+  var layer = document.getElementById('pool-layer');
+  layer.innerHTML = '';
+  particlePool.length = 0; 
+  for(var i=0; i<POOL_SIZE; i++){
+    var p = document.createElement('div');
+    p.className = 'particle';
+    p.innerText = Math.random() > 0.5 ? '1' : '0'; 
+    layer.appendChild(p);
+    particlePool.push({ el: p, active: false });
+  }
+}
+
+function spawnParticles() {
+  if(gameState.isLowSpec) return; 
+  var safeRect = document.getElementById('target-safe').getBoundingClientRect();
+  var cx = safeRect.left + safeRect.width / 2;
+  var cy = safeRect.top + safeRect.height / 2;
+
+  var count = 0;
+  for(var i=0; i<particlePool.length; i++) {
+    if(!particlePool[i].active) {
+      var p = particlePool[i];
+      p.active = true;
+      p.el.style.display = 'block';
+      p.el.innerText = Math.random() > 0.5 ? '1' : '0';
+      p.el.style.left = cx + 'px';
+      p.el.style.top = cy + 'px';
+      
+      var angle = Math.random() * Math.PI * 2;
+      var speed = Math.random() * 80 + 30;
+      var tx = Math.cos(angle) * speed;
+      var ty = Math.sin(angle) * speed - 50; 
+      
+      p.el.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+        { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+      ], { duration: 600, easing: 'ease-out' }).onfinish = (function(ptcl) {
+        return function() {
+          ptcl.el.style.display = 'none';
+          ptcl.active = false;
+        };
+      })(p);
+      
+      count++;
+      if(count >= 10) break; 
+    }
+  }
+}
+
+var screens = {
+  lobby: document.getElementById('screen-lobby'),
+  game: document.getElementById('screen-game'),
+  decrypt: document.getElementById('screen-decrypt'),
+  result: document.getElementById('screen-result')
+};
+
+function showScreen(id) {
+  Object.values(screens).forEach(function(s) { s.classList.remove('active'); });
+  screens[id].classList.add('active');
+}
+
+var grid = document.getElementById('avatar-grid');
+AVATARS.forEach(function(av) {
+  var div = document.createElement('div');
+  div.className = 'avatar-item';
+  div.innerText = av;
+  div.onclick = function() {
+    document.querySelectorAll('.avatar-item').forEach(function(el) { el.classList.remove('selected'); });
+    div.classList.add('selected');
+    gameState.playerAvatar = av;
+  };
+  grid.appendChild(div);
+});
+grid.firstChild.classList.add('selected');
+
+document.getElementById('btn-mute').onclick = function(e) {
+  gameState.isMuted = !gameState.isMuted;
+  e.target.innerText = gameState.isMuted ? "SOUND: OFF" : "SOUND: ON";
+};
+
+document.getElementById('btn-pause').onclick = function(e) {
+  if(!gameState.isPlaying || gameState.isDecrypting) return;
+  gameState.isPaused = !gameState.isPaused;
+  e.target.innerText = gameState.isPaused ? "RESUME" : "PAUSE";
+  if(gameState.isPaused) {
+    document.getElementById('question-box').innerText = "[ SYSTEM PAUSED ]";
+    document.getElementById('display-box').innerText = "";
+  } else {
+    document.getElementById('question-box').innerText = gameState.currentQ.q;
+    updateDisplay();
+  }
+};
+
+document.getElementById('btn-start').onclick = function() {
+  var rawName = document.getElementById('input-nickname').value.trim();
+  gameState.playerName = rawName || "요원" + (Math.floor(Math.random() * 900) + 100);
+  gameState.isLowSpec = document.getElementById('low-spec-toggle').checked;
+  
+  var difficulty = document.getElementById('select-difficulty').value;
+  var selectedData = difficulty === 'hard' ? QUIZ_DATA_HARD : QUIZ_DATA_EASY;
+  
+  gameState.questionQueue = shuffle(selectedData); 
+  
+  initPool();
+  startGame();
+};
+
+/* =========================================================================
+   [3] 입력 처리 (PC 물리키보드 & 모바일 가상키패드 완벽 호환)
+========================================================================= */
+document.querySelectorAll('.num-btn').forEach(function(btn) {
+  btn.addEventListener('pointerdown', function(e) {
+    e.preventDefault(); 
+    if(gameState.isPaused || !gameState.isPlaying || gameState.isDecrypting) return;
+    
+    var val = btn.getAttribute('data-val');
+    if(!val) return; 
+    handleInput(val);
+    
+    btn.classList.add('active');
+    setTimeout(function() { btn.classList.remove('active'); }, 100);
+  });
+});
+
+window.addEventListener('keydown', function(e) {
+  if(gameState.isPaused || !gameState.isPlaying || gameState.isDecrypting) return;
+  
+  if (e.key >= '0' && e.key <= '9') {
+    handleInput(e.key);
+    animateKeypadBtn(e.key);
+  } else if (e.key === 'Backspace') {
+    handleInput('-');
+    animateKeypadBtn('-');
+  } else if (e.key === 'Enter') {
+    handleInput('enter');
+    animateKeypadBtn('enter');
+  } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+    handleInput('c');
+    animateKeypadBtn('c');
+  }
+});
+
+function animateKeypadBtn(val) {
+  var btn = document.querySelector('.num-btn[data-val="' + val + '"]');
+  if(btn) {
+    btn.classList.add('active');
+    setTimeout(function() { btn.classList.remove('active'); }, 100);
+  }
+}
+
+function handleInput(val) {
+  if (val === 'enter') {
+    checkAnswer();
+  } else if (val === 'c') {
+    gameState.currentInput = "";
+    playSound('type');
+    updateDisplay();
+  } else if (val === '-') {
+    gameState.currentInput = gameState.currentInput.slice(0, -1);
+    playSound('type');
+    updateDisplay();
+  } else {
+    if(gameState.currentInput.length < 12) { 
+      gameState.currentInput += val;
+      playSound('type');
+      updateDisplay();
+    }
+  }
+}
+
+function updateDisplay() {
+  var display = document.getElementById('display-box');
+  display.innerText = gameState.currentInput || "_";
+  display.style.color = gameState.currentInput ? "var(--neon-green)" : "rgba(0,255,102,0.3)";
+}
+
+/* =========================================================================
+   [4] 게임 흐름 및 암호 해독 미니게임 로직
+========================================================================= */
+function shuffle(array) {
+  var arr = array.slice();
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
+  return arr;
+}
+
+function startGame() {
+  gameState.isPlaying = true;
+  gameState.isDecrypting = false;
+  gameState.score = 0; gameState.combo = 0; gameState.maxCombo = 0;
+  gameState.totalAttempts = 0; gameState.correctAttempts = 0;
+  gameState.currentQIdx = 0;
+  gameState.startTime = Date.now();
+  
+  document.getElementById('hud-agent').innerText = "AGENT: [" + gameState.playerAvatar + "] " + gameState.playerName;
+  document.getElementById('hud-stats').style.display = 'flex';
+  
+  clearInterval(gameState.timerInterval);
+  gameState.timerInterval = setInterval(function() {
+    if(!gameState.isPaused && !gameState.isDecrypting) {
+      var elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+      var min = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      var sec = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('hud-time').innerText = "TIME: " + min + ":" + sec;
+      gameState.playTime = elapsed;
+    }
+  }, 1000);
+  
+  showScreen('game');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  if (gameState.currentQIdx >= gameState.questionQueue.length) {
+    endGame(); 
+    return;
+  }
+
+  gameState.currentQ = gameState.questionQueue[gameState.currentQIdx];
+  gameState.currentInput = "";
+  
+  document.getElementById('target-safe').innerText = "🔒";
+  document.getElementById('target-safe').className = "";
+  document.getElementById('question-box').innerText = gameState.currentQ.q;
+  updateDisplay();
+  updateHUD();
+}
+
+function updateHUD() {
+  var scStr = String(gameState.score).padStart(4, '0');
+  document.getElementById('hud-score').innerText = "SCORE: " + scStr;
+  document.getElementById('hud-progress').innerText = "SYSTEM: " + (gameState.currentQIdx + 1) + " / 20";
+}
+
+function checkAnswer() {
+  if (!gameState.currentInput) return;
+
+  gameState.totalAttempts++;
+
+  if (gameState.currentInput === gameState.currentQ.a) {
+    gameState.correctAttempts++;
+    gameState.combo++;
+    if(gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+    
+    var pts = 100 + (gameState.combo * 10);
+    gameState.score += pts;
+
+    playSound('success');
+    
+    var safeEl = document.getElementById('target-safe');
+    safeEl.innerText = "🔓";
+    safeEl.classList.add('unlocked');
+    spawnParticles();
+    showCombo();
+    
+    var pwIdx = Math.floor(gameState.currentQIdx / 4);
+    
+    updateHUD();
+    document.getElementById('hint-modal').classList.remove('show');
+    
+    gameState.currentQIdx++;
+
+    // 4문제 클리어마다 미니게임 발동
+    setTimeout(function() {
+      if (gameState.currentQIdx % 4 === 0 && gameState.currentQIdx > 0) {
+         startDecryptGame(pwIdx);
+      } else {
+         loadQuestion();
+      }
+    }, 600);
+    
+  } else {
+    gameState.combo = 0;
+    gameState.currentInput = ""; 
+    updateDisplay();
+    playSound('error');
+    
+    var box = document.getElementById('question-box');
+    box.classList.add('shake-anim');
+    setTimeout(function() { box.classList.remove('shake-anim'); }, 300);
+    
+    var hintModal = document.getElementById('hint-modal');
+    hintModal.innerHTML = "ACCESS DENIED<br><span style='font-size:1rem; font-weight:normal;'>[힌트] " + gameState.currentQ.hint + "</span>";
+    hintModal.classList.add('show');
+    
+    setTimeout(function() {
+      hintModal.classList.remove('show');
+    }, 3500);
+  }
+}
+
+function showCombo() {
+  if(gameState.combo < 2) return;
+  var cd = document.getElementById('combo-text');
+  cd.innerText = gameState.combo + " COMBO!";
+  
+  cd.animate([
+    { opacity: 0, transform: 'scale(0.5) translateY(20px)' },
+    { opacity: 1, transform: 'scale(1.2) translateY(0)' },
+    { opacity: 0, transform: 'scale(1) translateY(-20px)' }
+  ], { duration: 1000, easing: 'ease-out' });
+}
+
+// 미니게임 시작: 스포일러 없이 4글자를 랜덤으로 섞어서 뿌림
+function startDecryptGame(pwIdx) {
+  gameState.isDecrypting = true;
+  gameState.decryptInputArr = [];
+  
+  var pwObj = DECRYPT_PASSWORDS[pwIdx];
+  document.getElementById('decrypt-desc').innerText = "[뜻] " + pwObj.desc;
+  
+  var shuffled = shuffle(pwObj.word.split(''));
+  var btnContainer = document.getElementById('decrypt-btns');
+  btnContainer.innerHTML = '';
+  
+  shuffled.forEach(function(char) {
+      var btn = document.createElement('button');
+      btn.className = 'd-btn';
+      btn.innerText = char;
+      btn.onpointerdown = function(e) {
+          e.preventDefault();
+          
+          // 이미 눌린 버튼은 다시 눌리지 않도록 처리
+          if(btn.disabled) return;
+          btn.disabled = true;
+          typeDecrypt(char);
+      };
+      btnContainer.appendChild(btn);
+  });
+  
+  updateDecryptSlots();
+  showScreen('decrypt');
+}
+
+function typeDecrypt(char) {
+  if (gameState.decryptInputArr.length < 4) {
+      gameState.decryptInputArr.push(char);
+      playSound('type');
+      updateDecryptSlots();
+      
+      if (gameState.decryptInputArr.length === 4) {
+          setTimeout(function() { verifyDecrypt(); }, 300);
+      }
+  }
+}
+
+function updateDecryptSlots() {
+  var slots = document.querySelectorAll('.d-slot');
+  slots.forEach(function(slot, i) {
+      slot.innerText = gameState.decryptInputArr[i] || "";
+  });
+}
+
+function clearDecrypt() {
+  gameState.decryptInputArr = [];
+  playSound('type');
+  updateDecryptSlots();
+  
+  // 비활성화된 글자 버튼들 다시 활성화
+  document.querySelectorAll('.d-btn').forEach(function(btn) {
+      btn.disabled = false;
+  });
+}
+
+function verifyDecrypt() {
+  var pwIdx = Math.floor((gameState.currentQIdx - 1) / 4);
+  var targetWord = DECRYPT_PASSWORDS[pwIdx].word;
+  var userWord = gameState.decryptInputArr.join('');
+  
+  if (userWord === targetWord) {
+      playSound('success');
+      
+      setTimeout(function() {
+          gameState.isDecrypting = false;
+          if (gameState.currentQIdx >= gameState.questionQueue.length) {
+              endGame();
+          } else {
+              showScreen('game');
+              loadQuestion();
+          }
+      }, 800);
+  } else {
+      playSound('error');
+      var slotsContainer = document.getElementById('decrypt-slots');
+      slotsContainer.classList.add('shake-anim');
+      setTimeout(function() {
+          slotsContainer.classList.remove('shake-anim');
+          clearDecrypt();
+      }, 500);
+  }
+}
+
+function endGame() {
+  gameState.isPlaying = false;
+  clearInterval(gameState.timerInterval);
+  playSound('success');
+  document.getElementById('hud-stats').style.display = 'none';
+  
+  var min = String(Math.floor(gameState.playTime / 60)).padStart(2, '0');
+  var sec = String(gameState.playTime % 60).padStart(2, '0');
+  
+  var accuracy = gameState.totalAttempts === 0 ? 0 : Math.round((gameState.correctAttempts / gameState.totalAttempts) * 100);
+  
+  var rank = "";
+  if (accuracy >= 90) rank = "SSS (전설의 요원)";
+  else if (accuracy >= 70) rank = "A (우수 요원)";
+  else if (accuracy >= 50) rank = "B (일반 요원)";
+  else rank = "C (훈련이 필요한 요원)";
+
+  document.getElementById('res-avatar').innerText = gameState.playerAvatar;
+  document.getElementById('res-name').innerText = gameState.playerName + " 요원";
+  document.getElementById('res-score').innerText = gameState.score;
+  document.getElementById('res-combo').innerText = gameState.maxCombo;
+  document.getElementById('res-acc').innerText = accuracy + "%";
+  document.getElementById('res-time').innerText = min + ":" + sec;
+  document.getElementById('res-rank').innerText = "최종 평가: " + rank;
+
+  showScreen('result');
+}
+
+document.getElementById('btn-restart').onclick = function() {
+  document.getElementById('input-nickname').value = '';
+  showScreen('lobby');
+};
+</script>
+</body>
+</html>
