@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>합리적 선택 디펜스 (익스트림 패치판)</title>
+    <style>
+        /* ==========================================
+           [UI/UX & 게임 요소 그래픽]
+        ========================================== */
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        :root {
+            --primary: #FF9A9E;
+            --secondary: #A8E6CF;
+            --accent: #FFD3B6;
+            --text-dark: #2F3542;
+            --bg-color: #F1F2F6;
+            --ui-bg: rgba(255, 255, 255, 0.95);
+            --danger: #FF4757;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-family: 'Jua', sans-serif; }
+        body { background: #1a1a2e; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; touch-action: none; }
+        
+        #app {
+            position: relative; width: 100vw; height: 100vh; max-width: 1200px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8); overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        @keyframes flashRed { 0% { box-shadow: inset 0 0 0 0px rgba(255,0,0,0.8); } 50% { box-shadow: inset 0 0 0 50px rgba(255,0,0,0.6); } 100% { box-shadow: inset 0 0 0 0px rgba(255,0,0,0); } }
+        .damage-flash { animation: flashRed 0.3s ease-out; }
+
+        @keyframes bombShake { 0% { transform: translate(15px, 15px) rotate(2deg); } 25% { transform: translate(-15px, -15px) rotate(-2deg); } 50% { transform: translate(15px, -15px) rotate(2deg); } 75% { transform: translate(-15px, 15px) rotate(-2deg); } 100% { transform: translate(0, 0) rotate(0); } }
+        .bomb-shake { animation: bombShake 0.5s ease-out; }
+
+        .magnet-coin { position: absolute; font-size: 2.5rem; pointer-events: none; z-index: 40; animation: flyToTopRight 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes flyToTopRight { 0% { transform: scale(0.5); opacity: 0; } 20% { transform: scale(1.5); opacity: 1; } 100% { top: 20px; left: 80%; transform: scale(0.5); opacity: 0; } }
+
+        #fx-layer { pointer-events: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 25; transition: all 0.3s ease; }
+
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; transition: opacity 0.3s ease; }
+        .hidden { display: none !important; }
+
+        h1 { font-size: 3.5rem; color: #fff; text-shadow: 4px 4px 0 var(--primary), -2px -2px 0 #333; margin-bottom: 10px; text-align: center; line-height: 1.2;}
+        h2 { font-size: 1.8rem; color: var(--text-dark); margin-bottom: 10px; text-shadow: 1px 1px 0 #fff; }
+        
+        .btn { padding: 15px 40px; font-size: 2rem; color: #fff; background: linear-gradient(45deg, var(--primary), #FFB7B2); border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 154, 158, 0.5); transition: all 0.2s; text-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
+        .btn:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-3px); }
+
+        #lobby { background: radial-gradient(circle, #E0F6FF, #87CEEB); }
+        .subtitle { font-size: 1.4rem; color: #fff; background: var(--danger); padding: 10px 20px; border-radius: 20px; font-weight: bold; margin-bottom: 15px; box-shadow: 0 4px 0px #c0392b;}
+        #nickname-input { padding: 15px 20px; font-size: 1.5rem; border: 4px solid var(--secondary); border-radius: 30px; text-align: center; margin-bottom: 15px; outline: none; }
+        
+        .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 25px; background: var(--ui-bg); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .avatar-option { font-size: 3rem; cursor: pointer; padding: 5px; border-radius: 15px; transition: 0.2s; text-align: center; }
+        .avatar-option.selected { background-color: var(--accent); transform: scale(1.1) rotate(-10deg); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 3px solid #fff; }
+
+        #top-bar { position: absolute; top: 0; left: 0; width: 100%; height: 70px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; background: var(--ui-bg); z-index: 20; border-bottom: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .status-badge { background: #fff; padding: 8px 15px; border-radius: 25px; font-size: 1.4rem; color: var(--text-dark); border: 3px solid #eee; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-weight: bold; }
+        .controls button { background: none; border: none; font-size: 2rem; cursor: pointer; margin-left: 10px; transition: 0.2s; }
+        .controls button:hover { transform: scale(1.2); }
+        
+        #combo-display { position: absolute; top: 80px; left: 20px; font-size: 2.5rem; color: #FFA502; text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff; font-weight: bold; z-index: 20; opacity: 0; transition: opacity 0.3s, transform 0.2s; pointer-events: none; }
+        #combo-display.active { opacity: 1; transform: scale(1.1); animation: comboPulse 0.5s infinite alternate; }
+        @keyframes comboPulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        #upgrade-panel { position: absolute; top: 85px; right: 20px; display: flex; gap: 10px; z-index: 20; flex-direction: column;}
+        .upgrade-btn { background: linear-gradient(to bottom, #FFE066, #F5AF19); border: 4px solid #FFF; border-radius: 20px; padding: 8px 15px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.2); color: #5D4037; display: flex; flex-direction: column; align-items: center; transition: 0.2s; width: 160px;}
+        .upgrade-btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        .upgrade-btn:active { transform: translateY(0); }
+        .upgrade-btn .cost { color: #D84315; font-size: 1.1rem; margin-top: 3px; background: rgba(255,255,255,0.7); padding: 2px 10px; border-radius: 10px; }
+        .upgrade-btn.disabled { filter: grayscale(1); cursor: not-allowed; opacity: 0.6; }
+
+        #canvas-container { flex: 1; width: 100%; position: relative; margin-top: 70px; margin-bottom: 260px; overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; object-fit: contain; cursor: crosshair; transition: filter 0.5s; }
+        
+        #gimmick-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; display: flex; justify-content: center; align-items: center;}
+        .sale-flyer { position: absolute; background: yellow; color: red; border: 5px dashed red; padding: 20px; font-size: 2.5rem; font-weight: bold; transform: rotate(-15deg); box-shadow: 5px 5px 15px rgba(0,0,0,0.5); animation: dropIn 0.5s ease-out forwards; }
+        @keyframes dropIn { from { transform: translateY(-200px) rotate(-30deg) scale(2); opacity: 0; } to { transform: translateY(0) rotate(-15deg) scale(1); opacity: 1; } }
+
+        /* 퀴즈 UI */
+        #quiz-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 260px; background: var(--ui-bg); border-top: 6px solid var(--accent); display: flex; flex-direction: column; padding: 15px 20px; z-index: 20; border-radius: 30px 30px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.2); }
+        #timer-bar-container { width: 100%; height: 15px; background: #eee; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+        #timer-bar { height: 100%; width: 100%; background: var(--secondary); transition: width 1s linear, background-color 0.5s; }
+        #timer-text { font-size: 1.3rem; font-weight: bold; color: var(--danger); text-align: center; margin-bottom: 5px; }
+
+        #question-text { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 15px; text-align: center; text-shadow: 1px 1px 0 #fff; line-height: 1.2; flex: 1; word-break: keep-all; }
+        #options-container { display: flex; gap: 15px; height: 90px; }
+        .option-btn { flex: 1; font-size: 1.2rem; background: #fff; color: var(--text-dark); border: 4px solid #E0E0E0; border-radius: 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; text-align: center; padding: 5px; word-break: keep-all; box-shadow: 0 6px 0 #E0E0E0; line-height: 1.2; }
+        .option-btn:hover { border-color: var(--secondary); transform: translateY(-2px); box-shadow: 0 8px 0 var(--secondary); }
+        .option-btn:active { transform: translateY(6px); box-shadow: 0 0 0 transparent; }
+
+        /* 힌트 모달 */
+        #hint-modal { background: rgba(0,0,0,0.85); z-index: 100; }
+        .modal-content { background: #fff; padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 600px; border: 8px solid var(--danger); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-content h2 { color: var(--danger); font-size: 2.8rem; margin-bottom: 10px; }
+        .penalty-txt { color: #fff; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; background: var(--danger); padding: 10px; border-radius: 15px; display: inline-block; }
+        .modal-desc { font-size: 1.5rem; color: #333; line-height: 1.6; margin-bottom: 30px; background: #f1f2f6; padding: 25px; border-radius: 20px; border: 3px dashed var(--accent); }
+
+        /* 게임오버 모달 */
+        #gameover-modal .modal-content { border-color: #333; }
+        #gameover-modal h2 { color: #333; }
+        #gameover-modal .penalty-txt { background: #333; color: #fff; }
+        #gameover-modal .modal-desc { border-color: #333; }
+
+        /* 대시보드 */
+        #dashboard { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); z-index: 50; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0; background: rgba(255,255,255,0.95); padding: 30px; border-radius: 30px; width: 90%; max-width: 600px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .stat-box { text-align: center; padding: 20px; background: #fff; border-radius: 20px; border: 3px solid #eee; }
+        .stat-value { font-size: 3rem; color: var(--danger); margin-top: 10px; text-shadow: 2px 2px 0px #eee; font-weight: bold; }
+
+        .floating-text { position: absolute; color: #FFD700; font-size: 3rem; font-weight: bold; pointer-events: none; text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000; animation: floatUp 1s ease-out forwards; z-index: 30; }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
+        
+        .gimmick-text { position: absolute; top: 30%; font-size: 4rem; font-weight: bold; color: red; text-shadow: 3px 3px 0 yellow, -3px -3px 0 yellow; animation: popIn 0.5s ease-out; z-index: 100;}
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- 로비 -->
+    <div id="lobby" class="screen">
+        <h1>✨ 합리적 선택 디펜스 ✨</h1>
+        <p class="subtitle">※ 20초 제한! 아이템 터치 즉시 발동! 몰려오는 맹수를 막으세요!</p>
+        <input type="text" id="nickname-input" placeholder="요원 이름 입력" maxlength="8">
+        <h2>정예 요원 선택</h2>
+        <div class="avatar-grid" id="avatar-grid"></div>
+        <button class="btn" id="btn-start">방어 작전 시작!</button>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="game-screen" class="screen hidden">
+        <div id="top-bar">
+            <div class="status-badge" style="color:var(--danger)">💖 <span id="ui-hp">100</span>/<span id="ui-maxhp">100</span></div>
+            <div class="status-badge" style="color:#e67e22">💰 <span id="ui-coins">0</span></div>
+            <div class="status-badge" style="color:#2980B9">⭐ <span id="ui-wave">1</span>/20</div>
+            <div class="controls">
+                <button id="btn-lowspec" title="저사양 모드">⚡</button>
+                <button id="btn-mute" title="음소거">🔊</button>
+                <button id="btn-pause" title="일시정지">⏸️</button>
+            </div>
+        </div>
+
+        <div id="combo-display">🔥 2 COMBO!</div>
+
+        <div id="upgrade-panel">
+            <button class="upgrade-btn" id="btn-up-weapon" onclick="buyUpgrade('weapon')">
+                <span id="up-weapon-txt">✨ 마법 강화 (Lv.1)</span>
+                <span class="cost" id="up-weapon-cost">200💰</span>
+            </button>
+            <button class="upgrade-btn" id="btn-up-hp" onclick="buyUpgrade('hp')">
+                <span id="up-hp-txt">🍄 기지 확장 (Lv.1)</span>
+                <span class="cost" id="up-hp-cost">200💰</span>
+            </button>
+        </div>
+
+        <div id="canvas-container">
+            <div id="fx-layer"></div>
+            <canvas id="game-canvas"></canvas>
+            <div id="gimmick-layer"></div>
+        </div>
+
+        <div id="quiz-container">
+            <div id="timer-text">⏳ 맹수 접근 중: <span id="ui-time-num">20</span>초 남음!</div>
+            <div id="timer-bar-container"><div id="timer-bar"></div></div>
+            
+            <div id="question-text">문제 로딩중...</div>
+            <div id="options-container" class="options-container">
+                <!-- 동적 생성 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 힌트 모달 -->
+    <div id="hint-modal" class="screen hidden modal-bg">
+        <div class="modal-content">
+            <h2 id="hint-title">앗, 오답입니다! 🚨</h2>
+            <div class="penalty-txt">기지 체력 -10 💔 <span style="color:yellow">(콤보 초기화)</span></div>
+            <p id="hint-text" class="modal-desc">힌트 내용</p>
+            <button class="btn" id="btn-hint-close">방어선으로 복귀</button>
+        </div>
+    </div>
+
+    <!-- 게임 오버 팝업창 -->
+    <div id="gameover-modal" class="screen hidden modal-bg" style="z-index: 150;">
+        <div class="modal-content">
+            <h2>💥 방어 실패 💥</h2>
+            <div class="penalty-txt">기지의 체력이 0이 되었습니다!</div>
+            <p class="modal-desc">맹수들의 공격이 너무 거셌군요.<br>문제 정답과 특수 아이템을 잘 활용하여 다시 도전해 보세요!</p>
+            <button class="btn" id="btn-gameover-restart" style="background: linear-gradient(45deg, #333, #555); box-shadow: 0 8px 20px rgba(0,0,0,0.5);">처음부터 다시하기</button>
+        </div>
+    </div>
+
+    <!-- 대시보드 (학습 피드백) -->
+    <div id="dashboard" class="screen hidden">
+        <h1 style="color:#fff; text-shadow: 2px 2px 0 #333;">🎉 학습 완료! 🎉</h1>
+        <h2 id="dash-title">훌륭한 합리적 선택 요원입니다!</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div style="font-size:1.3rem; color:#666">단번에 맞춘 문제</div>
+                <div class="stat-value"><span id="dash-first-try">0</span> / <span id="dash-total-q">0</span></div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size:1.3rem; color:#666">최종 정답률</div>
+                <div class="stat-value"><span id="dash-accuracy">0</span>%</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size:1.3rem; color:#666">물리친 몬스터</div>
+                <div class="stat-value"><span id="dash-monsters">0</span> 마리</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size:1.3rem; color:#666">플레이 타임 ⏱️</div>
+                <div class="stat-value"><span id="dash-time">00:00</span></div>
+            </div>
+        </div>
+        <button class="btn" id="btn-restart" style="background:#2ED573">처음부터 다시하기</button>
+    </div>
+</div>
+
+<script>
+    // [1. 일반 퀴즈 데이터]
+    const REGULAR_QUIZ_DATA = [
+        { q: "우리가 원하는 것을 모두 가질 수 없는 근본적인 이유는 무엇일까요?", o: ["자원이 한정되어 있어서", "만드는 시간이 부족해서", "모두가 같은 것을 원해서"], a: 0, h: "지구상의 자원(돈, 시간 등)은 무한하지 않고 한정되어 있어요. 이를 '자원의 희소성'이라고 합니다." },
+        { q: "한정된 용돈으로 하나만 골라야 하는 상황을 무엇이라고 할까요?", o: ["생산의 문제", "선택의 문제", "분배의 문제"], a: 1, h: "자원이 희소하기 때문에 우리는 가장 필요한 것을 골라야 하는 '선택의 문제'를 겪게 됩니다." },
+        { q: "물건을 살 때 가장 먼저 생각해야 할 '합리적 선택'의 기준은?", o: ["가장 싼 것인지", "유행하는 물건인지", "나에게 꼭 필요한지"], a: 2, h: "합리적 선택의 첫걸음은 '이 물건이 나에게 정말 필요한가?'를 스스로 묻는 것입니다." },
+        { q: "합리적 선택을 실천하기 위한 올바른 방법은 무엇일까요?", o: ["둘 다 사버린다", "가격과 품질을 비교한다", "광고를 보고 바로 산다"], a: 1, h: "가격표를 확인하고 품질을 꼼꼼히 '비교'하는 것이 합리적 선택의 기본입니다." },
+        { q: "가장 만족스러운 결과를 얻기 위해 신중하게 결정하는 것은?", o: ["생산 활동", "과소비", "합리적 선택"], a: 2, h: "적은 돈으로 나에게 가장 큰 만족을 주는 물건을 신중하게 고르는 것을 '합리적 선택'이라고 합니다." },
+        { q: "자신의 수입과 지출을 꼼꼼히 적어 소비를 돕는 것은?", o: ["일기장", "용돈 기입장", "독서록"], a: 1, h: "'용돈 기입장'을 쓰면 돈을 어디에 썼는지 돌아보고 계획적으로 소비할 수 있어요." },
+        { q: "사람들에게 필요한 물건을 만들거나 생활을 편리하게 해주는 활동은?", o: ["생산", "소비", "저축"], a: 0, h: "농부가 쌀을 기르거나, 물건을 만들어내는 모든 활동을 '생산'이라고 합니다." },
+        { q: "우리 생활에 필요한 물건이나 서비스를 돈을 주고 사서 쓰는 활동은?", o: ["생산", "기부", "소비"], a: 2, h: "만들어진 물건이나 서비스를 돈을 주고 사용하는 것을 '소비'라고 부릅니다." },
+        { q: "다음 중 '생산 활동'에 참여한 사람은 누구일까요?", o: ["딸기를 키우는 농부", "과자를 사는 학생", "장난감으로 노는 아이"], a: 0, h: "딸기를 길러서 사람들에게 제공하는 농부의 역할이 '생산 활동'입니다." },
+        { q: "미래에 필요한 곳에 쓰기 위해 돈의 일부를 쓰지 않고 모아두는 것은?", o: ["소비", "저축", "생산"], a: 1, h: "나중에 일어날 일이나 큰 목표를 위해 은행 등에 모아두는 것을 '저축'이라고 합니다." },
+        { q: "우리 지역의 부족한 물건을 다른 지역에서 사 오는 활동을 통해 알 수 있는 관계는?", o: ["독립 관계", "고립 관계", "상호 의존 관계"], a: 2, h: "지역들은 교류를 통해 서로 부족한 것을 채워주며 돕는 '상호 의존 관계'를 맺습니다." },
+        { q: "광고를 보고 물건을 살 때 가장 주의해야 할 점은?", o: ["과장된 내용이 없는지 확인", "연예인이 나오면 무조건 산다", "노래가 재밌으면 산다"], a: 0, h: "광고는 장점만 강조하므로, 진짜 나에게 필요한지 따져보아야 합니다." },
+        { q: "사람들이 직접 이동하는 '인적 교류'에 해당하는 것은?", o: ["다른 지역 사과 사 먹기", "장난감 주문하기", "우리 지역 축제에 놀러 오기"], a: 2, h: "관광객이나 전문가처럼 사람들이 직접 오가는 것을 '인적 교류'라고 부릅니다." },
+        { q: "용돈이 남았을 때 할 수 있는 합리적이고 바람직한 행동은?", o: ["미래를 위해 저축/기부한다", "억지로 간식을 사 먹는다", "잊어버린다"], a: 0, h: "남은 돈은 미래를 위해 저축하거나, 이웃을 위해 기부하는 것이 좋습니다." },
+        { q: "한정된 자원을 아끼기 위해 일상생활에서 실천할 수 있는 방법은?", o: ["새로운 물건을 매일 산다", "아껴 쓰고, 나눠 쓴다", "함부로 쓴다"], a: 1, h: "자원은 한정되어 있으므로 '아나바다' 정신이 꼭 필요합니다." }
+    ];
+
+    // [2. 보스전 퀴즈 데이터]
+    const BOSS_QUIZ_DATA = [
+        [ 
+            { q: "우리나라의 고유한 전통 옷은 무엇일까요?", o: ["한복", "기모노", "치파오"], a: 0, h: "우리나라 고유의 아름다운 선을 살린 전통 옷은 '한복'입니다." },
+            { q: "우리나라 국기의 이름은 무엇일까요?", o: ["성조기", "태극기", "별모양기"], a: 1, h: "가운데 태극 문양이 있는 우리나라의 국기는 '태극기'입니다." },
+            { q: "[사자성어] 한 마음 한 몸이라는 뜻으로, 굳게 뭉친 것을 뜻하는 말은?", o: ["우왕좌왕", "작심삼일", "일심동체"], a: 2, h: "마음과 몸이 하나가 되었다는 뜻의 사자성어는 '일심동체'입니다." },
+            { q: "[넌센스] 세상에서 가장 뜨거운 바다는 무엇일까요?", o: ["열바다", "홍해", "사해"], a: 0, h: "화가 날 때 '열받아'라고 하죠? 가장 뜨거운 바다는 '열바다'랍니다!" }
+        ],
+        [ 
+            { q: "여름에 비가 많이 오고 바람이 거세게 부는 자연 현상은?", o: ["지진", "태풍", "가뭄"], a: 1, h: "여름철에 큰 비바람을 몰고 오는 현상을 '태풍'이라고 합니다." },
+            { q: "태양계에서 가장 큰 행성은 무엇일까요?", o: ["화성", "지구", "목성"], a: 2, h: "태양계에서 크기가 가장 거대한 가스 행성은 '목성'입니다." },
+            { q: "[사자성어] 동쪽을 묻는데 서쪽을 대답한다는 뜻으로, 묻는 말에 전혀 엉뚱한 대답을 하는 것을 뜻하는 말은?", o: ["동문서답", "일석이조", "작심삼일"], a: 0, h: "묻는 말과 상관없는 엉뚱한 대답을 할 때 '동문서답'이라고 해요." },
+            { q: "[넌센스] 왕이 넘어지면 무슨 소리가 날까요?", o: ["꽈당", "킹콩", "쿵쿵"], a: 1, h: "왕(King)이 넘어지면(콩!) '킹콩' 소리가 납니다!" }
+        ],
+        [ 
+            { q: "우리나라에서 가장 높은 산은 어디일까요?", o: ["지리산", "한라산", "백두산"], a: 2, h: "한반도 북쪽에 있는 우리나라에서 가장 높은 산은 '백두산'입니다." },
+            { q: "세종대왕이 백성들을 위해 만든 글자는?", o: ["한글", "한자", "알파벳"], a: 0, h: "세종대왕님이 누구나 쉽게 읽고 쓰도록 만든 글자는 '한글'입니다." },
+            { q: "[사자성어] 돌 하나를 던져 새 두 마리를 잡는다는 뜻으로, 두 가지 이익을 얻는다는 말은?", o: ["구사일생", "일석이조", "다다익선"], a: 1, h: "돌 하나(일석)로 새 두 마리(이조)를 잡는다는 뜻의 '일석이조'입니다." },
+            { q: "[상식] 우리나라의 수도이며, 가장 많은 사람이 사는 도시는 어디일까요?", o: ["부산", "인천", "서울"], a: 2, h: "대한민국의 정치, 경제, 문화의 중심지이자 수도는 '서울'입니다." }
+        ],
+        [ 
+            { q: "1년 중 낮이 가장 긴 절기는 무엇일까요?", o: ["하지", "동지", "입춘"], a: 0, h: "여름철 낮의 길이가 1년 중 가장 긴 날을 '하지'라고 부릅니다." },
+            { q: "신라의 장군으로 바다를 지킨 해상왕은 누구일까요?", o: ["강감찬", "장보고", "이순신"], a: 1, h: "통일신라 시대 청해진을 설치하고 바다를 호령한 인물은 '장보고'입니다." },
+            { q: "[사자성어] 밥 열 숟가락이 모이면 밥 한 그릇이 된다는 뜻으로, 여럿이 힘을 합친다는 말은?", o: ["동문서답", "사면초가", "십시일반"], a: 2, h: "조금씩 힘을 모아 남을 돕는다는 뜻의 사자성어는 '십시일반'입니다." },
+            { q: "[상식] 우리가 물건을 살 때 사용하는 대한민국의 화폐(돈) 단위는 무엇일까요?", o: ["원(Won)", "달러(Dollar)", "엔(Yen)"], a: 0, h: "우리나라에서는 물건을 사고팔 때 '원'이라는 단위를 사용합니다." }
+        ],
+        [ 
+            { q: "독도는 우리나라의 동쪽 끝에 있는 섬입니다. 독도가 속한 도는?", o: ["강원도", "경상북도", "전라남도"], a: 1, h: "독도는 행정구역상 '경상북도 울릉군'에 속해 있습니다." },
+            { q: "철로 만들어진 가위나 못 등을 끌어당기는 성질을 가진 물체는 무엇일까요?", o: ["고무", "유리", "자석"], a: 2, h: "자석은 철로 만들어진 물체를 강하게 끌어당기는 성질이 있답니다." },
+            { q: "[사자성어] 처음 세운 결심이 3일을 가지 못한다는 뜻으로, 결심이 굳지 못함을 뜻하는 말은?", o: ["작심삼일", "만사형통", "일석이조"], a: 0, h: "결심이 오래가지 못하고 금방 포기하게 되는 것을 '작심삼일'이라고 합니다." },
+            { q: "[넌센스] 병아리가 아플 때 먹는 약의 이름은 무엇일까요?", o: ["감기약", "삐약", "알약"], a: 1, h: "병아리가 우는 소리를 생각해 보세요. 병아리는 '삐약'을 먹는답니다!" }
+        ]
+    ];
+
+    const AVATARS = ['🧚‍♀️','🧙‍♂️','🧜‍♀️','🧞‍♂️','🦸‍♀️','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🦄'];
+    const NORMAL_ENEMIES = ['🐺','🐗','🦅','🐊','🦈','🐳','🐅','🐆','🦂','🐍','🦇','🦏']; 
+    const BOSS_ENEMIES = ['🦖','🐉','🐙','🦑','🦍']; 
+    const ITEM_TYPES = ['❄️', '🧲', '💣']; 
+
+    const STATE = { LOBBY: 0, PLAYING: 1, PAUSED: 2, HINT: 3, GAMEOVER: 4, VICTORY: 5 };
+    let gameState = STATE.LOBBY; let lowSpecMode = false; let isMuted = false;
+    
+    let playerNick = ""; let playerAvatar = '🧚‍♀️'; 
+    let stats = { hp: 100, maxHp: 100, coins: 0, startTime: 0, totalTime: 0, maxCombo: 0, defeatedMonsters: 0, firstTryCorrect: 0 };
+    
+    let upgWeapon = { level: 1, maxLevel: 6, cost: [0, 200, 400, 500, 600, 800] };
+    let upgHp = { level: 1, maxLevel: 6, cost: [0, 200, 300, 400, 450, 550] };
+
+    let comboCount = 0; let isFrozen = false; 
+    
+    let currentWave = 0; let waveTimer = 0; let autoShootTimer = 0;
+    let isCurrentQuizFirstTry = true; let bossSpawnedThisWave = false;
+    let quizTimeLeft = 20; let quizTimerInterval = null; 
+    let bossQuestionIndex = 0; 
+
+    // 오디오 시스템
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let bgmTimer; let nextNoteTime = 0; let currentNote = 0;
+    const bgmNotes = [ 392.00, 523.25, 659.25, 523.25, 349.23, 440.00, 587.33, 440.00, 329.63, 392.00, 523.25, 392.00, 293.66, 349.23, 493.88, 392.00 ];
+
+    function scheduleBGM() {
+        if (isMuted || gameState !== STATE.PLAYING) return;
+        while (nextNoteTime < audioCtx.currentTime + 0.1) {
+            playBGMNote(bgmNotes[currentNote], nextNoteTime);
+            nextNoteTime += 0.2; currentNote = (currentNote + 1) % bgmNotes.length;
+        }
+        bgmTimer = requestAnimationFrame(scheduleBGM);
+    }
+
+    function playBGMNote(freq, time) {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'triangle'; osc.frequency.value = freq;
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.015, time); gain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+        osc.start(time); osc.stop(time + 0.15);
+    }
+    function startBGM() { if (audioCtx.state === 'suspended') audioCtx.resume(); nextNoteTime = audioCtx.currentTime + 0.1; currentNote = 0; cancelAnimationFrame(bgmTimer); scheduleBGM(); }
+    function stopBGM() { cancelAnimationFrame(bgmTimer); }
+
+    function playSound(type) {
+        if (isMuted || audioCtx.state === 'suspended') return;
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
+        if (type === 'shoot') { osc.type = 'square'; osc.frequency.setValueAtTime(800+upgWeapon.level*150, now); osc.frequency.exponentialRampToValueAtTime(300, now+0.1); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(now); osc.stop(now+0.1); }
+        else if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(1200, now); osc.frequency.setValueAtTime(1600, now+0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2); osc.start(now); osc.stop(now+0.2); }
+        else if (type === 'correct') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(1200, now+0.6); gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now+0.8); osc.start(now); osc.stop(now+0.8); }
+        else if (type === 'hit') { osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now+0.1); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.1); osc.start(now); osc.stop(now+0.1); }
+        else if (type === 'wrong') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.3); osc.start(now); osc.stop(now+0.3); }
+        else if (type === 'bomb') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.8); osc.start(now); osc.stop(now+0.8); }
+        else if (type === 'item') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.setValueAtTime(2000, now+0.3); gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now+0.5); osc.start(now); osc.stop(now+0.5); }
+    }
+
+    const UI = {
+        app: document.getElementById('app'), lobby: document.getElementById('lobby'), game: document.getElementById('game-screen'),
+        hint: document.getElementById('hint-modal'), gameover: document.getElementById('gameover-modal'), dash: document.getElementById('dashboard'),
+        hp: document.getElementById('ui-hp'), maxhp: document.getElementById('ui-maxhp'),
+        coins: document.getElementById('ui-coins'), wave: document.getElementById('ui-wave'),
+        combo: document.getElementById('combo-display'), fxLayer: document.getElementById('fx-layer')
+    };
+
+    const avatarGrid = document.getElementById('avatar-grid');
+    AVATARS.forEach(emoji => {
+        const div = document.createElement('div'); div.className = 'avatar-option'; div.innerText = emoji;
+        if (emoji === playerAvatar) div.classList.add('selected');
+        div.onclick = () => { document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected')); div.classList.add('selected'); playerAvatar = emoji; };
+        avatarGrid.appendChild(div);
+    });
+
+    const LOGICAL_WIDTH = 1000; const LOGICAL_HEIGHT = 600;
+    const canvas = document.getElementById('game-canvas'); const ctx = canvas.getContext('2d');
+    let scaleRatio = 1;
+    function resizeCanvas() {
+        const rect = document.getElementById('canvas-container').getBoundingClientRect();
+        scaleRatio = Math.min(rect.width / LOGICAL_WIDTH, rect.height / LOGICAL_HEIGHT);
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = LOGICAL_WIDTH * scaleRatio * dpr; canvas.height = LOGICAL_HEIGHT * scaleRatio * dpr;
+        ctx.setTransform(scaleRatio * dpr, 0, 0, scaleRatio * dpr, 0, 0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    class ObjectPool { constructor(createFn) { this.pool = []; this.createFn = createFn; } get() { return this.pool.length > 0 ? this.pool.pop() : this.createFn(); } release(obj) { this.pool.push(obj); } }
+
+    class Enemy {
+        constructor() { this.active = false; }
+        spawn(x, y, type, wave) {
+            this.x = x; this.y = y; this.type = type; this.active = true;
+            this.isBoss = (type === 'boss');
+            
+            if (type === 'boss') { 
+                const bossHpTable = { 4: 4719, 8: 9438, 12: 19800, 16: 28600, 20: 39600 };
+                const bossSpeedTable = { 4: 0.35, 8: 0.35, 12: 0.45, 16: 0.55, 20: 0.65 };
+                this.speed = bossSpeedTable[wave] || 0.65; 
+                this.maxHp = bossHpTable[wave] || 39600; 
+                this.size = 130; this.emoji = BOSS_ENEMIES[Math.floor(wave/4)-1]; 
+            }
+            else if (type === 'thief') { 
+                this.speed = 4.0; this.maxHp = 30 + (wave * 5); this.size = 45; this.emoji = '🦹‍♂️'; 
+            } 
+            else if (type === 'goldpig') { 
+                this.speed = 0.5; this.maxHp = 80 + (wave * 20); this.size = 60; this.emoji = '🐖'; 
+            }
+            else if (type === 'tank') { 
+                this.speed = 0.8 + (wave * 0.05); this.maxHp = 60 + (wave * 30); this.size = 65; this.emoji = ['🐘','🦏','🦛'][Math.floor(Math.random()*3)];
+            }
+            else { 
+                this.speed = 1.3 + (wave * 0.1); 
+                this.maxHp = 20 + (wave * 20); 
+                this.size = 50; this.emoji = NORMAL_ENEMIES[Math.floor(Math.random()*NORMAL_ENEMIES.length)]; 
+            }
+            
+            this.hp = this.maxHp; this.wobble = Math.random() * Math.PI;
+        }
+        update(dt) {
+            if (!this.active || isFrozen) return; 
+            this.x -= this.speed * (dt / 16); this.wobble += 0.08 * (dt / 16);
+        }
+        draw(ctx) {
+            if (!this.active) return;
+            ctx.save(); ctx.translate(this.x, this.y + Math.sin(this.wobble)*15);
+            ctx.font = `${this.size}px Arial`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(this.emoji, 0, 0);
+            const barWidth = this.isBoss ? 80 : 40; 
+            ctx.fillStyle = "red"; ctx.fillRect(-barWidth/2, -this.size/2 - 15, barWidth, 6);
+            ctx.fillStyle = this.type === 'goldpig' ? "#FFD700" : "#2ED573"; ctx.fillRect(-barWidth/2, -this.size/2 - 15, barWidth * (this.hp/this.maxHp), 6);
+            ctx.restore();
+        }
+    }
+
+    class Projectile {
+        constructor() { this.active = false; }
+        spawn(x, y, target, isUltimate, damageOverride = null) {
+            this.x = x; this.y = y; this.active = true; this.isUltimate = isUltimate;
+            const angle = Math.atan2(target.y - y, target.x - x);
+            const speed = isUltimate ? 35 : 18 + (upgWeapon.level * 2);
+            this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+            
+            const damageMult = 1 + (comboCount * 0.1);
+            const damages = [0, 8, 12, 18, 25, 32, 40]; 
+            
+            if (isUltimate) {
+                this.damage = damageOverride !== null ? damageOverride : 9999;
+                this.emoji = "🌟"; this.size = 70 + (comboCount * 5); this.glow = "#FFD700";
+            } else {
+                this.damage = damages[upgWeapon.level] * damageMult;
+                if (upgWeapon.level === 1) { this.emoji = "✨"; this.size = 30; this.glow = "#ffffff"; }
+                else if (upgWeapon.level === 2) { this.emoji = "☄️"; this.size = 40; this.glow = "#00ffff"; }
+                else if (upgWeapon.level === 3) { this.emoji = "🌀"; this.size = 50; this.glow = "#ff00ff"; }
+                else if (upgWeapon.level === 4) { this.emoji = "🔥"; this.size = 65; this.glow = "#ff4500"; }
+                else if (upgWeapon.level === 5) { this.emoji = "⚡"; this.size = 80; this.glow = "#FFFF00"; } 
+                else { this.emoji = "🔮"; this.size = 100; this.glow = "#8A2BE2"; } // 6단계 극강 이펙트
+            }
+        }
+        update(dt) { if (!this.active) return; this.x += this.vx * (dt / 16); this.y += this.vy * (dt / 16); }
+        draw(ctx) { 
+            if (!this.active) return; 
+            ctx.save();
+            ctx.shadowBlur = 15; 
+            ctx.shadowColor = this.glow;
+            ctx.font = `${this.size}px Arial`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; 
+            ctx.fillText(this.emoji, this.x, this.y); 
+            ctx.restore();
+        }
+    }
+
+    class DropItem {
+        constructor() { this.active = false; }
+        spawn(x, y) {
+            this.x = x; this.y = y; this.active = true;
+            this.typeIndex = Math.floor(Math.random() * ITEM_TYPES.length);
+            this.emoji = ITEM_TYPES[this.typeIndex];
+            this.vy = 2; this.wobble = 0; this.size = 50;
+        }
+        update(dt) { if (!this.active) return; this.y += this.vy * (dt / 16); this.wobble += 0.05 * (dt/16); if (this.y > LOGICAL_HEIGHT + 50) this.active = false; }
+        draw(ctx) {
+            if (!this.active) return;
+            ctx.save(); ctx.translate(this.x + Math.sin(this.wobble)*20, this.y);
+            ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#FFA502"; ctx.stroke();
+            ctx.font = `35px Arial`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(this.emoji, 0, 0);
+            ctx.restore();
+        }
+    }
+
+    class Particle {
+        constructor() { this.active = false; }
+        spawn(x, y, color) { this.x = x; this.y = y; this.active = true; this.color = color; const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 8 + 2; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed; this.life = 1.0; }
+        update(dt) { if (!this.active) return; this.x += this.vx * (dt/16); this.y += this.vy * (dt/16); this.life -= 0.04 * (dt/16); if (this.life <= 0) this.active = false; }
+        draw(ctx) { if (!this.active) return; ctx.globalAlpha = this.life; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, Math.random()*5+3, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1.0; }
+    }
+
+    const enemyPool = new ObjectPool(() => new Enemy()); const projPool = new ObjectPool(() => new Projectile()); 
+    const itemPool = new ObjectPool(() => new DropItem()); const particlePool = new ObjectPool(() => new Particle());
+    const enemies = []; const projectiles = []; const items = []; const particles = [];
+
+    function handleItemInteraction(clientX, clientY) {
+        if (gameState !== STATE.PLAYING) return;
+        const rect = canvas.getBoundingClientRect();
+        const clickX = (clientX - rect.left) / scaleRatio;
+        const clickY = (clientY - rect.top) / scaleRatio;
+
+        for (let i = items.length - 1; i >= 0; i--) {
+            const item = items[i]; if (!item.active) continue;
+            const itemRenderX = item.x + Math.sin(item.wobble)*20;
+            const dist = Math.hypot(itemRenderX - clickX, item.y - clickY);
+            if (dist < 100) { 
+                activateItem(item.typeIndex, itemRenderX, item.y);
+                item.active = false; itemPool.release(item); items.splice(i, 1);
+                break;
+            }
+        }
+    }
+
+    canvas.addEventListener('mousedown', (e) => handleItemInteraction(e.clientX, e.clientY));
+    canvas.addEventListener('touchstart', (e) => { handleItemInteraction(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+
+    function activateItem(typeIndex, x, y) {
+        playSound('item');
+        if (typeIndex === 0) { 
+            isFrozen = true; showGimmickText("❄️ 몬스터 빙결! (3초)"); 
+            UI.fxLayer.style.background = "rgba(173, 216, 230, 0.4)";
+            UI.fxLayer.style.boxShadow = "inset 0 0 100px rgba(0, 255, 255, 0.8)";
+            setTimeout(() => { 
+                isFrozen = false; 
+                UI.fxLayer.style.background = "transparent";
+                UI.fxLayer.style.boxShadow = "none";
+            }, 3000);
+        } else if (typeIndex === 1) { 
+            showGimmickText("🧲 코인 대박 흡수!"); 
+            addCoin(150, LOGICAL_WIDTH/2, LOGICAL_HEIGHT/2);
+            for(let i=0; i<15; i++) {
+                setTimeout(() => {
+                    const floater = document.createElement('div'); floater.className = 'magnet-coin'; floater.innerText = '💰';
+                    floater.style.left = `${Math.random()*80 + 10}%`; floater.style.top = `${Math.random()*80 + 10}%`;
+                    document.body.appendChild(floater); setTimeout(() => floater.remove(), 800);
+                }, i * 50);
+            }
+        } else if (typeIndex === 2) { 
+            playSound('bomb'); showGimmickText("💣 마법 폭탄 투하!");
+            UI.app.classList.add('bomb-shake'); setTimeout(() => UI.app.classList.remove('bomb-shake'), 500);
+            UI.fxLayer.style.background = "radial-gradient(circle, rgba(255,100,0,0.8) 0%, rgba(255,0,0,0) 80%)";
+            setTimeout(() => UI.fxLayer.style.background = "transparent", 300);
+            
+            enemies.forEach(e => { 
+                if (e.active && !e.isBoss && e.type !== 'goldpig') { 
+                    e.hp = 0; createExplosion(e.x, e.y, false, "#FF4500");
+                    stats.defeatedMonsters++; 
+                } 
+            }); 
+            for(let i=0; i<10; i++) createExplosion(Math.random()*LOGICAL_WIDTH, Math.random()*LOGICAL_HEIGHT, true, "#FF4500");
+        }
+    }
+
+    function showGimmickText(text) { 
+        const el = document.createElement('div'); el.className = 'gimmick-text'; el.innerText = text; 
+        document.body.appendChild(el); 
+        setTimeout(() => el.remove(), 1500); 
+    }
+
+    function addCoin(amount, x, y) {
+        const finalAmount = Math.floor(amount * (1 + (comboCount * 0.2))); 
+        stats.coins += finalAmount; UI.coins.innerText = stats.coins; playSound('coin'); checkUpgradeButtons();
+        if(x && y) {
+            const floater = document.createElement('div'); floater.className = 'floating-text'; floater.innerText = `+${finalAmount}💰`;
+            const canvasRect = canvas.getBoundingClientRect(); floater.style.left = `${canvasRect.left + (x * scaleRatio)}px`; floater.style.top = `${canvasRect.top + (y * scaleRatio)}px`;
+            document.body.appendChild(floater); setTimeout(() => floater.remove(), 1000);
+        }
+    }
+
+    function updateCombo(increase) {
+        if (increase) { comboCount++; stats.maxCombo = Math.max(stats.maxCombo, comboCount); UI.combo.innerText = `🔥 ${comboCount} COMBO!`; UI.combo.classList.add('active'); } 
+        else { comboCount = 0; UI.combo.classList.remove('active'); }
+    }
+
+    function checkUpgradeButtons() {
+        const wBtn = document.getElementById('btn-up-weapon');
+        if (upgWeapon.level >= upgWeapon.maxLevel) { wBtn.classList.add('disabled'); document.getElementById('up-weapon-txt').innerText = "✨ 마법 MAX"; document.getElementById('up-weapon-cost').innerText = "-"; }
+        else { const cost = upgWeapon.cost[upgWeapon.level]; document.getElementById('up-weapon-txt').innerText = `✨ 마법 강화 (Lv.${upgWeapon.level+1})`; document.getElementById('up-weapon-cost').innerText = `${cost}💰`; wBtn.classList.toggle('disabled', stats.coins < cost); }
+        const hBtn = document.getElementById('btn-up-hp');
+        if (upgHp.level >= upgHp.maxLevel) { hBtn.classList.add('disabled'); document.getElementById('up-hp-txt').innerText = "🍄 기지 확장 MAX"; document.getElementById('up-hp-cost').innerText = "-"; }
+        else { const cost = upgHp.cost[upgHp.level]; document.getElementById('up-hp-txt').innerText = `🍄 기지 확장 (Lv.${upgHp.level+1})`; document.getElementById('up-hp-cost').innerText = `${cost}💰`; hBtn.classList.toggle('disabled', stats.coins < cost); }
+    }
+
+    window.buyUpgrade = function(type) {
+        if (gameState !== STATE.PLAYING) return;
+        if (type === 'weapon' && upgWeapon.level < upgWeapon.maxLevel) { const cost = upgWeapon.cost[upgWeapon.level]; if (stats.coins >= cost) { stats.coins -= cost; upgWeapon.level++; playSound('coin'); } }
+        else if (type === 'hp' && upgHp.level < upgHp.maxLevel) { 
+            const cost = upgHp.cost[upgHp.level]; 
+            if (stats.coins >= cost) { 
+                stats.coins -= cost; 
+                upgHp.level++; 
+                stats.maxHp += [0, 0, 50, 80, 100, 100, 120][upgHp.level]; 
+                stats.hp = stats.maxHp; 
+                UI.hp.innerText = stats.hp; UI.maxhp.innerText = stats.maxHp; 
+                playSound('coin'); 
+            } 
+        }
+        UI.coins.innerText = stats.coins; checkUpgradeButtons();
+    };
+
+    function takeDamage(amount) {
+        stats.hp -= amount; UI.hp.innerText = Math.max(0, stats.hp); playSound('hit');
+        UI.app.classList.add('damage-flash'); setTimeout(() => UI.app.classList.remove('damage-flash'), 300);
+        if (stats.hp <= 0 && gameState === STATE.PLAYING) {
+            gameState = STATE.GAMEOVER; clearInterval(quizTimerInterval); stopBGM(); UI.gameover.classList.remove('hidden');
+        }
+    }
+
+    function startQuizTimer(hintText) {
+        clearInterval(quizTimerInterval); quizTimeLeft = 20;
+        document.getElementById('ui-time-num').innerText = quizTimeLeft; document.getElementById('timer-bar').style.width = '100%'; document.getElementById('timer-bar').style.backgroundColor = 'var(--secondary)';
+        quizTimerInterval = setInterval(() => {
+            if (gameState !== STATE.PLAYING) return;
+            quizTimeLeft--; document.getElementById('ui-time-num').innerText = quizTimeLeft;
+            const percent = (quizTimeLeft / 20) * 100; document.getElementById('timer-bar').style.width = `${percent}%`;
+            if (quizTimeLeft <= 5) document.getElementById('timer-bar').style.backgroundColor = 'var(--danger)'; else if (quizTimeLeft <= 10) document.getElementById('timer-bar').style.backgroundColor = 'var(--accent)';
+            if (quizTimeLeft <= 0) { clearInterval(quizTimerInterval); handleAnswer(-1, 0, hintText); }
+        }, 1000);
+    }
+
+    function setupQuizUI(q, isBossMode) {
+        if (isBossMode) {
+            document.getElementById('question-text').innerHTML = `<span style="color:var(--danger)">[보스전 ${bossQuestionIndex+1}/4]</span> ${q.q}`;
+        } else {
+            let passedBosses = Math.floor(currentWave / 4);
+            document.getElementById('question-text').innerHTML = `Q${currentWave - passedBosses + 1}. ${q.q}`;
+        }
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = ''; 
+        
+        q.o.forEach((optionText, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = optionText;
+            btn.onclick = () => handleAnswer(i, q.a, q.h);
+            container.appendChild(btn);
+        });
+        
+        startQuizTimer(q.h);
+    }
+
+    function loadQuiz(waveIndex) {
+        if (waveIndex >= 20) { endGame(true); return; }
+        UI.wave.innerText = waveIndex + 1;
+        
+        const isBossWave = ((waveIndex + 1) % 4 === 0);
+        
+        if (isBossWave) {
+            const bossSetIndex = Math.floor(waveIndex / 4);
+            const q = BOSS_QUIZ_DATA[bossSetIndex][bossQuestionIndex];
+            setupQuizUI(q, true);
+        } else {
+            bossSpawnedThisWave = false; 
+            const passedBosses = Math.floor(waveIndex / 4);
+            const q = REGULAR_QUIZ_DATA[waveIndex - passedBosses];
+            setupQuizUI(q, false);
+        }
+        isCurrentQuizFirstTry = true; 
+    }
+
+    function handleAnswer(selectedIndex, correctIndex, hint) {
+        if (gameState !== STATE.PLAYING) return;
+        clearInterval(quizTimerInterval);
+
+        const isBossWave = ((currentWave + 1) % 4 === 0);
+
+        if (selectedIndex === correctIndex) {
+            playSound('correct');
+            if(isCurrentQuizFirstTry) {
+                updateCombo(true);
+                stats.firstTryCorrect++;
+            }
+            
+            if (isBossWave) {
+                addCoin(isCurrentQuizFirstTry ? 150 : 50, 150, LOGICAL_HEIGHT - 50);
+                
+                let boss = enemies.find(e => e.isBoss && e.active);
+                if (boss) {
+                    const p = projPool.get(); 
+                    p.spawn(150, LOGICAL_HEIGHT/2, boss, true, boss.maxHp * 0.2); 
+                    projectiles.push(p);
+                }
+
+                bossQuestionIndex++;
+                if (bossQuestionIndex < 4) {
+                    setTimeout(() => { loadQuiz(currentWave); }, 1500);
+                } else {
+                    document.getElementById('question-text').innerHTML = "✨ 보스의 약점을 파악했습니다!<br>강력한 마법(자동 공격)으로 남은 체력을 깎으세요!";
+                    document.getElementById('options-container').innerHTML = "";
+                    clearInterval(quizTimerInterval);
+                }
+            } else {
+                addCoin(isCurrentQuizFirstTry ? 100 : 30, 150, LOGICAL_HEIGHT - 50);
+                enemies.forEach(e => { if (e.active) { const p = projPool.get(); p.spawn(150, LOGICAL_HEIGHT/2, e, true); projectiles.push(p); } });
+                currentWave++; setTimeout(() => { loadQuiz(currentWave); }, 1500);
+            }
+        } else {
+            playSound('wrong'); updateCombo(false);
+            isCurrentQuizFirstTry = false; 
+            takeDamage(10); 
+            
+            if (stats.hp > 0) {
+                gameState = STATE.HINT;
+                document.getElementById('hint-title').innerText = selectedIndex === -1 ? "⏱️ 시간 초과! 🚨" : "앗, 오답입니다! 🚨";
+                document.getElementById('hint-text').innerText = hint; UI.hint.classList.remove('hidden');
+            }
+        }
+    }
+
+    document.getElementById('btn-hint-close').onclick = () => { UI.hint.classList.add('hidden'); gameState = STATE.PLAYING; lastTime = performance.now(); requestAnimationFrame(gameLoop); };
+    document.getElementById('btn-gameover-restart').onclick = () => { UI.gameover.classList.add('hidden'); document.getElementById('btn-start').click(); };
+
+    function spawnEnemyLogic() {
+        const waveNum = currentWave + 1; const isBossWave = (waveNum % 4 === 0);
+        
+        if (isBossWave) {
+            if (!bossSpawnedThisWave) {
+                const e = enemyPool.get(); e.spawn(LOGICAL_WIDTH + 50, LOGICAL_HEIGHT/2, 'boss', waveNum); enemies.push(e); bossSpawnedThisWave = true;
+            }
+        } else {
+            let type = 'normal';
+            const r = Math.random(); 
+            if (r < 0.1) type = 'thief'; 
+            else if (r < 0.15) type = 'goldpig'; 
+            else if (r < 0.35 && currentWave >= 5) type = 'tank';
+            
+            const e = enemyPool.get(); const y = Math.random() * (LOGICAL_HEIGHT - 200) + 100;
+            e.spawn(LOGICAL_WIDTH + 50, y, type, waveNum); enemies.push(e);
+        }
+    }
+
+    function createExplosion(x, y, isBoss, overrideColor=null) {
+        if (lowSpecMode) return; const count = isBoss ? 50 : 20; const color = overrideColor || (isBoss ? "#FF4757" : "#FFD700");
+        for(let i=0; i<count; i++) { const p = particlePool.get(); p.spawn(x, y, color); particles.push(p); }
+    }
+
+    function updateGame(dt) {
+        const waveNum = currentWave + 1; waveTimer += dt;
+        const isBossWave = (waveNum % 4 === 0);
+        
+        let spawnInterval = Math.max(350, 1800 - (waveNum * 90)); 
+        if (waveTimer > spawnInterval) { 
+            spawnEnemyLogic(); 
+            if (!isBossWave && waveNum >= 8) {
+                if (Math.random() < 0.40) spawnEnemyLogic(); 
+                if (waveNum >= 12 && Math.random() < 0.25) spawnEnemyLogic();
+                if (waveNum >= 16 && Math.random() < 0.15) spawnEnemyLogic();
+            }
+            waveTimer = 0; 
+        }
+
+        autoShootTimer += dt; const rates = [0, 1000, 880, 760, 640, 520, 400]; const fireRate = rates[upgWeapon.level];
+        if (autoShootTimer > fireRate && enemies.length > 0) {
+            autoShootTimer = 0; 
+            let target = enemies.find(e => e.active && e.type === 'thief') || enemies.find(e => e.active && e.type === 'goldpig') || enemies[0];
+            if (target && target.active) {
+                playSound('shoot'); const dmgMult = 1 + (comboCount * 0.1);
+                
+                const p1 = projPool.get(); p1.spawn(150, LOGICAL_HEIGHT/2, target, false, dmgMult); projectiles.push(p1);
+                if (upgWeapon.level >= 2) { const p2 = projPool.get(); p2.spawn(150, LOGICAL_HEIGHT/2 - 30, target, false, dmgMult); projectiles.push(p2); }
+                if (upgWeapon.level >= 4) { const p3 = projPool.get(); p3.spawn(150, LOGICAL_HEIGHT/2 + 30, target, false, dmgMult); projectiles.push(p3); }
+                if (upgWeapon.level >= 6) { const p4 = projPool.get(); p4.spawn(150, LOGICAL_HEIGHT/2 - 60, target, false, dmgMult); projectiles.push(p4); }
+            }
+        }
+
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i]; if (!e.active) continue; e.update(dt);
+            if (e.x < 150) { 
+                if (e.type === 'thief') { showGimmickText("💸 코인 도난!"); stats.coins = Math.max(0, stats.coins - 100); UI.coins.innerText = stats.coins; playSound('wrong'); } 
+                else if (e.type === 'goldpig') { /* 통과 */ } 
+                else { 
+                    const dmg = e.isBoss ? Math.ceil(stats.hp / 2) : 15;
+                    takeDamage(dmg); 
+                }
+                createExplosion(150, LOGICAL_HEIGHT/2, false);
+                e.active = false; enemyPool.release(e); enemies.splice(i, 1); 
+                if (stats.hp <= 0) return; 
+            }
+        }
+
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            const p = projectiles[i]; if (!p.active) continue; p.update(dt);
+            if (p.x > LOGICAL_WIDTH || p.x < 0 || p.y < 0 || p.y > LOGICAL_HEIGHT) { p.active = false; projPool.release(p); projectiles.splice(i, 1); continue; }
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const e = enemies[j]; if (!e.active) continue; const dist = Math.hypot(p.x - e.x, p.y - e.y);
+                if (dist < (e.size/2 + p.size/2)) {
+                    e.hp -= p.damage; p.active = false; projPool.release(p); projectiles.splice(i, 1); playSound('hit');
+                    if (e.hp <= 0) { 
+                        createExplosion(e.x, e.y, e.isBoss);
+                        if (e.type === 'goldpig') { showGimmickText("잭팟!! 🎉"); addCoin(300, e.x, e.y); } else { addCoin(e.isBoss ? 100 : 10, e.x, e.y); }
+                        if (Math.random() < 0.1 && !e.isBoss && e.type !== 'goldpig') { const itm = itemPool.get(); itm.spawn(e.x, e.y); items.push(itm); }
+                        
+                        e.active = false; enemyPool.release(e); enemies.splice(j, 1); 
+                        stats.defeatedMonsters++; 
+                        
+                        if (e.isBoss) {
+                            bossQuestionIndex = 0; currentWave++;
+                            setTimeout(() => { loadQuiz(currentWave); }, 1500);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        for (let i = items.length - 1; i >= 0; i--) { const item = items[i]; if (!item.active) continue; item.update(dt); if (!item.active) { itemPool.release(item); items.splice(i, 1); } }
+        for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; if (!p.active) continue; p.update(dt); if (!p.active) { particlePool.release(p); particles.splice(i, 1); } }
+    }
+
+    function drawGame() {
+        ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+        
+        const auraColors = [
+            "rgba(255, 255, 255, 0)",
+            "rgba(255, 255, 255, 0.3)", // Lv1
+            "rgba(255, 235, 130, 0.4)", // Lv2
+            "rgba(255, 215, 0, 0.5)",   // Lv3
+            "rgba(255, 165, 0, 0.6)",   // Lv4
+            "rgba(255, 140, 0, 0.7)",   // Lv5
+            "rgba(255, 215, 0, 0.9)"    // Lv6
+        ];
+        const auraRadii = [0, 50, 70, 90, 120, 150, 190];
+        
+        ctx.save();
+        ctx.beginPath();
+        const grad = ctx.createRadialGradient(130, LOGICAL_HEIGHT/2 - 20, 10, 130, LOGICAL_HEIGHT/2 - 20, auraRadii[upgHp.level]);
+        grad.addColorStop(0, auraColors[upgHp.level]);
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = grad;
+        ctx.arc(130, LOGICAL_HEIGHT/2 - 20, auraRadii[upgHp.level], 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+        
+        ctx.font = "120px Arial"; 
+        ctx.textAlign = "center"; 
+        ctx.textBaseline = "middle"; 
+        ctx.fillText(playerAvatar, 130, LOGICAL_HEIGHT/2 - 20);
+        
+        ctx.font = "24px 'Jua', sans-serif"; 
+        ctx.fillStyle = "#fff"; 
+        ctx.fillText(playerNick, 130, LOGICAL_HEIGHT/2 + 50);
+        
+        enemies.forEach(e => e.draw(ctx)); items.forEach(i => i.draw(ctx)); projectiles.forEach(p => p.draw(ctx)); particles.forEach(p => p.draw(ctx));
+    }
+
+    let lastTime = 0;
+    function gameLoop(timestamp) {
+        if (gameState !== STATE.PLAYING) return;
+        let dt = timestamp - lastTime; lastTime = timestamp; if (dt > 100) dt = 16; 
+        updateGame(dt); drawGame(); requestAnimationFrame(gameLoop);
+    }
+
+    document.getElementById('btn-lowspec').onclick = (e) => { lowSpecMode = !lowSpecMode; e.target.style.opacity = lowSpecMode ? "0.5" : "1"; };
+    document.getElementById('btn-mute').onclick = (e) => { 
+        isMuted = !isMuted; 
+        e.target.innerText = isMuted ? "🔇" : "🔊"; 
+        if(isMuted) stopBGM(); 
+        else if(gameState === STATE.PLAYING) startBGM();
+    };
+    document.getElementById('btn-pause').onclick = (e) => {
+        if (gameState === STATE.PLAYING) { 
+            gameState = STATE.PAUSED; e.target.innerText = "▶️"; clearInterval(quizTimerInterval); stopBGM(); 
+        } else if (gameState === STATE.PAUSED) { 
+            gameState = STATE.PLAYING; e.target.innerText = "⏸️"; lastTime = performance.now(); 
+            if(document.getElementById('options-container').innerHTML !== "") {
+                startQuizTimer(document.getElementById('hint-text').innerText); 
+            }
+            requestAnimationFrame(gameLoop); startBGM(); 
+        }
+    };
+    document.addEventListener('contextmenu', e => e.preventDefault()); document.addEventListener('touchmove', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); }, { passive: false });
+
+    document.getElementById('btn-start').onclick = () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const nickInput = document.getElementById('nickname-input').value.trim(); playerNick = nickInput || "마스터";
+        stats = { hp: 100, maxHp: 100, coins: 0, startTime: Date.now(), totalTime: 0, maxCombo: 0, defeatedMonsters: 0, firstTryCorrect: 0 }; 
+        upgWeapon.level = 1; upgHp.level = 1; 
+        currentWave = 0; bossQuestionIndex = 0; comboCount = 0; isFrozen = false; UI.combo.classList.remove('active'); 
+        
+        UI.hp.innerText = stats.hp; UI.maxhp.innerText = stats.maxHp; UI.coins.innerText = 0; checkUpgradeButtons();
+        enemies.forEach(e => enemyPool.release(e)); enemies.length = 0; projectiles.forEach(p => projPool.release(p)); projectiles.length = 0; particles.forEach(p => particlePool.release(p)); particles.length = 0; items.forEach(i => itemPool.release(i)); items.length = 0;
+        
+        UI.lobby.classList.add('hidden'); UI.dash.classList.add('hidden');
+        UI.game.classList.remove('hidden'); 
+        
+        resizeCanvas(); loadQuiz(currentWave); gameState = STATE.PLAYING; lastTime = performance.now(); 
+        startBGM(); 
+        requestAnimationFrame(gameLoop);
+    };
+
+    function endGame(isVictory) {
+        if(!isVictory) return; 
+        gameState = STATE.VICTORY; clearInterval(quizTimerInterval); stopBGM();
+        
+        stats.totalTime = Math.floor((Date.now() - stats.startTime) / 1000); 
+        const min = String(Math.floor(stats.totalTime / 60)).padStart(2, '0'); 
+        const sec = String(stats.totalTime % 60).padStart(2, '0');
+        
+        const accuracy = Math.round((stats.firstTryCorrect / 35) * 100);
+        document.getElementById('dash-total-q').innerText = 35; 
+        document.getElementById('dash-first-try').innerText = stats.firstTryCorrect;
+        document.getElementById('dash-accuracy').innerText = accuracy;
+        document.getElementById('dash-monsters').innerText = stats.defeatedMonsters;
+        document.getElementById('dash-time').innerText = `${min}:${sec}`;
+
+        UI.game.classList.add('hidden'); UI.dash.classList.remove('hidden');
+    }
+
+    document.getElementById('btn-restart').onclick = () => { UI.dash.classList.add('hidden'); UI.lobby.classList.remove('hidden'); gameState = STATE.LOBBY; };
+    resizeCanvas();
+</script>
+</body>
+</html>
