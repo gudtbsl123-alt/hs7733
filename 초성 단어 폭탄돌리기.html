@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💣 초성 폭탄 돌리기 PRO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --danger: #ff0844;
+            --danger-secondary: #ffb199;
+        }
+
+        body {
+            font-family: 'Jua', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #000000);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 글래스모피즘 UI 패널 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .active {
+            display: flex;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(to right, #f6d365 0%, #fda085 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+        }
+
+        p {
+            font-size: 1.3rem;
+            color: #d1d8e0;
+            margin-bottom: 30px;
+        }
+
+        /* 세련된 버튼 */
+        button {
+            font-family: 'Jua', sans-serif;
+            font-size: 2.2rem;
+            padding: 15px 50px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 242, 254, 0.3);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 25px rgba(0, 242, 254, 0.5);
+        }
+
+        button:active {
+            transform: translateY(2px) scale(0.95);
+            box-shadow: 0 5px 10px rgba(0, 242, 254, 0.3);
+        }
+
+        /* 네온 미션 텍스트 */
+        .mission {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 40px #0ff, 0 0 80px #0ff;
+            margin: 20px 0 40px 0;
+            letter-spacing: 15px;
+        }
+
+        /* 폭탄 애니메이션 */
+        .bomb-container {
+            position: relative;
+            margin: 20px 0;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bomb {
+            font-size: 9rem;
+            z-index: 2;
+            transition: transform 0.1s;
+        }
+
+        .glow {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.5;
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.8); opacity: 0.3; }
+            100% { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* 긴장감 모드 (위험 상태) */
+        .danger-mode .glow {
+            background: radial-gradient(circle, var(--danger) 0%, rgba(255,8,68,0) 70%);
+            animation: dangerPulse 0.3s infinite alternate;
+        }
+        
+        .danger-mode .bomb {
+            animation: vibrate 0.2s infinite linear;
+        }
+
+        @keyframes dangerPulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.8); opacity: 1; }
+        }
+
+        @keyframes vibrate {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 2px); }
+            40% { transform: translate(-3px, -2px); }
+            60% { transform: translate(3px, 2px); }
+            80% { transform: translate(3px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* 폭발 화면 (화면 흔들림 + 플래시) */
+        .screen-shake {
+            animation: explodeShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .flash-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .flash-active {
+            animation: flash 1s ease-out;
+        }
+
+        @keyframes explodeShake {
+            10%, 90% { transform: translate3d(-10px, 0, 0); }
+            20%, 80% { transform: translate3d(15px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-20px, 15px, 0); }
+            40%, 60% { transform: translate3d(20px, -15px, 0); }
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .explosion-emoji {
+            font-size: 10rem;
+            margin-bottom: 20px;
+            animation: boom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes boom {
+            0% { transform: scale(0.1) rotate(-20deg); opacity: 0; }
+            50% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .loser-text {
+            color: var(--danger-secondary);
+            font-size: 4.5rem;
+            text-shadow: 0 0 20px var(--danger);
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flash-overlay" id="flash"></div>
+
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="glass-panel active">
+        <h1>초성 폭탄 돌리기</h1>
+        <p>단어를 외치고 재빨리 옆 사람에게 노트북을 넘기세요!</p>
+        <button onclick="startGame()">게임 시작하기</button>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="game-screen" class="glass-panel">
+        <div class="mission" id="mission-display">ㄱ ㅅ</div>
+        
+        <div class="bomb-container" id="bomb-wrapper">
+            <div class="glow"></div>
+            <div class="bomb">💣</div>
+        </div>
+        
+        <p style="color: #a4b0be; font-size: 1.3rem; margin-top: 10px;">노트북을 옆으로 넘기세요!</p>
+    </div>
+
+    <!-- 종료 화면 -->
+    <div id="end-screen" class="glass-panel">
+        <div class="explosion-emoji">💥</div>
+        <h1 class="loser-text">폭발!</h1>
+        <p style="margin-top: 15px; font-size: 1.5rem; color: white;">현재 노트북을 들고 있는 사람이 탈락입니다!</p>
+        <button onclick="startGame()" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); margin-top: 20px;">다음 문제</button>
+    </div>
+
+    <script>
+        const chosungList = [
+            'ㄱ ㅅ', 'ㄱ ㅈ', 'ㄱ ㄹ', 'ㄴ ㅁ', 'ㄷ ㄱ', 
+            'ㅁ ㄹ', 'ㅂ ㅈ', 'ㅅ ㅇ', 'ㅇ ㅈ', 'ㅈ ㄱ', 
+            'ㅊ ㅅ', 'ㅎ ㄱ', 'ㅂ ㅅ', 'ㅇ ㅁ', 'ㅍ ㄹ',
+            'ㄱ ㄱ', 'ㅅ ㅈ', 'ㅇ ㅇ', 'ㅎ ㅅ', 'ㄷ ㅂ',
+            'ㅁ ㅅ', 'ㅇ ㅊ', 'ㅈ ㅇ', 'ㄱ ㅂ', 'ㅅ ㅅ'
+        ];
+
+        let bombTimer;
+        let tensionTimer;
+        let isPlaying = false;
+
+        function startGame() {
+            isPlaying = true;
+
+            // 랜덤 초성 선택
+            const randomChosung = chosungList[Math.floor(Math.random() * chosungList.length)];
+            document.getElementById('mission-display').innerText = randomChosung;
+            
+            // 화면 전환
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('end-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+            
+            // 효과 초기화
+            document.getElementById('bomb-wrapper').classList.remove('danger-mode');
+            document.body.classList.remove('screen-shake');
+
+            // ★ 매 문제마다 11초(11000ms) ~ 40초(40999ms) 사이 무작위 타이머 생성
+            const explodeTime = Math.floor(Math.random() * 30000) + 11000;
+            
+            // 선생님 확인용 (원치 않으시면 아래 줄을 지우셔도 됩니다)
+            console.log(`이번 폭탄은 ${Math.floor(explodeTime/1000)}초 뒤에 터집니다!`);
+            
+            bombTimer = setTimeout(explodeBomb, explodeTime);
+
+            // 폭발 5초 전 네온 글로우가 붉게 변하며 박동이 빨라짐
+            tensionTimer = setTimeout(() => {
+                if (isPlaying) {
+                    document.getElementById('bomb-wrapper').classList.add('danger-mode');
+                }
+            }, explodeTime - 5000);
+        }
+
+        function explodeBomb() {
+            isPlaying = false;
+            clearTimeout(bombTimer);
+            clearTimeout(tensionTimer);
+
+            // 폭발 이펙트 (화면 흔들림 + 플래시)
+            document.body.classList.add('screen-shake');
+            const flash = document.getElementById('flash');
+            flash.classList.remove('flash-active');
+            void flash.offsetWidth; // 트리거 리플로우 (애니메이션 재시작)
+            flash.classList.add('flash-active');
+
+            // 화면 전환
+            document.getElementById('game-screen').classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('end-screen').classList.add('active');
+            }, 100); 
+        }
+    </script>
+</body>
+</html>
