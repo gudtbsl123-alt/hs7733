@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🎮 교실 미니 게임 천국</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
@@ -13,11 +13,16 @@
 
         body {
             font-family: 'Jua', sans-serif;
-            margin: 0; height: 100vh;
+            margin: 0; 
+            height: 100dvh; /* 모바일 하단바를 고려한 동적 뷰포트 높이 */
             background: linear-gradient(135deg, var(--bg-color), #203a43, #2c5364);
             color: white; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            overflow: hidden; user-select: none;
+            overflow: hidden; 
+            user-select: none; /* 텍스트 선택 방지 */
+            -webkit-user-select: none;
+            -webkit-touch-callout: none; /* 모바일 길게 누르기 메뉴 방지 */
+            touch-action: none; /* 모바일 스크롤 및 줌 방지 */
         }
 
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: relative; }
@@ -33,6 +38,10 @@
 
         h1 { font-size: 3.5rem; margin: 0 0 10px 0; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
         h2 { font-size: 2.5rem; color: #f1c40f; margin-bottom: 20px; }
+
+        /* 터치 반응 이펙트 공통 클래스 */
+        .touch-target { cursor: pointer; transition: transform 0.1s, filter 0.1s; }
+        .touch-target:active { transform: scale(0.95); filter: brightness(0.8); }
 
         .btn-main {
             font-family: 'Jua', sans-serif; font-size: 2rem; padding: 15px 40px; margin: 10px auto;
@@ -68,51 +77,55 @@
         
         /* 🏁 게임 1: 육상 트랙 아레나 */
         .g1-arena { width: 90%; max-width: 900px; background: #c0392b; padding: 20px; border-radius: 20px; border: 5px solid #ecf0f1; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
-        .g1-lane { width: 100%; height: 60px; border-bottom: 2px solid rgba(255,255,255,0.5); position: relative; margin-bottom: 10px; display: flex; align-items: center; }
+        .g1-lane { width: 100%; height: 60px; border-bottom: 2px solid rgba(255,255,255,0.5); position: relative; margin-bottom: 10px; display: flex; align-items: center; border-radius: 10px; }
         .g1-lane:last-child { border-bottom: none; }
-        .g1-racer { font-size: 3.5rem; position: absolute; left: 0; transition: left 0.1s linear; z-index: 10; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)); }
-        .g1-finish-line { position: absolute; right: 0; height: 100%; width: 20px; background: repeating-linear-gradient(45deg, #fff, #fff 10px, #000 10px, #000 20px); box-shadow: -5px 0 10px rgba(0,0,0,0.3); }
-        .g1-label { position: absolute; left: -80px; font-size: 1.5rem; font-weight: bold; width: 60px; text-align: right; text-shadow: 1px 1px 2px black; }
+        .g1-racer { font-size: 3.5rem; position: absolute; left: 0; transition: left 0.1s linear; z-index: 10; filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5)); pointer-events: none; }
+        .g1-finish-line { position: absolute; right: 0; height: 100%; width: 20px; background: repeating-linear-gradient(45deg, #fff, #fff 10px, #000 10px, #000 20px); box-shadow: -5px 0 10px rgba(0,0,0,0.3); pointer-events: none; }
+        .g1-label { position: absolute; left: -80px; font-size: 1.5rem; font-weight: bold; width: 60px; text-align: right; text-shadow: 1px 1px 2px black; pointer-events: none; }
+        
+        /* 게임 1 모바일 화면 대응 (라벨이 화면 밖으로 나가는 현상 방지) */
+        @media (max-width: 600px) {
+            .g1-label { left: 5px; z-index: 5; opacity: 0.5; text-align: left; }
+            .g1-racer { font-size: 2.5rem; }
+        }
 
-        /* 👀 게임 4: 무궁화 (꼬불꼬불 3배 길이 아레나) */
+        /* 👀 게임 4: 무궁화 */
         .g4-arena-s { 
-            position: relative; width: 95%; max-width: 1000px; height: 500px;
+            position: relative; width: 95%; max-width: 1000px; height: 400px;
             background: linear-gradient(to bottom, #27ae60 0%, #2ecc71 100%);
             border: 6px solid #2c3e50; border-radius: 20px; overflow: hidden;
             box-shadow: inset 0 0 30px rgba(0,0,0,0.4); margin-top: 10px;
         }
         .g4-doll-zone-s { 
-            position: absolute; right: 2%; bottom: 2%; font-size: 6rem; z-index: 20; 
-            transition: all 0.3s; text-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: absolute; right: 2%; bottom: 2%; font-size: 5rem; z-index: 20; 
+            transition: all 0.3s; text-shadow: 0 10px 20px rgba(0,0,0,0.5); pointer-events: none;
         }
         .g4-doll-zone-s.danger { text-shadow: 0 0 40px #ff0000, 0 0 20px #ff0000; transform: scale(1.1); }
-        .g4-racer-wrapper { position: absolute; transition: left 0.1s linear, top 0.1s linear; z-index: 10; }
-        .g4-racer-s { font-size: 3.5rem; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5)); transition: transform 0.2s; }
+        .g4-racer-wrapper { position: absolute; transition: left 0.1s linear, top 0.1s linear; z-index: 10; pointer-events: none; }
+        .g4-racer-s { font-size: 3rem; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5)); transition: transform 0.2s; }
         .g4-label-s { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 5px; color: white; white-space: nowrap; z-index: 11; }
         .eliminated { opacity: 0.3; filter: grayscale(100%); }
 
         /* 🎈 게임 5: 풍선 불기 아레나 */
         .g5-arena {
             position: relative; width: 95%; max-width: 1000px; height: 450px;
-            background: linear-gradient(to bottom, #89f7fe 0%, #66a6ff 100%); /* 하늘색 배경 */
+            background: linear-gradient(to bottom, #89f7fe 0%, #66a6ff 100%); 
             border: 5px solid #ecf0f1; border-radius: 20px; display: flex; 
             justify-content: space-around; align-items: flex-end; padding-bottom: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6); margin-top: 20px; overflow: hidden;
         }
-        .g5-player-slot { display: flex; flex-direction: column; align-items: center; width: 15%; position: relative; }
-        .g5-balloon-wrapper { position: relative; width: 40px; height: 40px; margin-bottom: 10px; display: flex; justify-content: center; align-items: flex-end; }
+        .g5-player-slot { display: flex; flex-direction: column; align-items: center; width: 15%; position: relative; padding: 10px; border-radius: 15px; }
+        .g5-balloon-wrapper { position: relative; width: 40px; height: 40px; margin-bottom: 10px; display: flex; justify-content: center; align-items: flex-end; pointer-events: none; }
         .g5-balloon {
             width: 40px; height: 50px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
             position: absolute; bottom: 0; transform-origin: bottom center; transition: transform 0.1s;
             box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2), inset 5px 5px 10px rgba(255,255,255,0.5);
             display: flex; justify-content: center; align-items: center; z-index: 10;
         }
-        .g5-balloon::after { /* 풍선 매듭 */
-            content: ''; position: absolute; bottom: -5px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid inherit;
-        }
+        .g5-balloon::after { content: ''; position: absolute; bottom: -5px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid inherit; }
         .g5-balloon-emoji { font-size: 1.5rem; z-index: 11; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
-        .g5-label { font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 10px; z-index: 15; text-align: center; }
-        .g5-score-text { font-size: 1.5rem; font-family: monospace; font-weight: bold; color: #fff; text-shadow: 0 0 5px #000; margin-top: 10px; }
+        .g5-label { font-size: 1.2rem; font-weight: bold; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 10px; z-index: 15; text-align: center; pointer-events: none; }
+        .g5-score-text { font-size: 1.5rem; font-family: monospace; font-weight: bold; color: #fff; text-shadow: 0 0 5px #000; margin-top: 10px; pointer-events: none; }
         
         .shake-danger { animation: shakeAnim 0.1s infinite; filter: brightness(1.2); }
         .popped { background: transparent !important; box-shadow: none !important; }
@@ -122,13 +135,12 @@
         /* 공통 게임 CSS */
         #timer-display { font-size: 9rem; font-family: monospace; color: #00f2fe; text-shadow: 0 0 30px rgba(0,242,254,0.6); margin: 30px 0; }
         .status-board { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; max-width: 800px; }
-        .status-card { background: rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 15px; font-size: 1.5rem; border: 3px solid; min-width: 120px; text-align: center; }
-        .status-card.stopped { background: rgba(255,255,255,0.3); box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .status-card { background: rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 15px; font-size: 1.5rem; border: 3px solid; min-width: 100px; text-align: center; }
+        .status-card.stopped { background: rgba(255,255,255,0.3); box-shadow: 0 0 15px rgba(255,255,255,0.5); cursor: not-allowed; transform: none !important; }
 
         .grid-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin: 20px 0; }
-        .box { width: 100px; height: 100px; background: linear-gradient(135deg, #d4a373, #faedcd); border-radius: 15px; font-size: 3.5rem; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 10px 15px rgba(0,0,0,0.4); transition: transform 0.2s; }
-        .box:hover { transform: scale(1.05); }
-        .box.opened { background: #eee; cursor: not-allowed; box-shadow: none; transform: none; }
+        .box { width: 80px; height: 80px; background: linear-gradient(135deg, #d4a373, #faedcd); border-radius: 15px; font-size: 2.5rem; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 15px rgba(0,0,0,0.4); }
+        .box.opened { background: #eee; cursor: not-allowed; box-shadow: none; transform: none !important; filter: none !important; }
         .turn-info { font-size: 2.5rem; color: #f1c40f; margin-bottom: 10px; text-shadow: 0 0 10px rgba(241,196,15,0.5); }
 
         /* 이펙트 */
@@ -145,7 +157,6 @@
 <body>
     <div id="flash-screen" class="flash"></div>
 
-    <!-- 메인 메뉴 -->
     <div id="screen-menu" class="screen active">
         <div class="glass-panel">
             <h1 style="font-size: 4rem; margin-bottom: 10px;">🎪 미니 게임 천국</h1>
@@ -158,22 +169,20 @@
         </div>
     </div>
 
-    <!-- 설정 모달 -->
     <div id="settings-modal">
         <div class="glass-panel">
             <h1>⚙️ 참가자 키 설정</h1>
-            <p>버튼을 누르고 설정할 자판을 누르세요.</p>
+            <p>버튼을 누르고 설정할 자판을 누르세요.<br><span style="font-size:1rem; color:#f1c40f;">(태블릿 터치 플레이시 별도 설정 없이 색상에 맞춰 터치하면 됩니다.)</span></p>
             <div id="key-settings-list"></div>
             <button class="btn-main" style="width: 200px; font-size: 1.5rem; padding: 10px;" onclick="closeKeySettings()">저장 및 닫기</button>
         </div>
     </div>
 
-    <!-- 🏃 게임 1: 연타 경주 -->
     <div id="screen-g1-ready" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 메인 메뉴로</button>
         <div class="glass-panel">
             <h2>🏃 육상 연타 경주</h2>
-            <p style="font-size: 1.5rem;">호루라기 소리가 울리면 키보드를 연타하세요!<br><span style="color:#e74c3c;">(꾹 누르고 있으면 안 갑니다. 반드시 뗐다 누르세요!)</span></p>
+            <p style="font-size: 1.5rem;">호루라기 소리가 울리면 <b>본인의 레인을 화면 터치</b>(또는 키보드 연타) 하세요!<br><span style="color:#e74c3c;">(꾹 누르고 있으면 안 갑니다. 반드시 뗐다 누르세요!)</span></p>
             <div class="setup-bar">
                 <label style="font-size: 1.5rem;">참가 인원:</label>
                 <select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option><option value="6">6인</option></select>
@@ -185,16 +194,16 @@
     </div>
     <div id="screen-g1-play" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
-        <h1 id="g1-message" style="font-size: 6rem; color: #f1c40f;">준비...</h1>
+        <h1 id="g1-message" style="font-size: 4rem; color: #f1c40f; margin-bottom: 10px;">준비...</h1>
+        <p style="margin-top:0; color:#bdc3c7;">본인의 레인을 마구 터치하세요!</p>
         <div class="g1-arena" id="g1-tracks"></div>
     </div>
 
-    <!-- ⏱️ 게임 2: 10초 달인 -->
     <div id="screen-g2-ready" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 메인 메뉴로</button>
         <div class="glass-panel">
             <h2>⏱️ 10.00초의 달인</h2>
-            <p style="font-size: 1.5rem;">3초 뒤 화면에서 숫자가 사라지고 시계 소리만 들립니다.<br>정확히 10.00초에 자신의 키를 누른 사람이 승리!</p>
+            <p style="font-size: 1.5rem;">3초 뒤 화면에서 숫자가 사라지고 시계 소리만 들립니다.<br>정확히 10.00초에 <b>화면의 자기 이름표를 터치</b>(또는 키보드 클릭)한 사람이 승리!</p>
             <div class="setup-bar">
                 <label style="font-size: 1.5rem;">참가 인원:</label>
                 <select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option><option value="6">6인</option></select>
@@ -212,12 +221,11 @@
         <button id="g2-result-btn" class="btn-main g2" style="display:none; margin-top:30px;" onclick="showG2Result()">결과 확인하기</button>
     </div>
 
-    <!-- 💣 게임 3: 복불복 폭탄 상자 -->
     <div id="screen-g3-ready" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 메인 메뉴로</button>
         <div class="glass-panel">
-            <h2>💣 폭탄 상자 복불복 (마우스 전용)</h2>
-            <p style="font-size: 1.5rem;">20개의 상자 중 1개에 폭탄이 있습니다.<br>자기 차례에 상자를 <b>최대 3개</b>까지 열 수 있습니다.</p>
+            <h2>💣 폭탄 상자 복불복</h2>
+            <p style="font-size: 1.5rem;">20개의 상자 중 1개에 폭탄이 있습니다.<br>자기 차례에 상자를 터치하여 <b>최대 3개</b>까지 열 수 있습니다.</p>
             <div class="setup-bar">
                 <label style="font-size: 1.5rem;">참가 인원:</label>
                 <select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option><option value="6">6인</option></select>
@@ -233,12 +241,11 @@
         <button id="g3-pass-btn" class="btn-main" style="width:300px; font-size:2rem; margin-top: 30px;" onclick="passG3Turn()" disabled>다음 턴 넘기기</button>
     </div>
 
-    <!-- 👀 게임 4: 무궁화 꽃이 피었습니다 -->
     <div id="screen-g4-ready" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 메인 메뉴로</button>
         <div class="glass-panel">
             <h2>👀 무궁화 꽃이 피었습니다</h2>
-            <p style="font-size: 1.5rem;">초록불일 때 꼬불꼬불 코스를 연타해서 완주하세요!<br><span style="color:#f1c40f;">빨간불이 되기 전 '노란불(1.5초 경고)'이 켜집니다.<br>빨간불에 움직이면 즉시 탈락!</span></p>
+            <p style="font-size: 1.5rem;">초록불일 때 <b>화면 하단의 본인 색상 버튼을 연타</b>하세요!<br><span style="color:#f1c40f;">빨간불이 되기 전 '노란불(1.5초 경고)'이 켜집니다.<br>빨간불에 터치하면 즉시 탈락!</span></p>
             <div class="setup-bar">
                 <label style="font-size: 1.5rem;">참가 인원:</label>
                 <select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option><option value="6">6인</option></select>
@@ -250,7 +257,7 @@
     </div>
     <div id="screen-g4-play" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
-        <h1 id="g4-light" style="font-size: 4rem; margin-bottom: 0;">🟢 안전! 연타하세요!</h1>
+        <h1 id="g4-light" style="font-size: 3rem; margin-bottom: 0;">🟢 안전! 연타하세요!</h1>
         
         <div class="g4-arena-s" id="g4-arena-container">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; width:100%; height:100%; top:0; left:0; z-index:1;">
@@ -261,14 +268,14 @@
             <div class="g4-doll-zone-s" id="g4-doll">🙈</div>
             <div id="g4-tracks-container" style="position:absolute; width:100%; height:100%; top:0; left:0; z-index:5;"></div>
         </div>
+        <div id="g4-touchpads" style="display:flex; width:95%; max-width:1000px; height:90px; margin-top:15px; gap:10px;"></div>
     </div>
 
-    <!-- 🎈 게임 5: 아슬아슬 풍선 불기 -->
     <div id="screen-g5-ready" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 메인 메뉴로</button>
         <div class="glass-panel">
             <h2>🎈 아슬아슬 풍선 불기</h2>
-            <p style="font-size: 1.5rem;">자신의 키를 <span style="color:#f1c40f;">'꾹 누르고'</span> 있으면 풍선이 부풀어 오릅니다.<br>터지기 직전에 손을 떼어 가장 크게 만든 사람이 승리!<br><span style="color:#e74c3c;">욕심을 부리다 터져버리면 0점(탈락)입니다.</span></p>
+            <p style="font-size: 1.5rem;"><b>화면의 자기 구역을 꾹 누르고 있으면</b> 풍선이 부풀어 오릅니다.<br>터지기 직전에 손을 떼어 가장 크게 만든 사람이 승리!<br><span style="color:#e74c3c;">욕심을 부리다 터져버리면 0점(탈락)입니다.</span></p>
             <div class="setup-bar">
                 <label style="font-size: 1.5rem;">참가 인원:</label>
                 <select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option><option value="5">5인</option><option value="6">6인</option></select>
@@ -280,13 +287,10 @@
     </div>
     <div id="screen-g5-play" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
-        <h1 id="g5-message" style="font-size: 3rem; color: #fff; text-shadow: 0 0 10px #000;">자신의 키를 꾹 눌러 바람을 넣으세요!</h1>
-        
-        <!-- 새로운 풍선 아레나 -->
+        <h1 id="g5-message" style="font-size: 3rem; color: #fff; text-shadow: 0 0 10px #000; text-align:center;">본인 구역을 꾹 터치하여 바람을 넣으세요!</h1>
         <div class="g5-arena" id="g5-tracks"></div>
     </div>
 
-    <!-- 우승/결과 공통 화면 -->
     <div id="screen-result" class="screen">
         <button class="btn-home" onclick="backToMenu()">◀ 메인 메뉴로</button>
         <div class="glass-panel" style="width: 80%; max-width: 600px;">
@@ -315,14 +319,13 @@
         const sfxBeep = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-digital-clock-drop-1089.mp3');
         
         const sfxCrate = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-wood-hard-hit-2182.mp3');
-        const sfxMassiveBoom = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-massive-explosion-in-dust-2055.mp3'); // 폭탄 & 풍선 터짐
+        const sfxMassiveBoom = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-massive-explosion-in-dust-2055.mp3'); 
         const sfxFail = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-funny-fail-low-tone-2849.mp3');
         
         const sfxWarning = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-tone-996.mp3'); 
         const sfxRedLightAlert = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-alert-alarm-911.mp3'); 
         const sfxZap = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-electricity-buzz-906.mp3'); 
-        
-        const sfxLock = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3'); // 풍선 잠금음
+        const sfxLock = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3'); 
 
         bgmMenu.loop = true; bgmRace.loop = true; bgmSuspense.loop = true; sfxTick.loop = true;
         
@@ -340,7 +343,6 @@
 
         let keyStates = {}; 
 
-        // --- UI 로직 ---
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
@@ -427,7 +429,7 @@
             }
         }
 
-        // 키 제어 (안티 홀드 - 연타용과 홀드용 분기)
+        // --- 키보드 이벤트 ---
         window.addEventListener('keydown', (e) => {
             let key = e.key.toLowerCase();
             if(!keyStates[key]) {
@@ -457,7 +459,8 @@
             pData.slice(0, globalNumPlayers).forEach(p => {
                 g1Progress[p.id] = 0;
                 let disp = p.key === ' ' ? 'SPC' : p.key === 'enter' ? 'ENT' : p.key.toUpperCase();
-                tracksHtml += `<div class="g1-lane"><div class="g1-label" style="color:${p.color}">${disp}</div><div class="g1-racer" id="racer-g1-${p.id}">${p.emoji}</div></div>`;
+                // onpointerdown 으로 모바일 터치 + 마우스 클릭 동시 지원
+                tracksHtml += `<div class="g1-lane touch-target" onpointerdown="handleG1Key('${p.key}')"><div class="g1-label" style="color:${p.color}">${disp}</div><div class="g1-racer" id="racer-g1-${p.id}">${p.emoji}</div></div>`;
             });
             document.getElementById('g1-tracks').innerHTML = tracksHtml;
 
@@ -497,7 +500,10 @@
             document.getElementById('g2-message').innerText = "준비..."; document.getElementById('timer-display').innerText = "0.00";
             
             let statusHtml = '';
-            pData.slice(0, globalNumPlayers).forEach(p => { statusHtml += `<div class="status-card" id="g2-status-${p.id}" style="border-color:${p.color}; color:${p.color}">${p.name}<br>대기중</div>`; });
+            pData.slice(0, globalNumPlayers).forEach(p => { 
+                // 터치 인터페이스 추가
+                statusHtml += `<div class="status-card touch-target" id="g2-status-${p.id}" onpointerdown="handleG2Key('${p.key}')" style="border-color:${p.color}; color:${p.color}">${p.name}<br>대기중</div>`; 
+            });
             document.getElementById('g2-status').innerHTML = statusHtml;
             sfxStart.currentTime = 0; sfxStart.play();
 
@@ -517,8 +523,11 @@
             let p = pData.slice(0, globalNumPlayers).find(x => x.key === key);
             if(p && !g2Rec[p.id]) {
                 g2Rec[p.id] = (Date.now() - g2StartT) / 1000;
-                document.getElementById(`g2-status-${p.id}`).innerHTML = `${p.name}<br>완료!`;
-                document.getElementById(`g2-status-${p.id}`).classList.add('stopped');
+                let card = document.getElementById(`g2-status-${p.id}`);
+                card.innerHTML = `${p.name}<br>완료!`;
+                card.classList.add('stopped');
+                card.classList.remove('touch-target'); // 터치 방지
+                card.onpointerdown = null; 
                 sfxPop.currentTime = 0; sfxPop.play();
                 if(Object.keys(g2Rec).length === globalNumPlayers) finishG2();
             }
@@ -547,7 +556,11 @@
             g3Bomb = Math.floor(Math.random() * 20); sfxStart.currentTime = 0; sfxStart.play(); 
             setTimeout(() => { bgmSuspense.currentTime = 0; bgmSuspense.play(); }, 1000);
             updateG3UI();
-            let bHtml = ''; for(let i=0; i<20; i++) bHtml += `<div class="box" id="box-${i}" onclick="openBox(${i})">📦</div>`;
+            let bHtml = ''; 
+            for(let i=0; i<20; i++) {
+                // onclick 대신 onpointerdown으로 반응 속도 최적화
+                bHtml += `<div class="box touch-target" id="box-${i}" onpointerdown="openBox(${i})">📦</div>`;
+            }
             document.getElementById('g3-board').innerHTML = bHtml;
         }
         function updateG3UI() {
@@ -568,7 +581,8 @@
                     showResult("💥 폭발!", `<span style="font-size:5rem">💣</span><br><span style="color:${pData[g3CurP].color}">${pData[g3CurP].name}</span> 당첨!`, sfxFail);
                 }, 2000);
             } else {
-                document.getElementById(`box-${idx}`).classList.add('opened'); document.getElementById(`box-${idx}`).innerHTML = '💎';
+                let b = document.getElementById(`box-${idx}`);
+                b.classList.add('opened'); b.classList.remove('touch-target'); b.innerHTML = '💎';
                 sfxCrate.currentTime = 0; sfxCrate.play();
                 g3Opened++; if(g3Opened >= 3) passG3Turn(); else updateG3UI();
             }
@@ -578,7 +592,7 @@
         }
 
         // ==========================================
-        // 👀 게임 4: 무궁화 꽃 (S자 코스 & 노란불)
+        // 👀 게임 4: 무궁화 꽃
         // ==========================================
         let g4State = 'green'; 
         let g4Prog = {}; let g4Active = {}; let g4Loop; let g4IsPlaying = false;
@@ -588,17 +602,25 @@
             sfxStart.currentTime = 0; sfxStart.play(); bgmSuspense.currentTime = 0; bgmSuspense.play(); 
             
             let html = '';
+            let padsHtml = ''; // 하단 터치 버튼 생성
+            
             pData.slice(0, globalNumPlayers).forEach((p, idx) => {
                 g4Prog[p.id] = 0; g4Active[p.id] = true;
                 let disp = p.key === ' ' ? 'SPC' : p.key === 'enter' ? 'ENT' : p.key.toUpperCase();
                 let laneOffset = (idx - (globalNumPlayers-1)/2) * 12; 
+                
                 html += `
                 <div class="g4-racer-wrapper" id="racer-wrapper-${p.id}" style="transform: translateY(${laneOffset}px)">
                     <div class="g4-label-s" style="background:${p.color};">${disp}</div>
                     <div class="g4-racer-s" id="racer-g4-${p.id}">${p.emoji}</div>
                 </div>`;
+                
+                // 모바일 터치 패드
+                padsHtml += `<div class="touch-target" style="flex:1; background:${p.color}; color:#fff; display:flex; justify-content:center; align-items:center; font-size:2rem; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-weight:bold;" onpointerdown="handleG4Key('${p.key}')">${disp}</div>`;
             });
             document.getElementById('g4-tracks-container').innerHTML = html;
+            document.getElementById('g4-touchpads').innerHTML = padsHtml;
+            
             document.getElementById('g4-doll').innerText = '🙈';
             document.getElementById('g4-doll').classList.remove('danger');
             
@@ -639,7 +661,6 @@
 
         function runG4Light() {
             if(!g4IsPlaying) return;
-            
             g4State = 'green';
             let l = document.getElementById('g4-light');
             l.innerHTML = "🟢 초록불! 연타하세요!"; l.style.color = "#2ecc71";
@@ -724,10 +745,17 @@
 
             let html = ''; 
             pData.slice(0, globalNumPlayers).forEach(p => {
-                g5Prog[p.id] = 0; g5State[p.id] = 'ready'; // ready -> blowing -> stopped/popped
+                g5Prog[p.id] = 0; g5State[p.id] = 'ready';
                 let disp = p.key === ' ' ? 'SPC' : p.key === 'enter' ? 'ENT' : p.key.toUpperCase();
+                
+                // 모바일 터치(포인터 이벤트) 대응. 터치를 떼거나, 영역을 벗어나면 정지하도록 이벤트 추가
                 html += `
-                <div class="g5-player-slot" id="slot-g5-${p.id}">
+                <div class="g5-player-slot touch-target" id="slot-g5-${p.id}" 
+                     onpointerdown="handleG5KeyDown('${p.key}')" 
+                     onpointerup="handleG5KeyUp('${p.key}')" 
+                     onpointerleave="handleG5KeyUp('${p.key}')" 
+                     onpointercancel="handleG5KeyUp('${p.key}')" 
+                     oncontextmenu="return false;">
                     <div class="g5-balloon-wrapper">
                         <div class="g5-balloon" id="balloon-g5-${p.id}" style="background:${p.color}">
                             <span class="g5-balloon-emoji">${p.emoji}</span>
@@ -741,7 +769,7 @@
             
             setTimeout(() => { 
                 g5IsPlaying = true; 
-                bgmSuspense.currentTime = 0; bgmSuspense.play(); // 긴장감 브금 시작
+                bgmSuspense.currentTime = 0; bgmSuspense.play(); 
                 g5Loop(); 
             }, 1000);
         }
@@ -751,7 +779,6 @@
             let p = pData.slice(0, globalNumPlayers).find(x => x.key === key);
             if(p && g5State[p.id] === 'ready') {
                 g5State[p.id] = 'blowing';
-                // 바람 넣는 느낌의 사운드 대신 전체 텐션 브금 유지
             }
         }
 
@@ -760,9 +787,10 @@
             let p = pData.slice(0, globalNumPlayers).find(x => x.key === key);
             if(p && g5State[p.id] === 'blowing') {
                 g5State[p.id] = 'stopped';
-                sfxLock.currentTime = 0; sfxLock.play(); // 멈춤(저장) 사운드
+                sfxLock.currentTime = 0; sfxLock.play(); 
                 document.getElementById(`score-g5-${p.id}`).style.color = '#2ecc71';
                 document.getElementById(`balloon-g5-${p.id}`).classList.remove('shake-danger');
+                document.getElementById(`slot-g5-${p.id}`).classList.remove('touch-target'); // 터치 시각효과 제거
                 checkG5End();
             }
         }
@@ -771,22 +799,19 @@
             if(!g5IsPlaying) return;
             pData.slice(0, globalNumPlayers).forEach(p => {
                 if(g5State[p.id] === 'blowing') {
-                    g5Prog[p.id] += 0.5; // 부풀어오르는 속도
+                    g5Prog[p.id] += 0.5; 
                     
                     let balloon = document.getElementById(`balloon-g5-${p.id}`);
                     let scoreTxt = document.getElementById(`score-g5-${p.id}`);
                     
-                    // 크기 비례 확대 (최대 100일 때 약 6배)
                     let scaleVal = 1 + (g5Prog[p.id] / 20);
                     balloon.style.transform = `scale(${scaleVal})`;
                     scoreTxt.innerText = Math.floor(g5Prog[p.id]) + '%';
                     
-                    // 80%가 넘어가면 덜덜 떨리기 시작
                     if(g5Prog[p.id] > 80 && !balloon.classList.contains('shake-danger')) {
                         balloon.classList.add('shake-danger');
                     }
                     
-                    // 100% 도달하면 펑!
                     if(g5Prog[p.id] >= 100) {
                         g5State[p.id] = 'popped';
                         balloon.classList.add('popped');
@@ -794,6 +819,7 @@
                         balloon.innerHTML = '<span class="popped-text">💥</span>';
                         scoreTxt.innerText = '탈락!';
                         scoreTxt.style.color = '#e74c3c';
+                        document.getElementById(`slot-g5-${p.id}`).classList.remove('touch-target');
                         
                         sfxMassiveBoom.currentTime = 0; sfxMassiveBoom.play(); 
                         checkG5End();
