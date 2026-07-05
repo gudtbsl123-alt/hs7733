@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>마법 물약 제조소: 분수와 소수</title>
+<style>
+    /* ==========================================
+       [2] UI/UX & [3] Cross-Platform CSS
+       ========================================== */
+    :root {
+        --primary: #6c5ce7;
+        --bg-color: #192a56;
+        --panel-bg: rgba(25, 42, 86, 0.95);
+        --text-light: #f5f6fa;
+        --correct: #00b894;
+        --wrong: #d63031;
+    }
+    * {
+        box-sizing: border-box;
+        margin: 0; padding: 0;
+        touch-action: none; 
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+    }
+    body, html {
+        width: 100%; height: 100%;
+        background-color: var(--bg-color);
+        font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+        color: var(--text-light);
+        overflow: hidden;
+    }
+    
+    /* 분수 표현 CSS */
+    .frac {
+        display: inline-flex; flex-direction: column; align-items: center;
+        vertical-align: middle; line-height: 1; font-weight: bold; margin: 0 4px;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+    }
+    .frac > .num { border-bottom: 3px solid var(--text-light); padding-bottom: 2px; width: 100%; text-align: center; }
+    .frac > .den { padding-top: 2px; }
+
+    /* 화면 컨테이너 (배경 애니메이션 추가) */
+    @keyframes bgDrift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    #app {
+        position: relative; width: 100%; height: 100%;
+        max-width: 800px; margin: 0 auto;
+        background: linear-gradient(135deg, #130f40, #30336b, #4834d4, #130f40);
+        background-size: 300% 300%;
+        animation: bgDrift 15s ease infinite;
+        box-shadow: 0 0 30px rgba(0,0,0,0.8); overflow: hidden;
+    }
+    canvas {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 1; pointer-events: none; 
+    }
+
+    /* 공통 패널 스타일 */
+    .screen {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        background: var(--panel-bg); z-index: 100; transition: opacity 0.3s ease;
+    }
+    .hidden { opacity: 0; pointer-events: none; z-index: -1 !important; }
+
+    /* 로비 화면 */
+    h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.7), 0 0 20px rgba(108, 92, 231, 0.8); text-align: center; word-break: keep-all; color: #fff; }
+    .subtitle { font-size: 1.2rem; color: #fbc531; margin-bottom: 20px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    
+    .avatar-grid {
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+        margin-bottom: 20px; max-height: 150px; overflow-y: auto; padding: 10px;
+        background: rgba(0,0,0,0.4); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .avatar-btn {
+        font-size: 2rem; background: none; border: 2px solid transparent;
+        cursor: pointer; transition: transform 0.2s; border-radius: 10px;
+    }
+    .avatar-btn.selected { border-color: #fbc531; transform: scale(1.15); background: rgba(251, 197, 49, 0.3); box-shadow: 0 0 15px rgba(251, 197, 49, 0.5); }
+    
+    .input-group { margin-bottom: 20px; width: 80%; max-width: 300px; }
+    input[type="text"] {
+        width: 100%; padding: 12px; font-size: 1.2rem; font-weight: bold; color: #2d3436;
+        border: 3px solid #a29bfe; border-radius: 10px; text-align: center; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .btn {
+        padding: 15px 35px; font-size: 1.3rem; font-weight: bold; margin: 5px;
+        background: linear-gradient(to bottom, #6c5ce7, #4834d4); color: white; border: 2px solid #a29bfe; border-radius: 30px;
+        cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.5); transition: transform 0.1s, filter 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .btn:active { transform: translateY(4px); box-shadow: 0 2px 5px rgba(0,0,0,0.5); filter: brightness(1.2); }
+    .btn-secondary { background: linear-gradient(to bottom, #fbc531, #e1b12c); color: #2d3436; border-color: #ffeaa7; text-shadow: none; }
+
+    /* 교실 환경 도구 & UI */
+    .controls-top { position: absolute; top: 10px; right: 10px; z-index: 50; display: flex; gap: 10px; }
+    .icon-btn {
+        background: rgba(0,0,0,0.6); color: white; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%;
+        width: 45px; height: 45px; font-size: 1.3rem; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s;
+    }
+    .icon-btn:active { transform: scale(0.9); }
+    .toggle-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 1rem; color: #dfe6e9; }
+    input[type="checkbox"] { transform: scale(1.5); }
+
+    /* 게임 UI */
+    #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+    #question-box {
+        position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+        width: 90%; max-width: 550px; background: rgba(10, 10, 20, 0.85); padding: 18px 25px; border-radius: 20px;
+        text-align: center; font-size: 1.25rem; font-weight: bold; line-height: 1.5; border: 3px solid #a29bfe;
+        word-break: keep-all; box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 20px rgba(108, 92, 231, 0.3);
+    }
+    .stats { position: absolute; top: 15px; left: 15px; font-size: 1.2rem; font-weight: bold; text-shadow: 0 2px 5px black; line-height: 1.5; }
+    .combo-text { color: #fbc531; font-size: 1.4rem; display: none; text-shadow: 0 0 10px #fbc531, 0 2px 5px black; animation: pop 0.3s ease; }
+    
+    @keyframes pop { 0% { transform: scale(0.5); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    /* 가마솥 제조 연출 업그레이드 */
+    #cauldron { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 5.5rem; text-shadow: 0 15px 30px rgba(0,0,0,0.9); z-index: 6; transition: 0.1s; }
+    @keyframes brewAnim {
+        0% { transform: translateX(-50%) scale(1) translateY(0); filter: brightness(1); }
+        30% { transform: translateX(-50%) scale(1.2) translateY(-10px); filter: drop-shadow(0 0 40px #00b894) brightness(1.5); }
+        70% { transform: translateX(-50%) scale(1.1) translateY(-5px); filter: drop-shadow(0 0 20px #00b894) brightness(1.2); }
+        100% { transform: translateX(-50%) scale(1) translateY(0); filter: brightness(1); }
+    }
+    #cauldron.brew { animation: brewAnim 0.5s ease; }
+
+    /* 연타 방지 안개 효과 */
+    #fog-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(30, 39, 46, 0.95); z-index: 999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        font-size: 3rem; color: #ff7675; font-weight: bold; text-align: center;
+        transition: opacity 0.3s; backdrop-filter: blur(10px); pointer-events: auto;
+    }
+    #fog-overlay.hidden { opacity: 0; pointer-events: none; z-index: -1; }
+
+    /* 비눗방울 스타일 (광원 강화) */
+    .bubble {
+        position: absolute; display: flex; justify-content: center; align-items: center;
+        border-radius: 50%; background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4), inset 0 -5px 15px rgba(255,255,255,0.4), 0 0 15px rgba(255,255,255,0.2);
+        color: white; font-size: 1.5rem; font-weight: bold; cursor: pointer; pointer-events: auto;
+        will-change: transform; z-index: 7; transition: filter 0.2s;
+    }
+    .bubble:active { filter: brightness(1.5) scale(0.9); }
+    
+    .bubble.golden {
+        background: rgba(251, 197, 49, 0.85) !important; border-color: #fff !important;
+        box-shadow: 0 0 30px #fbc531, inset 0 -5px 20px rgba(255,255,255,0.6) !important; color: #2d3436 !important;
+        animation: pulseGold 1s infinite alternate;
+    }
+    @keyframes pulseGold { from { box-shadow: 0 0 20px #fbc531; } to { box-shadow: 0 0 50px #fbc531, 0 0 20px #fff; } }
+
+    .bubble.trap {
+        background: rgba(30, 39, 46, 0.95) !important; border-color: #ff3f34 !important;
+        box-shadow: 0 0 20px rgba(255, 63, 52, 0.8), inset 0 -4px 10px rgba(0,0,0,0.7) !important; color: #ff3f34 !important;
+    }
+    
+    /* 황금 열차 업그레이드 */
+    #fever-train {
+        position: absolute; bottom: 15%; left: 0; font-size: 6rem; z-index: 5;
+        white-space: nowrap; pointer-events: none; 
+        text-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px #fbc531;
+        transform: translateX(-2000px); /* 화면 밖 대기 */
+    }
+
+    /* 힌트 모달 */
+    #hint-modal { background: rgba(0,0,0,0.9); flex-direction: column; padding: 20px; text-align: center; }
+    .hint-box { background: linear-gradient(135deg, #fff, #f5f6fa); color: #2d3436; padding: 25px; border-radius: 20px; max-width: 90%; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 3px solid #ff7675; }
+    .hint-title { color: var(--wrong); font-size: 1.6rem; font-weight: bold; margin-bottom: 15px; }
+    .hint-desc { font-size: 1.2rem; line-height: 1.6; font-weight: bold; }
+
+    /* 물약 도감 UI */
+    .potion-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+        width: 90%; max-width: 500px; max-height: 60vh; overflow-y: auto; padding: 10px;
+    }
+    .potion-item {
+        background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; text-align: center; border: 2px solid #555; transition: 0.3s; position: relative;
+    }
+    .potion-item.unlocked { background: rgba(255, 255, 255, 0.1); border-color: var(--theme-color); box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 0 20px var(--theme-color); }
+    
+    @keyframes rainbow-border {
+        0%, 100% { border-color: #ff0000; box-shadow: 0 0 25px #ff0000; }
+        16% { border-color: #ff7f00; box-shadow: 0 0 25px #ff7f00; }
+        33% { border-color: #ffff00; box-shadow: 0 0 25px #ffff00; }
+        50% { border-color: #00ff00; box-shadow: 0 0 25px #00ff00; }
+        66% { border-color: #0000ff; box-shadow: 0 0 25px #0000ff; }
+        83% { border-color: #8b00ff; box-shadow: 0 0 25px #8b00ff; }
+    }
+    .potion-item.unlocked.rainbow { animation: rainbow-border 3s linear infinite; }
+    .potion-icon { font-size: 3.5rem; filter: grayscale(100%) opacity(0.3); transition: 0.5s; margin-bottom: 10px; display: inline-block; }
+    .potion-item.unlocked .potion-icon { filter: grayscale(0%) opacity(1) drop-shadow(0 0 15px var(--theme-color)); transform: scale(1.1); }
+    
+    @keyframes float { 0%, 100% { transform: translateY(0) scale(1.15); } 50% { transform: translateY(-10px) scale(1.15); } }
+    .potion-item.unlocked.floating .potion-icon { animation: float 2.5s ease-in-out infinite; }
+
+    .potion-name { font-size: 1.1rem; font-weight: bold; word-break: keep-all; margin-top: 5px; color: #fff; text-shadow: 0 2px 4px black;}
+    .potion-req { font-size: 0.9rem; color: #aaa; margin-top: 5px; }
+    .potion-item.unlocked .potion-req { color: #fbc531; font-weight: bold; text-shadow: 0 1px 2px black;}
+
+    /* 저사양 모드 방어 */
+    body.low-spec #app { animation: none; background: var(--bg-color); }
+    body.low-spec .bubble { backdrop-filter: none; box-shadow: none; background: rgba(108, 92, 231, 0.9); border: 2px solid white; animation: none; }
+    body.low-spec .bubble.golden { background: #fbc531; animation: none; }
+    body.low-spec .bubble.trap { background: #2d3436; border: 2px solid #ff7675; }
+    body.low-spec #cauldron.brew { animation: none; }
+</style>
+</head>
+<body>
+
+<div id="app">
+    <div class="controls-top">
+        <button class="icon-btn" id="btn-pause">⏸️</button>
+        <button class="icon-btn" id="btn-mute">🔊</button>
+    </div>
+
+    <div id="screen-lobby" class="screen">
+        <h1>마법 물약 제조소<br><span style="font-size: 1.8rem; color: #a29bfe;">~분수와 소수의 비밀~</span></h1>
+        <div class="subtitle">알맞은 재료(비눗방울)를 가마솥에 넣어 물약을 완성하세요!</div>
+        
+        <div class="avatar-grid" id="avatar-container"></div>
+        
+        <div class="input-group">
+            <input type="text" id="input-nickname" placeholder="닉네임을 입력하세요" maxlength="6">
+        </div>
+        
+        <div class="toggle-group">
+            <input type="checkbox" id="chk-lowspec">
+            <label for="chk-lowspec">저사양 모드 (파티클/애니메이션 끄기)</label>
+        </div>
+        
+        <div>
+            <button class="btn" id="btn-start">게임 시작</button>
+            <button class="btn btn-secondary" id="btn-open-collection">물약 도감</button>
+        </div>
+    </div>
+
+    <div id="screen-collection" class="screen hidden">
+        <h1 style="color: #fbc531; font-size: 2.2rem; text-shadow: 0 4px 10px rgba(0,0,0,0.8);">마법 물약 컬렉션</h1>
+        <div style="margin-bottom: 15px; font-size:1.1rem; text-shadow: 0 2px 4px black;">나의 최고 기록: 한 번에 <span id="txt-total-score" style="color: #00b894; font-weight: bold; font-size: 1.5rem;">0</span>문제 정답!</div>
+        <div class="potion-grid" id="potion-container"></div>
+        <button class="btn" id="btn-close-collection" style="margin-top: 25px;">로비로 돌아가기</button>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+    
+    <div id="fog-overlay" class="hidden">
+        <div style="font-size: 6rem; margin-bottom: 20px;">🌪️</div>
+        <div style="text-shadow: 0 5px 15px black;">마법 폭주!</div>
+        <div style="font-size: 1.3rem; color: #dfe6e9; margin-top: 15px; font-weight: normal; text-shadow: 0 2px 5px black;">너무 빨리 찍으면 가마솥이 폭발해요!<br>(잠시 후 안개가 걷힙니다)</div>
+    </div>
+
+    <div id="ui-layer" class="hidden">
+        <div class="stats">
+            <div id="txt-score">점수: 0</div>
+            <div id="txt-stage">스테이지: 1 / 20</div>
+            <div id="txt-combo" class="combo-text">🔥 0 콤보!</div>
+        </div>
+        <div id="question-box">문제가 여기에 표시됩니다.</div>
+        
+        <div id="fever-train">🚂🚋🚋🚋✨🎊🎉</div>
+        <div id="cauldron">🍲</div>
+        <div id="bubble-container"></div>
+    </div>
+
+    <div id="screen-pause" class="screen hidden">
+        <h1 style="font-size: 3rem; margin-bottom: 30px;">일시정지</h1>
+        <button class="btn" id="btn-resume">계속하기</button>
+        <button class="btn btn-secondary" id="btn-quit" style="margin-top:15px;">그만하기</button>
+    </div>
+
+    <div id="screen-hint" class="screen hidden">
+        <div class="hint-box">
+            <div class="hint-title">앗! 엉뚱한 재료가 들어갔어요! (-5점) 💥</div>
+            <div class="hint-desc" id="txt-hint">힌트 내용</div>
+        </div>
+        <button class="btn" id="btn-retry">다시 도전하기</button>
+    </div>
+
+    <div id="screen-result" class="screen hidden">
+        <h1 style="font-size: 3rem; color: #00b894; text-shadow: 0 4px 10px black;">🎉 제조 완료! 🎉</h1>
+        <div style="font-size: 5rem; margin-bottom: 10px; filter: drop-shadow(0 0 20px #fbc531);" id="result-avatar">🧙‍♂️</div>
+        <h2 style="margin-bottom: 25px; font-size: 1.8rem;"><span id="result-nickname">학생</span> 마법사님</h2>
+        <table style="width: 85%; max-width: 450px; font-size: 1.3rem; margin-bottom: 30px; text-align: left; border-collapse: collapse; background: rgba(0,0,0,0.5); border-radius: 15px; padding: 15px;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                <td style="padding: 15px;">✨ 획득 점수</td><td style="text-align: right; font-weight: bold; color: #fff;" id="res-score">0점</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                <td style="padding: 15px;">🎯 한 번에 맞힌 문제</td><td style="text-align: right; font-weight: bold; color:#00b894;" id="res-perfect">0개</td>
+            </tr>
+            <tr>
+                <td style="padding: 15px;">🏆 마법 칭호</td><td style="text-align: right; color: #fbc531; font-weight: bold;" id="res-title">초보 마법사</td>
+            </tr>
+        </table>
+        <button class="btn" id="btn-restart">처음부터 다시하기</button>
+        <button class="btn btn-secondary" id="btn-result-collection" style="margin-top:15px;">새로운 물약 확인하기</button>
+    </div>
+</div>
+
+<script>
+const QUIZ_DATA = [
+    { question: "피자 1판을 똑같이 4조각으로 나누었습니다. 그 중 1조각을 분수로 나타내면?", answers: ["F(1,4)", "F(1,3)", "F(4,1)", "4"], correctIndex: 0, hint: "전체를 똑같이 나눈 조각 수를 '아래(분모)'에, 내가 가진 조각 수를 '위(분자)'에 적어요." },
+    { question: "전체를 똑같이 5로 나눈 것 중의 3을 분수로 나타내면?", answers: ["F(3,5)", "F(5,3)", "F(1,5)", "0.3"], correctIndex: 0, hint: "분모는 전체를 나눈 수(5), 분자는 선택한 부분의 수(3)입니다." },
+    { question: "다음 중 '단위분수'를 찾아 터뜨리세요!", answers: ["F(1,6)", "F(2,5)", "F(4,4)", "0.1"], correctIndex: 0, hint: "'단위분수'는 분자(위에 있는 수)가 항상 1인 분수를 말해요." },
+    { question: "분모가 같은 분수입니다. 둘 중 더 **큰** 수는 무엇일까요?<br> F(3,7) 과 F(5,7)", answers: ["F(5,7)", "F(3,7)", "F(1,7)", "F(7,7)"], correctIndex: 0, hint: "분모가 같을 때는, 조각을 더 많이 가진 쪽(분자가 큰 쪽)이 더 큽니다." },
+    { question: "단위분수의 크기 비교입니다. 둘 중 더 **큰** 수는 무엇일까요?<br> F(1,3) 과 F(1,5)", answers: ["F(1,3)", "F(1,5)", "F(3,5)", "F(5,3)"], correctIndex: 0, hint: "피자를 3명이 나눌 때와 5명이 나눌 때, 언제 1조각의 크기가 더 클까요? (단위분수는 분모가 작을수록 큽니다!)" },
+    { question: "분수 F(1,10) 을 소수로 바르게 나타낸 것은?", answers: ["0.1", "1.0", "0.01", "10"], correctIndex: 0, hint: "전체를 10으로 나눈 것 중 하나는 소수로 '영 점 일(0.1)'이라고 씁니다." },
+    { question: "0.1 이 7개 모이면 얼마가 될까요?", answers: ["0.7", "7.1", "F(1,7)", "7"], correctIndex: 0, hint: "0.1이 1개면 0.1, 2개면 0.2... 7개면 0.7이 됩니다." },
+    { question: "소수의 크기 비교입니다. 둘 중 더 **작은** 수는 무엇일까요?<br> 0.8 과 0.5", answers: ["0.5", "0.8", "0.1", "0.3"], correctIndex: 0, hint: "소수점 아래의 숫자가 클수록 더 큰 수입니다. 우리는 '작은 수'를 찾아야 해요!" },
+    { question: "F(8,10) 과 크기가 같은 소수를 찾아보세요.", answers: ["0.8", "0.1", "8.1", "1.8"], correctIndex: 0, hint: "F(1,10)이 0.1이므로, F(8,10)은 0.1이 8개 있는 것과 같습니다." },
+    { question: "1cm는 10mm입니다. 그렇다면 4mm는 몇 cm일까요?", answers: ["0.4cm", "4.0cm", "F(1,4)cm", "0.1cm"], correctIndex: 0, hint: "1mm는 0.1cm입니다. 4mm는 0.1cm가 4개 모인 길이에요." },
+    { question: "🚄 기차의 전체 칸 수를 똑같이 8칸으로 나누었을 때, 그 중 3칸은 분수로 어떻게 나타낼까요?", answers: ["F(3,8)", "F(8,3)", "F(1,8)", "0.3"], correctIndex: 0, hint: "전체 칸 수(8)가 분모, 우리가 찾는 칸 수(3)가 분자가 됩니다." },
+    { question: "🍰 케이크 1개를 똑같이 6조각으로 나누었습니다. 그 중 첫째 딸이 2조각을 먹었다면, 먹은 양을 분수로 나타내 보세요.", answers: ["F(2,6)", "F(6,2)", "F(1,6)", "2.6"], correctIndex: 0, hint: "전체를 6으로 나눈 것 중의 2이므로 분모는 6, 분자는 2입니다." },
+    { question: "🟩🟩🟩⬜⬜<br>똑같이 5칸으로 나눈 마법 지팡이입니다. 초록색으로 빛나는 부분은 전체의 얼마일까요?", answers: ["F(3,5)", "F(2,5)", "F(5,3)", "3.5"], correctIndex: 0, hint: "전체 5칸 중 초록색은 3칸입니다. 분모는 전체, 분자는 초록색 칸 수를 적어요." },
+    { question: "단위분수 F(1,8)과 F(1,9) 중 더 **작은** 수는 무엇일까요?", answers: ["F(1,9)", "F(1,8)", "F(9,8)", "F(8,9)"], correctIndex: 0, hint: "똑같은 피자를 8명이 나눌 때보다 9명이 나눌 때 1조각의 크기가 더 작아져요!" },
+    { question: "지우개 8mm의 길이를 cm 단위의 소수로 바르게 나타낸 것은?", answers: ["0.8cm", "8.0cm", "0.08cm", "F(1,8)cm"], correctIndex: 0, hint: "1mm는 0.1cm와 같습니다. 8mm는 0.1cm가 8개 모인 길이예요." },
+    { question: "다음 중 '단위분수'가 **아닌** 비눗방울을 찾아 터뜨리세요!", answers: ["F(2,3)", "F(1,2)", "F(1,4)", "F(1,7)"], correctIndex: 0, hint: "단위분수는 '분자(위에 있는 수)'가 무조건 1이어야 합니다." },
+    { question: "분수 F(7,10) 을 소수로 바꾸면 얼마일까요?", answers: ["0.7", "7.0", "0.07", "10.7"], correctIndex: 0, hint: "F(1,10)이 0.1과 같으므로, F(7,10)은 0.1이 7개 있는 것과 같습니다." },
+    { question: "마법사 고양이가 1L짜리 물약을 10칸으로 똑같이 나누어 그 중 4칸을 마셨습니다. 마신 양을 소수로 나타내면?", answers: ["0.4L", "F(10,4)L", "4.0L", "0.1L"], correctIndex: 0, hint: "전체를 10칸으로 나눈 것 중 4칸은 분수로 F(4,10)이며, 소수로는 0.4입니다." },
+    { question: "F(3,7) 에서 **분모**에 해당하는 숫자는 무엇일까요?", answers: ["7", "3", "10", "4"], correctIndex: 0, hint: "분모는 분수에서 가로선 '아래'에 있는 수로, 전체를 똑같이 나눈 조각 수를 뜻합니다." },
+    { question: "소수 0.6 과 0.9 중 더 **큰** 수를 찾아 터뜨려주세요!", answers: ["0.9", "0.6", "0.1", "1.5"], correctIndex: 0, hint: "소수점 아래의 숫자가 클수록 더 큰 수입니다. 0.1이 9개인 수가 더 커요!" }
+];
+
+const AVATARS = ['🧙‍♂️','🧚‍♀️','🧝‍♂️','🧛‍♀️','🧟‍♂️','🦸‍♀️','👨‍🚀','👩‍🔬','🦉','🐸','🐈','🐉','🦄','🐢','🐙'];
+
+const POTION_DATA = [
+    { id: 'p1', icon: '🧪', name: '초보자의 맑은 물약', req: 5, color: '#00b894' },
+    { id: 'p2', icon: '🍵', name: '연금술사의 초록 영약', req: 10, color: '#2ecc71' },
+    { id: 'p3', icon: '🍷', name: '마법사의 붉은 비약', req: 15, color: '#e74c3c' },
+    { id: 'p4', icon: '🔮', name: '대마법사의 영혼 구슬', req: 18, color: '#9b59b6' },
+    { id: 'p5', icon: '🏺✨', name: '전설의 무지개 엘릭서', req: 20, color: '#f1c40f' }
+];
+
+const GameState = {
+    nickname: '', avatar: '', isLowSpec: false,
+    currentStage: 0, score: 0, mistakes: 0, combo: 0,
+    isPlaying: false, isPaused: false, isMuted: false, isFever: false, isFogged: false,
+    lastTime: 0, maxPerfectScore: 0,
+    clickTimestamps: [],
+    mistakeStages: new Set()
+};
+
+function parseFractionText(text) {
+    return text.replace(/F\((\d+),(\d+)\)/g, '<span class="frac"><span class="num">$1</span><span class="den">$2</span></span>');
+}
+
+class BubblePool {
+    constructor(containerId, poolSize = 35) { 
+        this.container = document.getElementById(containerId);
+        this.pool = [];
+        this.activeBubbles = [];
+        this.appWidth = document.getElementById('app').clientWidth;
+        this.appHeight = document.getElementById('app').clientHeight;
+        
+        for (let i = 0; i < poolSize; i++) {
+            const el = document.createElement('div');
+            el.className = 'bubble hidden';
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (!GameState.isPlaying || GameState.isPaused || GameState.isFogged) return;
+                this.handleBubbleClick(el);
+            });
+            this.container.appendChild(el);
+            this.pool.push({ el: el, active: false, x: 0, y: 0, size: 0, speed: 0, type: '', wobbleOffset: Math.random() * Math.PI * 2 });
+        }
+    }
+
+    spawn(text, type) { 
+        const inactiveItem = this.pool.find(item => !item.active);
+        if (!inactiveItem) return;
+
+        const isFever = type === 'fever';
+        const isTrap = type === 'trap';
+        
+        const size = isFever ? 60 : Math.floor(Math.random() * 20) + 70; 
+        const x = Math.random() * (this.appWidth - size - 20) + 10;
+        const y = this.appHeight + (isFever ? Math.random() * 200 : 0); 
+        const speed = isFever ? (Math.random() * 1.5 + 2) : (GameState.isLowSpec ? 1.5 : (Math.random() * 1.5 + 1.0)); 
+
+        inactiveItem.active = true;
+        inactiveItem.x = x; inactiveItem.y = y; inactiveItem.size = size;
+        inactiveItem.speed = speed; inactiveItem.type = type;
+        
+        const el = inactiveItem.el;
+        el.innerHTML = parseFractionText(text);
+        el.style.width = `${size}px`; el.style.height = `${size}px`;
+        
+        if (isFever) el.className = 'bubble golden';
+        else if (isTrap) el.className = 'bubble trap';
+        else el.className = 'bubble';
+        
+        this.activeBubbles.push(inactiveItem);
+    }
+
+    release(item) {
+        item.active = false;
+        item.el.className = 'bubble hidden';
+        this.activeBubbles = this.activeBubbles.filter(b => b !== item);
+    }
+
+    clearAll() {
+        this.activeBubbles.slice().forEach(item => this.release(item));
+    }
+
+    update(deltaTime) {
+        if (!GameState.isPlaying || GameState.isPaused || GameState.isFogged) return;
+        const timeMod = deltaTime / 16.66;
+        const appW = this.appWidth;
+
+        this.activeBubbles.slice().forEach(item => {
+            item.y -= item.speed * timeMod;
+            let drawX = item.x;
+            if (!GameState.isLowSpec) {
+                drawX = item.x + Math.sin(Date.now() / 300 + item.wobbleOffset) * (item.type === 'fever' ? 5 : 15);
+                drawX = Math.max(0, Math.min(drawX, appW - item.size));
+            }
+            item.el.style.transform = `translate(${drawX}px, ${item.y}px)`;
+            
+            if (item.y + item.size < -50) {
+                if (item.type === 'fever' || item.type === 'trap') {
+                    this.release(item); 
+                } else {
+                    item.y = this.appHeight + 20;
+                    item.x = Math.random() * (this.appWidth - item.size - 20) + 10;
+                }
+            }
+        });
+    }
+
+    handleBubbleClick(el) {
+        const item = this.activeBubbles.find(b => b.el === el);
+        if (!item) return;
+
+        if (item.type === 'correct') handleCorrectAnswer(item);
+        else if (item.type === 'wrong') handleWrongAnswer(item);
+        else if (item.type === 'fever') handleFeverAnswer(item);
+        else if (item.type === 'trap') handleTrapAnswer(item);
+    }
+}
+
+// 캔버스 파티클 (자체 발광 글로우 업그레이드)
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    canvas.style.width = `${rect.width}px`; canvas.style.height = `${rect.height}px`;
+}
+window.addEventListener('resize', resizeCanvas);
+
+function spawnParticles(x, y, color) {
+    if (GameState.isLowSpec) return;
+    for (let i = 0; i < 25; i++) {
+        particles.push({ 
+            x: x, y: y, 
+            vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10, 
+            life: 1.0, color: color, size: Math.random() * 4 + 2 
+        });
+    }
+}
+
+function updateDrawParticles() {
+    if (GameState.isLowSpec) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.15; // 중력 가속도
+        p.life -= 0.02;
+        
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        // 자체 발광(Glow) 효과 추가
+        ctx.shadowBlur = 15; 
+        ctx.shadowColor = p.color;
+        
+        ctx.beginPath(); 
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); 
+        ctx.fill();
+        
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+    ctx.globalAlpha = 1.0;
+    ctx.shadowBlur = 0; // 초기화
+}
+
+// --------------------------------------------------
+// 사운드 시스템 대규모 업그레이드 (화음 및 BGM)
+// --------------------------------------------------
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let feverBgmInterval = null;
+
+function playOscillator(type, freq1, freq2, duration, vol=0.5) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq1, audioCtx.currentTime);
+    if(freq2) osc.frequency.exponentialRampToValueAtTime(freq2, audioCtx.currentTime + duration);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+
+function playSound(type) {
+    if (GameState.isMuted) return;
+    
+    if (type === 'pop') {
+        const baseFreq = 500 + Math.random() * 300; // 랜덤 피치로 경쾌함 증폭
+        playOscillator('sine', baseFreq, baseFreq * 1.5, 0.15, 0.4);
+    } else if (type === 'wrong') {
+        // 불협화음
+        playOscillator('sawtooth', 250, 100, 0.4, 0.4);
+        playOscillator('square', 200, 80, 0.4, 0.3);
+    } else if (type === 'correct') {
+        // C 메이저 코드 화음 연주 (청각적 쾌감 증폭)
+        playOscillator('sine', 400, 0, 0.4, 0.3); // 기본음
+        setTimeout(() => playOscillator('sine', 500, 0, 0.4, 0.3), 80); // 3도
+        setTimeout(() => playOscillator('sine', 600, 800, 0.5, 0.4), 160); // 5도 + 슬라이드업
+    } else if (type === 'whistle') { 
+        playOscillator('square', 300, 350, 1.0, 0.3);
+        setTimeout(() => playOscillator('square', 400, 450, 1.0, 0.3), 150);
+    }
+}
+
+// 축제 분위기 BGM 루프 (피버 타임 전용)
+function startFeverBGM() {
+    if (GameState.isMuted) return;
+    const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25]; // 신나는 아르페지오 (C E G C G E)
+    let step = 0;
+    feverBgmInterval = setInterval(() => {
+        if (GameState.isPaused || GameState.isMuted) return;
+        playOscillator('triangle', notes[step % notes.length], null, 0.15, 0.2);
+        step++;
+    }, 150); // 150ms 마다 빠른 템포로 연주
+}
+
+function stopFeverBGM() {
+    if(feverBgmInterval) clearInterval(feverBgmInterval);
+}
+
+// --------------------------------------------------
+// 초기화 및 게임 로직
+// --------------------------------------------------
+let bubblePool;
+let animationFrameId;
+
+function init() {
+    resizeCanvas(); renderLobby();
+    bubblePool = new BubblePool('bubble-container', 35);
+    
+    GameState.maxPerfectScore = parseInt(localStorage.getItem('potion_max_perfect')) || 0;
+    
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-pause').addEventListener('click', togglePause);
+    document.getElementById('btn-resume').addEventListener('click', togglePause);
+    document.getElementById('btn-quit').addEventListener('click', resetGameToLobby);
+    document.getElementById('btn-mute').addEventListener('click', toggleMute);
+    document.getElementById('btn-retry').addEventListener('click', resumeFromHint);
+    document.getElementById('btn-restart').addEventListener('click', resetGameToLobby);
+    
+    document.getElementById('btn-open-collection').addEventListener('click', openCollection);
+    document.getElementById('btn-close-collection').addEventListener('click', () => {
+        document.getElementById('screen-collection').classList.add('hidden');
+        document.getElementById('screen-lobby').classList.remove('hidden'); 
+        playSound('pop');
+    });
+    document.getElementById('btn-result-collection').addEventListener('click', () => {
+        document.getElementById('screen-result').classList.add('hidden');
+        openCollection();
+    });
+    
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    document.getElementById('app').addEventListener('pointerdown', (e) => {
+        if (!GameState.isPlaying || GameState.isPaused || GameState.isFogged) return;
+        if (GameState.isFever) return; // 피버 타임엔 무지성 터치 허용!
+
+        const now = Date.now();
+        GameState.clickTimestamps.push(now);
+        GameState.clickTimestamps = GameState.clickTimestamps.filter(t => now - t < 1000);
+
+        if (GameState.clickTimestamps.length >= 4) {
+            triggerFog();
+        }
+    }, { capture: true });
+}
+
+function renderLobby() {
+    const container = document.getElementById('avatar-container');
+    container.innerHTML = '';
+    AVATARS.forEach(emoji => {
+        const btn = document.createElement('button'); btn.className = 'avatar-btn'; btn.textContent = emoji;
+        btn.onclick = () => {
+            document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected'); GameState.avatar = emoji; playSound('pop');
+        };
+        container.appendChild(btn);
+    });
+    container.firstChild.click();
+}
+
+function openCollection() {
+    playSound('correct');
+    document.getElementById('screen-lobby').classList.add('hidden');
+    document.getElementById('screen-collection').classList.remove('hidden');
+    document.getElementById('txt-total-score').textContent = GameState.maxPerfectScore;
+    
+    const container = document.getElementById('potion-container');
+    container.innerHTML = '';
+    
+    POTION_DATA.forEach(potion => {
+        const isUnlocked = GameState.maxPerfectScore >= potion.req;
+        const el = document.createElement('div');
+        
+        let classes = 'potion-item';
+        if (isUnlocked) {
+            classes += ' unlocked';
+            if (potion.req >= 18) classes += ' floating';
+            if (potion.req === 20) classes += ' rainbow';
+        }
+        
+        el.className = classes;
+        el.style.setProperty('--theme-color', potion.color);
+        
+        el.innerHTML = `
+            <div class="potion-icon">${potion.icon}</div>
+            <div class="potion-name">${isUnlocked ? potion.name : '???'}</div>
+            <div class="potion-req">${isUnlocked ? '마스터 완료!' : `한 번에 ${potion.req}문제 정답 필요`}</div>
+        `;
+        container.appendChild(el);
+    });
+}
+
+function startGame() {
+    const nickInput = document.getElementById('input-nickname').value.trim();
+    GameState.nickname = nickInput || '무명';
+    GameState.isLowSpec = document.getElementById('chk-lowspec').checked;
+    if (GameState.isLowSpec) document.body.classList.add('low-spec'); else document.body.classList.remove('low-spec');
+
+    document.getElementById('screen-lobby').classList.add('hidden');
+    document.getElementById('ui-layer').classList.remove('hidden');
+    
+    GameState.currentStage = 0; GameState.score = 0; GameState.mistakes = 0; GameState.combo = 0;
+    GameState.isPlaying = true; GameState.isPaused = false; GameState.isFever = false; GameState.isFogged = false;
+    GameState.clickTimestamps = [];
+    GameState.mistakeStages.clear(); 
+    updateScoreUI();
+    
+    playSound('correct');
+    loadStage();
+    GameState.lastTime = performance.now();
+    gameLoop(performance.now());
+}
+
+function loadStage() {
+    if (GameState.currentStage >= QUIZ_DATA.length) { endGame(); return; }
+    bubblePool.clearAll();
+    
+    const currentQuiz = QUIZ_DATA[GameState.currentStage];
+    document.getElementById('txt-stage').textContent = `스테이지: ${GameState.currentStage + 1} / ${QUIZ_DATA.length}`;
+    document.getElementById('question-box').innerHTML = parseFractionText(currentQuiz.question);
+
+    let answers = [...currentQuiz.answers];
+    const correctAns = answers[currentQuiz.correctIndex];
+    answers.sort(() => Math.random() - 0.5);
+
+    answers.forEach((ans, idx) => {
+        const count = ans === correctAns ? 1 : 2; 
+        for(let i=0; i<count; i++) {
+            setTimeout(() => {
+                if(!GameState.isPlaying || GameState.isFever) return;
+                bubblePool.spawn(ans, ans === correctAns ? 'correct' : 'wrong');
+            }, i * 1000 + Math.random() * 500);
+        }
+    });
+
+    const trapCount = Math.random() > 0.5 ? 2 : 1;
+    for(let i=0; i<trapCount; i++) {
+        setTimeout(() => {
+            if(!GameState.isPlaying || GameState.isFever || GameState.isPaused) return;
+            bubblePool.spawn("☠️", "trap");
+        }, 1500 + Math.random() * 2000);
+    }
+}
+
+function updateScoreUI() {
+    document.getElementById('txt-score').textContent = `점수: ${GameState.score}`;
+    const comboEl = document.getElementById('txt-combo');
+    if (GameState.combo > 1) {
+        comboEl.style.display = 'block'; 
+        comboEl.textContent = `🔥 ${GameState.combo} 콤보!`;
+        // 애니메이션 초기화 트릭
+        comboEl.style.animation = 'none';
+        void comboEl.offsetWidth; 
+        comboEl.style.animation = 'pop 0.3s ease';
+    } else {
+        comboEl.style.display = 'none';
+    }
+}
+
+function handleCorrectAnswer(item) {
+    playSound('correct');
+    spawnParticles(item.x + item.size/2, item.y + item.size/2, '#00b894');
+    bubblePool.release(item);
+    
+    // 가마솥 애니메이션
+    const cauldron = document.getElementById('cauldron');
+    cauldron.classList.remove('brew');
+    void cauldron.offsetWidth; 
+    cauldron.classList.add('brew');
+    
+    GameState.score += 10;
+    GameState.combo++;
+    updateScoreUI();
+    
+    if (GameState.combo >= 3) {
+        GameState.combo = 0;
+        updateScoreUI();
+        startFeverTime();
+    } else {
+        bubblePool.clearAll();
+        GameState.currentStage++;
+        setTimeout(loadStage, 500);
+    }
+}
+
+function handleWrongAnswer(item) {
+    playSound('wrong');
+    spawnParticles(item.x + item.size/2, item.y + item.size/2, '#d63031');
+    bubblePool.release(item);
+    
+    GameState.mistakes++;
+    GameState.combo = 0;
+    GameState.mistakeStages.add(GameState.currentStage); 
+    
+    GameState.score = Math.max(0, GameState.score - 5);
+    updateScoreUI();
+    
+    GameState.isPaused = true;
+    const currentQuiz = QUIZ_DATA[GameState.currentStage];
+    document.getElementById('txt-hint').innerHTML = parseFractionText(currentQuiz.hint);
+    document.getElementById('screen-hint').classList.remove('hidden');
+}
+
+function handleTrapAnswer(item) {
+    playSound('wrong');
+    spawnParticles(item.x + item.size/2, item.y + item.size/2, '#8e44ad');
+    bubblePool.release(item);
+    
+    GameState.mistakeStages.add(GameState.currentStage); 
+    GameState.score = Math.max(0, GameState.score - 10);
+    GameState.combo = 0;
+    updateScoreUI();
+}
+
+function triggerFog() {
+    GameState.isFogged = true;
+    GameState.clickTimestamps = []; 
+    playSound('wrong');
+    
+    const fogOverlay = document.getElementById('fog-overlay');
+    fogOverlay.classList.remove('hidden');
+    
+    setTimeout(() => {
+        if (GameState.isPlaying) {
+            fogOverlay.classList.add('hidden');
+            GameState.isFogged = false;
+        }
+    }, 3000);
+}
+
+// [완벽 타이밍 수정] 피버 타임
+function startFeverTime() {
+    GameState.isFever = true;
+    bubblePool.clearAll();
+    
+    // 경적 소리 및 축제 BGM 시작
+    playSound('whistle');
+    startFeverBGM();
+    
+    document.getElementById('question-box').innerHTML = "✨ <b>축제 시작!</b> 황금 비눗방울을 마구 터뜨려 점수를 올리세요! ✨";
+    
+    const appW = document.getElementById('app').clientWidth;
+    const train = document.getElementById('fever-train');
+    
+    // 열차를 화면 왼쪽 밖(-1500px)에 대기시킴 (크기가 크므로 충분히 멀리)
+    train.style.transition = 'none';
+    train.style.transform = `translateX(-1500px)`; 
+    
+    // 11초 동안 화면 오른쪽 밖(appW + 500)으로 부드럽게 완전 통과
+    setTimeout(() => {
+        train.style.transition = 'transform 11s linear';
+        train.style.transform = `translateX(${appW + 500}px)`;
+    }, 50);
+    
+    // 비눗방울은 약 8초(40회) 동안만 생성
+    let feverTicks = 0;
+    const feverInterval = setInterval(() => {
+        if (!GameState.isPlaying || GameState.isPaused) return;
+        bubblePool.spawn("+5", "fever");
+        feverTicks++;
+        if (feverTicks >= 40) {
+            clearInterval(feverInterval);
+        }
+    }, 200);
+
+    // 열차가 화면 밖으로 완전히 사라지는 시간(11초)에 맞춰 피버 타임 종료
+    setTimeout(() => {
+        if(GameState.isPlaying) {
+            endFeverTime();
+        }
+    }, 11000);
+}
+
+function handleFeverAnswer(item) {
+    playSound('pop');
+    spawnParticles(item.x + item.size/2, item.y + item.size/2, '#fbc531');
+    bubblePool.release(item);
+    GameState.score += 5;
+    updateScoreUI();
+}
+
+function endFeverTime() {
+    GameState.isFever = false;
+    stopFeverBGM(); // 축제 BGM 종료
+    
+    const train = document.getElementById('fever-train');
+    train.style.transition = 'none';
+    train.style.transform = 'translateX(-1500px)';
+    
+    GameState.currentStage++;
+    loadStage();
+}
+
+function resumeFromHint() {
+    playSound('pop');
+    document.getElementById('screen-hint').classList.add('hidden');
+    GameState.isPaused = false;
+    GameState.lastTime = performance.now();
+}
+
+function togglePause() {
+    if (!GameState.isPlaying || !document.getElementById('screen-hint').classList.contains('hidden') || GameState.isFogged) return;
+    GameState.isPaused = !GameState.isPaused;
+    const pauseScreen = document.getElementById('screen-pause');
+    
+    if (GameState.isPaused) {
+        pauseScreen.classList.remove('hidden');
+        if(GameState.isFever) stopFeverBGM(); // 일시정지 시 음악 정지
+    } else {
+        pauseScreen.classList.add('hidden'); 
+        GameState.lastTime = performance.now();
+        if(GameState.isFever) startFeverBGM(); // 재개 시 음악 다시 재생
+    }
+    playSound('pop');
+}
+
+function toggleMute() {
+    GameState.isMuted = !GameState.isMuted;
+    document.getElementById('btn-mute').textContent = GameState.isMuted ? '🔇' : '🔊';
+    if(GameState.isMuted && GameState.isFever) stopFeverBGM();
+    if(!GameState.isMuted && GameState.isFever && !GameState.isPaused) startFeverBGM();
+}
+
+function endGame() {
+    GameState.isPlaying = false;
+    stopFeverBGM();
+    
+    document.getElementById('ui-layer').classList.add('hidden');
+    document.getElementById('fog-overlay').classList.add('hidden');
+    
+    const totalQ = QUIZ_DATA.length;
+    const perfectAnswers = totalQ - GameState.mistakeStages.size;
+    
+    let title = "초보 마법사";
+    if (perfectAnswers === 20) title = "전설의 대마법사 🌟";
+    else if (perfectAnswers >= 15) title = "수석 연금술사 ✨";
+    else if (perfectAnswers >= 10) title = "숙련된 물약제조사 🧪";
+    
+    if (perfectAnswers > GameState.maxPerfectScore) {
+        GameState.maxPerfectScore = perfectAnswers;
+        localStorage.setItem('potion_max_perfect', GameState.maxPerfectScore);
+    }
+
+    document.getElementById('result-avatar').textContent = GameState.avatar;
+    document.getElementById('result-nickname').textContent = GameState.nickname;
+    document.getElementById('res-score').textContent = `${GameState.score}점`;
+    document.getElementById('res-perfect').textContent = `${perfectAnswers}개`;
+    document.getElementById('res-title').textContent = title;
+    
+    document.getElementById('screen-result').classList.remove('hidden');
+    playSound('correct');
+}
+
+function resetGameToLobby() {
+    GameState.isPlaying = false;
+    stopFeverBGM();
+    
+    document.getElementById('screen-result').classList.add('hidden');
+    document.getElementById('screen-pause').classList.add('hidden');
+    document.getElementById('ui-layer').classList.add('hidden');
+    document.getElementById('fog-overlay').classList.add('hidden');
+    document.getElementById('screen-lobby').classList.remove('hidden');
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles = [];
+    bubblePool.clearAll();
+    
+    const train = document.getElementById('fever-train');
+    train.style.transition = 'none';
+    train.style.transform = 'translateX(-1500px)';
+}
+
+function gameLoop(currentTime) {
+    const deltaTime = currentTime - GameState.lastTime;
+    GameState.lastTime = currentTime;
+    if (GameState.isPlaying && !GameState.isPaused && !GameState.isFogged) {
+        bubblePool.update(deltaTime);
+        updateDrawParticles();
+    }
+    animationFrameId = requestAnimationFrame(gameLoop);
+}
+
+window.onload = init;
+</script>
+</body>
+</html>

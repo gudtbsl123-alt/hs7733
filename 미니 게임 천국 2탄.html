@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎮 교실 미니 게임 천국 2탄 (궁극의 네온 에디션)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        :root { --bg-color: #050b14; }
+
+        body {
+            font-family: 'Jua', sans-serif; margin: 0; height: 100vh;
+            background: linear-gradient(-45deg, #050b14, #120e2b, #15103a, #0b1d42);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            color: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            overflow: hidden; user-select: none; touch-action: none;
+        }
+
+        /* 오락실 CRT 스캔라인 효과 */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.15));
+            background-size: 100% 4px; pointer-events: none; z-index: 998;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 10; }
+        .active { display: flex; animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(40px) scale(0.9); } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+        .glass-panel {
+            background: rgba(10, 15, 30, 0.6); backdrop-filter: blur(20px);
+            border: 2px solid rgba(0, 242, 254, 0.3); border-radius: 35px;
+            padding: 3vw 5vw; text-align: center; 
+            box-shadow: 0 0 40px rgba(0, 242, 254, 0.2), inset 0 0 20px rgba(0, 242, 254, 0.1);
+            width: 85%; max-width: 800px; max-height: 85vh; overflow-y: auto;
+        }
+
+        h1 { font-size: clamp(2.5rem, 6vw, 4rem); margin: 0 0 10px 0; text-shadow: 0 0 20px #00f2fe, 0 0 40px #4facfe; letter-spacing: 2px; }
+        h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); color: #f1c40f; margin-bottom: 20px; text-shadow: 0 0 15px rgba(241, 196, 15, 0.8); }
+        p { font-size: clamp(1.2rem, 2.5vw, 1.5rem); line-height: 1.5; word-break: keep-all; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+
+        .btn-main {
+            font-family: 'Jua', sans-serif; font-size: clamp(1.3rem, 3vw, 2.2rem); padding: 15px 30px; margin: 12px auto;
+            border: 2px solid transparent; border-radius: 50px; color: white; cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 100%; max-width: 450px; display: block;
+            text-transform: uppercase; letter-spacing: 1px; position: relative; overflow: hidden;
+        }
+        .btn-main::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transition: 0.5s; }
+        .btn-main:hover::before { left: 100%; }
+        .btn-main:hover { transform: translateY(-5px) scale(1.03); }
+        .btn-main:active { transform: translateY(3px) scale(0.95); }
+        
+        .g1 { background: linear-gradient(135deg, #ff0844, #ffb199); box-shadow: 0 10px 30px rgba(255, 8, 68, 0.5); }
+        .g2 { background: linear-gradient(135deg, #00b09b, #96c93d); box-shadow: 0 10px 30px rgba(0, 176, 155, 0.5); }
+        .g3 { background: linear-gradient(135deg, #667eea, #764ba2); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5); }
+        .g4 { background: linear-gradient(135deg, #f83600, #f9d423); box-shadow: 0 10px 30px rgba(248, 54, 0, 0.5); }
+        .g5 { background: linear-gradient(135deg, #00c6ff, #0072ff); box-shadow: 0 10px 30px rgba(0, 198, 255, 0.5); }
+        
+        .btn-home { position: absolute; top: 15px; left: 15px; font-family: 'Jua', sans-serif; font-size: 1.2rem; padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.5); color: #00f2fe; border: 1px solid #00f2fe; cursor: pointer; box-shadow: 0 0 15px rgba(0,242,254,0.3); transition: 0.2s; }
+        .btn-home:hover { background: #00f2fe; color: black; transform: scale(1.05); box-shadow: 0 0 25px #00f2fe; }
+
+        .setup-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 25px 0; align-items: center; }
+        select { font-family: 'Jua', sans-serif; font-size: 1.3rem; padding: 10px 15px; border-radius: 12px; background: rgba(0,0,0,0.8); color: #f1c40f; border: 2px solid #f1c40f; outline: none; box-shadow: 0 0 15px rgba(241,196,15,0.4); }
+        select option { background: #050b14; color: white; }
+        
+        .player-list-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 25px; }
+        .key-badge { display: inline-block; background: #fff; color: #000; padding: 4px 12px; border-radius: 8px; font-family: monospace; font-size: 1.3rem; font-weight: bold; box-shadow: 0 4px 0 #bdc3c7, 0 5px 15px rgba(0,0,0,0.5); transform: translateY(-4px); }
+
+        #touch-pads { display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 900; }
+        .touch-zone { position: absolute; width: 25vw; max-width: 120px; height: 25vw; max-height: 120px; border-radius: 50%; opacity: 0.7; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; pointer-events: auto; backdrop-filter: blur(5px); box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.5); border: 3px solid rgba(255,255,255,0.8); transition: all 0.1s; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .touch-zone:active { opacity: 1; transform: scale(0.9) translateY(10px); box-shadow: 0 0px 0px rgba(0,0,0,0.8), inset 0 10px 30px rgba(0,0,0,0.8); }
+
+        /* G1 얌얌 - 홀로그램 네온 테두리 */
+        .g1-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2vw; width: 90%; max-width: 650px; margin-top: 20px; perspective: 1000px; }
+        .num-btn { background: rgba(0,0,0,0.6); border-radius: 20px; font-size: clamp(1.8rem, 6vw, 3.5rem); font-family: 'Jua', sans-serif; color: #fff; border: 2px solid transparent; background-clip: padding-box; position: relative; cursor: pointer; aspect-ratio: 1; transition: all 0.1s; box-shadow: 0 10px 20px rgba(0,0,0,0.6); text-shadow: 0 0 10px #fff; }
+        .num-btn::after { content: ''; position: absolute; top: -2px; bottom: -2px; left: -2px; right: -2px; background: linear-gradient(45deg, #ff0844, #ffb199, #00f2fe, #4facfe); border-radius: 22px; z-index: -1; opacity: 0.5; }
+        .num-btn:active { transform: translateY(10px) scale(0.85); background: #fff; color: #000; box-shadow: 0 0 30px #ff0844; }
+        .num-btn.hidden { visibility: hidden; }
+
+        /* G2 풍선 - 스트라이프 게이지 바 */
+        .balloon-container { position: relative; width: 220px; height: 350px; margin-top: 30px; }
+        .balloon { width: 50px; height: 60px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .gauge-bar { width: 40px; height: 280px; background: rgba(0,0,0,0.8); border-radius: 20px; position: absolute; left: -70px; bottom: 0; overflow: hidden; border: 3px solid #00f2fe; box-shadow: 0 0 20px rgba(0,242,254,0.4), inset 0 0 15px rgba(0,0,0,0.9); }
+        .gauge-fill { width: 100%; height: 10%; position: absolute; bottom: 0; transition: height 0.1s linear; background: repeating-linear-gradient(45deg, #00b894, #00b894 10px, #55efc4 10px, #55efc4 20px); box-shadow: 0 -5px 20px #00b894; animation: moveStripe 1s linear infinite; }
+        @keyframes moveStripe { from { background-position: 0 0; } to { background-position: 0 28px; } }
+        .target-line { width: 56px; height: 6px; background: #fff; position: absolute; left: -8px; top: 15%; z-index: 10; border-radius: 3px; box-shadow: 0 0 15px #ff7675, 0 0 30px #ff7675; border: 1px solid #ff7675; }
+
+        /* G3 눈치 - 캐릭터 오라 */
+        .nunchi-players { display: flex; justify-content: space-around; width: 100%; max-width: 900px; margin-top: 60px; }
+        .nunchi-char { font-size: clamp(4rem, 10vw, 6.5rem); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; animation: floatChar 2.5s ease-in-out infinite; }
+        .nunchi-char::after { content:''; position:absolute; bottom:-10px; left:20%; width:60%; height:10px; background:rgba(0,0,0,0.5); border-radius:50%; filter:blur(5px); animation: shadowPulse 2.5s ease-in-out infinite; }
+        @keyframes floatChar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes shadowPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(0.6); opacity: 0.2; } }
+        .nunchi-char.up { animation: none; transform: translateY(-100px) scale(1.4); z-index: 10; filter: drop-shadow(0 0 30px currentColor); }
+        .nunchi-char.up::after { display: none; }
+
+        /* G4 폭탄 - 붉은 아우라 및 강한 하트비트 */
+        .bomb-display { font-size: clamp(8rem, 22vw, 14rem); margin: 30px 0; animation: heartBeat 0.3s infinite alternate; filter: drop-shadow(0 0 40px #ff0000); }
+        @keyframes heartBeat { from { transform: scale(1); filter: drop-shadow(0 0 20px #e74c3c); } to { transform: scale(1.15); filter: drop-shadow(0 0 70px #ff0000); } }
+        .holder-info { background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(20,0,0,0.9)); padding: 25px 40px; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,0,0,0.2); border: 4px solid transparent; transition: all 0.2s; }
+        .press-bar { width: 100%; max-width: 350px; height: 35px; background: rgba(0,0,0,0.8); border-radius: 20px; overflow: hidden; margin-top: 20px; border: 3px solid rgba(255,255,255,0.6); box-shadow: inset 0 0 20px rgba(0,0,0,0.9); }
+        .press-fill { height: 100%; background: linear-gradient(90deg, #f1c40f, #e74c3c); width: 0%; transition: width 0.1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 20px #f1c40f; }
+
+        /* G5 복도 - 바닥 스크롤 3D 애니메이션 */
+        .corridor { width: 95%; max-width: 700px; height: 350px; background: linear-gradient(to bottom, #111, #2c3e50); border-radius: 20px; border: 8px solid #bdc3c7; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 20px 50px rgba(0,0,0,0.8); perspective: 600px; }
+        /* 스크롤되는 사이버펑크 바닥 */
+        .corridor::before { 
+            content:''; position:absolute; top:40%; left:-50%; right:-50%; bottom:0; 
+            background: repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,242,254,0.2) 20px, rgba(0,242,254,0.4) 22px),
+                        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,242,254,0.2) 40px, rgba(0,242,254,0.4) 42px);
+            transform: rotateX(70deg); transform-origin: top; 
+            animation: scrollFloor 1.5s linear infinite; 
+        }
+        @keyframes scrollFloor { from { background-position: 0 0; } to { background-position: 0 42px; } }
+        
+        .character-sprite { font-size: clamp(7rem, 18vw, 12rem); position: absolute; bottom: 10px; transition: transform 0.1s; display: none; filter: drop-shadow(0 30px 15px rgba(0,0,0,0.8)); animation: popInG5 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 5; }
+        @keyframes popInG5 { from { transform: scale(0.5) translateY(50px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        
+        .score-board { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 25px; }
+        .score-card { background: rgba(0,0,0,0.8); padding: 12px 25px; border-radius: 15px; font-size: 1.6rem; border: 2px solid; box-shadow: 0 10px 25px rgba(0,0,0,0.6); text-shadow: 1px 1px 2px black; }
+
+        .flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: 999; }
+        @keyframes boomFlash { 0% { background: #fff; opacity: 1; } 100% { opacity: 0; } }
+        @keyframes redFlash { 0% { background: #ff0844; opacity: 0.9; } 100% { opacity: 0; } }
+        .shake { animation: shakeAnim 0.3s; }
+        @keyframes shakeAnim { 0%,100%{transform:translate(0,0) rotate(0deg)} 25%{transform:translate(-25px,25px) rotate(-5deg)} 50%{transform:translate(25px,-25px) rotate(5deg)} 75%{transform:translate(-25px,-25px) rotate(-5deg)} }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div id="flash-screen" class="flash"></div>
+    <div id="touch-pads"></div>
+
+    <div id="screen-menu" class="screen active">
+        <div class="glass-panel">
+            <h1>🎪 미니 게임 천국 2</h1>
+            <p style="color: #00f2fe; margin-bottom: 25px; font-size:1.8rem; font-weight:bold; text-shadow: 0 0 10px #00f2fe;">✨ 얼티밋 네온 그래픽 에디션 ✨</p>
+            <button class="btn-main g1" onclick="showScreen('screen-g1-ready')">🔢 순서대로 얌얌</button>
+            <button class="btn-main g2" onclick="showScreen('screen-g2-ready')">🎈 터지기 직전! 풍선 펌프</button>
+            <button class="btn-main g3" onclick="showScreen('screen-g3-ready')">🚨 짝꿍 눈치 게임</button>
+            <button class="btn-main g4" onclick="showScreen('screen-g4-ready')">💣 째깍째깍 폭탄 돌리기</button>
+            <button class="btn-main g5" onclick="showScreen('screen-g5-ready')">📵 매의 눈 복도 지킴이</button>
+        </div>
+    </div>
+
+    <div id="screen-g1-ready" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 메뉴</button>
+        <div class="glass-panel">
+            <h2>🔢 순서대로 얌얌</h2>
+            <p>1부터 20까지 숫자를 순서대로 빠르게 누르세요!</p>
+            <div class="setup-bar"><label>참가 인원:</label><select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option></select></div>
+            <button class="btn-main g1" onclick="startG1()">게임 시작!</button>
+        </div>
+    </div>
+    <div id="screen-g1-play" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
+        <h2 id="g1-turn-msg" style="color: #ff9a9e; font-size: 3rem; text-shadow: 0 0 30px #ff9a9e;">플레이어 1 차례!</h2>
+        <div style="font-size: 3.5rem; font-family: monospace; color:#00f2fe; text-shadow: 0 0 20px #00f2fe;" id="g1-timer">0.00</div>
+        <div class="g1-board" id="g1-board"></div>
+    </div>
+
+    <div id="screen-g2-ready" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 메뉴</button>
+        <div class="glass-panel">
+            <h2>🎈 터지기 직전! 풍선 펌프</h2>
+            <p>게이지가 <span style="color:#ff7675; text-shadow:0 0 10px #ff7675;">하얀 선(최고점)</span>에 닿았을 때 버튼을 누르세요!</p>
+            <div class="setup-bar"><label>참가 인원:</label><select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option></select></div>
+            <div class="player-list-display preview-area"></div>
+            <button class="btn-main g2" onclick="startG2()">게임 시작!</button>
+        </div>
+    </div>
+    <div id="screen-g2-play" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
+        <div style="display:flex; gap: 6vw; flex-wrap: wrap; justify-content: center;" id="g2-arena"></div>
+    </div>
+
+    <div id="screen-g3-ready" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 메뉴</button>
+        <div class="glass-panel">
+            <h2>🚨 짝꿍 눈치 게임</h2>
+            <p>겹치지 않게 버튼을 누르세요! <span style="color:#ff7675;">동시에 누르면 감전 탈락!</span></p>
+            <div class="setup-bar"><label>참가 인원:</label><select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option></select></div>
+            <div class="player-list-display preview-area"></div>
+            <button class="btn-main g3" onclick="startG3()">눈치 싸움 시작!</button>
+        </div>
+    </div>
+    <div id="screen-g3-play" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
+        <h1 id="g3-counter" style="font-size: 12rem; color: #a18cd1; text-shadow: 0 0 60px #a18cd1;">준비</h1>
+        <div class="nunchi-players" id="g3-arena"></div>
+    </div>
+
+    <div id="screen-g4-ready" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 메뉴</button>
+        <div class="glass-panel">
+            <h2>💣 째깍째깍 폭탄 돌리기</h2>
+            <p>폭탄이 넘어오면 <b>버튼을 빠르게 5번 연타</b>해서 넘기세요!</p>
+            <div class="setup-bar"><label>참가 인원:</label><select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option></select></div>
+            <div class="player-list-display preview-area"></div>
+            <button class="btn-main g4" onclick="startG4()">폭탄 돌리기 시작!</button>
+        </div>
+    </div>
+    <div id="screen-g4-play" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
+        <div class="bomb-display" id="g4-bomb">💣</div>
+        <div class="holder-info" id="g4-holder-box">
+            <div id="g4-holder-name" style="font-size:3rem; text-shadow:0 0 15px white;">준비 중...</div>
+            <div class="press-bar"><div class="press-fill" id="g4-press-fill"></div></div>
+            <div style="font-size: 1.5rem; margin-top: 10px; color:#bdc3c7;">5번 연타해서 넘기세요! (<span id="g4-press-count" style="color:white; font-weight:bold;">0</span>/5)</div>
+        </div>
+    </div>
+
+    <div id="screen-g5-ready" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 메뉴</button>
+        <div class="glass-panel">
+            <h2>📵 매의 눈 복도 지킴이</h2>
+            <p><b>스마트폰 좀비(📱)가 나타났을 때 가장 먼저 누르세요!</b> (3점 승리)<br><span style="color:#ff7675; font-size:1.6rem;">※ 주의: 좀비가 아닐 때 찍으면 <b>마이너스(-)로 감점됩니다!</b></span></p>
+            <div class="setup-bar"><label>참가 인원:</label><select class="player-select" onchange="updateGlobalPlayers(this.value)"><option value="2">2인</option><option value="3">3인</option><option value="4" selected>4인</option></select></div>
+            <div class="player-list-display preview-area"></div>
+            <button class="btn-main g5" onclick="startG5()">지킴이 출동!</button>
+        </div>
+    </div>
+    <div id="screen-g5-play" class="screen">
+        <button class="btn-home" onclick="backToMenu()">◀ 강제 종료</button>
+        <h2 id="g5-message" style="font-size:3.5rem; text-shadow:0 0 30px #f1c40f;">복도를 주시하세요...</h2>
+        <div class="corridor">
+            <div class="character-sprite" id="g5-character">🚶</div>
+        </div>
+        <div class="score-board" id="g5-scores"></div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="glass-panel">
+            <h1 id="result-title" style="font-size: clamp(3.5rem, 8vw, 5rem); color: #f1c40f; text-shadow:0 0 40px #f1c40f;">결과 발표</h1>
+            <div id="result-content" style="font-size: 2.5rem; margin: 40px 0; line-height: 1.5; font-weight:bold;"></div>
+            <button class="btn-main" onclick="backToMenu()">메인으로 돌아가기</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🎵 자체 제작 웹 오디오 신디사이저 엔진 
+        // ==========================================
+        const SoundEngine = (function() {
+            let ctx = null; let bgmTimer = null;
+            function init() {
+                if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+            }
+            function playTone(freq, type, duration, vol=0.1, slideFreq=null) {
+                if(!ctx) return;
+                try {
+                    let osc = ctx.createOscillator(); let gain = ctx.createGain();
+                    osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    if(slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, ctx.currentTime + duration);
+                    gain.gain.setValueAtTime(vol, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(); osc.stop(ctx.currentTime + duration);
+                } catch(e) {}
+            }
+            function playNoise(duration, vol=0.3) {
+                if(!ctx) return;
+                try {
+                    let bufferSize = ctx.sampleRate * duration; let buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                    let data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    let noise = ctx.createBufferSource(); noise.buffer = buffer;
+                    let gain = ctx.createGain(); gain.gain.setValueAtTime(vol, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                    noise.connect(gain); gain.connect(ctx.destination); noise.start();
+                } catch(e) {}
+            }
+            return {
+                init: init,
+                click: () => playTone(800, 'sine', 0.1, 0.1),
+                pop: () => playTone(400, 'sine', 0.15, 0.1, 800),
+                fail: () => { playTone(300, 'sawtooth', 0.2, 0.1, 150); setTimeout(() => playTone(150, 'sawtooth', 0.4, 0.1, 50), 200); },
+                win: () => { playTone(400, 'square', 0.1, 0.1); setTimeout(() => playTone(500, 'square', 0.1, 0.1), 100); setTimeout(() => playTone(600, 'square', 0.1, 0.1), 200); setTimeout(() => playTone(800, 'square', 0.4, 0.1), 300); },
+                shock: () => playTone(100, 'sawtooth', 0.5, 0.2, 50),
+                boom: () => playNoise(0.8, 0.5),
+                correct: () => playTone(600, 'sine', 0.1, 0.1, 1200),
+                whistle: () => { playTone(1200, 'sine', 0.2, 0.1); setTimeout(() => playTone(1400, 'sine', 0.3, 0.1), 100); },
+                playBGM: (type) => {
+                    clearInterval(bgmTimer); if(!ctx) return;
+                    let step = 0; let speed = 250; let logic = null;
+                    if (type === 'menu') { const notes = [261.6, 329.6, 392.0, 329.6]; logic = () => { playTone(notes[step % notes.length], 'square', 0.2, 0.05); step++; }; speed = 400; }
+                    else if (type === 'g1') { const notes = [440, 493, 523, 587]; logic = () => { playTone(notes[step % notes.length], 'square', 0.1, 0.05); step++; }; speed = 150; }
+                    else if (type === 'g2') { const notes = [261.6, 261.6, 392, 392]; logic = () => { playTone(notes[step % notes.length], 'triangle', 0.2, 0.05); step++; }; speed = 300; }
+                    else if (type === 'g3') { const notes = [130.8, 146.8]; logic = () => { playTone(notes[step % notes.length], 'sine', 0.5, 0.1); step++; }; speed = 800; }
+                    else if (type === 'g4') { logic = () => { playTone((step % 2 === 0) ? 800 : 400, 'square', 0.05, 0.05); step++; }; speed = 500; }
+                    else if (type === 'g5') { const notes = [392, 0, 329, 0, 261, 0, 329, 0]; logic = () => { if(notes[step % notes.length] > 0) playTone(notes[step % notes.length], 'square', 0.1, 0.05); step++; }; speed = 200; }
+                    if(logic) bgmTimer = setInterval(logic, speed);
+                },
+                stopBGM: () => clearInterval(bgmTimer)
+            };
+        })();
+
+        document.body.addEventListener('click', () => SoundEngine.init(), {once: true});
+        document.body.addEventListener('touchstart', () => SoundEngine.init(), {once: true});
+
+        // --- 공통 변수 및 플레이어 데이터 ---
+        let currentActiveGame = 0; let globalNumPlayers = 4;
+        let isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+        const pData = [
+            { id: 'p1', key: 'q', emoji: '🐶', color: '#ff4757', name: 'P1', pos: 'bottom:20px; left:20px;' },
+            { id: 'p2', key: 'p', emoji: '🐱', color: '#1e90ff', name: 'P2', pos: 'bottom:20px; right:20px;' },
+            { id: 'p3', key: 'z', emoji: '🦊', color: '#2ed573', name: 'P3', pos: 'top:20px; left:20px;' },
+            { id: 'p4', key: 'm', emoji: '🐼', color: '#ffa502', name: 'P4', pos: 'top:20px; right:20px;' }
+        ];
+
+        let keyStates = {};
+
+        function showScreen(screenId) {
+            SoundEngine.init(); 
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'screen-menu') { SoundEngine.stopBGM(); SoundEngine.playBGM('menu'); }
+            renderPreviews();
+        }
+
+        function backToMenu() {
+            currentActiveGame = 0; hideTouchPads();
+            document.body.classList.remove('shake');
+            document.getElementById('flash-screen').style.animation = '';
+            showScreen('screen-menu');
+        }
+
+        function updateGlobalPlayers(val) {
+            globalNumPlayers = parseInt(val);
+            document.querySelectorAll('.player-select').forEach(sel => sel.value = val);
+            renderPreviews();
+        }
+
+        function renderPreviews() {
+            let html = pData.slice(0, globalNumPlayers).map(p => 
+                `<span style="color:${p.color}; text-shadow:0 0 10px ${p.color};"><span class="key-badge">${p.key.toUpperCase()}</span> ${p.name}</span>`
+            ).join('  ');
+            document.querySelectorAll('.preview-area').forEach(el => el.innerHTML = html);
+        }
+
+        function createTouchPads() {
+            const padContainer = document.getElementById('touch-pads'); padContainer.innerHTML = '';
+            if(isTouchDevice || window.innerWidth < 768) {
+                padContainer.style.display = 'block';
+                pData.slice(0, globalNumPlayers).forEach(p => {
+                    padContainer.innerHTML += `<div class="touch-zone" style="background:rgba(255,255,255,0.1); color:${p.color}; border-color:${p.color}; box-shadow: 0 0 30px ${p.color}; ${p.pos}" ontouchstart="simulateKey('${p.key}')">${p.emoji}</div>`;
+                });
+            }
+        }
+        function hideTouchPads() { document.getElementById('touch-pads').style.display = 'none'; }
+        function simulateKey(k) { handleInput(k); setTimeout(() => handleKeyUp(k), 100); }
+
+        window.addEventListener('keydown', (e) => { let k = e.key.toLowerCase(); if(!keyStates[k]) { keyStates[k] = true; handleInput(k); } });
+        window.addEventListener('keyup', (e) => { keyStates[e.key.toLowerCase()] = false; });
+
+        function handleInput(key) {
+            if(currentActiveGame === 2) handleG2(key);
+            if(currentActiveGame === 3) handleG3(key);
+            if(currentActiveGame === 4) handleG4(key);
+            if(currentActiveGame === 5) handleG5(key);
+        }
+
+        function showResult(title, content) {
+            currentActiveGame = 0; hideTouchPads(); SoundEngine.stopBGM();
+            document.getElementById('result-title').innerHTML = title;
+            document.getElementById('result-content').innerHTML = content;
+            showScreen('screen-result'); SoundEngine.win();
+        }
+
+        // ==========================================
+        // 1. 순서대로 얌얌
+        // ==========================================
+        let g1CurPlayer = 0; let g1Target = 1; let g1StartTime; let g1TimerInt; let g1Records = [];
+        function startG1() { SoundEngine.stopBGM(); showScreen('screen-g1-play'); currentActiveGame = 1; SoundEngine.playBGM('g1'); g1CurPlayer = 0; g1Records = []; setupG1Board(); }
+        function setupG1Board() {
+            g1Target = 1; let p = pData[g1CurPlayer];
+            document.getElementById('g1-turn-msg').innerHTML = `<span style="color:${p.color}; text-shadow:0 0 30px ${p.color};">${p.emoji} ${p.name} 차례!</span> (준비)`;
+            document.getElementById('g1-timer').innerText = "0.00";
+            let nums = Array.from({length:20}, (_,i)=>i+1).sort(()=>Math.random()-0.5);
+            document.getElementById('g1-board').innerHTML = nums.map(n => `<button class="num-btn" id="nbtn-${n}" onclick="clickG1Num(${n})">${n}</button>`).join('');
+            g1StartTime = 0; clearInterval(g1TimerInt);
+        }
+        function clickG1Num(n) {
+            if(n === g1Target) {
+                if(g1Target === 1) { g1StartTime = Date.now(); g1TimerInt = setInterval(() => { document.getElementById('g1-timer').innerText = ((Date.now()-g1StartTime)/1000).toFixed(2); }, 50); }
+                document.getElementById(`nbtn-${n}`).classList.add('hidden'); SoundEngine.click(); g1Target++;
+                if(g1Target > 20) { 
+                    clearInterval(g1TimerInt); g1Records.push({name: pData[g1CurPlayer].name, color: pData[g1CurPlayer].color, time: (Date.now() - g1StartTime)/1000}); g1CurPlayer++;
+                    if(g1CurPlayer < globalNumPlayers) { setTimeout(setupG1Board, 1500); document.getElementById('g1-turn-msg').innerText = "다음 플레이어 준비!"; } 
+                    else { g1Records.sort((a,b)=>a.time - b.time); let html = g1Records.map((r,i) => `<div style="color:${r.color}">${i+1}위: ${r.name} (${r.time.toFixed(2)}초)</div>`).join(''); setTimeout(()=>showResult("🔢 순서 얌얌 결과", html), 1000); }
+                }
+            } else { document.body.classList.add('shake'); SoundEngine.fail(); setTimeout(()=>document.body.classList.remove('shake'), 200); }
+        }
+
+        // ==========================================
+        // 2. 터지기 직전! 풍선 펌프
+        // ==========================================
+        let g2Gauge = 0; let g2Dir = 1; let g2Anim; let g2Playing = false; let g2Scores = {}; let g2Done = {};
+        function startG2() {
+            SoundEngine.stopBGM(); showScreen('screen-g2-play'); currentActiveGame = 2; g2Playing = true; SoundEngine.playBGM('g2'); createTouchPads();
+            let html = '';
+            pData.slice(0, globalNumPlayers).forEach(p => {
+                g2Scores[p.id] = 0; g2Done[p.id] = false;
+                html += `<div class="balloon-container" id="bc-${p.id}"><div class="gauge-bar"><div class="target-line"></div><div class="gauge-fill" id="gf-${p.id}"></div></div><div class="balloon" id="bal-${p.id}" style="background: radial-gradient(circle at 30% 30%, ${p.color}, #000); border: 2px solid ${p.color}; box-shadow: 0 0 20px ${p.color};">${p.emoji}</div><div style="text-align:center; margin-top:15px; color:${p.color}; font-size:1.5rem; text-shadow:0 0 15px ${p.color}; font-weight:bold;">${p.name}</div></div>`;
+            });
+            document.getElementById('g2-arena').innerHTML = html; g2Gauge = 0; g2Loop();
+        }
+        function g2Loop() {
+            if(!g2Playing) return;
+            g2Gauge += 2 * g2Dir; if(g2Gauge >= 100) { g2Gauge = 100; g2Dir = -1; } if(g2Gauge <= 0) { g2Gauge = 0; g2Dir = 1; }
+            pData.slice(0, globalNumPlayers).forEach(p => { if(!g2Done[p.id]) document.getElementById(`gf-${p.id}`).style.height = `${g2Gauge}%`; });
+            g2Anim = requestAnimationFrame(g2Loop);
+        }
+        function handleG2(key) {
+            if(!g2Playing) return; let p = pData.slice(0, globalNumPlayers).find(x => x.key === key);
+            if(p && !g2Done[p.id]) {
+                g2Done[p.id] = true; let score = g2Gauge; let b = document.getElementById(`bal-${p.id}`);
+                if(score >= 80 && score <= 90) { b.style.width = '120px'; b.style.height = '140px'; b.style.boxShadow = `0 0 60px ${p.color}`; SoundEngine.pop(); } 
+                else if(score > 90) { b.innerHTML = '💥'; b.style.background='transparent'; b.style.border='none'; b.style.boxShadow='none'; SoundEngine.fail(); score = 0; } 
+                else { let size = 50 + (score/2); b.style.width = size+'px'; b.style.height = (size+10)+'px'; SoundEngine.click(); }
+                g2Scores[p.id] = score;
+                if(Object.values(g2Done).every(v => v)) {
+                    g2Playing = false; cancelAnimationFrame(g2Anim);
+                    let winner = Object.keys(g2Scores).reduce((a, b) => g2Scores[a] > g2Scores[b] ? a : b); let wp = pData.find(x=>x.id===winner);
+                    setTimeout(()=>showResult("🎈 펌프 결과", `<span style="font-size:6rem">${wp.emoji}</span><br><span style="color:${wp.color}">${wp.name}</span> 우승! (정확도: ${g2Scores[winner].toFixed(1)}%)`), 1500);
+                }
+            }
+        }
+
+        // ==========================================
+        // 3. 짝꿍 눈치 게임
+        // ==========================================
+        let g3Count = 1; let g3Playing = false; let g3PressTimes = {}; let g3Loop;
+        function startG3() {
+            SoundEngine.stopBGM(); showScreen('screen-g3-play'); currentActiveGame = 3; createTouchPads(); g3Count = 1; g3PressTimes = {};
+            document.getElementById('g3-arena').innerHTML = pData.slice(0, globalNumPlayers).map(p => `<div class="nunchi-char" id="nc-${p.id}" style="color:${p.color}">${p.emoji}</div>`).join('');
+            let cDiv = document.getElementById('g3-counter'); cDiv.innerText = "준비";
+            setTimeout(() => { cDiv.innerText = "시작!"; SoundEngine.playBGM('g3'); g3Playing = true; g3NextTick(); }, 2000);
+        }
+        function g3NextTick() {
+            if(!g3Playing) return; document.getElementById('g3-counter').innerText = g3Count;
+            g3Loop = setTimeout(() => { if(g3Playing) { g3Count++; g3NextTick(); } }, Math.random() * 1000 + 1000);
+        }
+        function handleG3(key) {
+            if(!g3Playing) return; let p = pData.slice(0, globalNumPlayers).find(x => x.key === key);
+            if(p && !g3PressTimes[p.id]) {
+                let now = Date.now(); g3PressTimes[p.id] = now; document.getElementById(`nc-${p.id}`).classList.add('up');
+                let conflicts = Object.keys(g3PressTimes).filter(id => id !== p.id && Math.abs(g3PressTimes[id] - now) < 300);
+                if(conflicts.length > 0) {
+                    g3Playing = false; clearTimeout(g3Loop); SoundEngine.shock();
+                    document.getElementById('flash-screen').style.animation = 'boomFlash 0.5s';
+                    document.getElementById(`nc-${p.id}`).innerHTML = '💀'; conflicts.forEach(cid => document.getElementById(`nc-${cid}`).innerHTML = '💀');
+                    setTimeout(()=>showResult("⚡ 찌릿!", "동시에 일어나서 감전 탈락!"), 1500);
+                } else {
+                    SoundEngine.click();
+                    if(Object.keys(g3PressTimes).length === globalNumPlayers - 1) {
+                        g3Playing = false; clearTimeout(g3Loop); let loser = pData.slice(0, globalNumPlayers).find(x => !g3PressTimes[x.id]);
+                        setTimeout(()=>showResult("😂 눈치 실패", `<span style="font-size:6rem">${loser.emoji}</span><br><span style="color:${loser.color}">${loser.name}</span> 탈락! (끝까지 안 일어남)`), 1500);
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 4. 째깍째깍 폭탄 돌리기 (폭발 6초~33초)
+        // ==========================================
+        let g4HolderIdx = 0; let g4PressCount = 0; let g4Playing = false; let g4Timer;
+        function startG4() {
+            SoundEngine.stopBGM(); showScreen('screen-g4-play'); currentActiveGame = 4; createTouchPads();
+            SoundEngine.playBGM('g4'); g4Playing = true; g4PressCount = 0;
+            g4HolderIdx = Math.floor(Math.random() * globalNumPlayers); updateG4UI();
+            document.getElementById('g4-bomb').innerText = '💣';
+            
+            // 6초 ~ 33초 사이 랜덤 폭발
+            let bombTime = Math.random() * 27000 + 6000; 
+            g4Timer = setTimeout(explodeG4, bombTime);
+        }
+        function updateG4UI() {
+            let p = pData[g4HolderIdx];
+            document.getElementById('g4-holder-box').style.borderColor = p.color;
+            document.getElementById('g4-holder-box').style.boxShadow = `0 20px 50px rgba(0,0,0,0.8), inset 0 0 40px ${p.color}`;
+            document.getElementById('g4-holder-name').innerHTML = `<span style="color:${p.color}; text-shadow:0 0 20px ${p.color};">${p.emoji} ${p.name}</span>의 턴!`;
+            document.getElementById('g4-press-count').innerText = g4PressCount;
+            document.getElementById('g4-press-fill').style.width = `${(g4PressCount/5)*100}%`;
+        }
+        function handleG4(key) {
+            if(!g4Playing) return; let p = pData[g4HolderIdx];
+            if(p.key === key) {
+                g4PressCount++; SoundEngine.click();
+                if(g4PressCount >= 5) { g4PressCount = 0; g4HolderIdx = (g4HolderIdx + 1) % globalNumPlayers; SoundEngine.pop(); }
+                updateG4UI();
+            }
+        }
+        function explodeG4() {
+            g4Playing = false; SoundEngine.stopBGM(); document.body.classList.add('shake');
+            document.getElementById('flash-screen').style.animation = 'boomFlash 1s forwards'; setTimeout(() => document.getElementById('flash-screen').style.animation = '', 1000);
+            SoundEngine.boom(); document.getElementById('g4-bomb').innerText = '💥';
+            let loser = pData[g4HolderIdx];
+            setTimeout(() => { showResult("💥 폭탄 터짐!", `<span style="font-size:6rem">${loser.emoji}</span><br><span style="color:${loser.color}">${loser.name}</span> 폭사! (패배)`); }, 1500);
+        }
+
+        // ==========================================
+        // 5. 매의 눈 복도 지킴이 (등장 0.5초~2초, 찐 좀비 형상 5종)
+        // ==========================================
+        let g5Scores = {}; let g5Playing = false; let g5IsZombie = false; let g5RoundTimer;
+        
+        // ✨ 진정한 좀비와 관련된 형상 5가지 (스마트폰 결합) ✨
+        // 1. 일반 좀비, 2. 남자 좀비, 3. 여자 좀비, 4. 해골 좀비, 5. 좀비 떼
+        const zType = ['🧟📱', '🧟‍♂️📱', '🧟‍♀️📱', '💀📱', '🧟🧟📱'];
+        const nType = ['🚶', '🏃', '🙋', '👯', '🤷'];
+
+        function startG5() {
+            SoundEngine.stopBGM(); showScreen('screen-g5-play'); currentActiveGame = 5; createTouchPads();
+            SoundEngine.playBGM('g5'); g5Playing = true; 
+            pData.slice(0, globalNumPlayers).forEach(p => g5Scores[p.id] = 0);
+            updateG5ScoreUI(); nextG5Character();
+        }
+        function updateG5ScoreUI() {
+            document.getElementById('g5-scores').innerHTML = pData.slice(0, globalNumPlayers).map(p => 
+                `<div class="score-card" style="border-color:${p.color}; box-shadow: 0 0 15px ${p.color};"><span style="color:${p.color}; text-shadow:0 0 10px ${p.color};">${p.emoji} ${p.name}</span>: ${g5Scores[p.id]}점</div>`
+            ).join('');
+        }
+        function nextG5Character() {
+            if(!g5Playing) return;
+            document.getElementById('g5-message').innerText = "복도를 주시하세요...";
+            let charDiv = document.getElementById('g5-character'); charDiv.style.display = 'none';
+            
+            // 0.5초 ~ 2초 사이 랜덤 등장
+            let waitTime = Math.random() * 1500 + 500;
+
+            g5RoundTimer = setTimeout(() => {
+                if(!g5Playing) return;
+                
+                g5IsZombie = Math.random() < 0.35; 
+                charDiv.innerText = g5IsZombie 
+                                    ? zType[Math.floor(Math.random() * zType.length)] 
+                                    : nType[Math.floor(Math.random() * nType.length)];
+                
+                charDiv.style.display = 'block';
+                
+                // 좀비가 아니면 0.8초 후 사라지고 다음 턴
+                if(!g5IsZombie) { 
+                    setTimeout(() => { if(charDiv.style.display === 'block') nextG5Character(); }, 800); 
+                }
+            }, waitTime);
+        }
+        function handleG5(key) {
+            if(!g5Playing) return; let p = pData.slice(0, globalNumPlayers).find(x => x.key === key);
+            if(p) {
+                let charDiv = document.getElementById('g5-character');
+                if(charDiv.style.display === 'block') {
+                    if(g5IsZombie) {
+                        SoundEngine.whistle();
+                        document.getElementById('g5-message').innerHTML = `<span style="color:${p.color}; text-shadow:0 0 20px ${p.color};">${p.name}</span> 단속 성공! (+1점)`;
+                        g5Scores[p.id]++; updateG5ScoreUI(); charDiv.style.display = 'none'; g5IsZombie = false;
+                        if(g5Scores[p.id] >= 3) {
+                            g5Playing = false; clearTimeout(g5RoundTimer);
+                            setTimeout(() => showResult("👮 최고 지킴이", `<span style="font-size:6rem">${p.emoji}</span><br><span style="color:${p.color}">${p.name}</span> 3점 달성 우승!`), 1000);
+                        } else { setTimeout(nextG5Character, 1000); }
+                    } else {
+                        SoundEngine.fail();
+                        let flashRed = document.getElementById('flash-screen'); flashRed.style.animation = 'redFlash 0.5s'; setTimeout(() => flashRed.style.animation = '', 500);
+                        document.getElementById('g5-message').innerHTML = `<span style="color:#ff0844; text-shadow:0 0 20px #ff0844;">${p.name} 억울한 학생 잡음! (-1점)</span>`;
+                        g5Scores[p.id]--; updateG5ScoreUI(); charDiv.style.display = 'none'; setTimeout(nextG5Character, 1000);
+                    }
+                }
+            }
+        }
+
+        // 앱 시작
+        renderPreviews();
+    </script>
+</body>
+</html>
