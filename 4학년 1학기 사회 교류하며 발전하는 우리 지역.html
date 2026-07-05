@@ -1,0 +1,1370 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>대한민국 교류 대작전</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    font-family:'Gowun Dodum','Malgun Gothic','Segoe UI',sans-serif;
+    background:linear-gradient(160deg,#bfe6ff 0%,#8fd3f4 35%,#6cc3ea 70%,#4fb3e0 100%);
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+    overflow-x:hidden;
+    color:#26323d;
+    position:relative;
+  }
+
+  /* ---------- 하늘 데코: 해 & 구름 ---------- */
+  .skyDeco{ position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+  .sunDeco{
+    position:absolute; top:-40px; right:-30px; width:180px; height:180px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff6cf, #ffd76a 55%, #ffbe3d 100%);
+    box-shadow:0 0 60px 20px rgba(255,214,110,.55);
+  }
+  .cloudDeco{
+    position:absolute; background:#fff; border-radius:50px; opacity:.85;
+    box-shadow:0 8px 18px rgba(60,110,150,.12);
+  }
+  .cloudDeco::before, .cloudDeco::after{
+    content:''; position:absolute; background:#fff; border-radius:50%;
+  }
+  .cloud1{ width:130px; height:44px; top:8%; left:-10%; animation:driftRight 38s linear infinite; }
+  .cloud1::before{ width:60px; height:60px; top:-30px; left:15px; }
+  .cloud1::after{ width:45px; height:45px; top:-20px; left:65px; }
+  .cloud2{ width:100px; height:36px; top:22%; left:-15%; animation:driftRight 52s linear infinite; animation-delay:-15s; opacity:.7; }
+  .cloud2::before{ width:46px; height:46px; top:-22px; left:12px; }
+  .cloud2::after{ width:34px; height:34px; top:-14px; left:50px; }
+  .cloud3{ width:150px; height:50px; top:4%; left:-20%; animation:driftRight 65s linear infinite; animation-delay:-30s; opacity:.6; }
+  .cloud3::before{ width:70px; height:70px; top:-34px; left:20px; }
+  .cloud3::after{ width:52px; height:52px; top:-22px; left:78px; }
+  @keyframes driftRight{ from{ transform:translateX(0); } to{ transform:translateX(140vw); } }
+
+  #app{ width:100%; max-width:1485px; min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
+
+  /* ---------- HEADER ---------- */
+  #hud{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; row-gap:6px;
+    padding:10px 14px; background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.82));
+    backdrop-filter:blur(6px);
+    border-bottom:3px solid #2f7fc1; border-radius:0 0 20px 20px;
+    box-shadow:0 4px 14px rgba(30,80,130,.18);
+    position:sticky; top:0; z-index:50;
+  }
+  #hud .stat{ display:flex; align-items:center; gap:5px; font-weight:700; font-size:48px; font-family:'Jua',sans-serif; }
+  #heartsBox{ display:flex; gap:2px; }
+  .heart{ font-size:50px; transition:transform .2s; }
+  .heart.lost{ opacity:.25; transform:scale(.8); }
+  #scoreBox{ color:#c1660b; position:relative; }
+  .scorePop{
+    position:absolute; left:50%; top:-6px; transform:translateX(-50%);
+    font-weight:900; color:#38b000; font-size:0.8em; white-space:nowrap;
+    animation:scoreFloat .9s ease forwards; pointer-events:none; text-shadow:0 1px 0 #fff;
+  }
+  @keyframes scoreFloat{
+    0%{ opacity:0; transform:translate(-50%,4px) scale(.8); }
+    30%{ opacity:1; transform:translate(-50%,-12px) scale(1.2); }
+    100%{ opacity:0; transform:translate(-50%,-38px) scale(1); }
+  }
+  .sparkle{ pointer-events:none; }
+  #roundBox{ color:#2f7fc1; }
+  #comboBadge{
+    display:none; align-items:center; gap:3px; font-size:45px; font-weight:900; color:#e85d04;
+    background:#fff3e0; border:2px solid #ffb703; border-radius:20px; padding:3px 13px;
+    animation:comboPop .35s ease;
+  }
+  #comboBadge.show{ display:flex; }
+  @keyframes comboPop{ 0%{ transform:scale(.5); } 60%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
+
+  #progressWrap{ height:10px; background:#dcefff; overflow:hidden; }
+  #progressBar{
+    height:100%; width:0%; position:relative; overflow:hidden;
+    background:linear-gradient(90deg,#4cc9f0,#4361ee); transition:width .35s ease;
+  }
+  #progressBar::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(110deg, transparent 20%, rgba(255,255,255,.55) 50%, transparent 80%);
+    background-size:60px 100%; animation:shimmer 1.6s linear infinite;
+  }
+  @keyframes shimmer{ from{ background-position:-80px 0; } to{ background-position:220px 0; } }
+
+  /* ---------- HINT BUTTON ---------- */
+  #hintBtn{
+    display:flex; align-items:center; gap:6px; margin:0 auto 15px; padding:15px 30px;
+    background:linear-gradient(180deg,#fff3cf,#ffe9a8); border:2px solid #ffb703; border-radius:22px; font-size:45px; font-weight:800;
+    font-family:'Jua',sans-serif; color:#8a5a00; cursor:pointer; width:fit-content;
+    box-shadow:0 4px 10px rgba(200,150,0,.25); transition:transform .1s;
+  }
+  #hintBtn:hover:not(:disabled){ transform:translateY(-2px); }
+  #hintBtn:disabled{ opacity:.4; cursor:not-allowed; }
+  #hintBtn .hcount{ background:#ffb703; color:#5c3600; border-radius:50%; width:39px; height:39px; display:inline-flex; align-items:center; justify-content:center; font-size:36px; }
+
+  /* ---------- 지도 위 재미 연출 ---------- */
+  .popEmoji{ font-size:26px; pointer-events:none; animation:popFloat .9s ease forwards; }
+  @keyframes popFloat{
+    0%{ transform:translateY(0) scale(.4); opacity:0; }
+    25%{ transform:translateY(-8px) scale(1.2); opacity:1; }
+    70%{ transform:translateY(-30px) scale(1); opacity:1; }
+    100%{ transform:translateY(-46px) scale(.8); opacity:0; }
+  }
+  .truckIcon{ font-size:22px; pointer-events:none; }
+  @keyframes hintPulse{
+    0%,100%{ filter:drop-shadow(0 0 0px #ffd60a); }
+    50%{ filter:drop-shadow(0 0 9px #ffd60a) brightness(1.15); }
+  }
+  .region.hint-glow{ animation:hintPulse .8s ease-in-out infinite; }
+  .homeIcon{ pointer-events:none; }
+
+  /* ---------- SCREENS ---------- */
+  .screen{ flex:1; display:flex; flex-direction:column; align-items:center; padding:33px 24px 60px; }
+  .hidden{ display:none !important; }
+  .screen.enter{ animation:screenEnter .35s ease; }
+  @keyframes screenEnter{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  h1.title{ font-family:'Jua',sans-serif; font-size:88px; color:#1c4e80; text-shadow:2px 2px 0 #fff, 0 4px 10px rgba(28,78,128,.25); margin-bottom:6px; text-align:center; letter-spacing:-1px; }
+  p.sub{ color:#3a5a75; font-size:48px; text-align:center; margin-bottom:18px; line-height:1.5; }
+
+  .bigbtn{
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg,#ffe08a,#ffb703 55%,#f4a900);
+    border:none; border-radius:18px; padding:24px 57px; font-size:62px; font-weight:800;
+    font-family:'Jua',sans-serif; letter-spacing:1px;
+    color:#5c3600; box-shadow:0 6px 0 #b97c00, 0 10px 18px rgba(184,124,0,.35); cursor:pointer; margin-top:10px;
+    transition:transform .12s, box-shadow .12s;
+  }
+  .bigbtn::after{
+    content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
+    transform:skewX(-20deg); animation:btnShine 3s ease-in-out infinite;
+  }
+  @keyframes btnShine{ 0%{ left:-60%; } 40%,100%{ left:130%; } }
+  .bigbtn:hover{ transform:translateY(-2px); box-shadow:0 8px 0 #b97c00, 0 14px 22px rgba(184,124,0,.4); }
+  .bigbtn:active{ transform:translateY(4px); box-shadow:0 2px 0 #b97c00; }
+  .ghostbtn{
+    background:#fff; border:3px solid #2f7fc1; color:#2f7fc1; border-radius:16px;
+    padding:17px 39px; font-size:52px; font-weight:700; font-family:'Jua',sans-serif; cursor:pointer; margin-top:12px;
+    box-shadow:0 4px 12px rgba(47,127,193,.2); transition:transform .12s;
+  }
+  .ghostbtn:hover{ transform:translateY(-2px); background:#eef7ff; }
+
+  .mascot{ font-size:158px; margin:10px 0 4px; filter:drop-shadow(0 10px 14px rgba(20,60,100,.25)); animation:mascotBob 2.6s ease-in-out infinite; }
+  @keyframes mascotBob{ 0%,100%{ transform:translateY(0) rotate(-2deg); } 50%{ transform:translateY(-10px) rotate(2deg); } }
+
+  /* intro card list */
+  .introCard{
+    background:linear-gradient(135deg,#ffffff,#f3fbff); border-radius:18px; padding:24px 27px; margin:10px 0; width:100%;
+    box-shadow:0 6px 16px rgba(30,90,140,.12); border-left:8px solid #4cc9f0;
+    font-size:48px; line-height:1.5; position:relative;
+  }
+  .introCard b{ color:#1c4e80; }
+
+  /* ---------- MAP ---------- */
+  #mapWrap{
+    position:relative; width:100%; max-width:1350px; margin:6px auto 14px;
+    background:linear-gradient(180deg,#eaf7ff,#d8f0ff); border-radius:28px; padding:14px;
+    box-shadow:inset 0 0 0 3px #ffffff, 0 10px 24px rgba(20,90,140,.18);
+  }
+  svg#koreaMap{ width:100%; height:auto; display:block; }
+  .region{
+    cursor:pointer; stroke:#ffffff; stroke-width:4; stroke-linejoin:round;
+    transition:filter .15s, transform .15s; transform-origin:center;
+    filter:drop-shadow(0 6px 6px rgba(20,60,90,.28));
+  }
+  .region:hover{ filter:drop-shadow(0 8px 10px rgba(20,60,90,.32)) brightness(1.08); transform:translateY(-3px); }
+  .region.correct-flash{ filter:drop-shadow(0 10px 14px rgba(255,183,3,.6)) brightness(1.3); }
+  .region.wrong-flash{ filter:saturate(0.3) brightness(.8); }
+  .region.disabled{ pointer-events:none; opacity:.55; }
+  .regionIcon{ font-size:20px; pointer-events:none; opacity:.9; }
+  .waveLine{ fill:none; stroke:#ffffff; stroke-width:2.5; opacity:.45; }
+  .regionLabel{
+    font-family:'Jua',sans-serif;
+    font-size:20px; font-weight:400; fill:#111111; pointer-events:none; text-anchor:middle;
+    paint-order:stroke; stroke:#ffffff; stroke-width:3px; stroke-linejoin:round;
+  }
+  .regionLabel.sub{ font-size:13px; font-weight:800; font-family:'Gowun Dodum',sans-serif; }
+  .seaLabel{ font-size:12px; fill:#3a6690; font-style:italic; font-weight:600; opacity:.8; }
+
+  /* clue box */
+  #clueBox{
+    background:linear-gradient(135deg,#ffffff,#f3fbff); border-radius:20px; padding:21px 27px; width:100%; max-width:1350px;
+    box-shadow:0 6px 16px rgba(30,90,140,.14); margin-bottom:12px; text-align:center;
+    border:3px dashed #4cc9f0; min-height:96px; display:flex; align-items:center; justify-content:center;
+  }
+  #clueBox p{ font-size:52px; line-height:1.5; color:#26323d; font-weight:600; }
+  #clueBox .qtag{ font-family:'Jua',sans-serif; font-size:39px; background:linear-gradient(135deg,#5b9df9,#4361ee); color:#fff; padding:4px 16px; border-radius:20px; margin-right:6px; box-shadow:0 2px 6px rgba(67,97,238,.3); }
+
+  /* feedback popup */
+  #feedback{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(120%);
+    background:#fff; border-radius:18px; padding:21px 33px; box-shadow:0 6px 20px rgba(0,0,0,.25);
+    display:flex; align-items:center; gap:10px; max-width:90%; z-index:100; transition:transform .3s ease;
+  }
+  #feedback.show{ transform:translateX(-50%) translateY(0); }
+  #feedback.ok{ border:3px solid #38b000; }
+  #feedback.no{ border:3px solid #e63946; }
+  #feedback .fbicon{ font-size:72px; }
+  #feedback .fbtext{ font-size:48px; font-weight:700; line-height:1.4; }
+  #feedback .fbtext small{ display:block; font-weight:500; color:#666; margin-top:2px; font-size:.75em; }
+
+  /* 오답 해설 모달 (확인 버튼으로만 닫힘) */
+  #explainModal{
+    position:fixed; inset:0; background:rgba(20,25,35,.55); z-index:200;
+    display:flex; align-items:center; justify-content:center; padding:30px;
+    animation:fadeIn .18s ease;
+  }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  #explainModal.hidden{ display:none; }
+  .modalBox{
+    background:#fff; border-radius:20px; padding:39px 33px 33px; max-width:1080px; width:100%;
+    box-shadow:0 12px 30px rgba(0,0,0,.3); text-align:center; border:3px solid #e63946;
+    animation:popIn .22s ease;
+  }
+  @keyframes popIn{ from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .modalIcon{ font-size:99px; margin-bottom:6px; }
+  .modalTitle{ font-family:'Jua',sans-serif; font-size:62px; font-weight:400; color:#c1272d; margin-bottom:10px; }
+  .modalDesc{ font-size:48px; line-height:1.6; color:#26323d; text-align:left; background:#fff5f5;
+    border-radius:14px; padding:18px 21px; margin-bottom:16px; border:1px solid #ffd8d8; }
+  .modalDesc b{ color:#c1272d; }
+  .modalBtn{
+    background:linear-gradient(180deg,#6fb0ff,#2f7fc1); border:none; border-radius:16px;
+    padding:18px 51px; font-size:52px; font-weight:800; font-family:'Jua',sans-serif; color:#fff; cursor:pointer;
+    box-shadow:0 5px 0 #1c5a8c, 0 8px 14px rgba(28,90,140,.3); width:100%; transition:transform .1s;
+  }
+  .modalBtn:hover{ transform:translateY(-2px); }
+  .modalBtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #1c5a8c; }
+
+  /* round1 cards */
+  #r1cards{ width:100%; display:flex; flex-direction:column; gap:15px; margin-top:6px; }
+  .actCard{
+    background:linear-gradient(135deg,#ffffff,#f7fbff); border-radius:18px; padding:24px; display:flex; align-items:center; gap:12px;
+    box-shadow:0 6px 16px rgba(30,90,140,.12); border:2px solid #eef4fa;
+  }
+  .actCard .emo{ font-size:86px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.15)); }
+  .actCard .txt{ flex:1; font-size:50px; font-weight:600; color:#26323d; }
+  .actCard .choices{ display:flex; gap:6px; }
+  .choiceBtn{
+    border:2px solid #4361ee; background:linear-gradient(180deg,#ffffff,#eef2ff); color:#4361ee; border-radius:12px;
+    padding:12px 18px; font-weight:800; font-family:'Jua',sans-serif; font-size:45px; cursor:pointer; min-width:84px;
+    box-shadow:0 3px 0 #c3cdfa; transition:transform .1s;
+  }
+  .choiceBtn:hover:not(:disabled){ transform:translateY(-2px); }
+  .choiceBtn.picked-correct{ background:linear-gradient(180deg,#5fd15f,#38b000); border-color:#2c8c00; color:#fff; box-shadow:0 3px 0 #2c8c00; animation:correctPop .4s ease; }
+  @keyframes correctPop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.08); } 100%{ transform:scale(1); } }
+  .choiceBtn.picked-wrong{ background:linear-gradient(180deg,#f27d86,#e63946); border-color:#b32330; color:#fff; box-shadow:0 3px 0 #b32330; }
+  .choiceBtn:disabled{ opacity:.5; }
+
+  /* round3 객관식/주관식 영역 */
+  #answerArea{ width:100%; max-width:1350px; display:flex; flex-direction:column; gap:12px; }
+  .mcBtn{
+    background:linear-gradient(135deg,#ffffff,#f5f8ff); border:2px solid #4361ee; color:#26323d; border-radius:16px;
+    padding:21px 24px; font-size:50px; font-weight:700; text-align:left; cursor:pointer;
+    box-shadow:0 4px 10px rgba(30,60,140,.1); transition:transform .1s;
+  }
+  .mcBtn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 6px 14px rgba(30,60,140,.16); }
+  .mcBtn.picked-correct{ background:linear-gradient(135deg,#5fd15f,#38b000); border-color:#2c8c00; color:#fff; animation:correctPop .4s ease; }
+  .mcBtn.picked-wrong{ background:linear-gradient(135deg,#f27d86,#e63946); border-color:#b32330; color:#fff; }
+  .mcBtn:disabled{ opacity:.6; }
+  .shortWrap{ background:linear-gradient(135deg,#ffffff,#f7fbff); border-radius:18px; padding:24px; box-shadow:0 6px 16px rgba(30,90,140,.12); }
+  .shortInput{
+    width:100%; padding:18px 21px; font-size:52px; border:2px solid #4361ee; border-radius:12px;
+    box-sizing:border-box; font-family:inherit;
+  }
+  .shortInput:focus{ outline:3px solid #ffd166; }
+  .shortInput:disabled{ background:#f1f1f1; }
+  .shortHint{ font-size:40px; color:#888; margin-top:6px; }
+
+  /* result */
+  #resultStars{ font-size:148px; margin:10px 0; letter-spacing:6px; filter:drop-shadow(0 6px 8px rgba(0,0,0,.2)); }
+  #resultTitle{ font-family:'Jua',sans-serif; font-size:75px; font-weight:400; color:#1c4e80; margin-bottom:4px; }
+  #resultScore{ font-size:54px; color:#3a5a75; margin-bottom:16px; }
+  .statRow{ display:flex; gap:21px; margin-bottom:18px; }
+  .statPill{
+    background:linear-gradient(135deg,#ffffff,#f3fbff); border-radius:16px; padding:14px 20px; text-align:center;
+    box-shadow:0 6px 14px rgba(30,90,140,.14); border:2px solid #eaf4fb;
+  }
+  .statPill b{ display:block; font-size:68px; color:#2f7fc1; }
+  .statPill span{ font-size:39px; color:#777; }
+
+  /* 결과 화면 컨페티 */
+  .confetti{
+    position:absolute; top:-20px; width:14px; height:14px; opacity:.9;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(560px) rotate(540deg); opacity:0; }
+  }
+
+  #resultMascot{ animation:trophyPop .6s ease; }
+  @keyframes trophyPop{ 0%{ transform:scale(0) rotate(-20deg); } 60%{ transform:scale(1.25) rotate(8deg); } 100%{ transform:scale(1) rotate(0deg); } }
+
+  footer.stagefoot{ margin-top:auto; padding-top:18px; }
+</style>
+</head>
+<body>
+<div class="skyDeco">
+  <div class="sunDeco"></div>
+  <div class="cloudDeco cloud1"></div>
+  <div class="cloudDeco cloud2"></div>
+  <div class="cloudDeco cloud3"></div>
+</div>
+<div id="app">
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="stat" id="roundBox">🗺️ 1 / 3 라운드</div>
+    <div class="stat" id="heartsBox"></div>
+    <div class="stat" id="comboBadge" style="display:none;">🔥<span id="comboText"></span></div>
+    <div class="stat" id="scoreBox">⭐ 0점</div>
+  </div>
+  <div id="progressWrap"><div id="progressBar"></div></div>
+
+  <!-- ============ START SCREEN ============ -->
+  <div class="screen" id="screenStart">
+    <div class="mascot">🚚🗺️</div>
+    <h1 class="title">대한민국 교류 대작전</h1>
+    <p class="sub">4학년 사회 · 경제활동과 지역 간 교류<br>생산과 소비를 배우고, 우리 지역과 다른 지역이<br>왜 서로 물건을 주고받는지 지도에서 알아봐요!</p>
+    <button class="bigbtn" onclick="startGame()">게임 시작하기 ▶</button>
+  </div>
+
+  <!-- ============ ROUND 1 INTRO ============ -->
+  <div class="screen hidden" id="screenR1Intro">
+    <div class="mascot">🏭🛒</div>
+    <h1 class="title">1라운드 · 생산과 소비</h1>
+    <div class="introCard"><b>생산</b>이란 생활에 필요한 물건을 만들거나<br>서비스를 제공하는 활동이에요.</div>
+    <div class="introCard"><b>소비</b>란 생산된 물건이나 서비스를<br>돈을 주고 사서 쓰는 활동이에요.</div>
+    <p class="sub">아래 20가지 활동이 생산인지 소비인지<br>골라보세요!</p>
+    <button class="bigbtn" onclick="beginRound1()">시작! ▶</button>
+  </div>
+
+  <!-- ============ ROUND 1 PLAY ============ -->
+  <div class="screen hidden" id="screenR1Play">
+    <div id="r1cards"></div>
+  </div>
+
+  <!-- ============ ROUND 2 INTRO ============ -->
+  <div class="screen hidden" id="screenR2Intro">
+    <div class="mascot">🍎🐟</div>
+    <h1 class="title">2라운드 · 지역별 생산물 지도</h1>
+    <p class="sub">우리나라 여러 지역은 저마다 다른 자연환경과<br>산업을 가지고 있어서, 지역마다 잘 만드는<br>물건(생산물)이 달라요.<br><br>힌트를 읽고 <b>알맞은 지역을 지도에서 클릭</b>하세요!</p>
+    <button class="bigbtn" onclick="beginRound2()">시작! ▶</button>
+  </div>
+
+  <!-- ============ ROUND 3 INTRO ============ -->
+  <div class="screen hidden" id="screenR3Intro">
+    <div class="mascot">🔄🚛</div>
+    <h1 class="title">3라운드 · 지역 간 교류</h1>
+    <p class="sub">지역마다 자연환경과 생산물이 다르기 때문에,<br>내가 사는 곳에 없는 물건은 <b>다른 지역과 교류</b>해서<br>얻어야 해요.<br><br>먼저 상황에 맞는 <b>지역을 지도에서 클릭</b>하고,<br>이어서 교류의 뜻과 좋은 점을 묻는<br><b>객관식·주관식 문제</b>도 풀어봐요!</p>
+    <button class="bigbtn" onclick="beginRound3()">시작! ▶</button>
+  </div>
+
+  <!-- ============ MAP PLAY (round2 지도 / round3 지도·객관식·주관식 공용) ============ -->
+  <div class="screen hidden" id="screenMapPlay">
+    <div id="clueBox"><p id="clueText"></p></div>
+    <button id="hintBtn" onclick="useHint()">💡 힌트 사용하기 <span class="hcount" id="hintCount">3</span></button>
+    <div id="mapWrap">
+      <svg id="koreaMap" viewBox="0 0 420 605" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div id="answerArea" class="hidden"></div>
+  </div>
+
+  <!-- ============ RESULT ============ -->
+  <div class="screen hidden" id="screenResult" style="position:relative; overflow:hidden;">
+    <div class="mascot" id="resultMascot">🏆</div>
+    <div id="resultStars">★★★</div>
+    <div id="resultTitle">교류왕!</div>
+    <div id="resultScore">최종 점수 0점</div>
+    <div class="statRow" style="flex-wrap:wrap; justify-content:center;">
+      <div class="statPill"><b id="statCorrect">0</b><span>정답</span></div>
+      <div class="statPill"><b id="statWrong">0</b><span>오답</span></div>
+      <div class="statPill"><b id="statAcc">0%</b><span>정답률</span></div>
+      <div class="statPill"><b id="statCombo">0</b><span>최고 콤보</span></div>
+    </div>
+    <button class="bigbtn" onclick="restartGame()">다시 도전하기 🔁</button>
+  </div>
+
+  <div id="feedback">
+    <div class="fbicon" id="fbIcon">✅</div>
+    <div class="fbtext" id="fbText">정답!</div>
+  </div>
+
+  <!-- 오답 시 뜨는 해설 모달 (확인 버튼을 눌러야 닫힘) -->
+  <div id="explainModal" class="hidden">
+    <div class="modalBox">
+      <div class="modalIcon">❌</div>
+      <div class="modalTitle">아쉬워요!</div>
+      <div class="modalDesc" id="modalDescText"></div>
+      <button class="modalBtn" id="modalConfirmBtn">확인했어요 ✅</button>
+    </div>
+  </div>
+
+  <!-- 생명력 소진 시 뜨는 게임오버 팝업 (처음부터 다시 도전) -->
+  <div id="gameOverModal" class="hidden">
+    <div class="modalBox" style="border-color:#8a5a00;">
+      <div class="modalIcon">💔</div>
+      <div class="modalTitle" style="color:#8a5a00;">생명력을 모두 잃었어요!</div>
+      <div class="modalDesc" style="background:#fff8e1; border-color:#ffd166;">
+        아쉽지만 생명력이 모두 사라졌어요.<br>처음부터 다시 도전해봐요! 이번엔 콤보를 이어가면<br>생명력도 회복할 수 있어요 💪
+      </div>
+      <button class="modalBtn" style="background:linear-gradient(180deg,#ffe08a,#ffb703 55%,#f4a900); box-shadow:0 5px 0 #b97c00, 0 8px 14px rgba(184,124,0,.35); color:#5c3600;" onclick="restartGame()">처음부터 다시 도전하기 🔁</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   상태 관리
+========================================================= */
+const MAX_HEARTS = 5;
+
+const state = {
+  round: 1,
+  score: 0,
+  hearts: MAX_HEARTS,
+  correctCount: 0,
+  wrongCount: 0,
+  r2Idx: 0,
+  r3Idx: 0,
+  r3bIdx: 0,
+  r3Phase: 'map',   // 'map' → 'concept'
+  locked:false,
+  combo: 0,
+  maxCombo: 0,
+  hints: 3,
+  hintUsedThisQ: false
+};
+
+const TOTAL_Q = { r1: 20, r2: 9, r3map: 8, r3concept: 5 };
+TOTAL_Q.r3 = TOTAL_Q.r3map + TOTAL_Q.r3concept;
+
+const HOME_ICON = { x: 372, y: 30 }; // '우리 마을' 기준점 (동해 위)
+
+/* =========================================================
+   지역(권역) 데이터 & 좌표
+   (초등학생용 단순화 지도 - 실제 행정구역과 다소 다를 수 있음)
+========================================================= */
+const REGIONS = [
+  { id:'capital', name:'수도권', sub:'(서울·경기)', color:'#ffb703',
+    points:'148,45 228,58 222,148 158,168 108,128 118,72', lx:170, ly:110 },
+  { id:'gangwon', name:'강원도', sub:'', color:'#8ecae6',
+    points:'228,58 302,75 312,225 262,265 222,148', lx:266, ly:155 },
+  { id:'chungcheong', name:'충청도', sub:'', color:'#ffd6a5',
+    points:'158,168 222,148 218,235 195,325 148,255 92,215 98,155', lx:160, ly:230 },
+  { id:'gyeongsang', name:'경상도', sub:'(부산 포함)', color:'#ff9f9f',
+    points:'262,265 312,225 332,385 292,465 222,435 202,325 218,235', lx:262, ly:325 },
+  { id:'jeolla', name:'전라도', sub:'', color:'#b9fbc0',
+    points:'148,255 195,325 202,325 222,435 162,475 102,435 72,345 77,265 92,215', lx:142, ly:350 },
+  { id:'jeju', name:'제주도', sub:'', color:'#d0bdf4',
+    cx:155, cy:545, r:52, circle:true, lx:155, ly:545 }
+];
+
+const REGION_INFO = {
+  capital:      { title:'수도권 (서울·경기)', desc:'반도체 같은 첨단 전자 제품을 많이 만들고, 사람이 가장 많이 살아 물건도 가장 많이 소비해요.' },
+  gangwon:      { title:'강원도', desc:'감자·옥수수가 잘 자라는 산지이고, 스키장과 대관령 목장이 유명해요.' },
+  chungcheong:  { title:'충청도', desc:'금산의 인삼, 논산의 딸기가 특히 유명한 지역이에요.' },
+  jeolla:       { title:'전라도', desc:'넓은 들판에서 쌀농사가 활발하고, 김·젓갈 같은 바다 음식도 풍부해요.' },
+  gyeongsang:   { title:'경상도(부산 포함)', desc:'사과 농사와 자동차·조선업이 발달했고, 부산에서 싱싱한 수산물이 많이 잡혀요.' },
+  jeju:         { title:'제주도', desc:'감귤과 흑돼지가 특산물이고, 화산이 만든 독특한 자연환경이 있어요.' }
+};
+
+const REGION_EMOJI = {
+  capital:'💻', gangwon:'🥔', chungcheong:'🌱', jeolla:'🌾', gyeongsang:'🍎', jeju:'🍊'
+};
+
+/* =========================================================
+   문제 데이터
+========================================================= */
+const R1_ITEMS = [
+  { emo:'🌾', text:'농부가 벼를 수확해요', ans:'생산' },
+  { emo:'🍪', text:'마트에서 과자를 사요', ans:'소비' },
+  { emo:'🚗', text:'공장에서 자동차를 만들어요', ans:'생산' },
+  { emo:'💇', text:'미용실에서 머리를 잘라 줘요', ans:'생산' },
+  { emo:'🎬', text:'영화관에서 영화를 봐요', ans:'소비' },
+  { emo:'🐟', text:'어부가 바다에서 물고기를 잡아요', ans:'생산' },
+  { emo:'🍚', text:'식당에서 밥을 사 먹어요', ans:'소비' },
+  { emo:'👕', text:'옷가게에서 새 옷을 사요', ans:'소비' },
+  { emo:'🐄', text:'목장에서 소젖을 짜요', ans:'생산' },
+  { emo:'🎤', text:'가수가 무대에서 공연을 해요', ans:'생산' },
+  { emo:'🏥', text:'의사가 환자를 진료해 줘요', ans:'생산' },
+  { emo:'📚', text:'서점에서 책을 사요', ans:'소비' },
+  { emo:'🚌', text:'버스를 타고 이동해요', ans:'소비' },
+  { emo:'🏗️', text:'건설 노동자가 건물을 지어요', ans:'생산' },
+  { emo:'🚜', text:'농부가 트랙터로 밭을 갈아요', ans:'생산' },
+  { emo:'🎨', text:'화가가 그림을 그려서 팔아요', ans:'생산' },
+  { emo:'🍦', text:'아이스크림 가게에서 아이스크림을 사요', ans:'소비' },
+  { emo:'📱', text:'새 휴대폰을 사요', ans:'소비' },
+  { emo:'🚕', text:'택시를 타고 이동해요', ans:'소비' },
+  { emo:'✏️', text:'문구점에서 학용품을 사요', ans:'소비' }
+];
+
+const R2_QUESTIONS = [
+  { clue:'반도체 같은 첨단 전자 제품을 많이 만들어요.', ans:'capital' },
+  { clue:'감자와 옥수수가 잘 자라는 산지이고, 스키장이 유명해요.', ans:'gangwon' },
+  { clue:'인삼(금산)과 딸기(논산)가 특히 유명해요.', ans:'chungcheong' },
+  { clue:'넓은 들판에서 쌀농사가 활발하고, 김이 많이 나요.', ans:'jeolla' },
+  { clue:'사과 농사와 자동차·조선업이 발달하고, 부산이 있어요.', ans:'gyeongsang' },
+  { clue:'감귤과 흑돼지가 특산물인 화산섬이에요.', ans:'jeju' },
+  { clue:'너른 갯벌과 곡창지대를 가진, 쌀농사가 가장 발달한 지역이에요.', ans:'jeolla' },
+  { clue:'사람이 가장 많이 모여 살아서 소비 활동이 가장 활발한 지역이에요.', ans:'capital' },
+  { clue:'대관령 목장에서 소를 기르고, 감자 농사가 활발한 지역이에요.', ans:'gangwon' }
+];
+
+const R3_QUESTIONS = [
+  { clue:'제주도는 논이 부족해서 쌀이 모자라요.\n쌀이 풍부한 어느 지역에서 가져오면 좋을까요?', ans:'jeolla' },
+  { clue:'산이 많은 강원도는 신선한 수산물을 구하기 어려워요.\n수산물이 풍부한 지역은 어디일까요?', ans:'gyeongsang' },
+  { clue:'전라도 사람들이 새 자동차를 사고 싶어해요.\n자동차 공장이 있는 지역은 어디일까요?', ans:'gyeongsang' },
+  { clue:'충청도에서는 감귤 나무가 자라기 어려워요.\n달콤한 감귤은 어디서 가져올까요?', ans:'jeju' },
+  { clue:'수도권 사람들이 신선한 감자를 먹고 싶어해요.\n감자가 유명한 지역은 어디일까요?', ans:'gangwon' },
+  { clue:'경상도에 사는 사람이 최신 전자제품을 사고 싶어해요.\n첨단 제품이 유명한 지역은 어디일까요?', ans:'capital' },
+  { clue:'수도권 사람들이 김과 젓갈 같은 바다 음식을 먹고 싶어해요.\n김과 젓갈이 풍부한 지역은 어디일까요?', ans:'jeolla' },
+  { clue:'경상도의 자동차 공장에 필요한 반도체 같은 첨단 기술은\n어느 지역에서 얻을 수 있을까요?', ans:'capital' }
+];
+
+/* 3라운드 2단계 - 교류 개념 정리 문제 (객관식·주관식 혼합, 5문제) */
+const R3B_QUESTIONS = [
+  {
+    type:'mc',
+    q:'지역 간 서로 필요한 물자, 기술, 문화 등을 주고받는\n모든 활동을 무엇이라고 할까요?',
+    options:['교통', '교류', '합류', '통신', '의사소통'],
+    ans:1,
+    explain:'지역마다 자연환경과 생산물, 기술이 달라서 서로 필요한 것을 주고받는 활동을 <b>교류</b>라고 해요.'
+  },
+  {
+    type:'short',
+    q:'지역 간 교류가 발생하는 까닭을 써 보세요.',
+    model:'지역마다 자연환경, 생산물, 기술, 문화 등이 다르기 때문이에요.',
+    hint:'힌트: 자연환경 · 생산물 · 기술 이라는 낱말을 떠올려 보세요.'
+  },
+  {
+    type:'mc',
+    q:'지역 간 교류를 하면 좋은 점을 바르게 말한 사람은\n누구일까요?',
+    options:[
+      '채린 – 각 지역 사람들은 상호 의존하면서 살아가요.',
+      '태윤 – 각 지역 사람들은 필요한 모든 것을 직접 생산해요.'
+    ],
+    ans:0,
+    explain:'교류를 하면 각 지역이 서로 <b>의존</b>하며 살아갈 수 있어요. 모든 것을 혼자 다 생산할 필요가 없답니다.'
+  },
+  {
+    type:'mc',
+    q:'다음 중 문화 교류의 모습으로 알맞은 것은\n무엇일까요?',
+    options:[
+      '다른 지역의 축제에 참여한다',
+      '다른 지역의 생산물을 들여온다',
+      '우리 지역의 생산물을 다른 지역에 보낸다',
+      '우리 지역의 기술을 다른 지역에 알려 준다'
+    ],
+    ans:0,
+    explain:'생산물을 주고받는 것은 <b>물자 교류</b>, 기술을 주고받는 것은 <b>기술 교류</b>예요. 축제 같은 행사에 참여하는 것이 <b>문화 교류</b>의 대표적인 모습이랍니다.'
+  },
+  {
+    type:'short',
+    q:'다음 문장의 빈칸에 들어갈 알맞은 말을 써 보세요.\n\n"지역 ______이나 ______ 등에서\n우리 지역의 교류 사례를 찾아본다."',
+    model:'신문, 뉴스',
+    hint:'힌트: 우리 지역의 소식을 알려 주는 대표적인 매체 두 가지예요.'
+  }
+];
+
+let r1Order = [], r2Order = [], r3Order = [];
+
+/* =========================================================
+   유틸
+========================================================= */
+function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+
+function updateHUD(){
+  document.getElementById('scoreBox').textContent = '⭐ ' + state.score + '점';
+  const roundNames = {1:'생산과 소비',2:'지역별 생산물',3:'지역 간 교류'};
+  document.getElementById('roundBox').textContent = '🗺️ ' + state.round + ' / 3 라운드 · ' + roundNames[state.round];
+  const hb = document.getElementById('heartsBox');
+  hb.innerHTML = '';
+  for(let i=0;i<MAX_HEARTS;i++){
+    const s = document.createElement('span');
+    s.className = 'heart' + (i < state.hearts ? '' : ' lost');
+    s.textContent = '❤️';
+    hb.appendChild(s);
+  }
+  const combo = document.getElementById('comboBadge');
+  if(state.combo >= 2){
+    combo.style.display = 'flex';
+    combo.classList.add('show');
+    document.getElementById('comboText').textContent = state.combo + '콤보';
+  } else {
+    combo.style.display = 'none';
+    combo.classList.remove('show');
+  }
+  const hintBtn = document.getElementById('hintBtn');
+  if(hintBtn){
+    document.getElementById('hintCount').textContent = state.hints;
+    hintBtn.disabled = (state.hints <= 0) || state.hintUsedThisQ;
+  }
+}
+
+function comboMultiplier(combo){
+  if(combo >= 5) return 2.0;
+  if(combo >= 4) return 1.8;
+  if(combo >= 3) return 1.5;
+  if(combo >= 2) return 1.2;
+  return 1.0;
+}
+
+function okMessage(result){
+  if(result.combo >= 2){
+    return `정답이에요! 🔥 ${result.combo}콤보 ×${result.mult} → +${result.pts}점`;
+  }
+  return `정답이에요! +${result.pts}점`;
+}
+
+/* correct/wrong 처리 + 콤보 배율 적용. { pts, combo, mult } 반환 */
+function awardPoint(basePts, correct){
+  if(correct){
+    state.combo++;
+    if(state.combo > state.maxCombo) state.maxCombo = state.combo;
+    const mult = comboMultiplier(state.combo);
+    const pts = Math.round(basePts * mult);
+    state.score += pts;
+    state.correctCount++;
+
+    let healed = false;
+    if(state.combo % 3 === 0 && state.hearts < MAX_HEARTS){
+      state.hearts++;
+      healed = true;
+    }
+
+    updateHUD();
+    spawnScorePop(pts);
+    if(healed) spawnHeartHeal();
+    return { pts, combo: state.combo, mult, healed };
+  } else {
+    state.combo = 0;
+    state.wrongCount++;
+    if(state.hearts>0) state.hearts--;
+    updateHUD();
+    return { pts:0, combo:0, mult:1, healed:false, gameOver: state.hearts <= 0 };
+  }
+}
+
+function spawnHeartHeal(){
+  playHealSound();
+  const hb = document.getElementById('heartsBox');
+  const span = document.createElement('span');
+  span.className = 'scorePop';
+  span.style.color = '#e63946';
+  span.textContent = '+1❤️';
+  hb.style.position = 'relative';
+  hb.appendChild(span);
+  setTimeout(()=> span.remove(), 900);
+}
+
+function spawnScorePop(pts){
+  const box = document.getElementById('scoreBox');
+  const span = document.createElement('span');
+  span.className = 'scorePop';
+  span.textContent = '+' + pts;
+  box.appendChild(span);
+  setTimeout(()=> span.remove(), 900);
+}
+
+function setProgress(current, total){
+  const roundBase = { 1:0, 2:33.3, 3:66.6 };
+  const within = (current/total) * 33.3;
+  document.getElementById('progressBar').style.width = (roundBase[state.round] + within) + '%';
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{ s.classList.add('hidden'); s.classList.remove('enter'); });
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  void el.offsetWidth; // 리플로우를 강제해 애니메이션이 매번 재생되도록 함
+  el.classList.add('enter');
+}
+
+/* =========================================================
+   사운드 이펙트 (Web Audio API - 외부 파일 없이 재생)
+========================================================= */
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    audioCtx = new AC();
+  }
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  return audioCtx;
+}
+
+function playTone(freq, duration, type, offset, volume){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  const t0 = ctx.currentTime + offset;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(volume, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + duration + 0.03);
+}
+
+/* 정답: 경쾌하게 올라가는 두 음 */
+function playCorrectSound(){
+  playTone(784, 0.14, 'sine', 0,    0.22); // 솔
+  playTone(988, 0.18, 'sine', 0.1,  0.22); // 시
+  playTone(1319,0.2,  'sine', 0.2,  0.18); // 미(높은)
+}
+
+/* 오답: 낮게 떨어지는 부저음 */
+function playWrongSound(){
+  playTone(220, 0.16, 'sawtooth', 0,    0.15);
+  playTone(160, 0.24, 'sawtooth', 0.13, 0.15);
+}
+
+/* 하트 회복: 반짝이는 상승 톤 */
+function playHealSound(){
+  playTone(659, 0.1, 'sine', 0,    0.18);
+  playTone(880, 0.16,'sine', 0.08, 0.2);
+}
+
+/* 게임오버: 힘 빠지듯 내려가는 톤 */
+function playGameOverSound(){
+  playTone(392, 0.2, 'triangle', 0,    0.2);
+  playTone(330, 0.2, 'triangle', 0.18, 0.2);
+  playTone(262, 0.32,'triangle', 0.36, 0.2);
+}
+
+/* 최종 결과: 축하 팡파르 */
+function playFanfare(){
+  playTone(523, 0.14, 'sine', 0,    0.2);
+  playTone(659, 0.14, 'sine', 0.13, 0.2);
+  playTone(784, 0.14, 'sine', 0.26, 0.2);
+  playTone(1047,0.35, 'sine', 0.39, 0.22);
+}
+
+function showFeedback(ok, mainText, subText, onDismiss){
+  if(ok){
+    playCorrectSound();
+    const fb = document.getElementById('feedback');
+    fb.className = 'ok';
+    document.getElementById('fbIcon').textContent = '✅';
+    document.getElementById('fbText').innerHTML = mainText + (subText ? '<small>'+subText+'</small>' : '');
+    fb.classList.add('show');
+    clearTimeout(window._fbTimer);
+    window._fbTimer = setTimeout(()=>{
+      fb.classList.remove('show');
+      if(onDismiss) onDismiss();
+    }, 1300);
+  } else {
+    playWrongSound();
+    // 오답: 확인 버튼을 눌러야 닫히는 해설 모달
+    const modal = document.getElementById('explainModal');
+    document.getElementById('modalDescText').innerHTML = (subText || mainText);
+    modal.classList.remove('hidden');
+    const btn = document.getElementById('modalConfirmBtn');
+    const handler = ()=>{
+      modal.classList.add('hidden');
+      btn.removeEventListener('click', handler);
+      if(onDismiss) onDismiss();
+    };
+    btn.addEventListener('click', handler);
+  }
+}
+
+/* =========================================================
+   시작 / 재시작
+========================================================= */
+function showGameOver(){
+  playGameOverSound();
+  document.getElementById('gameOverModal').classList.remove('hidden');
+}
+
+/* 정답/오답 피드백이 닫힌 뒤: 생명력이 0이면 게임오버 팝업, 아니면 다음 진행 */
+function proceedAfterAnswer(result, fn){
+  if(result && result.gameOver){
+    showGameOver();
+  } else {
+    fn();
+  }
+}
+
+function startGame(){
+  getAudioCtx(); // 첫 사용자 클릭(제스처) 시점에 오디오 컨텍스트를 깨워둠
+  document.getElementById('gameOverModal').classList.add('hidden');
+  state.locked = false;
+  state.round = 1; state.score = 0; state.hearts = MAX_HEARTS;
+  state.correctCount = 0; state.wrongCount = 0;
+  state.r2Idx = 0; state.r3Idx = 0; state.r3bIdx = 0; state.r3Phase = 'map';
+  state.combo = 0; state.maxCombo = 0; state.hints = 3; state.hintUsedThisQ = false;
+  updateHUD();
+  showScreen('screenR1Intro');
+}
+function restartGame(){ startGame(); }
+
+/* =========================================================
+   ROUND 1 : 생산과 소비 분류
+========================================================= */
+function beginRound1(){
+  r1Order = shuffle(R1_ITEMS);
+  const wrap = document.getElementById('r1cards');
+  wrap.innerHTML = '';
+  r1Order.forEach((item, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'actCard';
+    card.id = 'r1card_'+idx;
+    card.innerHTML = `
+      <div class="emo">${item.emo}</div>
+      <div class="txt">${item.text}</div>
+      <div class="choices">
+        <button class="choiceBtn" onclick="answerR1(${idx},'생산')">생산</button>
+        <button class="choiceBtn" onclick="answerR1(${idx},'소비')">소비</button>
+      </div>`;
+    wrap.appendChild(card);
+  });
+  setProgress(0, TOTAL_Q.r1);
+  showScreen('screenR1Play');
+}
+
+function answerR1(idx, picked){
+  const card = document.getElementById('r1card_'+idx);
+  const btns = card.querySelectorAll('.choiceBtn');
+  btns.forEach(b=> b.disabled = true);
+  const correct = r1Order[idx].ans;
+  btns.forEach(b=>{
+    if(b.textContent === picked){
+      b.classList.add(picked === correct ? 'picked-correct' : 'picked-wrong');
+    }
+    if(b.textContent === correct && picked !== correct){
+      b.classList.add('picked-correct');
+    }
+  });
+  const ok = picked === correct;
+  const result = awardPoint(10, ok);
+
+  const answeredCount = document.querySelectorAll('.choiceBtn:disabled').length / 2;
+  setProgress(answeredCount, TOTAL_Q.r1);
+
+  showFeedback(
+    ok, ok ? okMessage(result) : '아쉬워요!',
+    `'${r1Order[idx].text}'는 <b>${correct}</b> 활동이에요.`,
+    ()=>{
+      proceedAfterAnswer(result, ()=>{
+        if(answeredCount >= TOTAL_Q.r1){ showScreen('screenR2Intro'); }
+      });
+    }
+  );
+}
+
+/* =========================================================
+   지도 렌더링
+========================================================= */
+function makeLabelText(x, y, str, isSub){
+  const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x', x); t.setAttribute('y', y);
+  t.setAttribute('class', isSub ? 'regionLabel sub' : 'regionLabel');
+  // 클래스 로딩 실패에도 대비해 인라인 속성으로 검정 글씨 + 흰 외곽선을 강제 지정
+  t.setAttribute('fill', '#111111');
+  t.setAttribute('stroke', '#ffffff');
+  t.setAttribute('stroke-width', isSub ? '2' : '3');
+  t.setAttribute('paint-order', 'stroke');
+  t.setAttribute('font-weight', '900');
+  t.setAttribute('font-size', isSub ? '13' : '20');
+  t.setAttribute('text-anchor', 'middle');
+  t.textContent = str;
+  return t;
+}
+
+/* hex 색상을 밝게 만들어 그라데이션 상단 색으로 사용 */
+function lightenColor(hex, amt){
+  const n = parseInt(hex.replace('#',''), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  r = Math.min(255, Math.round(r + (255 - r) * amt));
+  g = Math.min(255, Math.round(g + (255 - g) * amt));
+  b = Math.min(255, Math.round(b + (255 - b) * amt));
+  return `rgb(${r},${g},${b})`;
+}
+
+function renderMap(showHome){
+  const svg = document.getElementById('koreaMap');
+  svg.innerHTML = '';
+
+  // 지역별 그라데이션 정의 (밝은 톤 → 원래 색)
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  REGIONS.forEach(r=>{
+    const grad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+    grad.setAttribute('id', 'grad-'+r.id);
+    grad.setAttribute('x1','0%'); grad.setAttribute('y1','0%');
+    grad.setAttribute('x2','100%'); grad.setAttribute('y2','100%');
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+    stop1.setAttribute('offset','0%'); stop1.setAttribute('stop-color', lightenColor(r.color, 0.55));
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg','stop');
+    stop2.setAttribute('offset','100%'); stop2.setAttribute('stop-color', r.color);
+    grad.appendChild(stop1); grad.appendChild(stop2);
+    defs.appendChild(grad);
+  });
+  svg.appendChild(defs);
+
+  // 잔잔한 파도 무늬 (바다 배경 장식)
+  const waves = [
+    'M0,95 Q20,88 40,95 T80,95 T120,95',
+    'M300,60 Q320,53 340,60 T380,60',
+    'M20,470 Q40,463 60,470 T100,470',
+    'M340,540 Q360,533 380,540 T420,540'
+  ];
+  waves.forEach(d=>{
+    const wp = document.createElementNS('http://www.w3.org/2000/svg','path');
+    wp.setAttribute('d', d); wp.setAttribute('class','waveLine');
+    svg.appendChild(wp);
+  });
+
+  // 바다 배경 텍스트 (동해/서해/남해 위치에 각각 표시)
+  const seas = [ {x:335,y:150,t:'동해'}, {x:35,y:190,t:'서해'}, {x:130,y:520,t:'남해'} ];
+  seas.forEach(s=>{
+    const st = document.createElementNS('http://www.w3.org/2000/svg','text');
+    st.setAttribute('x', s.x); st.setAttribute('y', s.y);
+    st.setAttribute('class','seaLabel'); st.textContent = s.t;
+    svg.appendChild(st);
+  });
+
+  REGIONS.forEach(r=>{
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','region');
+    g.setAttribute('data-id', r.id);
+
+    if(r.circle){
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', r.cx); c.setAttribute('cy', r.cy); c.setAttribute('r', r.r);
+      c.setAttribute('fill', `url(#grad-${r.id})`);
+      g.appendChild(c);
+    } else {
+      const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      poly.setAttribute('points', r.points);
+      poly.setAttribute('fill', `url(#grad-${r.id})`);
+      poly.setAttribute('stroke-linejoin', 'round');
+      g.appendChild(poly);
+    }
+
+    // 지역 대표 아이콘 (은은한 흰 배경 원 위에 표시해 가독성 향상)
+    const iconY = r.sub ? r.ly - 34 : r.ly - 22;
+    const iconBg = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    iconBg.setAttribute('cx', r.lx); iconBg.setAttribute('cy', iconY - 8);
+    iconBg.setAttribute('r', 17); iconBg.setAttribute('fill', 'rgba(255,255,255,.75)');
+    g.appendChild(iconBg);
+    const icon = document.createElementNS('http://www.w3.org/2000/svg','text');
+    icon.setAttribute('x', r.lx); icon.setAttribute('y', iconY);
+    icon.setAttribute('text-anchor','middle'); icon.setAttribute('class','regionIcon');
+    icon.textContent = REGION_EMOJI[r.id] || '';
+    g.appendChild(icon);
+
+    // 라벨: 지역명(큰 글씨) + 부제(작은 글씨, 있을 때만)
+    g.appendChild(makeLabelText(r.lx, r.sub ? r.ly - 7 : r.ly + 8, r.name, false));
+    if(r.sub){
+      g.appendChild(makeLabelText(r.lx, r.ly + 25, r.sub, true));
+    }
+
+    g.addEventListener('click', ()=> onRegionClick(r.id, g));
+    svg.appendChild(g);
+  });
+
+  // 3라운드(교류) 전용: '우리 마을' 기준점 - 트럭이 여기서 출발해요
+  if(showHome){
+    const hg = document.createElementNS('http://www.w3.org/2000/svg','g');
+    hg.setAttribute('class','homeIcon');
+    const hc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    hc.setAttribute('cx', HOME_ICON.x); hc.setAttribute('cy', HOME_ICON.y); hc.setAttribute('r', 24);
+    hc.setAttribute('fill', '#ffffff'); hc.setAttribute('stroke', '#4361ee'); hc.setAttribute('stroke-width', '3');
+    hc.style.filter = 'drop-shadow(0 4px 5px rgba(30,60,120,.3))';
+    hg.appendChild(hc);
+    const ht = document.createElementNS('http://www.w3.org/2000/svg','text');
+    ht.setAttribute('x', HOME_ICON.x); ht.setAttribute('y', HOME_ICON.y+7);
+    ht.setAttribute('text-anchor','middle'); ht.setAttribute('font-size', '20');
+    ht.textContent = '🏠';
+    hg.appendChild(ht);
+    const hl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    hl.setAttribute('x', HOME_ICON.x); hl.setAttribute('y', HOME_ICON.y+40);
+    hl.setAttribute('text-anchor','middle'); hl.setAttribute('font-size', '11'); hl.setAttribute('fill','#1c4e80'); hl.setAttribute('font-weight','800');
+    hl.textContent = '우리 마을';
+    hg.appendChild(hl);
+    svg.appendChild(hg);
+  }
+}
+
+/* 정답 클릭 시 반짝이는 스파클 파티클 */
+function spawnSparkles(regionId){
+  const region = REGIONS.find(r=>r.id === regionId);
+  if(!region) return;
+  const svg = document.getElementById('koreaMap');
+  const count = 6;
+  for(let i=0; i<count; i++){
+    const angle = (Math.PI*2/count)*i + Math.random()*0.4;
+    const dist = 30 + Math.random()*18;
+    const el = document.createElementNS('http://www.w3.org/2000/svg','text');
+    el.setAttribute('x', region.lx); el.setAttribute('y', region.ly);
+    el.setAttribute('text-anchor','middle'); el.setAttribute('font-size','16');
+    el.setAttribute('class','sparkle');
+    el.textContent = '✨';
+    svg.appendChild(el);
+
+    const startX = region.lx, startY = region.ly;
+    const endX = startX + Math.cos(angle)*dist;
+    const endY = startY + Math.sin(angle)*dist;
+    const duration = 600;
+    const startTime = performance.now();
+    function step(now){
+      const t = Math.min(1, (now-startTime)/duration);
+      el.setAttribute('x', startX + (endX-startX)*t);
+      el.setAttribute('y', startY + (endY-startY)*t);
+      el.setAttribute('opacity', String(1-t));
+      if(t < 1){ requestAnimationFrame(step); } else { el.remove(); }
+    }
+    requestAnimationFrame(step);
+  }
+}
+
+/* 정답 지역 위에 특산물 이모지가 통통 튀며 나타나는 연출 */
+function spawnPopEmoji(regionId){
+  const region = REGIONS.find(r=>r.id === regionId);
+  const emoji = REGION_EMOJI[regionId];
+  if(!region || !emoji) return;
+  const svg = document.getElementById('koreaMap');
+  const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x', region.lx); t.setAttribute('y', region.ly - 20);
+  t.setAttribute('text-anchor','middle');
+  t.setAttribute('class','popEmoji');
+  t.textContent = emoji;
+  svg.appendChild(t);
+  setTimeout(()=> t.remove(), 950);
+}
+
+/* 3라운드: '우리 마을'에서 정답 지역까지 트럭이 이동하며 교류 개념을 시각화 */
+function animateTruck(correctId){
+  const region = REGIONS.find(r=>r.id === correctId);
+  if(!region) return;
+  const svg = document.getElementById('koreaMap');
+  const truck = document.createElementNS('http://www.w3.org/2000/svg','text');
+  truck.setAttribute('class','truckIcon');
+  truck.setAttribute('text-anchor','middle');
+  truck.textContent = '🚚';
+  svg.appendChild(truck);
+
+  const fromX = HOME_ICON.x, fromY = HOME_ICON.y;
+  const toX = region.lx, toY = region.ly;
+  const duration = 750;
+  const startTime = performance.now();
+
+  function step(now){
+    const t = Math.min(1, (now - startTime) / duration);
+    const ease = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; // easeInOutQuad
+    const x = fromX + (toX - fromX) * ease;
+    const y = fromY + (toY - fromY) * ease - Math.sin(ease*Math.PI) * 24; // 살짝 포물선
+    truck.setAttribute('x', x); truck.setAttribute('y', y);
+    if(t < 1){ requestAnimationFrame(step); }
+    else { setTimeout(()=> truck.remove(), 200); }
+  }
+  requestAnimationFrame(step);
+}
+
+/* =========================================================
+   힌트 아이템
+========================================================= */
+function useHint(){
+  if(state.hints <= 0 || state.hintUsedThisQ) return;
+  state.hints--;
+  state.hintUsedThisQ = true;
+
+  if(state.round === 3 && state.r3Phase === 'concept'){
+    useHintMC();
+  } else {
+    useHintMap();
+  }
+  updateHUD();
+}
+
+function useHintMap(){
+  const correctId = state.round === 2
+    ? R2_QUESTIONS[state.r2Idx].ans
+    : R3_QUESTIONS[state.r3Idx].ans;
+  const el = document.querySelector(`.region[data-id="${correctId}"]`);
+  if(el) el.classList.add('hint-glow');
+}
+
+function useHintMC(){
+  const item = r3bOrder[state.r3bIdx];
+  if(!item || item.type !== 'mc') return;
+  const btns = document.querySelectorAll('#answerArea .mcBtn');
+  const wrongIdxs = item.options.map((_,i)=>i).filter(i=> i !== item.ans);
+  if(wrongIdxs.length === 0) return;
+  const pick = wrongIdxs[Math.floor(Math.random()*wrongIdxs.length)];
+  const btn = btns[pick];
+  if(btn){
+    btn.disabled = true;
+    btn.style.opacity = '0.3';
+    btn.style.textDecoration = 'line-through';
+  }
+}
+
+function onRegionClick(id, gEl){
+  if(state.locked) return;
+
+  if(state.round === 2){
+    handleAnswer(id, R2_QUESTIONS[state.r2Idx].ans, 15, ()=>{
+      state.r2Idx++;
+      setProgress(state.r2Idx, TOTAL_Q.r2);
+      if(state.r2Idx >= TOTAL_Q.r2){ showScreen('screenR3Intro'); }
+      else { loadR2Question(); }
+    });
+  } else if(state.round === 3 && state.r3Phase === 'map'){
+    handleAnswer(id, R3_QUESTIONS[state.r3Idx].ans, 20, ()=>{
+      state.r3Idx++;
+      setProgress(state.r3Idx, TOTAL_Q.r3);
+      if(state.r3Idx >= TOTAL_Q.r3map){ beginRound3Concept(); }
+      else { loadR3Question(); }
+    });
+  }
+}
+
+function handleAnswer(clickedId, correctId, pts, afterFn){
+  state.locked = true;
+  const clickedEl = document.querySelector(`.region[data-id="${clickedId}"]`);
+  const correctEl = document.querySelector(`.region[data-id="${correctId}"]`);
+  const ok = clickedId === correctId;
+
+  if(ok){
+    clickedEl.classList.add('correct-flash');
+    spawnSparkles(correctId);
+  } else {
+    clickedEl.classList.add('wrong-flash');
+    correctEl.classList.add('correct-flash');
+  }
+  document.querySelectorAll('.region').forEach(el=> el.classList.add('disabled'));
+
+  spawnPopEmoji(correctId);
+  if(state.round === 3 && state.r3Phase === 'map'){ animateTruck(correctId); }
+
+  const result = awardPoint(pts, ok);
+  const info = REGION_INFO[correctId];
+
+  showFeedback(
+    ok, ok ? okMessage(result) : '아쉬워요!',
+    `${info.title} — ${info.desc}`,
+    ()=>{
+      document.querySelectorAll('.region').forEach(el=>{
+        el.classList.remove('disabled','correct-flash','wrong-flash','hint-glow');
+      });
+      state.locked = false;
+      proceedAfterAnswer(result, afterFn);
+    }
+  );
+}
+
+/* =========================================================
+   ROUND 2  (지도 - 지역별 생산물)
+========================================================= */
+function beginRound2(){
+  state.round = 2; state.r2Idx = 0;
+  r2Order = shuffle(R2_QUESTIONS);
+  R2_QUESTIONS.length = 0; r2Order.forEach(q=>R2_QUESTIONS.push(q));
+  renderMap(false);
+  document.getElementById('mapWrap').classList.remove('hidden');
+  document.getElementById('answerArea').classList.add('hidden');
+  document.getElementById('hintBtn').classList.remove('hidden');
+  updateHUD();
+  setProgress(0, TOTAL_Q.r2);
+  loadR2Question();
+  showScreen('screenMapPlay');
+}
+function loadR2Question(){
+  state.hintUsedThisQ = false;
+  updateHUD();
+  document.getElementById('clueText').innerHTML =
+    `<span class="qtag">문제 ${state.r2Idx+1}/${TOTAL_Q.r2}</span>${R2_QUESTIONS[state.r2Idx].clue}`;
+}
+
+/* =========================================================
+   ROUND 3 - 1단계 (지도 - 지역 간 교류 상황)
+========================================================= */
+function beginRound3(){
+  state.round = 3; state.r3Idx = 0; state.r3bIdx = 0; state.r3Phase = 'map';
+  r3Order = shuffle(R3_QUESTIONS);
+  R3_QUESTIONS.length = 0; r3Order.forEach(q=>R3_QUESTIONS.push(q));
+  renderMap(true);
+  document.getElementById('mapWrap').classList.remove('hidden');
+  document.getElementById('answerArea').classList.add('hidden');
+  document.getElementById('hintBtn').classList.remove('hidden');
+  updateHUD();
+  setProgress(0, TOTAL_Q.r3);
+  loadR3Question();
+  showScreen('screenMapPlay');
+}
+function loadR3Question(){
+  state.hintUsedThisQ = false;
+  updateHUD();
+  document.getElementById('clueText').innerHTML =
+    `<span class="qtag">지도 문제 ${state.r3Idx+1}/${TOTAL_Q.r3map}</span>${R3_QUESTIONS[state.r3Idx].clue.replace('\n','<br>')}`;
+}
+
+/* =========================================================
+   ROUND 3 - 2단계 (교류 개념 정리: 객관식 · 주관식)
+========================================================= */
+let r3bOrder = [];
+
+function beginRound3Concept(){
+  state.r3Phase = 'concept';
+  state.r3bIdx = 0;
+  r3bOrder = shuffle(R3B_QUESTIONS);
+  document.getElementById('mapWrap').classList.add('hidden');
+  document.getElementById('answerArea').classList.remove('hidden');
+  setProgress(TOTAL_Q.r3map, TOTAL_Q.r3);
+  loadR3ConceptQuestion();
+}
+
+function loadR3ConceptQuestion(){
+  const item = r3bOrder[state.r3bIdx];
+  document.getElementById('clueText').innerHTML =
+    `<span class="qtag">개념 문제 ${state.r3bIdx+1}/${TOTAL_Q.r3concept}</span>${item.q.replace(/\n/g,'<br>')}`;
+
+  const hintBtn = document.getElementById('hintBtn');
+  state.hintUsedThisQ = false;
+
+  const area = document.getElementById('answerArea');
+  area.innerHTML = '';
+
+  if(item.type === 'mc'){
+    hintBtn.classList.remove('hidden');
+    item.options.forEach((opt, i)=>{
+      const b = document.createElement('button');
+      b.className = 'mcBtn';
+      b.textContent = opt;
+      b.onclick = ()=> answerR3B_MC(i);
+      area.appendChild(b);
+    });
+  } else {
+    hintBtn.classList.add('hidden'); // 주관식은 힌트가 필요 없어요 (모범답안으로 바로 확인)
+    const wrap = document.createElement('div');
+    wrap.className = 'shortWrap';
+    wrap.innerHTML = `
+      <input type="text" id="shortInput" class="shortInput" placeholder="여기에 답을 적어 보세요">
+      <div class="shortHint">${item.hint}</div>
+      <button class="bigbtn" style="width:100%;margin-top:12px;font-size:34px;padding:14px;" id="shortSubmitBtn">정답 확인하기 ✏️</button>
+    `;
+    area.appendChild(wrap);
+    document.getElementById('shortSubmitBtn').onclick = showShortModelAnswer;
+  }
+  updateHUD();
+}
+
+function answerR3B_MC(pickedIdx){
+  if(state.locked) return;
+  state.locked = true;
+  const item = r3bOrder[state.r3bIdx];
+  const btns = document.querySelectorAll('#answerArea .mcBtn');
+  btns.forEach(b=> b.disabled = true);
+  const ok = pickedIdx === item.ans;
+  btns[pickedIdx].classList.add(ok ? 'picked-correct' : 'picked-wrong');
+  if(!ok) btns[item.ans].classList.add('picked-correct');
+
+  const result = awardPoint(18, ok);
+  showFeedback(ok, ok ? okMessage(result) : '아쉬워요!', item.explain, ()=> proceedAfterAnswer(result, advanceR3Concept));
+}
+
+function showShortModelAnswer(){
+  if(state.locked) return;
+  state.locked = true;
+  const item = r3bOrder[state.r3bIdx];
+  const input = document.getElementById('shortInput');
+  input.disabled = true;
+  document.getElementById('shortSubmitBtn').disabled = true;
+
+  const area = document.getElementById('answerArea');
+  const box = document.createElement('div');
+  box.className = 'shortWrap';
+  box.style.marginTop = '10px';
+  box.style.border = '2px solid #4361ee';
+  box.innerHTML = `
+    <p style="font-weight:800;color:#1c4e80;margin-bottom:8px;">📖 모범 답안</p>
+    <p style="line-height:1.6;">${item.model}</p>
+    <p style="margin-top:14px; font-weight:700; font-size:30px;">내가 쓴 답이 모범 답안과 비슷한가요?</p>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="choiceBtn" style="flex:1;" onclick="selfGrade(true)">네, 맞았어요 ✅</button>
+      <button class="choiceBtn" style="flex:1;" onclick="selfGrade(false)">다시 배울래요 📖</button>
+    </div>
+  `;
+  area.appendChild(box);
+}
+
+function selfGrade(isCorrect){
+  const item = r3bOrder[state.r3bIdx];
+  const result = awardPoint(18, isCorrect);
+  showFeedback(
+    isCorrect, isCorrect ? okMessage(result) : '괜찮아요, 다시 기억해봐요!',
+    `모범 답안: ${item.model}`,
+    ()=> proceedAfterAnswer(result, advanceR3Concept)
+  );
+}
+
+function advanceR3Concept(){
+  state.locked = false;
+  state.r3bIdx++;
+  setProgress(TOTAL_Q.r3map + state.r3bIdx, TOTAL_Q.r3);
+  if(state.r3bIdx >= TOTAL_Q.r3concept){ showResult(); }
+  else { loadR3ConceptQuestion(); }
+}
+
+/* =========================================================
+   RESULT
+========================================================= */
+function showResult(){
+  playFanfare();
+  const total = state.correctCount + state.wrongCount;
+  const acc = total ? Math.round((state.correctCount/total)*100) : 0;
+
+  document.getElementById('statCorrect').textContent = state.correctCount;
+  document.getElementById('statWrong').textContent = state.wrongCount;
+  document.getElementById('statAcc').textContent = acc + '%';
+  document.getElementById('statCombo').textContent = state.maxCombo;
+  document.getElementById('resultScore').textContent = '최종 점수 ' + state.score + '점';
+
+  let stars, title, mascot;
+  if(acc >= 85){ stars='★★★'; title='교류왕! 🏆'; mascot='🏆'; }
+  else if(acc >= 60){ stars='★★☆'; title='교류 마스터! 🎖️'; mascot='🎖️'; }
+  else { stars='★☆☆'; title='교류 초보 탐험가'; mascot='🧭'; }
+
+  document.getElementById('resultStars').textContent = stars;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMascot').textContent = mascot;
+
+  showScreen('screenResult');
+  spawnConfetti(acc >= 60 ? 36 : 18);
+}
+
+/* 결과 화면에 색종이가 흩날리는 연출 */
+function spawnConfetti(count){
+  const screen = document.getElementById('screenResult');
+  const colors = ['#ffb703','#4cc9f0','#38b000','#e63946','#ff8fab','#4361ee'];
+  for(let i=0; i<count; i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + '%';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    c.style.animationDuration = (1.6 + Math.random()*1.2) + 's';
+    c.style.animationDelay = (Math.random()*0.6) + 's';
+    screen.appendChild(c);
+    setTimeout(()=> c.remove(), 3200);
+  }
+}
+
+updateHUD();
+</script>
+</body>
+</html>
