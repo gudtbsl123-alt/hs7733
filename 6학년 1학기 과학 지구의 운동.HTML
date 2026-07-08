@@ -952,16 +952,17 @@ function renderStage(){
   const c = getCenter();
   if(st.mechanic==='dayCycle'){
     const r = Math.min(CW,CH)*0.24;
-    drawOrbit(c.x,c.y,r*1.9);
-    const sunDirDeg = state.mech.dial-90;
-    const a = sunDirDeg*Math.PI/180;
-    const sx = c.x + Math.cos(a)*r*1.9, sy = c.y + Math.sin(a)*r*1.9;
-    const isDay = Math.cos((state.mech.dial-180)*Math.PI/180) > 0;
     const sunR1 = Math.min(CW,CH)*0.13;
-    if(isDay) drawSun(sx,sy,sunR1); else drawMoon(sx,sy,sunR1*0.77);
-    // 파란 지구 - 태양 방향에 따라 관측자가 서 있는 면이 밝아지거나 어두워진다
-    drawEarth(c.x,c.y,r,0,{sunDir:sunDirDeg});
-    ctx.font='30px sans-serif'; ctx.textAlign='center'; ctx.fillText('🧍',c.x,c.y+r*0.62);
+    // 태양은 항상 같은 자리에 고정! 지구가 자전축을 중심으로 스스로 돈다
+    drawSun(CW*0.82, c.y, sunR1);
+    drawEarth(c.x,c.y,r,state.mech.dial,{sunDir:0, arrow:true});
+    // 관측자(사람)는 지구 표면에 고정된 채 지구와 함께 회전한다 → 낮/밤을 직접 겪는다
+    const obsAngle = ((-90+state.mech.dial)%360+360)%360;
+    const obsRad = obsAngle*Math.PI/180;
+    const px = c.x+Math.cos(obsRad)*r*0.78, py = c.y+Math.sin(obsRad)*r*0.78;
+    ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.fillText('🧍', px, py);
+    let diff = obsAngle-0; diff = ((diff+540)%360)-180;
+    const isDay = Math.abs(diff) < 90;
     ctx.font='13px Gowun Dodum'; ctx.fillStyle='#cfd3ff';
     ctx.fillText((isDay?'☀️ 낮 · ':'🌙 밤 · ')+'하루의 시간: '+Math.round(state.mech.dial/360*24)+'시', c.x, c.y-r-18);
   }
