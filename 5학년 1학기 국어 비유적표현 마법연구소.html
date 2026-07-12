@@ -8,11 +8,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; }
-  body{
+  
+  /* 모바일 하단 주소창 잘림 현상을 막기 위한 dvh 적용 */
+  html, body { min-height:100vh; min-height:100dvh; }
+  body {
     font-family:'Gowun Dodum','Malgun Gothic',sans-serif;
     background:radial-gradient(ellipse at 30% 0%, #2e1a63 0%, #1a1040 45%, #0d0824 100%);
-    min-height:100vh; overflow-x:hidden; color:#f1eaff;
+    overflow-x:hidden; color:#f1eaff;
     display:flex; flex-direction:column; align-items:center; position:relative;
   }
 
@@ -54,7 +56,7 @@
     100%{ opacity:0; transform:translateY(-120vh) scale(1.1); }
   }
 
-  /* 크리스탈 폭발 파티클 (기존에 정의만 되어 있던 클래스를 실사용) */
+  /* 크리스탈 폭발 파티클 */
   .miniSpark{ position:fixed; pointer-events:none; z-index:300; font-size:15px; animation:sparkFly .8s ease-out forwards; }
   .confettiFall{
     position:fixed; top:-30px; pointer-events:none; z-index:300;
@@ -65,7 +67,7 @@
     100%{ transform:translateY(110vh) rotate(var(--rot)); opacity:.15; }
   }
 
-  #app{ width:100%; max-width:640px; min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
+  #app{ width:100%; max-width:640px; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; position:relative; z-index:1; }
 
   /* ---------- HUD ---------- */
   #hud{
@@ -107,6 +109,7 @@
     border:none; border-radius:16px; padding:14px 34px; font-size:17px; font-weight:800;
     font-family:'Jua',sans-serif; letter-spacing:.5px; color:#fff; cursor:pointer; margin-top:8px;
     box-shadow:0 5px 0 #4a0e8f, 0 8px 18px rgba(90,20,150,.5); transition:transform .12s;
+    touch-action: manipulation; /* 터치 딜레이 제거 */
   }
   .bigbtn::after{
     content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
@@ -140,9 +143,12 @@
   .plainCard .sentence{ font-size:16.5px; line-height:1.6; color:#fff; font-weight:600; }
 
   #wandRow{ display:flex; justify-content:center; margin-bottom:10px; font-size:26px; }
+  
+  /* 텍스트 입력창 (아이폰 줌 버그 방지를 위해 16px 고정 및 텍스트 선택 허용) */
   #inputArea{
     width:100%; min-height:90px; border-radius:14px; border:2px solid #a78bfa; background:rgba(255,255,255,.95);
-    color:#26183f; padding:14px; font-size:14.5px; font-family:inherit; resize:vertical; line-height:1.6;
+    color:#26183f; padding:14px; font-size:16px; font-family:inherit; resize:vertical; line-height:1.6;
+    user-select: auto; /* 터치 환경에서 텍스트 커서 조작 및 복사 허용 */
   }
   #inputArea:focus{ outline:3px solid #ffd166; }
   #inputArea:disabled{ background:#e9e3f5; color:#8677a3; }
@@ -204,6 +210,7 @@
   .ghostbtn{
     background:transparent; border:2px solid #a78bfa; color:#e9d8ff; border-radius:14px;
     padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px;
+    touch-action: manipulation;
   }
 
   /* 파티클(별점 등장 시) */
@@ -268,7 +275,7 @@
       <div id="critList"></div>
       <div class="critComment" id="critComment"></div>
       
-      <!-- 신규 추가: 모범 답안 영역 -->
+      <!-- 모범 답안 영역 -->
       <div id="modelAnswersBox" class="exampleCard hidden" style="margin-top:14px; background:linear-gradient(135deg,rgba(255,209,102,.1),rgba(199,125,255,.1)); border-color:rgba(255,209,102,.5);">
         <div style="color:#ffd166; font-weight:800; margin-bottom:8px;">🌟 만점 모범 예시 답안</div>
         <ul id="modelAnswersList" style="list-style:none; padding-left:0; font-size:13.5px; line-height:1.6; color:#efe6ff;"></ul>
@@ -926,7 +933,7 @@ function renderCriteriaReveal(scores, sum){
     let bucket = sum >= 20 ? 'high' : sum >= 12 ? 'mid' : 'low';
     document.getElementById('critComment').textContent = pick(COMMENTS[bucket]);
 
-    // 신규 추가: 모범 답안 렌더링
+    // 모범 답안 렌더링
     const modelBox = document.getElementById('modelAnswersBox');
     const modelList = document.getElementById('modelAnswersList');
     const currentModels = PROBLEMS[state.idx].models;
