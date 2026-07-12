@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>비유의 마법 연구소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    font-family:'Gowun Dodum','Malgun Gothic',sans-serif;
+    background:radial-gradient(ellipse at 30% 0%, #2e1a63 0%, #1a1040 45%, #0d0824 100%);
+    min-height:100vh; overflow-x:hidden; color:#f1eaff;
+    display:flex; flex-direction:column; align-items:center; position:relative;
+  }
+
+  /* ---------- 배경 반짝임 ---------- */
+  .starDeco{ position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+  .twinkle{
+    position:absolute; width:3px; height:3px; background:#fff; border-radius:50%;
+    box-shadow:0 0 6px 2px rgba(255,255,255,.8);
+    animation:twinkleAnim 2.4s ease-in-out infinite;
+  }
+  @keyframes twinkleAnim{ 0%,100%{ opacity:.15; transform:scale(1); } 50%{ opacity:1; transform:scale(1.6); } }
+  .driftOrb{
+    position:absolute; border-radius:50%; filter:blur(2px); opacity:.35;
+    animation:driftAnim 14s ease-in-out infinite;
+  }
+  @keyframes driftAnim{ 0%,100%{ transform:translateY(0) translateX(0); } 50%{ transform:translateY(-30px) translateX(20px); } }
+
+  /* 오로라 리본 (은은하게 흐르는 색 띠) */
+  .aurora{
+    position:absolute; width:140%; height:220px; left:-20%;
+    background:linear-gradient(90deg, transparent, rgba(199,125,255,.25), rgba(255,209,102,.18), rgba(123,47,247,.25), transparent);
+    filter:blur(30px); animation:auroraFlow 16s ease-in-out infinite;
+    transform-origin:center;
+  }
+  @keyframes auroraFlow{
+    0%,100%{ transform:translateX(-4%) rotate(-2deg) scaleY(1); opacity:.55; }
+    50%{ transform:translateX(4%) rotate(2deg) scaleY(1.3); opacity:.85; }
+  }
+
+  /* 떠다니는 마법 가루 (은은하게 위로 올라가며 사라짐) */
+  .dustMote{
+    position:fixed; pointer-events:none; z-index:2; border-radius:50%;
+    background:radial-gradient(circle,#ffe9b8,#ffd166 60%,transparent 75%);
+    animation:dustRise linear forwards;
+  }
+  @keyframes dustRise{
+    0%{ opacity:0; transform:translateY(0) scale(.4); }
+    12%{ opacity:.9; }
+    100%{ opacity:0; transform:translateY(-120vh) scale(1.1); }
+  }
+
+  /* 크리스탈 폭발 파티클 (기존에 정의만 되어 있던 클래스를 실사용) */
+  .miniSpark{ position:fixed; pointer-events:none; z-index:300; font-size:15px; animation:sparkFly .8s ease-out forwards; }
+  .confettiFall{
+    position:fixed; top:-30px; pointer-events:none; z-index:300;
+    animation:confettiFallAnim linear forwards;
+  }
+  @keyframes confettiFallAnim{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(110vh) rotate(var(--rot)); opacity:.15; }
+  }
+
+  #app{ width:100%; max-width:640px; min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    display:flex; align-items:center; justify-content:space-between; padding:12px 18px;
+    background:linear-gradient(180deg,rgba(60,30,110,.85),rgba(40,20,80,.7));
+    backdrop-filter:blur(6px); border-bottom:2px solid #a78bfa;
+    box-shadow:0 4px 18px rgba(0,0,0,.4);
+    position:sticky; top:0; z-index:50;
+  }
+  #hud .stat{ font-family:'Jua',sans-serif; font-size:15px; color:#e9d8ff; display:flex; align-items:center; gap:5px; }
+  #totalStarBox{ color:#ffd166; font-weight:700; }
+
+  #progressWrap{ height:6px; background:rgba(255,255,255,.12); }
+  #progressBar{ height:100%; width:0%; background:linear-gradient(90deg,#c77dff,#7b2ff7,#ffd166); transition:width .4s ease; }
+
+  /* ---------- 화면 공통 ---------- */
+  .screen{ flex:1; display:flex; flex-direction:column; align-items:center; padding:26px 20px 50px; }
+  .hidden{ display:none !important; }
+  .screen.enter{ animation:screenEnter .4s ease; }
+  @keyframes screenEnter{ from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:translateY(0);} }
+
+  h1.title{
+    font-family:'Jua',sans-serif; font-size:30px; text-align:center; margin-bottom:6px;
+    background:linear-gradient(90deg,#ffd166,#c77dff,#7b2ff7,#ffd166);
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 2px 6px rgba(199,125,255,.5));
+    animation:titleShimmer 5s linear infinite;
+  }
+  @keyframes titleShimmer{ 0%{ background-position:0% 50%; } 100%{ background-position:300% 50%; } }
+  p.sub{ color:#d8c8ff; font-size:14.5px; text-align:center; line-height:1.6; margin-bottom:16px; }
+
+  .mascot{ font-size:64px; margin:6px 0; animation:floatMascot 3s ease-in-out infinite; filter:drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
+  @keyframes floatMascot{ 0%,100%{ transform:translateY(0) rotate(-3deg);} 50%{ transform:translateY(-10px) rotate(3deg);} }
+
+  .bigbtn{
+    position:relative; overflow:hidden;
+    background:linear-gradient(180deg,#c77dff,#7b2ff7 60%,#5a189a);
+    border:none; border-radius:16px; padding:14px 34px; font-size:17px; font-weight:800;
+    font-family:'Jua',sans-serif; letter-spacing:.5px; color:#fff; cursor:pointer; margin-top:8px;
+    box-shadow:0 5px 0 #4a0e8f, 0 8px 18px rgba(90,20,150,.5); transition:transform .12s;
+  }
+  .bigbtn::after{
+    content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.6), transparent);
+    transform:skewX(-20deg); animation:btnShine 3s ease-in-out infinite;
+  }
+  @keyframes btnShine{ 0%{ left:-60%;} 40%,100%{ left:130%;} }
+  .bigbtn:active{ transform:translateY(4px); box-shadow:0 1px 0 #4a0e8f; }
+  .bigbtn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .exampleCard{
+    background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(199,125,255,.08));
+    border:1.5px solid rgba(199,125,255,.4); border-radius:16px; padding:16px 18px; margin:8px 0; width:100%;
+    font-size:13.5px; line-height:1.7; color:#efe6ff;
+  }
+  .exampleCard .plain{ color:#c9b8ea; }
+  .exampleCard .arrow{ color:#ffd166; font-weight:700; }
+  .exampleCard b{ color:#ffd166; }
+
+  /* ---------- 문제 화면 ---------- */
+  #qBadge{
+    font-family:'Jua',sans-serif; background:linear-gradient(135deg,#7b2ff7,#c77dff);
+    color:#fff; padding:5px 16px; border-radius:20px; font-size:13px; margin-bottom:10px;
+    box-shadow:0 3px 10px rgba(123,47,247,.4);
+  }
+  .plainCard{
+    background:linear-gradient(135deg,#231447,#2d1a5c); border:2px solid rgba(199,125,255,.35);
+    border-radius:18px; padding:20px; width:100%; margin-bottom:14px; box-shadow:0 6px 20px rgba(0,0,0,.3);
+  }
+  .plainCard .pageNum{ font-size:12px; color:#c9b8ea; margin-bottom:6px; }
+  .plainCard .sentence{ font-size:16.5px; line-height:1.6; color:#fff; font-weight:600; }
+
+  #wandRow{ display:flex; justify-content:center; margin-bottom:10px; font-size:26px; }
+  #inputArea{
+    width:100%; min-height:90px; border-radius:14px; border:2px solid #a78bfa; background:rgba(255,255,255,.95);
+    color:#26183f; padding:14px; font-size:14.5px; font-family:inherit; resize:vertical; line-height:1.6;
+  }
+  #inputArea:focus{ outline:3px solid #ffd166; }
+  #inputArea:disabled{ background:#e9e3f5; color:#8677a3; }
+
+  .hintLine{ font-size:12px; color:#b9a6dd; margin-top:6px; text-align:center; }
+
+  /* 마법진/크리스탈 연출 */
+  #crystalWrap{ position:relative; width:170px; height:170px; margin:16px auto 6px; display:flex; align-items:center; justify-content:center; }
+  #crystalGlow{
+    position:absolute; inset:0; border-radius:50%; filter:blur(20px); opacity:.45;
+    background:radial-gradient(circle, #ffd166, #7b2ff7 60%, transparent 75%);
+    transition:opacity .6s ease; transform:scale(.7);
+    animation:crystalBreathe 2.6s ease-in-out infinite;
+  }
+  @keyframes crystalBreathe{ 0%,100%{ transform:scale(.65); } 50%{ transform:scale(.8); } }
+  #crystalGlow.lit{ opacity:1; animation:crystalBurstGlow .9s ease-out; }
+  @keyframes crystalBurstGlow{
+    0%{ transform:scale(.5); opacity:.3; }
+    35%{ transform:scale(1.6); opacity:1; }
+    100%{ transform:scale(1.15); opacity:1; }
+  }
+  #crystalEmoji{
+    font-size:68px; position:relative; z-index:2; filter:drop-shadow(0 0 12px rgba(255,209,102,.6));
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  #crystalEmoji.pop{ animation:crystalPop .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes crystalPop{ 0%{ transform:scale(.6) rotate(-8deg); } 60%{ transform:scale(1.3) rotate(6deg); } 100%{ transform:scale(1) rotate(0deg); } }
+  .magicRing{
+    position:absolute; border:2px dashed rgba(199,125,255,.5); border-radius:50%;
+    animation:spinRing 6s linear infinite;
+  }
+  .magicRing.ring3{ border-color:rgba(255,209,102,.4); }
+  @keyframes spinRing{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
+  /* 결과 카드(제출 후) */
+  #resultBox{ width:100%; margin-top:8px; }
+  .critRow{
+    display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); border-radius:12px;
+    padding:9px 12px; margin-bottom:7px; border:1px solid rgba(199,125,255,.25);
+  }
+  .critLabel{ font-size:13px; font-weight:700; color:#f1eaff; width:78px; flex-shrink:0; }
+  .critStars{ display:flex; gap:2px; }
+  .critStar{ font-size:17px; opacity:.25; transform:scale(.6); transition:opacity .25s ease, transform .25s ease; }
+  .critStar.on{ opacity:1; transform:scale(1); }
+  .critComment{ margin-top:12px; font-size:13.5px; line-height:1.6; color:#e9d8ff; background:rgba(123,47,247,.15);
+    border-radius:12px; padding:12px 14px; border:1px solid rgba(199,125,255,.3); }
+
+  /* ---------- 결과 화면 ---------- */
+  #finalStars{ font-size:40px; margin:10px 0; }
+  #finalTitle{ font-family:'Jua',sans-serif; font-size:24px; color:#ffd166; margin-bottom:4px; text-align:center; }
+  #finalScore{ font-size:15px; color:#d8c8ff; margin-bottom:16px; }
+  .avgRow{ display:flex; flex-direction:column; gap:8px; width:100%; margin-bottom:18px; }
+  .avgItem{ display:flex; align-items:center; gap:10px; }
+  .avgItem .lbl{ width:78px; font-size:13px; font-weight:700; flex-shrink:0; }
+  .avgBar{ flex:1; height:14px; border-radius:8px; background:rgba(255,255,255,.1); overflow:hidden; }
+  .avgFill{ height:100%; border-radius:8px; background:linear-gradient(90deg,#ffd166,#c77dff); }
+  .avgNum{ font-size:12.5px; color:#d8c8ff; width:34px; text-align:right; }
+
+  .ghostbtn{
+    background:transparent; border:2px solid #a78bfa; color:#e9d8ff; border-radius:14px;
+    padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px;
+  }
+
+  /* 파티클(별점 등장 시) */
+  @keyframes sparkFly{
+    0%{ opacity:0; transform:translate(0,0) scale(.4); }
+    30%{ opacity:1; }
+    100%{ opacity:0; transform:translate(var(--dx),var(--dy)) scale(1.1); }
+  }
+</style>
+</head>
+<body>
+<div class="starDeco" id="starDeco"></div>
+
+<div id="app">
+
+  <div id="hud">
+    <div class="stat">📖 <span id="progressText">문제 0 / 20</span></div>
+    <div class="stat" id="totalStarBox">⭐ 누적 0점</div>
+  </div>
+  <div id="progressWrap"><div id="progressBar"></div></div>
+
+  <!-- 시작 화면 -->
+  <div class="screen" id="screenStart">
+    <div class="mascot">🪄✨</div>
+    <h1 class="title">비유의 마법 연구소</h1>
+    <p class="sub">5학년 국어 6단원 · 작품을 즐겨요 — 비유적 표현<br>
+    평범한 문장에 [비유의 마법 가루]를 뿌려 보세요.<br>
+    여러분이 쓴 비유를 마법 크리스탈이 5가지 기준으로 평가해 줄 거예요!</p>
+
+    <div class="exampleCard">
+      <b>📘 선생님 예시 (278쪽)</b><br><br>
+      <span class="plain">거리에서는 나무나 풀 한 포기 찾아볼 수 없었다.</span><br>
+      <span class="arrow">→</span> 거리에서는 <b>사막의 모래바람처럼</b> 회색 먼지만 날릴 뿐, 초록색 생명체는 흔적조차 찾을 수 없었다.<br>
+      <span class="arrow">→</span> 거리는 <b>회색 도화지처럼</b> 삭막하여 나무나 풀의 초록빛을 어디에서도 찾을 수 없었다.
+    </div>
+    <p class="hintLine">정답은 없어요! 장면의 느낌을 살려 자유롭게 써 보세요 🌙</p>
+    <button class="bigbtn" onclick="startGame()">마법 연구소 입장하기 ▶</button>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div class="screen hidden" id="screenPlay">
+    <div id="qBadge">문제 1 / 20</div>
+    <div class="plainCard">
+      <div class="pageNum" id="pageNum">278쪽</div>
+      <div class="sentence" id="plainSentence"></div>
+    </div>
+
+    <div id="wandRow">🪄 → ✨</div>
+    <textarea id="inputArea" placeholder="이 문장에 비유적 표현을 더해서 다시 써 보세요..."></textarea>
+    <p class="hintLine">'~처럼', '~같이'를 활용한 직유나, 'A는 B다' 형태의 은유 모두 좋아요!</p>
+    <button class="bigbtn" id="submitBtn" onclick="submitAnswer()">마법 주문 외우기 ✨</button>
+
+    <div id="crystalWrap">
+      <div class="magicRing" style="width:170px;height:170px;top:0;left:0;"></div>
+      <div class="magicRing" style="width:126px;height:126px;top:22px;left:22px;animation-direction:reverse;animation-duration:9s;"></div>
+      <div class="magicRing ring3" style="width:150px;height:150px;top:10px;left:10px;animation-duration:12s;"></div>
+      <div id="crystalGlow"></div>
+      <div id="crystalEmoji">🔮</div>
+    </div>
+
+    <div id="resultBox" class="hidden">
+      <div id="critList"></div>
+      <div class="critComment" id="critComment"></div>
+      <button class="bigbtn" id="nextBtn" style="width:100%;" onclick="nextQuestion()">다음 문제로 ▶</button>
+    </div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="screen hidden" id="screenResult">
+    <div class="mascot">🧙‍♂️</div>
+    <div id="finalStars">⭐⭐⭐</div>
+    <div id="finalTitle">비유의 대마법사!</div>
+    <div id="finalScore">총 누적 점수 0점 / 125점</div>
+
+    <div class="avgRow" id="avgRow"></div>
+
+    <button class="bigbtn" onclick="restartGame()">다시 도전하기 🔁</button>
+    <button class="ghostbtn" onclick="showAllAnswers()">내가 쓴 비유 다시 보기 📜</button>
+  </div>
+
+  <!-- 내가 쓴 답 모아보기 모달 -->
+  <div id="reviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,5,25,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#1e1240;border:2px solid #a78bfa;border-radius:18px;padding:22px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;">
+      <h2 style="font-family:'Jua',sans-serif;color:#ffd166;margin-bottom:14px;font-size:19px;">📜 나의 비유 모음집</h2>
+      <div id="reviewList"></div>
+      <button class="bigbtn" style="width:100%;margin-top:10px;" onclick="document.getElementById('reviewModal').classList.add('hidden')">닫기</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   배경 반짝임 생성
+========================================================= */
+(function initSky(){
+  const deco = document.getElementById('starDeco');
+  for(let i=0;i<40;i++){
+    const t = document.createElement('div');
+    t.className = 'twinkle';
+    t.style.left = Math.random()*100 + '%';
+    t.style.top = Math.random()*100 + '%';
+    t.style.animationDelay = (Math.random()*2.4) + 's';
+    deco.appendChild(t);
+  }
+  const orbColors = ['#7b2ff7','#c77dff','#ffd166'];
+  for(let i=0;i<5;i++){
+    const o = document.createElement('div');
+    o.className = 'driftOrb';
+    const size = 60 + Math.random()*90;
+    o.style.width = size+'px'; o.style.height = size+'px';
+    o.style.left = Math.random()*100 + '%';
+    o.style.top = Math.random()*100 + '%';
+    o.style.background = orbColors[i % orbColors.length];
+    o.style.animationDuration = (10+Math.random()*10) + 's';
+    o.style.animationDelay = (Math.random()*5) + 's';
+    deco.appendChild(o);
+  }
+  // 오로라 리본 2줄
+  for(let i=0;i<2;i++){
+    const a = document.createElement('div');
+    a.className = 'aurora';
+    a.style.top = (15 + i*45) + '%';
+    a.style.animationDelay = (i*3) + 's';
+    a.style.animationDuration = (14 + i*4) + 's';
+    deco.appendChild(a);
+  }
+})();
+
+/* 떠다니는 마법 가루를 주기적으로 생성 */
+function spawnDust(){
+  const deco = document.getElementById('starDeco');
+  const d = document.createElement('div');
+  d.className = 'dustMote';
+  const size = 3 + Math.random()*4;
+  d.style.width = size+'px'; d.style.height = size+'px';
+  d.style.left = Math.random()*100 + '%';
+  d.style.top = (70 + Math.random()*30) + '%';
+  d.style.animationDuration = (5 + Math.random()*4) + 's';
+  deco.appendChild(d);
+  setTimeout(()=> d.remove(), 9500);
+}
+setInterval(spawnDust, 450);
+
+/* 화면 좌표 기준으로 반짝임 파티클을 사방으로 흩뿌림 */
+function spawnMiniSparks(centerX, centerY, count, emojiList){
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'miniSpark';
+    el.textContent = emojiList[Math.floor(Math.random()*emojiList.length)];
+    const angle = Math.random()*Math.PI*2;
+    const dist = 50 + Math.random()*70;
+    el.style.left = centerX + 'px';
+    el.style.top = centerY + 'px';
+    el.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+    el.style.setProperty('--dy', Math.sin(angle)*dist + 'px');
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 850);
+  }
+}
+
+/* =========================================================
+   문제 데이터 (교과서 활동지 기반)
+========================================================= */
+const PROBLEMS = [
+  { page:'278쪽', text:'사람들은 차분하게 한자리에 앉아 생각하는 법이 없이 연신 움직이기만 했다.' },
+  { page:'279쪽', text:'아무리 애를 써서 생각해도 어머니의 모습이 떠오르지 않았다.' },
+  { page:'281쪽', text:'어머니와 함께 지낼 때에는 매일 사랑을 느낄 수 있었던 것 같은데,' },
+  { page:'283쪽', text:'김수철 박사를 중심으로 로봇 휴머니드와 사람들이 쭉 늘어섰다.' },
+  { page:'284쪽', text:'구경꾼들은 어느새 자신들의 가슴이 따스하게 데워져 오는 것을 느낄 수 있었다.' },
+  { page:'문장 6',  text:'밤이 깊어지자 온 마을은 아무 소리도 들리지 않을 만큼 고요해졌다.' },
+  { page:'문장 7',  text:'발표를 앞둔 아이는 손이 떨리고 심장이 빠르게 뛰었다.' },
+  { page:'문장 8',  text:'오랜만에 만난 친구를 보자 저절로 웃음이 터져 나왔다.' },
+  { page:'문장 9',  text:'잘못을 들킨 그는 얼굴이 붉어지며 아무 말도 하지 못했다.' },
+  { page:'문장 10', text:'며칠째 내린 비로 시냇물이 순식간에 불어났다.' },
+  { page:'문장 11', text:'시험이 끝나자 아이들은 교실 밖으로 한꺼번에 몰려나갔다.' },
+  { page:'문장 12', text:'할머니의 손을 잡자 마음이 편안하고 따뜻해졌다.' },
+  { page:'문장 13', text:'그 소식을 들은 순간 온몸에 소름이 돋고 말문이 막혔다.' },
+  { page:'문장 14', text:'산 정상에 오르자 눈앞에 펼쳐진 풍경이 끝없이 이어졌다.' },
+  { page:'문장 15', text:'며칠 밤을 새운 그의 눈은 붉게 충혈되어 있었다.' },
+  { page:'문장 16', text:'아이는 처음 보는 곤충이 신기해 한참을 들여다보았다.' },
+  { page:'문장 17', text:'경기에서 이긴 선수들은 서로 부둥켜안으며 기뻐했다.' },
+  { page:'문장 18', text:'밤하늘에 뜬 별들이 셀 수 없이 많이 반짝이고 있었다.' },
+  { page:'문장 19', text:'갑자기 정전이 되자 방 안은 아무것도 보이지 않을 만큼 캄캄해졌다.' },
+  { page:'문장 20', text:'오랫동안 기다리던 편지가 도착하자 가슴이 두근거리기 시작했다.' }
+];
+
+const CRITERIA = [
+  { key:'적합성', icon:'🎯' },
+  { key:'표현력', icon:'🎨' },
+  { key:'창의성', icon:'💡' },
+  { key:'기발함', icon:'⚡' },
+  { key:'생생함', icon:'✨' }
+];
+
+const state = { idx:0, records:[], totalScore:0 };
+
+/* =========================================================
+   규칙 기반 "AI풍" 채점 엔진
+   ---------------------------------------------------------
+   [0단계] 유효성 게이트 — 통과 못하면 점수를 매기지 않고 재작성 유도
+     - 한글 비율 40% 미만 (영어 낙서, 키보드 눌러쓰기 등 차단)
+     - 공백 제외 실질 글자 수 8자 미만
+     - 원문과 92% 이상 동일(그대로 베낌)
+     - 글자 다양성 낮음: 서로 다른 글자 종류가 전체 글자수 대비 25% 미만
+       (예: "가가가가가가가가" 같은 반복 낙서 차단)
+
+   [지표별 채점 기준] (유효성 게이트 통과 시 1~5점, 절대 0점은 없음)
+     🎯 적합성 : 문제 문장의 핵심 정서/상황과 얼마나 어울리는 낱말을 썼는가
+                기본 2 + (문제별 핵심 정서 어휘 포함 +2) + (비유 연결 구조 +1)
+     🎨 표현력 : 감각적·묘사적 언어를 얼마나 풍부하게 썼는가
+                기본 1 + (생생한 어휘 개수, 최대 +3) + (원문보다 유의미하게 확장 +1)
+     💡 창의성 : 상투적 비유가 아닌 자신만의 비유인가
+                기본 3 + (클리셰 사용 -2) + (마커 없는 은유 구조 +1) + (정서어휘·생생어휘 동시사용 +1)
+     ⚡ 기발함 : 예상 밖의 신선한 연결인가
+                기본 2 + (생생한 어휘 2개 이상 +1) + (문장을 크게 확장 +1) + (클리셰 -1)
+     ✨ 생생함 : 장면이 눈앞에 그려지듯 감각적인가
+                기본 1 + (생생한 어휘 개수, 최대 +3) + (비유 마커 사용 +1)
+========================================================= */
+const SIMILE_MARKERS = ['처럼','같이','같은','듯이','인 듯','인듯','마냥','흡사','마치']; // 참고용 (실제 판정은 hasSimileMarker 함수 사용)
+
+/* 직유 마커를 문맥까지 고려해 판정 (오탐 방지)
+   - '~같이'는 명사에 바로 붙어야 비유(번개같이). 띄어쓴 '~와 같이'(함께)는 제외
+   - '~같은'은 뒤에 공백/문장끝이 와야 비유(구름 같은). '같은데/같은가'(어미)는 제외 */
+function hasSimileMarker(text){
+  if(/[가-힣]처럼/.test(text)) return true;
+  if(/[가-힣]같이/.test(text)) return true;
+  if(/같은(\s|$)/.test(text)) return true;
+  if(/듯이|인\s?듯|마냥|흡사|마치/.test(text)) return true;
+  return false;
+}
+
+/* 비유 기법 등급: 0=없음, 1=직유(마커 사용), 2=은유(마커 없이 "A는/은 B다" 구조)
+   → 은유가 직유보다 더 정교한 표현으로 간주해 더 높은 점수를 줌 */
+function deviceLevel(text){
+  const marker = hasSimileMarker(text);
+  const metaphor = /[은는]\s*[가-힣]+(이다|였다|다)\.?$/.test(text) && !marker;
+  if(metaphor) return 2;
+  if(marker) return 1;
+  return 0;
+}
+
+/* 감각/묘사 어휘를 5개 카테고리로 분류 — 카테고리를 몇 종류나 넘나들며 썼는지로
+   표현력·생생함을 판단 (같은 카테고리 어휘만 여러 개 쓰는 것보다 다양하게 쓰는 게 더 높은 점수) */
+const SENSORY = {
+  시각: ['반짝','빛나','새하얀','새까만','짙은','깊은','눈부신','캄캄','별빛','달빛','노을','수놓','또렷','안개','서리','구름','영롱'],
+  청각: ['천둥','번개','메아리','왁자지껄','웅성','쿵쾅','윙윙','시끌벅적','와글','북적','우르르'],
+  촉각온도: ['뜨거운','차가운','따뜻','포근','눈보라','촛불','비단','솜털','서늘','푸근'],
+  움직임: ['소용돌이','물결','파도치','일렁','휘몰아','넘실','쏜살','휙휙','이리저리','회오리','펄럭','산산이','와르르','부글','활활'],
+  정서강도: ['벅차','두근','설레','분주','부산','정신없이','쉴 새 없이','뭉클','짜릿','전율']
+};
+function sensoryCategoryCount(text){
+  return Object.values(SENSORY).filter(list=> list.some(w=> text.includes(w))).length;
+}
+function anyVividWord(text){
+  return Object.values(SENSORY).some(list=> list.some(w=> text.includes(w)));
+}
+
+/* 클리셰 탐지: 정확한 문구 일치 대신 '소재+서술어' 핵심어 동시 출현으로 판정
+   (예: '꽃처럼 예쁘게'/'꽃같이 예뻤다' 등 어미가 달라져도 모두 잡아냄) */
+const CLICHE_PAIRS = [
+  ['꽃','예쁘'], ['천사','같'], ['호랑이','무섭'], ['토끼','빠르'], ['거북이','느리'], ['바다','넓']
+];
+function isClicheFuzzy(text){
+  return CLICHE_PAIRS.some(([a,b]) => text.includes(a) && text.includes(b));
+}
+
+/* 문제별 핵심 정서 어휘 (적합성 가산용) / 반대 정서 어휘 (적합성·창의성 감산용 — 문맥에 안 맞는 비유 감지) */
+const KEYWORDS_BY_PROBLEM = [
+  ['움직','분주','부산','바쁘','안절부절','들썩','서성','왔다갔다','부지런'],           // 1. 가만있지 못하고 계속 움직임
+  ['희미','흐릿','안개','지워','아득','떠오르','기억','사라'],                          // 2. 애써도 떠오르지 않는 기억
+  ['따뜻','포근','그립','아련','햇살','온기','품','다정'],                              // 3. 어머니와의 사랑, 그리움
+  ['줄','늘어','행렬','도열','나란히','가지런','정렬','일렬'],                          // 4. 사람과 로봇이 늘어선 모습
+  ['따뜻','벅차','뭉클','감동','데워','온기','설레','벅찬'],                            // 5. 가슴이 따스해지는 감동
+  ['고요','조용','적막','숨죽','잠들','멈춘','정지','깊은'],                            // 6. 소리 없는 고요한 밤
+  ['떨리','긴장','두근','조마조마','쿵쾅','불안','초조'],                              // 7. 발표 앞둔 떨림
+  ['반갑','웃음','환하','밝아','기쁨','활짝','터져'],                                  // 8. 친구를 만난 반가움
+  ['붉어','부끄','화끈','민망','당황','빨개','달아'],                                  // 9. 들켜서 부끄러움
+  ['불어','넘치','거세','휘몰아','콸콸','솟구','불어나'],                              // 10. 비로 불어난 시냇물
+  ['몰려','우르르','와글','신나','들뜨','활기','왁자지껄'],                            // 11. 시험 끝난 해방감
+  ['포근','따뜻','편안','아늑','푸근','안정','포옥'],                                  // 12. 할머니 손, 포근함
+  ['소름','충격','멍하','아찔','얼어붙','굳어','전율'],                                // 13. 충격적인 소식
+  ['끝없','광활','웅장','아득','드넓','펼쳐','거대'],                                  // 14. 산 정상의 풍경
+  ['충혈','지치','피곤','축','늘어지','무겁','졸린'],                                  // 15. 밤새운 피로
+  ['신기','궁금','호기심','들여다','유심히','두리번','살펴'],                          // 16. 곤충을 향한 호기심
+  ['부둥켜','환호','기뻐','벅차','짜릿','만세','얼싸안'],                              // 17. 승리의 환희
+  ['반짝','빛나','별빛','수놓','촘촘','아름다','영롱'],                                // 18. 밤하늘 별빛
+  ['캄캄','깜깜','어둠','칠흑','아무것도','막막','짙은'],                              // 19. 정전 속 어둠
+  ['두근','설레','기대','벅차','조마조마','들뜨','기다리']                             // 20. 편지 기다리는 설렘
+];
+
+const CONTRA_KEYWORDS_BY_PROBLEM = [
+  ['차분','고요','멈춘','정지'],                 // 1. 분주함의 반대: 차분/정지
+  ['또렷','선명','생생히'],                      // 2. 흐릿한 기억의 반대: 또렷함
+  ['차갑','냉정','미움','싫'],                   // 3. 그리움의 반대: 차가움
+  ['흩어','제각각','뒤엉','뒤죽박죽'],           // 4. 정렬된 모습의 반대: 흩어짐
+  ['차갑','냉담','무관심'],                      // 5. 감동의 반대: 차가움
+  ['시끄럽','소란','왁자지껄','북적'],           // 6. 고요함의 반대: 시끄러움
+  ['차분','평온','태연','느긋'],                 // 7. 긴장의 반대: 차분함
+  ['불쾌','짜증','싫','귀찮'],                   // 8. 반가움의 반대: 불쾌함
+  ['당당','자랑스럽','떳떳'],                    // 9. 부끄러움의 반대: 당당함
+  ['잔잔','메마른','바싹'],                      // 10. 불어난 물의 반대: 메마름
+  ['조용','침울','시무룩','축 처'],              // 11. 해방감의 반대: 침울함
+  ['차갑','싸늘','냉랭'],                        // 12. 포근함의 반대: 차가움
+  ['평온','태연','무덤덤','심드렁'],             // 13. 충격의 반대: 무덤덤함
+  ['좁은','작은','아담','비좁'],                 // 14. 웅장함의 반대: 좁음
+  ['생기','활기','팔팔','쌩쌩'],                 // 15. 피로의 반대: 생기
+  ['무관심','시큰둥','심드렁'],                  // 16. 호기심의 반대: 무관심
+  ['침울','실망','좌절','시무룩'],               // 17. 환희의 반대: 침울함
+  ['흐릿','칙칙','희미'],                        // 18. 별빛의 반대: 흐릿함
+  ['환한','밝은','눈부신'],                      // 19. 어둠의 반대: 밝음
+  ['무덤덤','심드렁','따분','지루']              // 20. 설렘의 반대: 무덤덤함
+];
+
+
+function clampStar(n){ return Math.max(1, Math.min(5, Math.round(n))); }
+function jitter(range){ return (Math.random()*2-1) * range; }
+
+function hangulRatio(text){
+  const hangul = (text.match(/[가-힣]/g) || []).length;
+  const nonSpace = text.replace(/\s/g,'').length;
+  return nonSpace === 0 ? 0 : hangul / nonSpace;
+}
+function uniqueCharRatio(text){
+  const chars = text.replace(/\s/g,'').split('');
+  if(chars.length === 0) return 0;
+  return new Set(chars).size / chars.length;
+}
+/* 아주 단순한 유사도 추정 (공통 어절 비율) */
+function wordOverlapRatio(a, b){
+  const wa = a.split(/\s+/), wb = b.split(/\s+/);
+  const common = wa.filter(w=> wb.includes(w)).length;
+  return common / Math.max(wa.length, 1);
+}
+
+function scoreExpression(original, raw, problemIdx){
+  const text = raw.trim();
+  const origCore = original.replace(/[.,]/g,'').trim();
+  const nonSpaceLen = text.replace(/\s/g,'').length;
+
+  /* ---- 0단계: 유효성 게이트 ---- */
+  const overlapRatio = text.length > 0
+    ? (text.includes(origCore) ? 1 : wordOverlapRatio(origCore, text))
+    : 0;
+  const isValidKorean = hangulRatio(text) >= 0.4;
+  const longEnough = nonSpaceLen >= 8;
+  const notCopied = overlapRatio <= 0.92;
+  const notRepetitive = nonSpaceLen < 10 || uniqueCharRatio(text) >= 0.25;
+
+  if(!isValidKorean || !longEnough || !notCopied || !notRepetitive){
+    return { scores:null, tooShort:true };
+  }
+
+  /* ---- 1단계: 특징 추출 ---- */
+  const device = deviceLevel(text);                 // 0=없음, 1=직유, 2=은유
+  const isCliche = isClicheFuzzy(text);
+  const keywordHit = (KEYWORDS_BY_PROBLEM[problemIdx] || []).some(k=> text.includes(k));
+  const contraHit = (CONTRA_KEYWORDS_BY_PROBLEM[problemIdx] || []).some(k=> text.includes(k));
+  const sensoryCount = sensoryCategoryCount(text);   // 0~5 (몇 가지 감각 영역을 넘나들며 썼는지)
+  const hasVivid = anyVividWord(text);
+  const addedWords = (()=>{
+    const origSet = new Set(origCore.split(/\s+/));
+    return text.replace(/[.,]/g,'').split(/\s+/).filter(w=> !origSet.has(w)).length;
+  })();
+  // 키워드와 다른 낱말로 감각 표현을 썼다면 "뻔한 답이 아닌 자신만의 비유"로 간주
+  const noveltyHit = hasVivid && !keywordHit && !contraHit;
+  /* 목록에 없는 어휘를 써도(=noveltyHit이 false여도), 비유 구조를 갖추고 충분히 문장을
+     확장했다면 "성실하고 완성도 있는 시도"로 인정. 커스텀 단어 목록에 없는 창의적인
+     표현이 오히려 손해 보지 않도록 하는 보완 장치 */
+  const genuineEffort = device>=1 && addedWords>=5 && !contraHit && !isCliche;
+
+  /* ---- 2단계: 지표별 채점 (서로 다른 신호 조합으로 계산 — 상단 주석 참고) ---- */
+  let 적합성 = 1 + (keywordHit ? 2 : 0) + (device>=1 ? 1 : 0) + ((noveltyHit || genuineEffort) ? 1 : 0)
+              - (contraHit ? 3 : 0) - (isCliche ? 1 : 0);
+
+  let 표현력 = 1 + Math.min(3, sensoryCount) + (addedWords >= 4 ? 1 : 0)
+              + (genuineEffort && sensoryCount===0 ? 1 : 0) - (isCliche ? 1 : 0);
+
+  let 창의성 = 2 + device + ((noveltyHit || genuineEffort) ? 1 : 0) - (isCliche ? 2 : 0) - (contraHit ? 1 : 0);
+
+  let 기발함 = 1 + (noveltyHit ? 2 : genuineEffort ? 1 : 0) + (sensoryCount >= 2 ? 1 : 0)
+              + (addedWords >= 2 && addedWords <= 6 && sensoryCount >= 1 ? 1 : 0) - (isCliche ? 1 : 0);
+
+  let 생생함 = 1 + Math.min(4, sensoryCount + (sensoryCount>0?1:0))
+              + (genuineEffort && sensoryCount===0 ? 1 : 0) - (contraHit ? 1 : 0);
+
+  // 살짝의 무작위성으로 "AI가 섬세하게 살펴본" 느낌을 더함 (합격한 답에만 적용)
+  [적합성,표현력,창의성,기발함,생생함] = [적합성,표현력,창의성,기발함,생생함].map(v=> v + jitter(0.3));
+
+  return {
+    scores:{
+      적합성:clampStar(적합성), 표현력:clampStar(표현력), 창의성:clampStar(창의성),
+      기발함:clampStar(기발함), 생생함:clampStar(생생함)
+    },
+    tooShort:false
+  };
+}
+
+const COMMENTS = {
+  high:[
+    '우와, 진짜 마법사 같은 비유예요! 크리스탈이 눈부시게 빛나요! 🌟',
+    '장면이 눈앞에 그려질 만큼 생생해요! 최고의 마법 가루였어요! ✨',
+    '기발한 비유예요! 이야기가 훨씬 더 살아났어요! 🪄'
+  ],
+  mid:[
+    '좋은 비유예요! 감각적인 낱말을 하나만 더 더해볼까요? 🌙',
+    '괜찮은 시도예요! 장면의 분위기를 살리는 표현을 조금 더 찾아봐요.',
+    '나쁘지 않아요! 다음엔 더 놀라운 비유에 도전해볼까요? ⭐'
+  ],
+  low:[
+    '비유의 마법이 조금 약했어요. \'~처럼\'이나 \'~같이\'를 활용해볼까요?',
+    '조금 더 감각적인 표현으로 다시 도전해봐요! 마법 가루가 더 필요해요 ✨',
+    '괜찮아요, 마법은 연습하면 늘어요! 장면의 느낌을 떠올리며 다시 써볼까요?'
+  ],
+  empty:[
+    '마법 가루가 아직 뿌려지지 않았어요! 조금 더 정성껏 써 볼까요? 🪄',
+    '문장을 조금 더 바꿔서 다시 써 볼까요? 원래 문장 그대로는 마법이 통하지 않아요!'
+  ]
+};
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* =========================================================
+   사운드 (Web Audio API)
+========================================================= */
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    audioCtx = new AC();
+  }
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  return audioCtx;
+}
+function playTone(freq, duration, type, offset, volume){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  const t0 = ctx.currentTime + offset;
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(volume, t0+0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0+duration+0.03);
+}
+function playCast(){
+  playTone(440,0.1,'sine',0,0.18); playTone(660,0.1,'sine',0.08,0.18);
+  playTone(880,0.14,'sine',0.16,0.2); playTone(1320,0.18,'sine',0.26,0.2);
+}
+function playStarChime(){ playTone(1200 + Math.random()*300, 0.12, 'sine', 0, 0.16); }
+function playFanfare(){
+  playTone(523,0.14,'sine',0,0.2); playTone(659,0.14,'sine',0.13,0.2);
+  playTone(784,0.14,'sine',0.26,0.2); playTone(1047,0.35,'sine',0.39,0.22);
+}
+
+/* =========================================================
+   화면 제어
+========================================================= */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{ s.classList.add('hidden'); s.classList.remove('enter'); });
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  void el.offsetWidth;
+  el.classList.add('enter');
+}
+
+function updateHUD(){
+  document.getElementById('progressText').textContent = `문제 ${Math.min(state.idx+1,PROBLEMS.length)} / ${PROBLEMS.length}`;
+  document.getElementById('totalStarBox').textContent = `⭐ 누적 ${state.totalScore}점`;
+  document.getElementById('progressBar').style.width = (state.idx/PROBLEMS.length*100) + '%';
+}
+
+function startGame(){
+  getAudioCtx();
+  state.idx = 0; state.records = []; state.totalScore = 0;
+  updateHUD();
+  loadQuestion();
+  showScreen('screenPlay');
+}
+function restartGame(){ startGame(); }
+
+function loadQuestion(){
+  const p = PROBLEMS[state.idx];
+  document.getElementById('qBadge').textContent = `문제 ${state.idx+1} / ${PROBLEMS.length}`;
+  document.getElementById('pageNum').textContent = p.page;
+  document.getElementById('plainSentence').textContent = p.text;
+  document.getElementById('inputArea').value = '';
+  document.getElementById('inputArea').disabled = false;
+  document.getElementById('submitBtn').classList.remove('hidden');
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('resultBox').classList.add('hidden');
+  document.getElementById('crystalGlow').classList.remove('lit');
+  document.getElementById('crystalEmoji').textContent = '🔮';
+  document.getElementById('critList').innerHTML = '';
+  updateHUD();
+}
+
+function submitAnswer(){
+  const input = document.getElementById('inputArea');
+  const text = input.value;
+  const p = PROBLEMS[state.idx];
+  const result = scoreExpression(p.text, text, state.idx);
+
+  playCast();
+  input.disabled = true;
+  document.getElementById('submitBtn').disabled = true;
+
+  if(result.tooShort){
+    document.getElementById('crystalEmoji').textContent = '💤';
+    const box = document.getElementById('resultBox');
+    box.classList.remove('hidden');
+    document.getElementById('critList').innerHTML = '';
+    document.getElementById('critComment').textContent = pick(COMMENTS.empty);
+    document.getElementById('nextBtn').textContent = '다시 써 보기 ✏️';
+    document.getElementById('nextBtn').onclick = retryQuestion;
+    return;
+  }
+
+  const sum = Object.values(result.scores).reduce((a,b)=>a+b,0);
+  state.records.push({ page:p.page, text:p.text, input:text, scores:result.scores, sum });
+  state.totalScore += sum;
+
+  const glowEl = document.getElementById('crystalGlow');
+  const crystalEl = document.getElementById('crystalEmoji');
+  glowEl.classList.remove('lit'); void glowEl.offsetWidth; glowEl.classList.add('lit');
+  crystalEl.classList.remove('pop'); void crystalEl.offsetWidth; crystalEl.classList.add('pop');
+  crystalEl.textContent = sum >= 20 ? '💎' : sum >= 12 ? '🔮' : '🕯️';
+
+  const rect = document.getElementById('crystalWrap').getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  const sparkEmojis = sum >= 20 ? ['✨','💫','⭐','🌟'] : sum >= 12 ? ['✨','🪄','💫'] : ['✨'];
+  spawnMiniSparks(cx, cy, sum >= 20 ? 14 : sum >= 12 ? 9 : 5, sparkEmojis);
+
+  renderCriteriaReveal(result.scores, sum);
+  updateHUD();
+}
+
+function renderCriteriaReveal(scores, sum){
+  const box = document.getElementById('resultBox');
+  const list = document.getElementById('critList');
+  list.innerHTML = '';
+  box.classList.remove('hidden');
+  document.getElementById('nextBtn').textContent = (state.idx === PROBLEMS.length-1) ? '결과 보기 🏆' : '다음 문제로 ▶';
+  document.getElementById('nextBtn').onclick = nextQuestion;
+
+  CRITERIA.forEach((c, ci)=>{
+    const row = document.createElement('div');
+    row.className = 'critRow';
+    const starsHtml = Array.from({length:5}).map(()=> `<span class="critStar">★</span>`).join('');
+    row.innerHTML = `<div class="critLabel">${c.icon} ${c.key}</div><div class="critStars">${starsHtml}</div>`;
+    list.appendChild(row);
+  });
+
+  // 한 지표씩 순차적으로 별을 채우며 반짝임 사운드
+  let totalDelay = 200;
+  CRITERIA.forEach((c, ci)=>{
+    const starEls = list.children[ci].querySelectorAll('.critStar');
+    const val = scores[c.key];
+    for(let s=0; s<val; s++){
+      setTimeout(()=>{
+        starEls[s].classList.add('on');
+        playStarChime();
+      }, totalDelay);
+      totalDelay += 90;
+    }
+    totalDelay += 120;
+  });
+
+  setTimeout(()=>{
+    let bucket = sum >= 20 ? 'high' : sum >= 12 ? 'mid' : 'low';
+    document.getElementById('critComment').textContent = pick(COMMENTS[bucket]);
+  }, totalDelay + 100);
+}
+
+function retryQuestion(){
+  document.getElementById('inputArea').disabled = false;
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('resultBox').classList.add('hidden');
+  document.getElementById('crystalEmoji').textContent = '🔮';
+}
+
+function nextQuestion(){
+  state.idx++;
+  if(state.idx >= PROBLEMS.length){
+    showFinalResult();
+  } else {
+    loadQuestion();
+    showScreen('screenPlay');
+  }
+}
+
+function showFinalResult(){
+  playFanfare();
+  const maxTotal = PROBLEMS.length * 25; // 문제 수 x (5지표 x 5점)
+  document.getElementById('finalScore').textContent = `총 누적 점수 ${state.totalScore}점 / ${maxTotal}점`;
+
+  const avgAll = state.totalScore / maxTotal; // 0~1
+  let stars, title;
+  if(avgAll >= 0.86){ stars='⭐⭐⭐⭐⭐'; title='비유의 대마법사! 🧙‍♂️👑'; }
+  else if(avgAll >= 0.7){ stars='⭐⭐⭐⭐'; title='숙련된 비유 마법사! 🪄'; }
+  else if(avgAll >= 0.5){ stars='⭐⭐⭐'; title='견습 비유 마법사 📖'; }
+  else { stars='⭐⭐'; title='비유 마법 입문자 🌱'; }
+  document.getElementById('finalStars').textContent = stars;
+  document.getElementById('finalTitle').textContent = title;
+  celebrateFinal(avgAll);
+
+  const avgRow = document.getElementById('avgRow');
+  avgRow.innerHTML = '';
+  CRITERIA.forEach(c=>{
+    const total = state.records.reduce((a,r)=> a + r.scores[c.key], 0);
+    const avg = total / state.records.length;
+    const pct = (avg/5*100);
+    const item = document.createElement('div');
+    item.className = 'avgItem';
+    item.innerHTML = `<div class="lbl">${c.icon} ${c.key}</div><div class="avgBar"><div class="avgFill" style="width:${pct}%;"></div></div><div class="avgNum">${avg.toFixed(1)}</div>`;
+    avgRow.appendChild(item);
+  });
+
+  showScreen('screenResult');
+}
+
+function celebrateFinal(avgAll){
+  const emojis = avgAll >= 0.86 ? ['✨','🌟','💫','⭐','👑'] : avgAll >= 0.7 ? ['✨','🪄','💫','⭐'] : ['✨','⭐'];
+  const count = avgAll >= 0.86 ? 30 : avgAll >= 0.7 ? 20 : 12;
+  const w = window.innerWidth;
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{
+      const el = document.createElement('div');
+      el.className = 'confettiFall';
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      el.style.left = Math.random()*w + 'px';
+      el.style.fontSize = (16 + Math.random()*14) + 'px';
+      el.style.animationDuration = (2.4 + Math.random()*1.6) + 's';
+      el.style.setProperty('--rot', (Math.random()>0.5?1:-1) * (180+Math.random()*180) + 'deg');
+      document.body.appendChild(el);
+      setTimeout(()=> el.remove(), 4200);
+    }, i*90);
+  }
+}
+
+function showAllAnswers(){
+  const list = document.getElementById('reviewList');
+  list.innerHTML = state.records.map((r,i)=>`
+    <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin-bottom:10px;border:1px solid rgba(199,125,255,.25);">
+      <div style="font-size:11px;color:#c9b8ea;margin-bottom:4px;">${r.page} · 총 ${r.sum}점</div>
+      <div style="font-size:12.5px;color:#c9b8ea;margin-bottom:6px;">원문: ${r.text}</div>
+      <div style="font-size:14px;color:#fff;font-weight:600;">✨ ${r.input}</div>
+    </div>
+  `).join('');
+  document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+updateHUD();
+</script>
+</body>
+</html>
