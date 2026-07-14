@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
 <style>
-  /* [수정됨] 터치 딜레이 방지를 위해 touch-action: manipulation 추가 */
+  /* 터치 딜레이 방지를 위해 touch-action: manipulation 추가 */
   * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
-  html,body{ height:100%; }
+  /* 배경 잘림 현상 방지를 위해 height를 min-height로 수정 */
+  html,body{ min-height:100%; }
   body{
     font-family:'Gowun Dodum','Malgun Gothic','Segoe UI',sans-serif;
     background:linear-gradient(160deg,#bfe6ff 0%,#8fd3f4 35%,#6cc3ea 70%,#4fb3e0 100%);
-    min-height:100vh;
     display:flex; flex-direction:column; align-items:center;
     overflow-x:hidden;
     color:#26323d;
@@ -167,21 +167,21 @@
   .introCard b{ color:#1c4e80; }
 
   /* ---------- MAP ---------- */
-  /* [수정됨] 태블릿 가로 비율 대응 및 중앙 정렬 추가 */
+  /* 태블릿 가로 비율 대응 및 중앙 정렬 추가 */
   #mapWrap{
     position:relative; width:100%; max-width:1350px; margin:6px auto 14px;
     background:linear-gradient(180deg,#eaf7ff,#d8f0ff); border-radius:28px; padding:14px;
     box-shadow:inset 0 0 0 3px #ffffff, 0 10px 24px rgba(20,90,140,.18);
     display:flex; justify-content:center; align-items:center;
   }
-  /* [수정됨] 태블릿 화면에서 지도가 너무 커지는 것을 방지 (max-height 추가) */
+  /* 태블릿 화면에서 지도가 너무 커지는 것을 방지 (max-height 추가) */
   svg#koreaMap{ width:100%; height:auto; display:block; max-height:55vh; }
   
   .region{
     cursor:pointer; stroke:#ffffff; stroke-width:4; stroke-linejoin:round;
     transition:filter .15s, transform .15s; transform-origin:center;
     filter:drop-shadow(0 6px 6px rgba(20,60,90,.28));
-    /* [수정됨] 모바일/태블릿 터치 인식 강제 최적화 */
+    /* 모바일/태블릿 터치 인식 강제 최적화 */
     touch-action: manipulation;
   }
   .region:hover{ filter:drop-shadow(0 8px 10px rgba(20,60,90,.32)) brightness(1.08); transform:translateY(-3px); }
@@ -313,6 +313,55 @@
   @keyframes trophyPop{ 0%{ transform:scale(0) rotate(-20deg); } 60%{ transform:scale(1.25) rotate(8deg); } 100%{ transform:scale(1) rotate(0deg); } }
 
   footer.stagefoot{ margin-top:auto; padding-top:18px; }
+
+  /* ---------- 태블릿 및 모바일 반응형 최적화 ---------- */
+  @media (max-width: 1024px) {
+    #hud .stat { font-size: 34px; }
+    .heart { font-size: 36px; }
+    h1.title { font-size: 64px; }
+    p.sub { font-size: 34px; }
+    .bigbtn { font-size: 46px; padding: 18px 40px; }
+    .mascot { font-size: 110px; }
+    .introCard { font-size: 36px; padding: 18px 22px; }
+    #clueBox p { font-size: 40px; }
+    .actCard .emo { font-size: 70px; }
+    .actCard .txt { font-size: 40px; }
+    .choiceBtn { font-size: 36px; padding: 12px 18px; }
+    .mcBtn { font-size: 36px; padding: 18px; }
+    .shortInput { font-size: 38px; }
+    #resultTitle { font-size: 60px; }
+    #resultScore { font-size: 44px; }
+    .statPill b { font-size: 50px; }
+    .statPill span { font-size: 28px; }
+  }
+
+  @media (max-width: 768px) {
+    #hud .stat { font-size: 22px; }
+    .heart { font-size: 24px; }
+    h1.title { font-size: 40px; }
+    p.sub { font-size: 22px; }
+    .bigbtn { font-size: 28px; padding: 12px 24px; }
+    .ghostbtn { font-size: 24px; padding: 10px 20px; }
+    .mascot { font-size: 80px; }
+    .introCard { font-size: 22px; padding: 12px 16px; border-left-width: 6px; }
+    #clueBox p { font-size: 24px; }
+    #clueBox .qtag { font-size: 18px; padding: 4px 10px; }
+    .actCard { padding: 14px; flex-wrap: wrap; justify-content: center; text-align: center; gap: 8px; }
+    .actCard .txt { font-size: 24px; width: 100%; }
+    .choiceBtn { font-size: 22px; padding: 10px 16px; flex: 1; }
+    .mcBtn { font-size: 22px; padding: 14px; }
+    .shortInput { font-size: 24px; padding: 12px; }
+    .shortHint { font-size: 18px; }
+    .statRow { gap: 10px; }
+    .statPill { padding: 10px; }
+    .statPill b { font-size: 32px; }
+    .statPill span { font-size: 18px; }
+    #resultStars { font-size: 70px; margin: 0; }
+    #resultTitle { font-size: 40px; }
+    #resultScore { font-size: 24px; }
+    #hintBtn { font-size: 24px; padding: 10px 20px; }
+    #hintBtn .hcount { font-size: 20px; width: 26px; height: 26px; }
+  }
 </style>
 </head>
 <body>
@@ -506,7 +555,7 @@ const R1_ITEMS = [
   { emo:'🏗️', text:'건설 노동자가 건물을 지어요', ans:'생산' },
   { emo:'🚜', text:'농부가 트랙터로 밭을 갈아요', ans:'생산' },
   { emo:'🎨', text:'화가가 그림을 그려서 팔아요', ans:'생산' },
-  { emo:'🍦', text:'아이스크림 가게에서 아이스크림을 사요', ans:'소비' },
+  { emo:'🍦', text:'아이스크림 가게에서 아이스크림 사요', ans:'소비' },
   { emo:'📱', text:'새 휴대폰을 사요', ans:'소비' },
   { emo:'🚕', text:'택시를 타고 이동해요', ans:'소비' },
   { emo:'✏️', text:'문구점에서 학용품을 사요', ans:'소비' }
