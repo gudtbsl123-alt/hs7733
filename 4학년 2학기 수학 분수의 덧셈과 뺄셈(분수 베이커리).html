@@ -18,7 +18,11 @@
   .floatEmoji{position:absolute;font-size:26px;opacity:.20;animation:floatUpSlow linear infinite;}
   @keyframes floatUpSlow{0%{transform:translateY(0) rotate(0deg);}100%{transform:translateY(-115vh) rotate(360deg);}}
 
-  .wrap{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;align-items:center;padding:10px 14px 14px;}
+  /* 조각 담기 영역이 켜지면 세로로 길어질 수 있어, 잘려서 못 누르는 일이 없도록 항상 스크롤 가능하게 둔다 */
+  .wrap{
+    position:relative;z-index:1;height:100dvh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
+    display:flex;flex-direction:column;align-items:center;padding:10px 14px 18px;
+  }
 
   /* ── 헤더 ── */
   header{text-align:center;margin-bottom:8px;flex-shrink:0;}
@@ -40,8 +44,102 @@
     box-shadow:0 10px 0 #e9b98f,0 18px 34px rgba(180,110,60,.24);
   }
 
+  /* 가게 등급 배너 */
+  .shopBanner{
+    display:flex;align-items:center;gap:8px;justify-content:center;
+    font-size:13px;font-weight:900;color:#a15c2d;margin-bottom:9px;
+    background:#fff6ec;border:2px solid #f0c19a;border-radius:14px;padding:7px 12px;
+  }
+  .shopBanner .tierIcon{font-size:19px;}
+  .shopBarOuter{flex:1;max-width:170px;height:9px;border-radius:6px;background:#fbe6d2;overflow:hidden;border:1.5px solid #eec7a5;}
+  .shopBarInner{height:100%;width:0%;background:linear-gradient(90deg,#fbbf24,#f472b6);transition:width .5s;}
+  .shopBanner .tierNext{font-size:11px;color:#b0805f;font-weight:700;}
+
   /* 손님 + 주문서 */
   .guestRow{display:flex;gap:13px;align-items:flex-start;}
+
+  /* 손님 인내심 게이지 */
+  .patienceWrap{margin-top:8px;display:flex;align-items:center;gap:7px;}
+  .patienceLabel{font-size:11px;font-weight:800;color:#b0805f;flex-shrink:0;}
+  .patienceOuter{flex:1;height:11px;border-radius:7px;background:#fbe6d2;overflow:hidden;border:1.5px solid #eec7a5;}
+  .patienceInner{height:100%;width:100%;background:linear-gradient(90deg,#4ade80,#22c55e);transition:width .25s linear,background .4s;}
+  .patienceInner.warn{background:linear-gradient(90deg,#fbbf24,#f59e0b);}
+  .patienceInner.danger{background:linear-gradient(90deg,#fb7185,#ef4444);animation:patiencePulse .55s ease-in-out infinite;}
+  @keyframes patiencePulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+  .tipTag{font-size:11.5px;font-weight:900;color:#16a34a;flex-shrink:0;min-width:52px;text-align:right;}
+  .tipTag.gone{color:#b0805f;}
+
+  /* 러시아워 */
+  .rushBanner{
+    display:none;text-align:center;font-size:13.5px;font-weight:900;color:#fff;
+    background:linear-gradient(90deg,#f97316,#ef4444,#f97316);background-size:200% auto;
+    border-radius:13px;padding:7px 12px;margin-bottom:9px;
+    animation:rushFlow 2.2s linear infinite;box-shadow:0 3px 0 #c2410c;
+  }
+  .rushBanner.on{display:block;}
+  @keyframes rushFlow{to{background-position:200% center;}}
+  .queueRow{display:flex;gap:5px;align-items:center;justify-content:flex-end;margin-top:6px;min-height:26px;}
+  .queueLabel{font-size:10.5px;color:#b0805f;font-weight:800;margin-right:2px;}
+  .queueFace{font-size:21px;animation:queueBob 1.8s ease-in-out infinite;}
+  .queueFace:nth-child(3){animation-delay:.3s;}
+  .queueFace:nth-child(4){animation-delay:.6s;}
+  @keyframes queueBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+
+  /* 조각 담기(조작식) */
+  .buildArea{display:none;flex-direction:column;gap:7px;margin-top:14px;}
+  .buildArea.on{display:flex;}
+  .plateBox{
+    background:linear-gradient(170deg,#fffdf9,#fff2e3);border:2.5px dashed #f0a877;border-radius:16px;
+    padding:8px 11px;text-align:center;
+  }
+  .plateTitle{font-size:11px;font-weight:900;color:#b0805f;letter-spacing:.4px;margin-bottom:3px;}
+  .plateAmount{font-size:24px;font-weight:900;color:#ea580c;min-height:30px;display:flex;align-items:center;justify-content:center;gap:4px;}
+  .plateItems{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:5px;min-height:30px;}
+  .pieceBtn{
+    border:2px solid #eab792;background:#fff8f0;border-radius:11px;padding:4px 7px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation;
+    transition:transform .12s,box-shadow .12s;box-shadow:0 2px 0 #e5b78f;
+  }
+  .pieceBtn:active{transform:translateY(2px);box-shadow:0 0 0 #e5b78f;}
+  .pieceBtn svg{width:34px;height:34px;display:block;}
+  .pieceBtn.onPlate{border-color:#fb923c;background:#ffedd5;}
+  .pieceBtn.pop{animation:piecePop .34s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes piecePop{0%{transform:scale(.4) rotate(-25deg);}100%{transform:scale(1) rotate(0);}}
+  .buildRow{display:flex;gap:9px;flex-wrap:wrap;align-items:stretch;}
+  .buildPanel{
+    flex:1;min-width:190px;background:#fffaf2;border:2px solid #f5d7ba;border-radius:16px;padding:10px 12px;
+  }
+  .buildPanel h4{font-size:11.5px;font-weight:900;color:#b0805f;margin-bottom:6px;letter-spacing:.3px;}
+  .buildHelp{font-size:11.5px;color:#a97c62;font-weight:700;margin-top:5px;line-height:1.5;}
+  .serveBtn{
+    width:100%;padding:14px;border:none;border-radius:15px;font-size:17px;font-weight:900;cursor:pointer;
+    background:linear-gradient(90deg,#fb923c,#f472b6);color:#fff;box-shadow:0 5px 0 #d9743a;
+    touch-action:manipulation;transition:transform .12s,box-shadow .12s;text-shadow:0 2px 3px rgba(0,0,0,.16);
+  }
+  .serveBtn:active{transform:translateY(4px);box-shadow:0 1px 0 #d9743a;}
+  .serveBtn:disabled{background:#e7d3c2;color:#fff;box-shadow:0 5px 0 #d3bda9;cursor:not-allowed;}
+  .buildBtnRow{display:flex;gap:8px;}
+  .miniBtn{
+    padding:9px 12px;border-radius:12px;border:2px solid #eec2a0;background:#fff8f0;color:#a15c2d;
+    font-weight:900;font-size:13px;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 #e9bb96;flex:1;
+  }
+  .miniBtn:active{transform:translateY(3px);box-shadow:0 0 0 #e9bb96;}
+
+  /* 레시피북 */
+  .recipeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;margin-bottom:6px;}
+  .recipeCard{
+    background:#fffaf2;border:2px solid #f5d7ba;border-radius:14px;padding:9px 6px;text-align:center;
+  }
+  .recipeCard.mastered{background:#f0fdf4;border-color:#86efac;}
+  .recipeCard.learning{background:#fffbeb;border-color:#fcd34d;}
+  .recipeCard.locked{opacity:.45;}
+  .recipeCard .rIcon{font-size:26px;line-height:1.2;}
+  .recipeCard .rName{font-size:10.5px;font-weight:800;color:#7c4a2d;margin-top:3px;line-height:1.3;word-break:keep-all;}
+  .recipeCard .rState{font-size:9.5px;font-weight:900;margin-top:3px;}
+  .recipeCard.mastered .rState{color:#16a34a;}
+  .recipeCard.learning .rState{color:#d97706;}
+  .recipeCard.locked .rState{color:#a8a29e;}
+  .recipeSummary{font-size:13px;font-weight:800;color:#a15c2d;text-align:center;margin-bottom:11px;line-height:1.6;}
   .guestAvatar{
     font-size:47px;line-height:1;flex-shrink:0;animation:guestBob 2.1s ease-in-out infinite;
     filter:drop-shadow(0 4px 5px rgba(150,90,50,.28));
@@ -290,15 +388,29 @@
   <div class="stage">
     <!-- 메인 카운터 -->
     <div class="counter">
+      <div class="rushBanner" id="rushBanner">🔥 러시아워! 손님이 몰려와요 — 팁 2배! 🔥</div>
       <div class="board">
+        <div class="shopBanner" id="shopBanner">
+          <span class="tierIcon" id="tierIcon">🛒</span>
+          <span id="tierName">포장마차</span>
+          <div class="shopBarOuter"><div class="shopBarInner" id="shopBarInner"></div></div>
+          <span class="tierNext" id="tierNext"></span>
+        </div>
         <div class="guestRow">
           <div class="guestAvatar" id="guestAvatar">🧒</div>
           <div class="bubble">
             <span class="orderNo" id="orderNo">주문 1 / 20</span>
             <span id="orderText">어서 오세요!</span>
             <span class="diffBadge" id="diffBadge">하</span>
+            <div class="patienceWrap">
+              <span class="patienceLabel">⏳ 기다리는 중</span>
+              <div class="patienceOuter"><div class="patienceInner" id="patienceInner"></div></div>
+              <span class="tipTag" id="tipTag">팁 +0</span>
+            </div>
           </div>
         </div>
+
+        <div class="queueRow" id="queueRow"></div>
 
         <div class="workbench">
           <button type="button" class="benchLabel" id="benchLabel" title="다시 보기">🔪 작업대</button>
@@ -309,6 +421,33 @@
       </div>
 
       <div class="choices" id="choicesBox"></div>
+
+      <!-- 조각 담기(조작식) 영역 -->
+      <div class="buildArea" id="buildArea">
+        <div class="plateBox">
+          <div class="plateTitle">🍽️ 접시에 담긴 양</div>
+          <div class="plateAmount" id="plateAmount">0</div>
+          <div class="plateItems" id="plateItems"></div>
+        </div>
+        <div class="buildRow">
+          <div class="buildPanel">
+            <h4>🎂 통케이크 창고</h4>
+            <div class="plateItems" id="wholeStock"></div>
+            <div class="buildHelp" id="buildHelpWhole">통케이크를 누르면 접시에 담겨요.</div>
+          </div>
+          <div class="buildPanel">
+            <h4>🍰 조각 창고</h4>
+            <div class="plateItems" id="sliceStock"></div>
+            <div class="buildHelp" id="buildHelpSlice">통케이크를 <b>쪼개기</b> 하면 조각이 생겨요.</div>
+          </div>
+        </div>
+        <div class="buildBtnRow">
+          <button type="button" class="miniBtn" id="splitBtn">🔪 통케이크 쪼개기</button>
+          <button type="button" class="miniBtn" id="resetPlateBtn">↩️ 접시 비우기</button>
+        </div>
+        <button type="button" class="serveBtn" id="serveBtn">🧑‍🍳 손님께 서빙하기!</button>
+      </div>
+
       <div id="hintBox"></div>
     </div>
 
@@ -357,6 +496,15 @@
     <h2>🧁 분수 베이커리 🍰</h2>
     <div class="sub">4학년 2학기 수학 1단원 · 분수의 덧셈과 뺄셈</div>
     <div class="hofBox">
+      <div class="hofTitle">🏬 내 가게 등급</div>
+      <div class="shopBanner" id="startShopBanner" style="margin-bottom:0;">
+        <span class="tierIcon" id="startTierIcon">🛒</span>
+        <span id="startTierName">포장마차</span>
+        <div class="shopBarOuter"><div class="shopBarInner" id="startShopBar"></div></div>
+        <span class="tierNext" id="startTierNext"></span>
+      </div>
+    </div>
+    <div class="hofBox">
       <div class="hofTitle">🏆 명예의 파티시에 TOP 5</div>
       <div id="hallOfFame"></div>
     </div>
@@ -365,13 +513,15 @@
       <input type="text" id="nicknameInput" maxlength="10" placeholder="예: 케이크대장">
     </div>
     <div class="rules">
-      🧑‍🍳 손님의 주문을 읽고 <b>알맞은 빵의 양</b>을 골라 서빙하세요!<br>
-      🔪 작업대에서 <b>케이크가 조각으로 쪼개지는 모습</b>을 잘 살펴보세요.<br>
-      💡 틀리면 정답을 바로 알려주지 않고 <b>힌트</b>를 드려요. 다시 도전!<br>
-      🔥 <b>한 번에</b> 연속으로 맞히면 콤보 보너스가 팡팡!<br>
-      🥖 서빙에 성공한 빵은 <b>진열장</b>에 차곡차곡 쌓여요.
+      🧑‍🍳 손님의 주문을 읽고 <b>알맞은 빵의 양</b>을 서빙하세요!<br>
+      🍰 어떤 주문은 <b>조각을 직접 담아</b> 만들어야 해요. 통케이크를 쪼개 보세요!<br>
+      ⏳ 손님이 <b>기다리는 동안</b> 서빙하면 <b>팁</b>을 더 받아요.<br>
+      🔥 마지막 5명은 <b>러시아워</b> — 손님이 몰려오고 팁이 2배!<br>
+      💡 틀리면 정답 대신 <b>힌트</b>를 드려요. 다시 도전!<br>
+      📖 한 번에 맞힌 주문은 <b>레시피북</b>에 마스터로 기록돼요.
     </div>
     <button class="bigBtn" id="startBtn">🍞 가게 문 열기!</button>
+    <div class="ghostBtn" id="recipeBtn">📖 레시피북 보기</div>
     <div class="ghostBtn" id="achBtn">🏅 업적 보기</div>
   </div>
 </div>
@@ -397,10 +547,31 @@
       <div id="collectionList"></div>
       <div id="collectionEmpty" class="hidden">만든 빵이 없어요…</div>
     </div>
+    <div id="shopGrowBox" class="hofBox">
+      <div class="hofTitle">🏬 가게 성장</div>
+      <div class="shopBanner" id="resultShopBanner" style="margin-bottom:0;">
+        <span class="tierIcon" id="resultTierIcon">🛒</span>
+        <span id="resultTierName">포장마차</span>
+        <div class="shopBarOuter"><div class="shopBarInner" id="resultShopBar"></div></div>
+        <span class="tierNext" id="resultTierNext"></span>
+      </div>
+      <div id="tierUpMsg" class="recipeSummary hidden" style="margin:9px 0 0;"></div>
+    </div>
     <div id="sessionAchList"></div>
     <button class="bigBtn" id="retryBtn">🔁 내일 또 열기!</button>
+    <div class="ghostBtn" id="resultRecipeBtn">📖 레시피북 확인하기</div>
     <div class="ghostBtn" id="shareBtn">📸 결과 이미지 저장 / 공유</div>
     <div class="ghostBtn" id="closeBtn">닫기</div>
+  </div>
+</div>
+
+<!-- 레시피북 -->
+<div class="overlay hidden" id="recipeOverlay">
+  <div class="card">
+    <h2>📖 레시피북</h2>
+    <div class="recipeSummary" id="recipeSummary"></div>
+    <div class="recipeGrid" id="recipeGrid"></div>
+    <div class="ghostBtn" id="recipeCloseBtn">닫기</div>
   </div>
 </div>
 
@@ -463,7 +634,7 @@ function escapeHtml(s){ const d=document.createElement('div'); d.textContent=Str
      - bar   : 띠(식빵) 모델
      - compare: 두 접시 비교 */
 const QUESTIONS = [
-  { diff:'하', guest:'🧒', item:{e:'🍰',name:'딸기 쇼트케이크'},
+  { id:1, diff:'하', guest:'🧒', item:{e:'🍰',name:'딸기 쇼트케이크'},
     order:'딸기 케이크 <b>2/7판</b>이랑 <b>3/7판</b> 주세요! 다 합치면 몇 판이죠?',
     q:'{a} + {b} = ?',
     visual:{mode:'add', d:7, a:2, b:3, flavor:'strawberry'},
@@ -471,7 +642,7 @@ const QUESTIONS = [
     choices:[{w:0,n:5,d:7},{w:0,n:5,d:14},{w:0,n:6,d:7},{w:0,n:1,d:7}], answer:0,
     hint:'분모(아래 수)가 같으면 분모는 그대로 두고 <b>분자(위 수)끼리만</b> 더해요.' },
 
-  { diff:'하', guest:'👧', item:{e:'🧁',name:'바닐라 컵케이크'},
+  { id:2, build:true, diff:'하', guest:'👧', item:{e:'🧁',name:'바닐라 컵케이크'},
     order:'컵케이크 반죽 <b>4/9</b>컵에 <b>5/9</b>컵을 더 넣으면 몇 컵이 되나요?',
     q:'{a} + {b} = ?',
     visual:{mode:'add', d:9, a:4, b:5, flavor:'vanilla'},
@@ -479,7 +650,7 @@ const QUESTIONS = [
     choices:[{w:1,n:0,d:0},{w:0,n:8,d:9},{w:0,n:9,d:18},{w:0,n:10,d:9}],
     hint:'분자끼리 더하면 9가 돼요. 분모와 분자가 <b>같은 수</b>가 되면 얼마일까요?' },
 
-  { diff:'하', guest:'🧑', item:{e:'🍪',name:'초코칩 쿠키'},
+  { id:3, diff:'하', guest:'🧑', item:{e:'🍪',name:'초코칩 쿠키'},
     order:'쿠키 반죽 <b>8/9</b>판에서 <b>6/9</b>판을 구웠어요. 남은 반죽은요?',
     q:'{a} − {b} = ?',
     visual:{mode:'sub', d:9, total:8, take:6, flavor:'choco'},
@@ -487,7 +658,7 @@ const QUESTIONS = [
     choices:[{w:0,n:2,d:9},{w:0,n:14,d:9},{w:0,n:2,d:18},{w:0,n:3,d:9}],
     hint:'뺄셈도 분모는 그대로! <b>분자끼리만</b> 빼면 돼요. 8 − 6은 얼마인가요?' },
 
-  { diff:'하', guest:'👦', item:{e:'🥧',name:'애플파이'},
+  { id:4, diff:'하', guest:'👦', item:{e:'🥧',name:'애플파이'},
     order:'애플파이 <b>11/12</b>판 중에 <b>7/12</b>판이 팔렸어요. 남은 건 몇 판?',
     q:'{a} − {b} = ?',
     visual:{mode:'sub', d:12, total:11, take:7, flavor:'apple'},
@@ -495,7 +666,7 @@ const QUESTIONS = [
     choices:[{w:0,n:4,d:12},{w:0,n:4,d:24},{w:0,n:18,d:12},{w:0,n:5,d:12}],
     hint:'분모 12는 그대로 두고 <b>11 − 7</b>만 계산해 보세요.' },
 
-  { diff:'하', guest:'👩', item:{e:'🎂',name:'생일 케이크'},
+  { id:5, diff:'하', guest:'👩', item:{e:'🎂',name:'생일 케이크'},
     order:'생일 케이크가 <b>3과 4/8판</b> 있었는데 <b>1과 1/8판</b>을 팔았어요!',
     q:'{a} − {b} = ?',
     visual:{mode:'sub', d:8, total:28, take:9, flavor:'birthday'},
@@ -503,7 +674,7 @@ const QUESTIONS = [
     choices:[{w:2,n:3,d:8},{w:2,n:5,d:8},{w:4,n:5,d:8},{w:3,n:3,d:8}],
     hint:'대분수는 <b>자연수는 자연수끼리, 분수는 분수끼리</b> 빼요. 3−1과 4/8−1/8을 따로 계산!' },
 
-  { diff:'하', guest:'🧓', item:{e:'🍞',name:'우유 식빵'},
+  { id:6, diff:'하', guest:'🧓', item:{e:'🍞',name:'우유 식빵'},
     order:'식빵을 아침에 <b>1과 5/8덩이</b>, 점심에 <b>1과 2/8덩이</b> 구웠어요!',
     q:'{a} + {b} = ?',
     visual:{mode:'bar', d:8, a:13, b:10, flavor:'bread'},
@@ -511,7 +682,7 @@ const QUESTIONS = [
     choices:[{w:2,n:7,d:8},{w:2,n:3,d:8},{w:3,n:7,d:8},{w:2,n:7,d:16}],
     hint:'자연수끼리 1+1, 분수끼리 5/8+2/8을 각각 더한 뒤 합쳐 보세요.' },
 
-  { diff:'하', guest:'🧕', item:{e:'🍩',name:'딸기 도넛'},
+  { id:7, build:true, diff:'하', guest:'🧕', item:{e:'🍩',name:'딸기 도넛'},
     order:'도넛 반죽 <b>5/6통</b>에 <b>3/6통</b>을 더 부었어요. 전부 몇 통?',
     q:'{a} + {b} = ?',
     visual:{mode:'add', d:6, a:5, b:3, flavor:'donut'},
@@ -519,7 +690,7 @@ const QUESTIONS = [
     choices:[{w:1,n:2,d:6},{w:0,n:8,d:12},{w:0,n:2,d:6},{w:1,n:3,d:6}],
     hint:'5+3=8이니까 8/6이 돼요. 6/6은 1이니까, <b>남은 조각</b>은 몇 개일까요?' },
 
-  { diff:'중', guest:'🚶', item:{e:'🥐',name:'버터 크루아상'},
+  { id:8, build:true, diff:'중', guest:'🚶', item:{e:'🥐',name:'버터 크루아상'},
     order:'예준이가 집에서 <b>2/9km</b> 걸어 문구점에 들렀다가 <b>8/9km</b>를 더 걸어 학교에 갔어요.',
     q:'예준이가 걸은 전체 거리는?\n{a} + {b} = ?',
     visual:{mode:'add', d:9, a:2, b:8, flavor:'croissant'},
@@ -527,7 +698,7 @@ const QUESTIONS = [
     choices:[{w:1,n:1,d:9},{w:0,n:8,d:9},{w:1,n:2,d:9},{w:0,n:10,d:18}],
     hint:'2+8=10이라 10/9예요. 9/9는 1이니까 <b>대분수</b>로 바꿔 보세요.' },
 
-  { diff:'중', guest:'👨', item:{e:'🥖',name:'통밀 바게트'},
+  { id:9, diff:'중', guest:'👨', item:{e:'🥖',name:'통밀 바게트'},
     order:'민지 몸무게는 <b>32와 4/15kg</b>, 정수는 민지보다 <b>3과 8/15kg</b> 더 무거워요.',
     q:'정수의 몸무게는?\n{a} + {b} = ?',
     visual:{mode:'bar', d:15, a:4, b:8, flavor:'baguette', hideWhole:true},
@@ -535,7 +706,7 @@ const QUESTIONS = [
     choices:[{w:35,n:12,d:15},{w:35,n:2,d:15},{w:34,n:12,d:15},{w:36,n:2,d:15}],
     hint:'자연수는 32+3, 분수는 4/15+8/15로 나눠서 더해요. 분수 부분이 1을 넘나요?' },
 
-  { diff:'중', guest:'👵', item:{e:'🧇',name:'벨기에 와플'},
+  { id:10, diff:'중', guest:'👵', item:{e:'🧇',name:'벨기에 와플'},
     order:'와플 반죽 <b>12/15통</b>에서 <b>5/15통</b>을 사용했어요.',
     q:'{a} − {b} = ?',
     visual:{mode:'sub', d:15, total:12, take:5, flavor:'waffle'},
@@ -543,7 +714,7 @@ const QUESTIONS = [
     choices:[{w:0,n:7,d:15},{w:0,n:7,d:30},{w:0,n:17,d:15},{w:0,n:8,d:15}],
     hint:'분모 15는 그대로! <b>12 − 5</b>만 하면 돼요.' },
 
-  { diff:'중', guest:'🧑‍🎓', item:{e:'🥞',name:'수플레 팬케이크'},
+  { id:11, build:true, diff:'중', guest:'🧑‍🎓', item:{e:'🥞',name:'수플레 팬케이크'},
     order:'팬케이크 반죽 <b>2와 8/10컵</b>에서 <b>15/10컵</b>을 덜어냈어요!',
     q:'{a} − {b} = ?',
     visual:{mode:'borrow', d:10, whole:2, extra:8, take:15, flavor:'pancake'},
@@ -551,7 +722,7 @@ const QUESTIONS = [
     choices:[{w:1,n:3,d:10},{w:1,n:7,d:10},{w:2,n:3,d:10},{w:0,n:13,d:100}],
     hint:'2와 8/10을 <b>가분수 28/10</b>으로 바꿔 보세요. 그러면 28/10 − 15/10!' },
 
-  { diff:'중', guest:'🧑‍🍳', item:{e:'🥨',name:'소금 프레첼'},
+  { id:12, diff:'중', guest:'🧑‍🍳', item:{e:'🥨',name:'소금 프레첼'},
     order:'프레첼 반죽에 <b>4/9</b>통을 넣고 조금 더 넣어도 <b>1통을 넘지 않게</b> 하려고 해요.',
     q:'□ 안에 들어갈 수 <b>없는</b> 수는?\n{a} + □/9 &lt; 1',
     visual:{mode:'add', d:9, a:4, b:0, flavor:'pretzel', question:true},
@@ -559,7 +730,7 @@ const QUESTIONS = [
     choices:[{text:'5'},{text:'1'},{text:'2'},{text:'4'}],
     hint:'1은 9/9예요. 4/9 + □/9가 9/9보다 <b>작아야</b> 하니까 4+□가 9보다 작아야 해요.' },
 
-  { diff:'중', guest:'👶', item:{e:'🍮',name:'커스터드 푸딩'},
+  { id:13, diff:'중', guest:'👶', item:{e:'🍮',name:'커스터드 푸딩'},
     order:'푸딩 두 개 중 어느 쪽이 더 클까요? 잘 비교해 주세요!',
     q:'㉠ 19/20 보다 5/20 만큼 더 작은 수\n㉡ 15/20 보다 3/20 만큼 더 작은 수\n더 큰 것은?',
     visual:{mode:'compare', d:20, left:14, right:12, flavor:'pudding'},
@@ -567,7 +738,7 @@ const QUESTIONS = [
     choices:[{text:'㉠'},{text:'㉡'},{text:'두 수는 같아요'},{text:'알 수 없어요'}],
     hint:'㉠은 19/20−5/20, ㉡은 15/20−3/20을 각각 계산해서 <b>분자를 비교</b>해 보세요.' },
 
-  { diff:'중', guest:'🕵️', item:{e:'🍫',name:'초콜릿 케이크'},
+  { id:14, diff:'중', guest:'🕵️', item:{e:'🍫',name:'초콜릿 케이크'},
     order:'초콜릿 케이크 계산서 4장 중, <b>차가 다른 하나</b>를 찾아주세요!',
     q:'다음 중 계산 결과(차)가 <b>다른</b> 하나는?',
     visual:{mode:'bar', d:9, a:4, b:3, flavor:'chocolate', hideWhole:true},
@@ -580,7 +751,7 @@ const QUESTIONS = [
     ],
     hint:'식 하나에 <b>11/9라는 가분수</b>가 숨어 있어요. 먼저 1과 2/9로 바꾼 뒤 빼 보세요. 나머지 세 개는 모두 6과 4/9랍니다.' },
 
-  { diff:'상', guest:'🤴', item:{e:'👑',name:'로얄 크라운 케이크'},
+  { id:15, build:true, diff:'상', guest:'🤴', item:{e:'👑',name:'로얄 크라운 케이크'},
     order:'통케이크 <b>4판</b>에서 <b>1과 4/5판</b>을 포장해 드릴게요!',
     q:'{a} − {b} = ?',
     visual:{mode:'borrow', d:5, whole:4, extra:0, take:9, flavor:'royal'},
@@ -588,7 +759,7 @@ const QUESTIONS = [
     choices:[{w:2,n:1,d:5},{w:3,n:1,d:5},{w:2,n:4,d:5},{w:3,n:4,d:5}],
     hint:'자연수 4에서 분수를 뺄 수 없죠? 통케이크 1판을 <b>5조각(5/5)</b>으로 쪼개서 3과 5/5로 만들어 보세요!' },
 
-  { diff:'상', guest:'👨‍👩‍👧', item:{e:'🍕',name:'디저트 피자'},
+  { id:16, build:true, diff:'상', guest:'👨‍👩‍👧', item:{e:'🍕',name:'디저트 피자'},
     order:'승원이네가 피자 <b>2판</b>을 시켜서 <b>1과 3/8판</b>을 먹었어요.',
     q:'먹고 남은 피자는 몇 판일까요?\n{a} − {b} = ?',
     visual:{mode:'borrow', d:8, whole:2, extra:0, take:11, flavor:'pizza'},
@@ -596,7 +767,7 @@ const QUESTIONS = [
     choices:[{w:0,n:5,d:8},{w:0,n:3,d:8},{w:1,n:5,d:8},{w:0,n:4,d:8}],
     hint:'2판을 <b>1과 8/8판</b>으로 바꾸면 뺄 수 있어요. 1과 8/8 − 1과 3/8은?' },
 
-  { diff:'상', guest:'🧙', item:{e:'🫐',name:'블루베리 머핀'},
+  { id:17, diff:'상', guest:'🧙', item:{e:'🫐',name:'블루베리 머핀'},
     order:'분모가 8인 진분수 머핀 2개가 있어요. 합은 <b>7/8</b>, 차는 <b>1/8</b>이래요!',
     q:'두 진분수는 각각 얼마일까요?',
     visual:{mode:'compare', d:8, left:4, right:3, flavor:'blueberry'},
@@ -604,7 +775,7 @@ const QUESTIONS = [
     choices:[{text:'4/8 와 3/8'},{text:'5/8 와 2/8'},{text:'6/8 와 1/8'},{text:'7/8 와 1/8'}],
     hint:'두 수를 <b>더하면 7/8</b>, <b>빼면 1/8</b>이 되는 짝을 하나씩 넣어서 확인해 보세요.' },
 
-  { diff:'상', guest:'🎨', item:{e:'🎀',name:'리본 롤케이크'},
+  { id:18, build:true, diff:'상', guest:'🎨', item:{e:'🎀',name:'리본 롤케이크'},
     order:'길이가 <b>1과 1/5m</b>인 색 테이프 2장을 <b>3/5m</b>만큼 겹쳐서 이어 붙였어요!',
     q:'이어 붙인 색 테이프의 전체 길이는?',
     visual:{mode:'overlap', d:5, len:6, over:3, flavor:'ribbon'},
@@ -612,7 +783,7 @@ const QUESTIONS = [
     choices:[{w:1,n:4,d:5},{w:2,n:2,d:5},{w:1,n:2,d:5},{w:2,n:4,d:5}],
     hint:'두 장을 <b>먼저 더한 뒤</b>, 겹친 만큼을 <b>빼야</b> 해요. (1과1/5 + 1과1/5) − 3/5' },
 
-  { diff:'상', guest:'🧑‍🔬', item:{e:'🌰',name:'밤 타르트'},
+  { id:19, build:true, diff:'상', guest:'🧑‍🔬', item:{e:'🌰',name:'밤 타르트'},
     order:'타르트 4종류 중 <b>2개를 골라 차가 가장 크게</b> 만들어 주세요!',
     q:'3과 2/7,  2와 2/7,  17/7,  3과 6/7\n두 개를 골라 만든 가장 큰 차는?',
     visual:{mode:'compare', d:7, left:27, right:16, flavor:'chestnut', maxDenomParts:7},
@@ -620,7 +791,7 @@ const QUESTIONS = [
     choices:[{w:1,n:4,d:7},{w:1,n:3,d:7},{w:2,n:4,d:7},{w:1,n:5,d:7}],
     hint:'가장 <b>큰 수</b>에서 가장 <b>작은 수</b>를 빼면 차가 제일 커요. 17/7은 2와 3/7이랍니다!' },
 
-  { diff:'상', guest:'🦸', item:{e:'🍯',name:'허니 브레드'},
+  { id:20, diff:'상', guest:'🦸', item:{e:'🍯',name:'허니 브레드'},
     order:'허니브레드 계산서 4장 중 <b>결과가 가장 작은</b> 것을 찾아주세요!',
     q:'계산 결과가 가장 <b>작은</b> 것은?',
     visual:{mode:'bar', d:4, a:3, b:1, flavor:'honey', hideWhole:true},
@@ -1144,16 +1315,99 @@ if(!document.documentElement.requestFullscreen && !document.documentElement.webk
   fsBtn.style.display = 'none';
 }
 
-/* ══════════ 저장 데이터 (최고기록 / 업적) ══════════ */
+/* ══════════ 저장 데이터 (최고기록 / 업적 / 가게성장 / 레시피북) ══════════ */
 const HS_KEY = 'bakery_highscores', ACH_KEY = 'bakery_achievements', NICK_KEY = 'bakery_nickname';
+const REV_KEY = 'bakery_totalRevenue', RECIPE_KEY = 'bakery_recipes';
 function loadJSON(k, fallback){
   try{ const v = JSON.parse(localStorage.getItem(k) || 'null'); return v === null ? fallback : v; }
   catch(e){ return fallback; }
 }
+function saveJSON(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 let highScores = loadJSON(HS_KEY, []);
 if(!Array.isArray(highScores)) highScores = [];
 let achUnlocked = new Set(loadJSON(ACH_KEY, []));
 let sessionAch = [];
+
+/* ── 가게 성장: 누적 매출이 쌓이면 가게가 커진다 ── */
+const SHOP_TIERS = [
+  {min:0,     icon:'🛒', name:'포장마차'},
+  {min:3000,  icon:'🏠', name:'동네 빵집'},
+  {min:8000,  icon:'🏪', name:'인기 베이커리'},
+  {min:15000, icon:'🏬', name:'대형 베이커리'},
+  {min:25000, icon:'🏰', name:'왕실 베이커리'}
+];
+let totalRevenue = Number(loadJSON(REV_KEY, 0)) || 0;
+function tierIndexFor(rev){
+  let idx = 0;
+  for(let i=0;i<SHOP_TIERS.length;i++) if(rev >= SHOP_TIERS[i].min) idx = i;
+  return idx;
+}
+/** 가게 등급 배너를 갱신한다. prefix로 시작화면/게임중/결과화면 요소를 구분한다. */
+function renderShopTier(prefix, rev){
+  const idx = tierIndexFor(rev);
+  const tier = SHOP_TIERS[idx], next = SHOP_TIERS[idx+1];
+  const iconEl = document.getElementById(prefix.icon);
+  const nameEl = document.getElementById(prefix.name);
+  const barEl  = document.getElementById(prefix.bar);
+  const nextEl = document.getElementById(prefix.next);
+  if(iconEl) iconEl.textContent = tier.icon;
+  if(nameEl) nameEl.textContent = tier.name;
+  if(next){
+    const span = next.min - tier.min;
+    const pct = Math.max(0, Math.min(100, Math.round((rev - tier.min) / span * 100)));
+    if(barEl) barEl.style.width = pct + '%';
+    if(nextEl) nextEl.textContent = `다음 ${next.icon} 까지 ${(next.min - rev).toLocaleString()}원`;
+  } else {
+    if(barEl) barEl.style.width = '100%';
+    if(nextEl) nextEl.textContent = '최고 등급 달성!';
+  }
+}
+const TIER_UI = {
+  start : {icon:'startTierIcon',  name:'startTierName',  bar:'startShopBar',  next:'startTierNext'},
+  game  : {icon:'tierIcon',       name:'tierName',       bar:'shopBarInner',  next:'tierNext'},
+  result: {icon:'resultTierIcon', name:'resultTierName', bar:'resultShopBar', next:'resultTierNext'}
+};
+
+/* ── 레시피북: 문제별 습득 상태를 기기에 기록한다 ──
+   'mastered' = 한 번에 정답, 'learning' = 힌트를 보고 정답, 없으면 미습득 */
+let recipeBook = loadJSON(RECIPE_KEY, {});
+if(typeof recipeBook !== 'object' || recipeBook === null || Array.isArray(recipeBook)) recipeBook = {};
+function markRecipe(qid, mastered){
+  const cur = recipeBook[qid];
+  if(mastered) recipeBook[qid] = 'mastered';
+  else if(cur !== 'mastered') recipeBook[qid] = 'learning';
+  saveJSON(RECIPE_KEY, recipeBook);
+}
+function renderRecipeBook(){
+  const grid = document.getElementById('recipeGrid');
+  const sum  = document.getElementById('recipeSummary');
+  const mastered = QUESTIONS.filter(q=>recipeBook[q.id] === 'mastered').length;
+  const learning = QUESTIONS.filter(q=>recipeBook[q.id] === 'learning').length;
+  const locked   = QUESTIONS.length - mastered - learning;
+  sum.innerHTML = `✅ 마스터 <b>${mastered}</b>개 · 📒 배우는 중 <b>${learning}</b>개 · 🔒 아직 <b>${locked}</b>개` +
+    (locked + learning > 0 ? '<br><span style="font-size:11.5px;color:#b0805f;">아직 마스터하지 못한 레시피에 다시 도전해 보세요!</span>' : '<br><span style="font-size:11.5px;color:#16a34a;">모든 레시피를 마스터했어요! 🎉</span>');
+  grid.innerHTML = QUESTIONS.map(q=>{
+    const st = recipeBook[q.id];
+    const cls = st === 'mastered' ? 'mastered' : (st === 'learning' ? 'learning' : 'locked');
+    const label = st === 'mastered' ? '✅ 마스터' : (st === 'learning' ? '📒 배우는 중' : '🔒 미습득');
+    return `<div class="recipeCard ${cls}">
+      <div class="rIcon">${st ? q.item.e : '❔'}</div>
+      <div class="rName">${escapeHtml(st ? q.item.name : '???')}</div>
+      <div class="rState">${label}</div>
+    </div>`;
+  }).join('');
+}
+function openRecipeBook(){
+  sfx.click();
+  renderRecipeBook();
+  document.getElementById('recipeOverlay').classList.remove('hidden');
+}
+document.getElementById('recipeBtn').onclick = openRecipeBook;
+document.getElementById('resultRecipeBtn').onclick = openRecipeBook;
+document.getElementById('recipeCloseBtn').onclick = ()=>{
+  sfx.click();
+  document.getElementById('recipeOverlay').classList.add('hidden');
+};
 
 function renderHallOfFame(){
   const box = document.getElementById('hallOfFame');
@@ -1177,7 +1431,12 @@ const ACHIEVEMENTS = [
   {id:'combo10',icon:'⚡', name:'전설의 스피드',  desc:'10연속 한 번에 정답을 맞혔어요',         check:()=> combo >= 10},
   {id:'perfect',icon:'💯', name:'무결점 파티시에',desc:'10문제 이상을 한 번에 모두 맞혔어요',     check:()=> perfect >= 10},
   {id:'rich',   icon:'💰', name:'대박 매출',      desc:'매출 3,000원을 넘겼어요',                check:()=> score >= 3000},
-  {id:'star5',  icon:'⭐', name:'별 다섯 개',     desc:'가게 별점 5개를 달성했어요',             check:()=> starCount() >= 5}
+  {id:'star5',  icon:'⭐', name:'별 다섯 개',     desc:'가게 별점 5개를 달성했어요',             check:()=> starCount() >= 5},
+  {id:'tip500', icon:'🪙', name:'팁 부자',        desc:'한 판에서 팁 500원을 모았어요',          check:()=> tipsEarned >= 500},
+  {id:'rush',   icon:'🔥', name:'러시아워 정복',  desc:'러시아워 손님 5명을 모두 서빙했어요',    check:()=> rushServed >= 5},
+  {id:'shop3',  icon:'🏪', name:'가게 확장',      desc:'가게가 인기 베이커리로 성장했어요',      check:()=> tierIndexFor(totalRevenue) >= 2},
+  {id:'recipe', icon:'📖', name:'레시피 마스터',  desc:'레시피 20개를 모두 마스터했어요',
+    check:()=> QUESTIONS.every(q=>recipeBook[q.id] === 'mastered')}
 ];
 function saveAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify([...achUnlocked])); }catch(e){} }
 function checkAch(){
@@ -1213,6 +1472,64 @@ let order = [], qIndex = 0, curQ = null, wrongThisQ = 0;
 let score = 0, served = 0, perfect = 0, combo = 0, maxCombo = 0;
 let breadMade = 0, collection = [], startTime = 0, nickname = '파티시에';
 let state = 'idle';   // idle | playing | over
+let tipsEarned = 0, rushServed = 0;
+
+/* ── 손님 인내심(시간 압박) ──
+   시간이 다 되어도 실패가 아니라 팁만 받지 못한다. 느린 학생도 부담 없이 진행할 수 있다. */
+const RUSH_FROM = 15;                 // 16번째 주문부터 러시아워
+const PATIENCE_MS = {'하':30000, '중':40000, '상':50000};
+let patienceTotal = 0, patienceLeft = 0, patienceTimer = null, patienceLastTick = 0;
+
+function isRushNow(){ return qIndex >= RUSH_FROM; }
+function currentTip(){
+  if(patienceTotal <= 0) return 0;
+  const ratio = Math.max(0, patienceLeft / patienceTotal);
+  const base = Math.round(ratio * 120 / 10) * 10;     // 최대 120원, 10원 단위
+  return isRushNow() ? base * 2 : base;               // 러시아워엔 팁 2배
+}
+function renderPatience(){
+  const pct = patienceTotal > 0 ? Math.max(0, patienceLeft / patienceTotal * 100) : 0;
+  const bar = document.getElementById('patienceInner');
+  bar.style.width = pct + '%';
+  bar.classList.toggle('warn',   pct <= 55 && pct > 22);
+  bar.classList.toggle('danger', pct <= 22);
+  const tip = currentTip();
+  const tag = document.getElementById('tipTag');
+  tag.textContent = tip > 0 ? `팁 +${tip}` : '팁 없음';
+  tag.classList.toggle('gone', tip <= 0);
+}
+function stopPatience(){
+  if(patienceTimer){ clearInterval(patienceTimer); patienceTimer = null; }
+}
+function startPatience(diff){
+  stopPatience();
+  patienceTotal = PATIENCE_MS[diff] || 40000;
+  if(isRushNow()) patienceTotal = Math.round(patienceTotal * 0.7);   // 러시아워엔 더 촉박하게
+  patienceLeft = patienceTotal;
+  patienceLastTick = Date.now();
+  renderPatience();
+  patienceTimer = setInterval(()=>{
+    if(state !== 'playing'){ patienceLastTick = Date.now(); return; }
+    const now = Date.now();
+    patienceLeft = Math.max(0, patienceLeft - (now - patienceLastTick));
+    patienceLastTick = now;
+    renderPatience();
+    if(patienceLeft <= 0) stopPatience();
+  }, 200);
+}
+/** 러시아워 배너와 대기 손님 줄을 갱신한다. */
+function renderQueue(){
+  const banner = document.getElementById('rushBanner');
+  const row = document.getElementById('queueRow');
+  const rush = isRushNow();
+  banner.classList.toggle('on', rush);
+  const remain = TOTAL_Q - qIndex - 1;
+  if(remain <= 0){ row.innerHTML = ''; return; }
+  const waiting = order.slice(qIndex+1, qIndex+1 + (rush ? 3 : 1));
+  row.innerHTML = '<span class="queueLabel">대기 손님</span>' +
+    waiting.map(q=>`<span class="queueFace">${q.guest}</span>`).join('') +
+    (remain > waiting.length ? `<span class="queueLabel">외 ${remain - waiting.length}명</span>` : '');
+}
 
 function shuffle(arr){
   const a = arr.slice();
@@ -1263,6 +1580,133 @@ function updateShelf(){
   shelf.innerHTML = collection.map(c=>`<span class="shelfItem" title="${escapeHtml(c.name)}">${c.e}</span>`).join('');
 }
 
+/* ══════════ 조각 담기(조작식) ══════════
+   찍기를 막고 분수를 손으로 만들어 보게 하는 모드.
+   접시에 담긴 양(plateWhole 판 + plateSlice 조각)이 정답과 정확히 같아야 서빙할 수 있다. */
+let buildOn = false, buildDen = 8, plateWhole = 0, plateSlice = 0, stockWhole = 0, stockSlice = 0;
+
+/** 접시에 담긴 양을 '전체 조각 수'로 환산 */
+function plateUnits(){ return plateWhole*buildDen + plateSlice; }
+function answerUnits(f){ return f.w*(f.d || buildDen) + (f.d ? f.n : 0); }
+
+/** 창고·접시에 놓이는 작은 케이크 아이콘.
+    큰 연출용 drawRoundCake는 접시 그림자와 옅은 색 때문에 작게 줄이면 흐려져서,
+    작은 크기에서도 또렷하도록 테두리를 진하게 준 전용 렌더러를 쓴다. */
+function miniCakeSVG(denom, filled, size){
+  const fl = flavorOf(curQ && curQ.visual ? curQ.visual.flavor : 'vanilla');
+  const svg = el('svg', {viewBox:'0 0 100 100', width:size, height:size});
+  if(denom <= 1){
+    svg.appendChild(el('circle', {cx:50, cy:50, r:42, fill:fl.body, stroke:fl.top, 'stroke-width':5}));
+    svg.appendChild(el('circle', {cx:50, cy:50, r:15, fill:fl.crumb, stroke:fl.edge, 'stroke-width':3}));
+  } else {
+    // 조각 1개 — 부채꼴을 크게 그려 한눈에 '조각'임을 알 수 있게 한다
+    const step = 360/denom;
+    svg.appendChild(el('circle', {cx:50, cy:50, r:42, fill:'#fffaf3', stroke:'#e8d5c0',
+      'stroke-width':3, 'stroke-dasharray':'5 4'}));
+    svg.appendChild(el('path', {d: slicePath(50, 50, 42, 0, step),
+      fill:fl.body, stroke:fl.top, 'stroke-width':4, 'stroke-linejoin':'round'}));
+  }
+  return svg;
+}
+function makePieceBtn(denom, filled, label, onClick, onPlate){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pieceBtn pop' + (onPlate ? ' onPlate' : '');
+  b.title = label;
+  b.appendChild(miniCakeSVG(denom, filled, 38));
+  b.addEventListener('click', onClick);
+  return b;
+}
+function renderBuild(){
+  const amountEl = document.getElementById('plateAmount');
+  const w = plateWhole, n = plateSlice, d = buildDen;
+  amountEl.innerHTML = (w === 0 && n === 0) ? '0' : fracHTML({w:w, n:n, d:d});
+
+  // 접시: 담긴 것을 누르면 창고로 되돌린다
+  const plate = document.getElementById('plateItems');
+  plate.innerHTML = '';
+  for(let i=0;i<plateWhole;i++){
+    plate.appendChild(makePieceBtn(1, 1, '통케이크 1판 (빼기)', ()=>{
+      plateWhole--; stockWhole++; sfx.click(); renderBuild();
+    }, true));
+  }
+  for(let i=0;i<plateSlice;i++){
+    plate.appendChild(makePieceBtn(buildDen, 1, `조각 1/${buildDen} (빼기)`, ()=>{
+      plateSlice--; stockSlice++; sfx.click(); renderBuild();
+    }, true));
+  }
+  if(plateWhole === 0 && plateSlice === 0){
+    plate.innerHTML = '<span class="shelfEmpty">창고에서 눌러 담아 보세요!</span>';
+  }
+
+  // 통케이크 창고
+  const ws = document.getElementById('wholeStock');
+  ws.innerHTML = '';
+  for(let i=0;i<stockWhole;i++){
+    ws.appendChild(makePieceBtn(1, 1, '통케이크 담기', ()=>{
+      if(stockWhole <= 0) return;
+      stockWhole--; plateWhole++; sfx.click(); renderBuild();
+    }, false));
+  }
+  if(stockWhole === 0) ws.innerHTML = '<span class="shelfEmpty">비었어요</span>';
+
+  // 조각 창고
+  const ss = document.getElementById('sliceStock');
+  ss.innerHTML = '';
+  for(let i=0;i<stockSlice;i++){
+    ss.appendChild(makePieceBtn(buildDen, 1, `조각 담기 (1/${buildDen})`, ()=>{
+      if(stockSlice <= 0) return;
+      stockSlice--; plateSlice++; sfx.click(); renderBuild();
+    }, false));
+  }
+  if(stockSlice === 0) ss.innerHTML = `<span class="shelfEmpty">쪼개면 생겨요</span>`;
+
+  document.getElementById('splitBtn').disabled = (stockWhole <= 0);
+  document.getElementById('serveBtn').disabled = (plateWhole === 0 && plateSlice === 0);
+}
+function setupBuild(q){
+  buildOn = true;
+  const ans = q.choices[q.answer];
+  buildDen = ans.d > 0 ? ans.d : (q.visual && q.visual.d ? q.visual.d : 8);
+  plateWhole = 0; plateSlice = 0;
+  // 정답을 만들 수 있을 만큼 넉넉히 준비하되, 정답이 그대로 보이지는 않게 한다
+  stockWhole = Math.max(3, (ans.w || 0) + 2);
+  stockSlice = 0;
+  document.getElementById('buildArea').classList.add('on');
+  document.getElementById('choicesBox').style.display = 'none';
+  document.getElementById('buildHelpWhole').innerHTML = '통케이크를 누르면 접시에 담겨요.';
+  document.getElementById('buildHelpSlice').innerHTML =
+    `<b>쪼개기</b>를 누르면 통케이크 1판이 <b>${buildDen}조각</b>이 돼요.`;
+  renderBuild();
+}
+function teardownBuild(){
+  buildOn = false;
+  document.getElementById('buildArea').classList.remove('on');
+  document.getElementById('choicesBox').style.display = '';
+}
+document.getElementById('splitBtn').onclick = ()=>{
+  if(!buildOn || state !== 'playing' || stockWhole <= 0) return;
+  stockWhole--;
+  stockSlice += buildDen;
+  sfx.slice();
+  floatText(`1판 = ${buildDen}조각!`, '#dc2626');
+  renderBuild();
+};
+document.getElementById('resetPlateBtn').onclick = ()=>{
+  if(!buildOn || state !== 'playing') return;
+  stockWhole += plateWhole; stockSlice += plateSlice;
+  plateWhole = 0; plateSlice = 0;
+  sfx.click();
+  renderBuild();
+};
+document.getElementById('serveBtn').onclick = ()=>{
+  if(!buildOn || state !== 'playing') return;
+  const ans = curQ.choices[curQ.answer];
+  const want = (ans.w || 0) * buildDen + (ans.d > 0 ? ans.n : 0);
+  if(plateUnits() === want) resolveCorrect();
+  else resolveWrong(`접시에 담긴 양이 정답과 달라요.`);
+};
+
 /* ══════════ 문제 표시 ══════════ */
 function showQuestion(){
   curQ = order[qIndex];
@@ -1282,21 +1726,83 @@ function showQuestion(){
   document.getElementById('questionBox').innerHTML = qHtml;
 
   renderCake(curQ.visual);
+  renderQueue();
+  startPatience(curQ.diff);
 
   const box = document.getElementById('choicesBox');
   box.innerHTML = '';
-  const labels = ['1','2','3','4'];
-  curQ.choices.forEach((c, i)=>{
-    const btn = document.createElement('button');
-    btn.className = 'choice';
-    btn.innerHTML = `<span class="cLabel">${labels[i]}</span><span>${fracHTML(c)}</span>`;
-    btn.addEventListener('click', ()=>pickChoice(i, btn));
-    box.appendChild(btn);
-  });
+  if(curQ.build){
+    setupBuild(curQ);
+  } else {
+    teardownBuild();
+    const labels = ['1','2','3','4'];
+    curQ.choices.forEach((c, i)=>{
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `<span class="cLabel">${labels[i]}</span><span>${fracHTML(c)}</span>`;
+      btn.addEventListener('click', ()=>pickChoice(i, btn));
+      box.appendChild(btn);
+    });
+  }
 
   const hb = document.getElementById('hintBox');
   hb.style.display = 'none';
   hb.innerHTML = '';
+  updateHUD();
+}
+
+/** 정답 처리 — 객관식·조작식이 함께 사용한다 */
+function resolveCorrect(){
+  stopPatience();
+  sfx.correct();
+  if(buildOn){
+    document.getElementById('serveBtn').disabled = true;
+    document.getElementById('splitBtn').disabled = true;
+  }
+
+  const base = ({'하':100, '중':160, '상':240})[curQ.diff];
+  const tip = currentTip();
+  let gain = base + tip;
+  const firstTry = (wrongThisQ === 0);
+  if(firstTry){
+    perfect++; combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    if(combo >= 2){ gain += 40 * (combo - 1); sfx.combo(); }
+    document.getElementById('comboText').textContent = combo >= 2 ? `${combo} 연속!` : '좋아요!';
+  } else {
+    combo = 0;
+    document.getElementById('comboText').textContent = '-';
+  }
+  tipsEarned += tip;
+  if(isRushNow()) rushServed++;
+  score += gain;
+  served++;
+  breadMade++;
+  collection.push(curQ.item);
+  markRecipe(curQ.id, firstTry);       // 레시피북 기록
+
+  floatText(`+${gain}원`, '#16a34a');
+  if(tip > 0) setTimeout(()=>floatText(`팁 +${tip}`, '#d97706'), 380);
+  setTimeout(()=>{ sfx.serve(); confettiBurst(); }, 240);
+  updateShelf();
+  updateHUD();
+  checkAch();
+
+  setTimeout(()=>{
+    qIndex++;
+    if(qIndex >= order.length) finishGame();
+    else showQuestion();
+  }, 1250);
+}
+/** 오답 처리 — 정답을 알려주지 않고 힌트만 준다 */
+function resolveWrong(prefix){
+  wrongThisQ++;
+  combo = 0;
+  document.getElementById('comboText').textContent = '-';
+  sfx.wrong();
+  const hb = document.getElementById('hintBox');
+  hb.style.display = 'block';
+  hb.innerHTML = `<span class="hintTitle">💡 파티시에 힌트</span>${prefix ? escapeHtml(prefix)+' ' : ''}${curQ.hint} <b>다시 도전해 볼까요?</b>`;
   updateHUD();
 }
 
@@ -1305,47 +1811,11 @@ function pickChoice(i, btn){
   if(i === curQ.answer){
     btn.classList.add('right');
     document.querySelectorAll('.choice').forEach(b=>{ b.disabled = true; });
-    sfx.correct();
-
-    const base = ({'하':100, '중':160, '상':240})[curQ.diff];
-    let gain = base;
-    if(wrongThisQ === 0){
-      perfect++; combo++;
-      maxCombo = Math.max(maxCombo, combo);
-      if(combo >= 2){ gain += 40 * (combo - 1); sfx.combo(); }
-      document.getElementById('comboText').textContent = combo >= 2 ? `${combo} 연속!` : '좋아요!';
-    } else {
-      combo = 0;
-      document.getElementById('comboText').textContent = '-';
-    }
-    score += gain;
-    served++;
-    breadMade++;
-    collection.push(curQ.item);
-
-    floatText(`+${gain}원`, '#16a34a');
-    setTimeout(()=>{ sfx.serve(); confettiBurst(); }, 240);
-    updateShelf();
-    updateHUD();
-    checkAch();
-
-    setTimeout(()=>{
-      qIndex++;
-      if(qIndex >= order.length) finishGame();
-      else showQuestion();
-    }, 1250);
-
+    resolveCorrect();
   } else {
     btn.classList.add('wrong');
     btn.disabled = true;
-    wrongThisQ++;
-    combo = 0;
-    document.getElementById('comboText').textContent = '-';
-    sfx.wrong();
-    const hb = document.getElementById('hintBox');
-    hb.style.display = 'block';
-    hb.innerHTML = `<span class="hintTitle">💡 파티시에 힌트</span>${curQ.hint} <b>다시 한번 골라볼까요?</b>`;
-    updateHUD();
+    resolveWrong('');
   }
 }
 
@@ -1381,10 +1851,11 @@ function startGame(){
   order = buildOrder();
   qIndex = 0; score = 0; served = 0; perfect = 0;
   combo = 0; maxCombo = 0; breadMade = 0; collection = [];
-  sessionAch = [];
+  sessionAch = []; tipsEarned = 0; rushServed = 0;
   startTime = Date.now();
   state = 'playing';
   document.getElementById('comboText').textContent = '-';
+  renderShopTier(TIER_UI.game, totalRevenue);
   updateShelf();
   updateHUD();
   showQuestion();
@@ -1393,10 +1864,27 @@ function startGame(){
 
 function finishGame(){
   state = 'over';
+  stopPatience();
+  teardownBuild();
   stopBGM();
   bgmStarted = false;
   sfx.finish();
   checkAch();
+
+  // 가게 성장: 오늘 매출을 누적하고 등급이 올랐는지 확인
+  const tierBefore = tierIndexFor(totalRevenue);
+  totalRevenue += score;
+  saveJSON(REV_KEY, totalRevenue);
+  const tierAfter = tierIndexFor(totalRevenue);
+  renderShopTier(TIER_UI.result, totalRevenue);
+  renderShopTier(TIER_UI.start,  totalRevenue);
+  const tierMsg = document.getElementById('tierUpMsg');
+  if(tierAfter > tierBefore){
+    tierMsg.innerHTML = `🎊 축하해요! 가게가 <b>${SHOP_TIERS[tierAfter].icon} ${escapeHtml(SHOP_TIERS[tierAfter].name)}</b>(으)로 성장했어요!`;
+    tierMsg.classList.remove('hidden');
+  } else {
+    tierMsg.classList.add('hidden');
+  }
 
   const ms = Date.now() - startTime;
   const mm = Math.floor(ms/60000), ss = Math.floor((ms%60000)/1000);
@@ -1576,6 +2064,7 @@ document.getElementById('closeBtn').onclick = ()=>{
   document.getElementById('overOverlay').classList.add('hidden');
   document.getElementById('startOverlay').classList.remove('hidden');
   renderHallOfFame();
+  renderShopTier(TIER_UI.start, totalRevenue);
   state = 'idle';
 };
 document.getElementById('skipBtn').onclick = ()=>{
@@ -1584,8 +2073,10 @@ document.getElementById('skipBtn').onclick = ()=>{
   finishGame();
 };
 
-/* 초기 작업대 안내 화면 (라벨은 renderCake 안에서 '다시 보기' 버튼 모양으로 채워진다) */
+/* 초기 화면 준비 (라벨은 renderCake 안에서 '다시 보기' 버튼 모양으로 채워진다) */
 renderCake({mode:'add', d:8, a:3, b:2, flavor:'strawberry'});
+renderShopTier(TIER_UI.start, totalRevenue);
+renderShopTier(TIER_UI.game,  totalRevenue);
 })();
 </script>
 </body>
