@@ -407,7 +407,6 @@ buildQuizQueue();
 /* ===================== 사운드 (WebAudio 효과음 + BGM) ===================== */
 let actx;
 let muted = false;
-let noiseBuffer = null;
 function ensureAudio(){
   if(!actx){
     try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
@@ -445,118 +444,94 @@ const sfx = {
   achievement: ()=>beep([659,784,988,1319],0.13,'triangle',0.015)
 };
 
-/* ===================== BGM (오실레이터+노이즈 합성, 외부 음원 불필요) =====================
-   C-G-Am-F 코드 진행을 4가지 아르페지오 패턴으로 8회 변주(약 66초 루프)한 멜로디에
-   화성(하모니) 음, 베이스, 그리고 킥/스네어/하이햇 타악기를 겹쳐 한층 풍성한 사운드로 구성했다. */
-const BGM_CHORDS = [
-  [261.63,329.63,392.00,523.25], // C 장조
-  [196.00,246.94,293.66,392.00], // G 장조
-  [220.00,261.63,329.63,440.00], // A 단조
-  [174.61,220.00,261.63,349.23]  // F 장조
-];
-const BGM_PATTERNS = [
-  [0,1,2,3,2,1,0,1],
-  [0,2,1,3,0,2,1,3],
-  [3,2,1,0,1,2,3,2],
-  [0,1,3,2,0,1,3,2]
-];
-function buildBgmSequence(){
-  const melody = [], harmony = [], bass = [];
-  const REPEATS = 8;
-  for(let rep=0; rep<REPEATS; rep++){
-    const pattern = BGM_PATTERNS[rep % BGM_PATTERNS.length];
-    for(let ci=0; ci<BGM_CHORDS.length; ci++){
-      const chord = BGM_CHORDS[ci];
-      const root = chord[0]/2;
-      const fifth = root*Math.pow(2,7/12);
-      for(let s=0;s<8;s++){
-        melody.push(chord[pattern[s]]);
-        harmony.push(chord[(pattern[s]+2)%4]);
-        bass.push(s%4===2 ? fifth : root);
-      }
-    }
-  }
-  return { melody, harmony, bass };
+/* ===================== BGM: 테트리스 테마(코로베이니키) 피아노풍 합성 =====================
+   업로드해 주신 mp3는 "테트리스 테마 피아노 버전"으로, 그 멜로디 자체는 1861년 러시아 민요
+   '코로베이니키(Korobeiniki)'로 저작권이 만료된 공유 저작물입니다. 다만 업로드된 mp3 파일 자체는
+   누군가의 특정 연주/녹음이라 배포용 페이지에 그대로 심기는 어려워서, 같은 멜로디를 직접
+   피아노풍 오실레이터 합성으로 재현해 반복 재생되도록 구현했습니다. */
+const NOTE_SEMITONE = {C:-9,'C#':-8,D:-7,'D#':-6,E:-5,F:-4,'F#':-3,G:-2,'G#':-1,A:0,'A#':1,B:2};
+function noteFreq(note){
+  if(!note) return null;
+  const m = note.match(/^([A-G]#?)(\d)$/);
+  const semis = NOTE_SEMITONE[m[1]] + (parseInt(m[2],10)-4)*12;
+  return 440 * Math.pow(2, semis/12);
 }
-const BGM_SEQ = buildBgmSequence();
-const BGM_MELODY = BGM_SEQ.melody;
-const BGM_HARMONY = BGM_SEQ.harmony;
-const BGM_BASS = BGM_SEQ.bass;
-let bgmTimer = null, bgmStep = 0;
+const TETRIS_THEME_NOTES = [
+  ['E5',2],['B4',1],['C5',1],['D5',2],['C5',1],['B4',1],
+  ['A4',2],['A4',1],['C5',1],['E5',2],['D5',1],['C5',1],
+  ['B4',3],['C5',1],['D5',2],['E5',2],
+  ['C5',2],['A4',2],['A4',2],[null,2],
+  ['D5',2],['F5',1],['A5',2],['G5',1],['F5',1],
+  ['E5',3],['C5',1],['E5',2],['D5',1],['C5',1],
+  ['B4',2],['B4',1],['C5',1],['D5',2],['E5',2],
+  ['C5',2],['A4',2],['A4',2],[null,2],
+  ['E5',2],['B4',1],['C5',1],['D5',2],['C5',1],['B4',1],
+  ['A4',2],['A4',1],['C5',1],['E5',2],['D5',1],['C5',1],
+  ['B4',3],['C5',1],['D5',2],['E5',2],
+  ['C5',2],['A4',2],['A4',2],[null,2],
+  ['D5',2],['F5',1],['A5',2],['G5',1],['F5',1],
+  ['E5',3],['C5',1],['E5',2],['D5',1],['C5',1],
+  ['B4',2],['B4',1],['C5',1],['D5',2],['E5',2],
+  ['C5',2],['A4',2],['A4',2],[null,2],
+  ['E5',2],['C5',2],['D5',2],['B4',2],
+  ['C5',2],['A4',2],['G#4',2],['B4',2],
+  ['E5',2],['C5',2],['D5',2],['B4',2],
+  ['C5',1],['E5',1],['A5',2],['G#5',2]
+];
+const TETRIS_THEME = TETRIS_THEME_NOTES.map(([n,d])=>({ f:noteFreq(n), d }));
+const BGM_EIGHTH = 0.185; // 초 (약 162bpm 8분음표 느낌)
+let bgmThemeIndex = 0, bgmTimeoutId = null, bgmStarted = false;
 
-function createNoiseBuffer(){
-  const size = actx.sampleRate * 0.2;
-  const buf = actx.createBuffer(1, size, actx.sampleRate);
-  const data = buf.getChannelData(0);
-  for(let i=0;i<size;i++) data[i] = Math.random()*2-1;
-  return buf;
-}
-function playBgmNote(freq, vol, dur, type){
-  if(muted || !actx) return;
+function playPianoNote(freq, dur){
+  if(muted || !actx || !freq) return;
   try{
     const t = actx.currentTime;
-    const osc = actx.createOscillator();
-    const gain = actx.createGain();
-    osc.type = type; osc.frequency.value = freq;
-    gain.gain.setValueAtTime(vol, t);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-    osc.connect(gain); gain.connect(actx.destination);
-    osc.start(t); osc.stop(t+dur);
-  }catch(e){}
-}
-function playKick(){
-  if(muted || !actx) return;
-  try{
-    const t = actx.currentTime;
-    const osc = actx.createOscillator();
-    const gain = actx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(150, t);
-    osc.frequency.exponentialRampToValueAtTime(45, t+0.12);
-    gain.gain.setValueAtTime(0.18, t);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t+0.16);
-    osc.connect(gain); gain.connect(actx.destination);
-    osc.start(t); osc.stop(t+0.16);
-  }catch(e){}
-}
-function playNoiseHit(vol, dur, freq, type){
-  if(muted || !actx) return;
-  try{
-    if(!noiseBuffer) noiseBuffer = createNoiseBuffer();
-    const t = actx.currentTime;
-    const src = actx.createBufferSource();
-    src.buffer = noiseBuffer;
     const filter = actx.createBiquadFilter();
-    filter.type = type || 'highpass';
-    filter.frequency.value = freq || 4000;
-    const gain = actx.createGain();
-    gain.gain.setValueAtTime(vol, t);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-    src.connect(filter); filter.connect(gain); gain.connect(actx.destination);
-    src.start(t); src.stop(t+dur);
+    filter.type = 'lowpass';
+    filter.frequency.value = 3400;
+    filter.connect(actx.destination);
+
+    const fundamental = actx.createOscillator();
+    fundamental.type = 'triangle';
+    fundamental.frequency.value = freq;
+    const gain1 = actx.createGain();
+    gain1.gain.setValueAtTime(0.0001, t);
+    gain1.gain.linearRampToValueAtTime(0.13, t+0.008);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    fundamental.connect(gain1); gain1.connect(filter);
+    fundamental.start(t); fundamental.stop(t+dur+0.05);
+
+    const overtone = actx.createOscillator();
+    overtone.type = 'sine';
+    overtone.frequency.value = freq*2;
+    const gain2 = actx.createGain();
+    gain2.gain.setValueAtTime(0.0001, t);
+    gain2.gain.linearRampToValueAtTime(0.04, t+0.008);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, t+dur*0.6);
+    overtone.connect(gain2); gain2.connect(filter);
+    overtone.start(t); overtone.stop(t+dur*0.6+0.05);
   }catch(e){}
 }
-function bgmTick(){
-  if(!muted){
-    const step = bgmStep % BGM_MELODY.length;
-    const beatInBar = bgmStep % 8;
-    playBgmNote(BGM_MELODY[step], 0.05, 0.22, 'triangle');
-    playBgmNote(BGM_HARMONY[step], 0.026, 0.22, 'sine');
-    playBgmNote(BGM_BASS[step], 0.055, 0.24, 'square');
-    if(beatInBar===0 || beatInBar===4) playKick();
-    if(beatInBar===4) playNoiseHit(0.05, 0.13, 1800, 'highpass');
-    playNoiseHit(0.014, 0.03, 7000, 'highpass');
-  }
-  bgmStep++;
+function scheduleBgmStep(){
+  const note = TETRIS_THEME[bgmThemeIndex % TETRIS_THEME.length];
+  const durSec = note.d * BGM_EIGHTH;
+  playPianoNote(note.f, durSec*0.95);
+  bgmThemeIndex++;
+  bgmTimeoutId = setTimeout(scheduleBgmStep, durSec*1000);
 }
 function startBGM(){
   ensureAudio();
   stopBGM();
-  bgmStep = 0;
-  bgmTimer = setInterval(bgmTick, 260);
+  bgmThemeIndex = 0;
+  scheduleBgmStep();
 }
 function stopBGM(){
-  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+  if(bgmTimeoutId){ clearTimeout(bgmTimeoutId); bgmTimeoutId = null; }
+}
+function maybeStartBgm(){
+  if(bgmStarted) return;
+  bgmStarted = true;
+  startBGM();
 }
 function toggleMute(){
   muted = !muted;
@@ -1170,13 +1145,14 @@ function resetGame(){
   drawHold();
   newActivePiece();
   state = 'playing';
-  startBGM();
+  maybeStartBgm();
   tick();
 }
 
 function gameOver(){
   state = 'gameover';
   stopBGM();
+  bgmStarted = false;
   sfx.gameover();
   checkAchievements();
   const playMs = Date.now() - startTime - pausedAccum;
@@ -1359,7 +1335,13 @@ try{
   if(saved) document.getElementById('nicknameInput').value = saved;
 }catch(e){}
 
+const nicknameInputEl = document.getElementById('nicknameInput');
+['pointerdown','keydown','input','focus'].forEach(evt=>{
+  nicknameInputEl.addEventListener(evt, maybeStartBgm);
+});
+
 document.getElementById('startBtn').onclick = ()=>{
+  maybeStartBgm();
   const val = document.getElementById('nicknameInput').value.trim();
   nickname = val || '플레이어';
   try{ localStorage.setItem('ttq_nickname', nickname); }catch(e){}
