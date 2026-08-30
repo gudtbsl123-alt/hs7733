@@ -29,7 +29,8 @@
   header p{font-size:13px;color:#a97c62;margin-top:3px;font-weight:600;}
   #playerTag{font-size:13.5px;font-weight:800;color:#d97706;margin-top:3px;min-height:17px;}
 
-  .stage{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex:1;min-height:0;width:100%;max-width:1220px;}
+  /* 두 열을 같은 높이로 늘려서, 보기 4개와 사이드 조작 버튼의 아래쪽 끝이 일직선이 되게 한다 */
+  .stage{display:flex;gap:18px;align-items:stretch;justify-content:center;flex:0 1 auto;min-height:0;width:100%;max-width:1220px;}
 
   /* ── 카운터(메인) ── */
   .counter{flex:1;max-width:640px;min-width:0;display:flex;flex-direction:column;gap:11px;min-height:0;}
@@ -76,7 +77,17 @@
   }
   #cakeStage{width:100%;max-width:460px;}
   #cakeStage svg{width:100%;height:auto;display:block;overflow:visible;}
-  .benchLabel{font-size:11.5px;color:#b08160;font-weight:800;letter-spacing:.4px;}
+  /* 작업대 라벨 = 애니메이션 다시보기 버튼 */
+  .benchLabel{
+    font-size:12.5px;color:#a15c2d;font-weight:900;letter-spacing:.3px;font-family:inherit;
+    background:#fff6ec;border:2px solid #f0c19a;border-radius:20px;padding:5px 15px;cursor:pointer;
+    box-shadow:0 3px 0 #ecc09a;transition:transform .12s,box-shadow .12s,background .18s;
+    touch-action:manipulation;display:inline-flex;align-items:center;gap:5px;
+  }
+  .benchLabel:hover{background:#ffeeda;}
+  .benchLabel:active{transform:translateY(3px);box-shadow:0 0 0 #ecc09a;}
+  .benchLabel .replayIcon{font-size:13px;animation:replaySpinHint 3.2s ease-in-out infinite;}
+  @keyframes replaySpinHint{0%,72%{transform:rotate(0);}86%{transform:rotate(-360deg);}100%{transform:rotate(-360deg);}}
 
   /* 문제 식 */
   .questionBox{
@@ -92,7 +103,9 @@
   .frac .den{font-size:.72em;padding:1px 3px 0;border-top:2.2px solid currentColor;}
 
   /* 선택지 */
-  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  /* 보기 4개 — 사이드바 하단 조작 버튼(가게 닫기/음소거/전체화면)과 같은 높이에 오도록
+     주문판과의 간격을 넓혀 아래로 내린다 */
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px;}
   .choice{
     display:flex;align-items:center;justify-content:center;gap:8px;min-height:62px;
     background:linear-gradient(170deg,#fff,#fff3e4);border:2.5px solid #f2c6a0;border-radius:17px;
@@ -143,7 +156,8 @@
   @keyframes shelfPop{0%{transform:scale(0) rotate(-40deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;}}
   .shelfEmpty{font-size:12.5px;color:#bb9276;font-weight:700;}
 
-  .ctrlRow{display:flex;gap:7px;}
+  /* margin-top:auto 로 사이드바 맨 아래에 붙여 보기 4개와 높이를 맞춘다 */
+  .ctrlRow{display:flex;gap:7px;margin-top:auto;}
   .ctrlBtn{
     padding:11px 8px;border-radius:13px;border:2.5px solid #eec2a0;background:#fff8f0;color:#a15c2d;
     font-weight:900;font-size:13.5px;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 #e9bb96;
@@ -249,14 +263,14 @@
     .side{width:100%;max-width:560px;flex-direction:row;flex-wrap:wrap;gap:8px;}
     .panel{flex:1;min-width:150px;padding:11px 13px;}
     .scoreVal{font-size:25px;}
-    .ctrlRow{width:100%;}
+    .ctrlRow{width:100%;margin-top:0;}
   }
   @media (max-width:520px){
     .board{padding:13px 13px;}
     .guestAvatar{font-size:38px;}
     .bubble{font-size:13.5px;padding:9px 11px;}
     .questionBox{font-size:16px;padding:10px 11px;}
-    .choices{grid-template-columns:1fr;gap:8px;}
+    .choices{grid-template-columns:1fr;gap:8px;margin-top:0;}
     .choice{min-height:54px;font-size:16px;}
     .workbench{min-height:120px;}
   }
@@ -287,7 +301,7 @@
         </div>
 
         <div class="workbench">
-          <div class="benchLabel" id="benchLabel">🔪 작업대</div>
+          <button type="button" class="benchLabel" id="benchLabel" title="다시 보기">🔪 작업대</button>
           <div id="cakeStage"></div>
         </div>
 
@@ -758,17 +772,22 @@ function svgText(parent, x, y, str, size, color, weight){
   return t;
 }
 
+/** 마지막으로 그린 연출 설정 — '다시 보기' 버튼이 이 값을 재사용한다 */
+let lastVisualCfg = null;
+
 /** 문제의 visual 설정에 따라 작업대 연출을 그린다. */
 function renderCake(cfg){
+  lastVisualCfg = cfg;
   const stage = document.getElementById('cakeStage');
   stage.innerHTML = '';
   const label = document.getElementById('benchLabel');
+  let labelText = '🔪 작업대';
   const fl = flavorOf(cfg.flavor);
   const W = 460, H = 168;
   const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img'});
 
   if(cfg.mode === 'add'){
-    label.textContent = '🥣 두 반죽을 합쳐요!';
+    labelText = '🥣 두 반죽을 합쳐요!';
     const r = 44;
     drawRoundCake(svg, 96, 74, r, cfg.d, cfg.a, fl, {delay:0.1});
     svgText(svg, 96, 152, `${cfg.a}/${cfg.d}`, 19, '#a15c2d', 900);
@@ -786,7 +805,7 @@ function renderCake(cfg){
     svgText(svg, 396, 122, '?', 36, '#ec4899', 900);
 
   } else if(cfg.mode === 'sub'){
-    label.textContent = '🔪 조각을 덜어내요!';
+    labelText = '🔪 조각을 덜어내요!';
     const cakes = Math.ceil(cfg.total / cfg.d);
     if(cakes <= 1){
       // 한 판 안에서 조각을 덜어내는 경우 — 날아가는 연출을 함께 보여준다
@@ -815,7 +834,7 @@ function renderCake(cfg){
     }
 
   } else if(cfg.mode === 'borrow'){
-    label.textContent = '✂️ 통케이크를 조각으로 쪼개요!';
+    labelText = '✂️ 통케이크를 조각으로 쪼개요!';
     const shapes = cfg.whole + (cfg.extra > 0 ? 1 : 0);
     const rr = shapes >= 5 ? 28 : (shapes === 4 ? 32 : 38);
     const gap = Math.min(rr*2 + 26, (W - 60) / Math.max(shapes,1));
@@ -850,7 +869,7 @@ function renderCake(cfg){
     svgText(svg, W/2, 158, `여기서 ${cfg.take}조각(${cfg.take}/${cfg.d})을 빼면?`, 15, '#dc2626', 900);
 
   } else if(cfg.mode === 'bar'){
-    label.textContent = '🍞 띠 모델로 살펴봐요!';
+    labelText = '🍞 띠 모델로 살펴봐요!';
     const bw = 330, bh = 34, bx = 78;
     // 대분수여도 잘리지 않도록 필요한 칸 수를 먼저 구한다
     const cells = Math.max(cfg.d, cfg.a, cfg.b);
@@ -863,7 +882,7 @@ function renderCake(cfg){
       `한 칸이 1/${cfg.d} — 진한 선이 1(${cfg.d}칸)이 되는 자리예요`, 13.5, '#a97c62', 800);
 
   } else if(cfg.mode === 'compare'){
-    label.textContent = '⚖️ 두 개를 비교해요!';
+    labelText = '⚖️ 두 개를 비교해요!';
     const r = 43;
     const leftCakes = Math.ceil(cfg.left / cfg.d), rightCakes = Math.ceil(cfg.right / cfg.d);
     if(leftCakes <= 1 && rightCakes <= 1){
@@ -886,7 +905,7 @@ function renderCake(cfg){
     }
 
   } else if(cfg.mode === 'overlap'){
-    label.textContent = '🎀 겹쳐서 이어 붙여요!';
+    labelText = '🎀 겹쳐서 이어 붙여요!';
     const unit = 30;                       // 1/d 한 칸의 픽셀 폭
     const bx = 40, bh = 30;
     const w1 = cfg.len * unit;
@@ -905,8 +924,18 @@ function renderCake(cfg){
     svgText(svg, x2 + (cfg.over*unit)/2, 152, `겹친 부분 ${cfg.over}/${cfg.d}m`, 13, '#be185d', 900);
   }
 
+  // 라벨 자체가 '다시 보기' 버튼이므로 안내 아이콘을 함께 붙인다
+  label.innerHTML = `<span class="replayIcon">🔄</span><span>${escapeHtml(labelText)} · 다시 보기</span>`;
   stage.appendChild(svg);
 }
+
+/** 작업대 라벨을 누르면 현재 문제의 연출을 처음부터 다시 재생한다. */
+function replayVisual(){
+  if(!lastVisualCfg) return;
+  sfx.slice();
+  renderCake(lastVisualCfg);
+}
+document.getElementById('benchLabel').addEventListener('click', replayVisual);
 
 /* ══════════ 사운드 ══════════ */
 let actx = null, muted = false, masterGain = null;
@@ -1555,9 +1584,8 @@ document.getElementById('skipBtn').onclick = ()=>{
   finishGame();
 };
 
-/* 초기 작업대 안내 화면 */
+/* 초기 작업대 안내 화면 (라벨은 renderCake 안에서 '다시 보기' 버튼 모양으로 채워진다) */
 renderCake({mode:'add', d:8, a:3, b:2, flavor:'strawberry'});
-document.getElementById('benchLabel').textContent = '🔪 작업대';
 })();
 </script>
 </body>
