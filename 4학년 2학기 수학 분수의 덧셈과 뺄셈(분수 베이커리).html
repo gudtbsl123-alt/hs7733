@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>분수 베이커리</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;}
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none;}
+  body{
+    background:
+      radial-gradient(circle at 12% 15%, #ffe8d6 0%, transparent 45%),
+      radial-gradient(circle at 88% 20%, #ffd9e8 0%, transparent 42%),
+      linear-gradient(170deg,#fff6ec 0%,#ffeadd 45%,#ffe1ee 100%);
+    color:#5a3b2e;position:relative;
+  }
+  #bgDeco{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .floatEmoji{position:absolute;font-size:26px;opacity:.20;animation:floatUpSlow linear infinite;}
+  @keyframes floatUpSlow{0%{transform:translateY(0) rotate(0deg);}100%{transform:translateY(-115vh) rotate(360deg);}}
+
+  .wrap{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;align-items:center;padding:10px 14px 14px;}
+
+  /* ── 헤더 ── */
+  header{text-align:center;margin-bottom:8px;flex-shrink:0;}
+  header h1{
+    font-size:27px;font-weight:900;letter-spacing:-.3px;
+    color:#c2410c;text-shadow:2px 2px 0 #fff,4px 4px 0 rgba(194,65,12,.18);
+  }
+  header p{font-size:13px;color:#a97c62;margin-top:3px;font-weight:600;}
+  #playerTag{font-size:13.5px;font-weight:800;color:#d97706;margin-top:3px;min-height:17px;}
+
+  .stage{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex:1;min-height:0;width:100%;max-width:1220px;}
+
+  /* ── 카운터(메인) ── */
+  .counter{flex:1;max-width:640px;min-width:0;display:flex;flex-direction:column;gap:11px;min-height:0;}
+  .board{
+    background:linear-gradient(165deg,#fffdf9,#fff4e6);
+    border:3px solid #f0c9a4;border-radius:24px;padding:16px 18px;
+    box-shadow:0 10px 0 #e9b98f,0 18px 34px rgba(180,110,60,.24);
+  }
+
+  /* 손님 + 주문서 */
+  .guestRow{display:flex;gap:13px;align-items:flex-start;}
+  .guestAvatar{
+    font-size:47px;line-height:1;flex-shrink:0;animation:guestBob 2.1s ease-in-out infinite;
+    filter:drop-shadow(0 4px 5px rgba(150,90,50,.28));
+  }
+  @keyframes guestBob{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-7px) rotate(3deg);}}
+  .bubble{
+    position:relative;flex:1;min-width:0;background:#fff;border:2.5px solid #f5b78a;border-radius:16px;
+    padding:11px 14px;font-size:15px;font-weight:700;line-height:1.55;color:#7c4a2d;
+    box-shadow:0 4px 0 #f3cdb0;
+  }
+  .bubble::before{
+    content:'';position:absolute;left:-11px;top:19px;width:0;height:0;
+    border:9px solid transparent;border-right-color:#f5b78a;
+  }
+  .bubble::after{
+    content:'';position:absolute;left:-7px;top:19px;width:0;height:0;
+    border:9px solid transparent;border-right-color:#fff;
+  }
+  .orderNo{font-size:11.5px;font-weight:800;color:#d97706;letter-spacing:.4px;display:block;margin-bottom:2px;}
+
+  /* 난이도 뱃지 */
+  .diffBadge{display:inline-block;font-size:11.5px;font-weight:900;padding:3px 11px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+  .diff-하{background:#dcfce7;color:#15803d;}
+  .diff-중{background:#fef3c7;color:#b45309;}
+  .diff-상{background:#ffe4e6;color:#be123c;}
+
+  /* 케이크 작업대 */
+  .workbench{
+    margin-top:12px;background:
+      repeating-linear-gradient(45deg,#fffaf3 0 11px,#fff4e8 11px 22px);
+    border:2.5px dashed #edbf97;border-radius:18px;padding:12px 10px 10px;
+    min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  }
+  #cakeStage{width:100%;max-width:460px;}
+  #cakeStage svg{width:100%;height:auto;display:block;overflow:visible;}
+  .benchLabel{font-size:11.5px;color:#b08160;font-weight:800;letter-spacing:.4px;}
+
+  /* 문제 식 */
+  .questionBox{
+    margin-top:11px;text-align:center;font-size:19px;font-weight:800;color:#7c4a2d;line-height:1.75;
+    background:#fffdf7;border:2px solid #f4d3b4;border-radius:14px;padding:12px 14px;white-space:pre-line;
+  }
+
+  /* 분수 표기 */
+  .frac{display:inline-flex;align-items:center;gap:3px;vertical-align:middle;margin:0 2px;}
+  .frac .whole{font-size:1.06em;font-weight:900;}
+  .frac .fr{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-weight:800;}
+  .frac .num{font-size:.72em;padding:0 3px 1px;}
+  .frac .den{font-size:.72em;padding:1px 3px 0;border-top:2.2px solid currentColor;}
+
+  /* 선택지 */
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .choice{
+    display:flex;align-items:center;justify-content:center;gap:8px;min-height:62px;
+    background:linear-gradient(170deg,#fff,#fff3e4);border:2.5px solid #f2c6a0;border-radius:17px;
+    padding:11px 12px;font-size:17px;font-weight:800;color:#7c4a2d;cursor:pointer;
+    box-shadow:0 4px 0 #eab792;transition:transform .12s,box-shadow .12s,background .18s;
+    touch-action:manipulation;text-align:center;
+  }
+  .choice .cLabel{
+    flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#fbbf24;color:#7c2d12;
+    font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;
+  }
+  .choice:hover:not(:disabled){background:linear-gradient(170deg,#fff8ef,#ffe9d3);}
+  .choice:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 #eab792;}
+  .choice.wrong{background:#ffe4e6;border-color:#fda4af;color:#9f1239;opacity:.6;box-shadow:0 4px 0 #fbc7cd;}
+  .choice.right{background:#dcfce7;border-color:#4ade80;color:#15803d;box-shadow:0 4px 0 #86efac;animation:rightPop .45s ease;}
+  @keyframes rightPop{0%{transform:scale(1);}45%{transform:scale(1.09);}100%{transform:scale(1);}}
+  .choice:disabled{cursor:not-allowed;}
+
+  /* 힌트 */
+  #hintBox{
+    display:none;margin-top:10px;background:#fffbeb;border:2.5px dashed #fbbf24;border-radius:15px;
+    padding:12px 14px;font-size:14.5px;color:#92400e;line-height:1.6;font-weight:700;
+  }
+  #hintBox .hintTitle{font-weight:900;color:#d97706;display:block;margin-bottom:3px;font-size:13px;}
+
+  /* ── 사이드 패널 ── */
+  .side{width:250px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;}
+  .panel{
+    background:linear-gradient(165deg,#fffdf9,#fff2e3);border:2.5px solid #f2cba6;border-radius:19px;padding:13px 15px;
+    box-shadow:0 5px 0 #ecc09a;
+  }
+  .panel h3{font-size:11.5px;color:#b0805f;letter-spacing:.9px;margin-bottom:7px;font-weight:900;}
+  .scoreVal{font-size:31px;font-weight:900;color:#ea580c;line-height:1.1;}
+  .rowline{display:flex;justify-content:space-between;font-size:14px;color:#8a6249;margin-top:6px;font-weight:700;}
+  .rowline b{color:#7c4a2d;font-weight:900;}
+
+  .progressBarOuter{height:15px;border-radius:9px;background:#fbe6d2;overflow:hidden;border:2px solid #eec7a5;}
+  .progressBarInner{height:100%;width:0%;background:linear-gradient(90deg,#fbbf24,#fb923c,#f472b6);transition:width .45s cubic-bezier(.34,1.4,.64,1);}
+  .progressRow{font-size:16px;font-weight:900;color:#ea580c;margin-bottom:6px;}
+
+  .starRow{font-size:22px;letter-spacing:2px;line-height:1.25;}
+  #comboText{font-size:23px;font-weight:900;color:#ec4899;text-align:center;min-height:30px;line-height:1.3;}
+  .comboWrap{text-align:center;}
+
+  /* 만든 빵 진열장 */
+  #shelf{display:flex;flex-wrap:wrap;gap:5px;min-height:34px;align-content:flex-start;}
+  .shelfItem{font-size:22px;animation:shelfPop .5s cubic-bezier(.34,1.56,.64,1);line-height:1.1;}
+  @keyframes shelfPop{0%{transform:scale(0) rotate(-40deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;}}
+  .shelfEmpty{font-size:12.5px;color:#bb9276;font-weight:700;}
+
+  .ctrlRow{display:flex;gap:7px;}
+  .ctrlBtn{
+    padding:11px 8px;border-radius:13px;border:2.5px solid #eec2a0;background:#fff8f0;color:#a15c2d;
+    font-weight:900;font-size:13.5px;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 #e9bb96;
+  }
+  .ctrlBtn:hover{background:#fff0e0;}
+  .ctrlBtn:active{transform:translateY(3px);box-shadow:0 0 0 #e9bb96;}
+  #muteBtn,#fsBtn{width:48px;flex-shrink:0;}
+  #skipBtn{flex:1;}
+
+  /* ── 오버레이 ── */
+  .overlay{position:fixed;inset:0;background:rgba(90,50,25,.55);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px;}
+  .hidden{display:none !important;}
+  .card{
+    width:min(93vw,560px);max-height:90vh;overflow-y:auto;border-radius:26px;padding:28px 26px;
+    background:linear-gradient(168deg,#fffdf8,#fff1e2);border:3px solid #f0c19a;
+    box-shadow:0 14px 0 #e5ac7f,0 30px 60px rgba(120,70,35,.4);touch-action:pan-y;
+  }
+  .card h2{font-size:25px;font-weight:900;text-align:center;color:#c2410c;margin-bottom:6px;text-shadow:2px 2px 0 #fff;}
+  .card .sub{text-align:center;font-size:13.5px;color:#a97c62;font-weight:700;margin-bottom:15px;}
+  .rules{background:#fffaf2;border:2px solid #f5d7ba;border-radius:15px;padding:13px 15px;font-size:13.5px;line-height:1.95;color:#7c4a2d;margin-bottom:16px;font-weight:600;}
+  .rules b{color:#ea580c;font-weight:900;}
+  .formGroup{margin-bottom:15px;}
+  .formGroup label{display:block;font-size:13.5px;color:#8a6249;margin-bottom:6px;font-weight:800;}
+  .formGroup input{
+    width:100%;padding:14px 16px;border-radius:14px;border:2.5px solid #f0c19a;background:#fffdf8;
+    color:#7c4a2d;font-size:16px;font-weight:800;
+  }
+  .formGroup input:focus{outline:none;border-color:#fb923c;background:#fff8ef;}
+  .bigBtn{
+    display:block;width:100%;padding:16px;border:none;border-radius:17px;font-size:18px;font-weight:900;cursor:pointer;
+    background:linear-gradient(90deg,#fb923c,#f472b6);color:#fff;letter-spacing:.4px;
+    box-shadow:0 6px 0 #d9743a;transition:transform .12s,box-shadow .12s;touch-action:manipulation;
+    text-shadow:0 2px 3px rgba(0,0,0,.16);
+  }
+  .bigBtn:active{transform:translateY(5px);box-shadow:0 1px 0 #d9743a;}
+  .ghostBtn{
+    display:block;width:100%;padding:12px;margin-top:9px;border-radius:14px;text-align:center;
+    background:#fff6ec;border:2.5px solid #f0c19a;color:#a15c2d;font-weight:800;font-size:14px;cursor:pointer;
+    touch-action:manipulation;box-shadow:0 3px 0 #e9bb96;
+  }
+  .ghostBtn:active{transform:translateY(3px);box-shadow:0 0 0 #e9bb96;}
+
+  /* 명예의 전당 */
+  .hofBox{background:#fffaf2;border:2px solid #f5d7ba;border-radius:15px;padding:11px 14px;margin-bottom:15px;}
+  .hofTitle{font-weight:900;font-size:12.5px;color:#b0805f;margin-bottom:5px;}
+  .hofRow{display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:#7c4a2d;font-weight:700;}
+  .hofRow b{color:#ea580c;font-weight:900;}
+  .hsEmpty{font-size:12.5px;color:#bb9276;text-align:center;padding:3px 0;font-weight:700;}
+
+  /* 결과 */
+  .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0;}
+  .statCell{background:#fffaf2;border:2px solid #f5d7ba;border-radius:14px;padding:12px 8px;text-align:center;}
+  .statCell .v{font-size:24px;font-weight:900;color:#ea580c;line-height:1.15;}
+  .statCell .l{font-size:12px;color:#a97c62;margin-top:3px;font-weight:700;}
+  #rankTitle{text-align:center;font-size:22px;font-weight:900;color:#c2410c;margin:6px 0 3px;text-shadow:1px 1px 0 #fff;}
+  #rankSub{text-align:center;font-size:13.5px;color:#a97c62;font-weight:700;margin-bottom:4px;}
+  #resultStars{text-align:center;font-size:27px;letter-spacing:3px;margin:6px 0;}
+  #newRecordBadge{text-align:center;font-weight:900;color:#d97706;font-size:15.5px;margin-top:6px;}
+  #collectionBox{background:#fffaf2;border:2px solid #f5d7ba;border-radius:15px;padding:12px 14px;margin-bottom:14px;}
+  #collectionBox .cTitle{font-size:12.5px;font-weight:900;color:#b0805f;margin-bottom:7px;}
+  #collectionList{display:flex;flex-wrap:wrap;gap:6px;font-size:25px;line-height:1.2;}
+  #collectionEmpty{font-size:12.5px;color:#bb9276;font-weight:700;}
+  #sessionAchList{margin-top:10px;font-size:13px;color:#be6b1f;text-align:center;line-height:1.7;font-weight:800;}
+
+  /* 업적 */
+  .achRow{display:flex;gap:12px;align-items:center;padding:10px 5px;border-bottom:1.5px solid #f5e0cb;}
+  .achRow:last-child{border-bottom:none;}
+  .achRow.locked{opacity:.42;}
+  .achIcon{font-size:26px;width:36px;text-align:center;flex-shrink:0;}
+  .achName{font-weight:900;font-size:14.5px;color:#7c4a2d;}
+  .achDesc{font-size:12px;color:#a97c62;margin-top:2px;font-weight:600;}
+
+  /* 토스트 */
+  #toastContainer{position:fixed;top:14px;right:14px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+  .achToast{
+    display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#fffdf8,#ffe9d3);
+    border:2.5px solid #fbbf24;border-radius:16px;padding:10px 15px;box-shadow:0 6px 18px rgba(150,90,40,.32);
+    animation:toastIn .35s cubic-bezier(.34,1.5,.64,1);max-width:270px;
+  }
+  .achToast.out{animation:toastOut .4s ease forwards;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(46px) scale(.85);}to{opacity:1;transform:translateX(0) scale(1);}}
+  @keyframes toastOut{to{opacity:0;transform:translateX(46px);}}
+  .achToastIcon{font-size:25px;}
+  .achToastTitle{font-size:10.5px;color:#d97706;font-weight:900;}
+  .achToastName{font-size:13.5px;font-weight:900;color:#7c4a2d;}
+
+  /* 서빙 성공 플로팅 */
+  .floatUp{position:fixed;font-weight:900;font-size:27px;pointer-events:none;z-index:150;
+    text-shadow:0 2px 6px rgba(255,255,255,.9);animation:floatAway 1.1s ease forwards;}
+  @keyframes floatAway{0%{opacity:1;transform:translateY(0) scale(.8);}25%{transform:translateY(-14px) scale(1.15);}100%{opacity:0;transform:translateY(-72px) scale(1);}}
+
+  /* 색종이 */
+  .confetti{position:fixed;width:9px;height:14px;pointer-events:none;z-index:140;animation:confettiFall linear forwards;}
+  @keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0);}100%{opacity:0;transform:translateY(78vh) rotate(680deg);}}
+
+  /* 반응형 */
+  @media (max-width:940px){
+    .wrap{height:auto;min-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-bottom:22px;}
+    header h1{font-size:21px;}
+    header p{font-size:11.5px;}
+    .stage{flex-direction:column;align-items:center;gap:11px;}
+    .counter{width:100%;max-width:560px;}
+    .side{width:100%;max-width:560px;flex-direction:row;flex-wrap:wrap;gap:8px;}
+    .panel{flex:1;min-width:150px;padding:11px 13px;}
+    .scoreVal{font-size:25px;}
+    .ctrlRow{width:100%;}
+  }
+  @media (max-width:520px){
+    .board{padding:13px 13px;}
+    .guestAvatar{font-size:38px;}
+    .bubble{font-size:13.5px;padding:9px 11px;}
+    .questionBox{font-size:16px;padding:10px 11px;}
+    .choices{grid-template-columns:1fr;gap:8px;}
+    .choice{min-height:54px;font-size:16px;}
+    .workbench{min-height:120px;}
+  }
+</style>
+</head>
+<body>
+<div id="bgDeco"></div>
+<div id="toastContainer"></div>
+
+<div class="wrap">
+  <header>
+    <h1>🧁 분수 베이커리 🍰</h1>
+    <p>4학년 2학기 수학 1단원 · 분수의 덧셈과 뺄셈</p>
+    <div id="playerTag"></div>
+  </header>
+
+  <div class="stage">
+    <!-- 메인 카운터 -->
+    <div class="counter">
+      <div class="board">
+        <div class="guestRow">
+          <div class="guestAvatar" id="guestAvatar">🧒</div>
+          <div class="bubble">
+            <span class="orderNo" id="orderNo">주문 1 / 20</span>
+            <span id="orderText">어서 오세요!</span>
+            <span class="diffBadge" id="diffBadge">하</span>
+          </div>
+        </div>
+
+        <div class="workbench">
+          <div class="benchLabel" id="benchLabel">🔪 작업대</div>
+          <div id="cakeStage"></div>
+        </div>
+
+        <div class="questionBox" id="questionBox"></div>
+      </div>
+
+      <div class="choices" id="choicesBox"></div>
+      <div id="hintBox"></div>
+    </div>
+
+    <!-- 사이드 -->
+    <div class="side">
+      <div class="panel">
+        <h3>💰 오늘의 매출</h3>
+        <div class="scoreVal" id="scoreVal">0</div>
+        <div class="rowline"><span>손님 만족</span><b id="satisfyVal">100%</b></div>
+        <div class="rowline"><span>한 번에 성공</span><b id="perfectVal">0</b></div>
+      </div>
+
+      <div class="panel">
+        <h3>📋 주문 진행</h3>
+        <div class="progressRow" id="progressText">0 / 20</div>
+        <div class="progressBarOuter"><div class="progressBarInner" id="progressBarInner"></div></div>
+      </div>
+
+      <div class="panel">
+        <h3>⭐ 가게 별점</h3>
+        <div class="starRow" id="starRow">☆☆☆☆☆</div>
+      </div>
+
+      <div class="panel comboWrap">
+        <h3 style="text-align:center;">🔥 연속 성공</h3>
+        <div id="comboText">-</div>
+      </div>
+
+      <div class="panel">
+        <h3>🥖 오늘 만든 빵</h3>
+        <div id="shelf"><span class="shelfEmpty">아직 없어요!</span></div>
+      </div>
+
+      <div class="ctrlRow">
+        <button id="skipBtn" class="ctrlBtn">🚪 가게 닫기</button>
+        <button id="muteBtn" class="ctrlBtn">🔊</button>
+        <button id="fsBtn" class="ctrlBtn">⛶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 시작 -->
+<div class="overlay" id="startOverlay">
+  <div class="card">
+    <h2>🧁 분수 베이커리 🍰</h2>
+    <div class="sub">4학년 2학기 수학 1단원 · 분수의 덧셈과 뺄셈</div>
+    <div class="hofBox">
+      <div class="hofTitle">🏆 명예의 파티시에 TOP 5</div>
+      <div id="hallOfFame"></div>
+    </div>
+    <div class="formGroup">
+      <label>🎀 파티시에 이름을 알려주세요</label>
+      <input type="text" id="nicknameInput" maxlength="10" placeholder="예: 케이크대장">
+    </div>
+    <div class="rules">
+      🧑‍🍳 손님의 주문을 읽고 <b>알맞은 빵의 양</b>을 골라 서빙하세요!<br>
+      🔪 작업대에서 <b>케이크가 조각으로 쪼개지는 모습</b>을 잘 살펴보세요.<br>
+      💡 틀리면 정답을 바로 알려주지 않고 <b>힌트</b>를 드려요. 다시 도전!<br>
+      🔥 <b>한 번에</b> 연속으로 맞히면 콤보 보너스가 팡팡!<br>
+      🥖 서빙에 성공한 빵은 <b>진열장</b>에 차곡차곡 쌓여요.
+    </div>
+    <button class="bigBtn" id="startBtn">🍞 가게 문 열기!</button>
+    <div class="ghostBtn" id="achBtn">🏅 업적 보기</div>
+  </div>
+</div>
+
+<!-- 결과 -->
+<div class="overlay hidden" id="overOverlay">
+  <div class="card">
+    <h2 id="overTitle">🎉 영업 종료!</h2>
+    <div id="resultStars">⭐⭐⭐</div>
+    <div id="rankTitle"></div>
+    <div id="rankSub"></div>
+    <div id="newRecordBadge" class="hidden">🏆 가게 최고 기록 달성!</div>
+    <div class="statGrid">
+      <div class="statCell"><div class="v" id="stScore">0</div><div class="l">오늘의 매출</div></div>
+      <div class="statCell"><div class="v" id="stAcc">0%</div><div class="l">한 번에 정답률</div></div>
+      <div class="statCell"><div class="v" id="stBread">0</div><div class="l">만든 빵 개수</div></div>
+      <div class="statCell"><div class="v" id="stKinds">0</div><div class="l">빵 종류</div></div>
+      <div class="statCell"><div class="v" id="stTime">0:00</div><div class="l">영업 시간</div></div>
+      <div class="statCell"><div class="v" id="stCombo">0</div><div class="l">최고 연속 성공</div></div>
+    </div>
+    <div id="collectionBox">
+      <div class="cTitle">🧺 오늘의 빵 진열장</div>
+      <div id="collectionList"></div>
+      <div id="collectionEmpty" class="hidden">만든 빵이 없어요…</div>
+    </div>
+    <div id="sessionAchList"></div>
+    <button class="bigBtn" id="retryBtn">🔁 내일 또 열기!</button>
+    <div class="ghostBtn" id="shareBtn">📸 결과 이미지 저장 / 공유</div>
+    <div class="ghostBtn" id="closeBtn">닫기</div>
+  </div>
+</div>
+
+<!-- 업적 -->
+<div class="overlay hidden" id="achOverlay">
+  <div class="card">
+    <h2>🏅 파티시에 업적</h2>
+    <div id="achList"></div>
+    <div class="ghostBtn" id="achCloseBtn">닫기</div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ══════════ 배경 장식 ══════════ */
+(function initDeco(){
+  const deco = document.getElementById('bgDeco');
+  const emojis = ['🧁','🍰','🥐','🍪','🥖','🍞','🎂','🍩','🥧','🫐'];
+  for(let i=0;i<16;i++){
+    const el = document.createElement('div');
+    el.className = 'floatEmoji';
+    el.textContent = emojis[i % emojis.length];
+    el.style.left = (Math.random()*100)+'%';
+    el.style.top = (100 + Math.random()*40)+'%';
+    el.style.animationDuration = (17 + Math.random()*15)+'s';
+    el.style.animationDelay = (-Math.random()*25)+'s';
+    el.style.fontSize = (19 + Math.random()*17)+'px';
+    deco.appendChild(el);
+  }
+})();
+
+/* ══════════ 분수 유틸 ══════════
+   분수는 {w: 정수부, n: 분자, d: 분모} 로 표현한다.
+   d가 0이거나 n이 0이면 자연수로 본다. */
+function fracHTML(f){
+  if(f.text !== undefined) return escapeHtml(f.text);
+  const hasFrac = f.d > 0 && f.n > 0;
+  let html = '<span class="frac">';
+  if(f.w > 0 || !hasFrac) html += `<span class="whole">${f.w}</span>`;
+  if(hasFrac) html += `<span class="fr"><span class="num">${f.n}</span><span class="den">${f.d}</span></span>`;
+  html += '</span>';
+  return html;
+}
+function fracText(f){
+  if(f.text !== undefined) return f.text;
+  const hasFrac = f.d > 0 && f.n > 0;
+  if(!hasFrac) return String(f.w);
+  return (f.w > 0 ? f.w + '과 ' : '') + f.n + '/' + f.d;
+}
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+
+/* ══════════ 문제 데이터 (20문항) ══════════
+   정답은 사전에 별도 스크립트로 전수 계산 검증함.
+   visual: 작업대에 그려질 케이크 연출 설정
+     - add   : 두 접시가 합쳐지는 덧셈 연출
+     - sub   : 조각이 떨어져 나가는 뺄셈 연출
+     - borrow: 통케이크 1판이 조각으로 쪼개지는 받아내림 연출
+     - bar   : 띠(식빵) 모델
+     - compare: 두 접시 비교 */
+const QUESTIONS = [
+  { diff:'하', guest:'🧒', item:{e:'🍰',name:'딸기 쇼트케이크'},
+    order:'딸기 케이크 <b>2/7판</b>이랑 <b>3/7판</b> 주세요! 다 합치면 몇 판이죠?',
+    q:'{a} + {b} = ?',
+    visual:{mode:'add', d:7, a:2, b:3, flavor:'strawberry'},
+    a:{w:0,n:2,d:7}, b:{w:0,n:3,d:7},
+    choices:[{w:0,n:5,d:7},{w:0,n:5,d:14},{w:0,n:6,d:7},{w:0,n:1,d:7}], answer:0,
+    hint:'분모(아래 수)가 같으면 분모는 그대로 두고 <b>분자(위 수)끼리만</b> 더해요.' },
+
+  { diff:'하', guest:'👧', item:{e:'🧁',name:'바닐라 컵케이크'},
+    order:'컵케이크 반죽 <b>4/9</b>컵에 <b>5/9</b>컵을 더 넣으면 몇 컵이 되나요?',
+    q:'{a} + {b} = ?',
+    visual:{mode:'add', d:9, a:4, b:5, flavor:'vanilla'},
+    a:{w:0,n:4,d:9}, b:{w:0,n:5,d:9}, answer:0,
+    choices:[{w:1,n:0,d:0},{w:0,n:8,d:9},{w:0,n:9,d:18},{w:0,n:10,d:9}],
+    hint:'분자끼리 더하면 9가 돼요. 분모와 분자가 <b>같은 수</b>가 되면 얼마일까요?' },
+
+  { diff:'하', guest:'🧑', item:{e:'🍪',name:'초코칩 쿠키'},
+    order:'쿠키 반죽 <b>8/9</b>판에서 <b>6/9</b>판을 구웠어요. 남은 반죽은요?',
+    q:'{a} − {b} = ?',
+    visual:{mode:'sub', d:9, total:8, take:6, flavor:'choco'},
+    a:{w:0,n:8,d:9}, b:{w:0,n:6,d:9}, answer:0,
+    choices:[{w:0,n:2,d:9},{w:0,n:14,d:9},{w:0,n:2,d:18},{w:0,n:3,d:9}],
+    hint:'뺄셈도 분모는 그대로! <b>분자끼리만</b> 빼면 돼요. 8 − 6은 얼마인가요?' },
+
+  { diff:'하', guest:'👦', item:{e:'🥧',name:'애플파이'},
+    order:'애플파이 <b>11/12</b>판 중에 <b>7/12</b>판이 팔렸어요. 남은 건 몇 판?',
+    q:'{a} − {b} = ?',
+    visual:{mode:'sub', d:12, total:11, take:7, flavor:'apple'},
+    a:{w:0,n:11,d:12}, b:{w:0,n:7,d:12}, answer:0,
+    choices:[{w:0,n:4,d:12},{w:0,n:4,d:24},{w:0,n:18,d:12},{w:0,n:5,d:12}],
+    hint:'분모 12는 그대로 두고 <b>11 − 7</b>만 계산해 보세요.' },
+
+  { diff:'하', guest:'👩', item:{e:'🎂',name:'생일 케이크'},
+    order:'생일 케이크가 <b>3과 4/8판</b> 있었는데 <b>1과 1/8판</b>을 팔았어요!',
+    q:'{a} − {b} = ?',
+    visual:{mode:'sub', d:8, total:28, take:9, flavor:'birthday'},
+    a:{w:3,n:4,d:8}, b:{w:1,n:1,d:8}, answer:0,
+    choices:[{w:2,n:3,d:8},{w:2,n:5,d:8},{w:4,n:5,d:8},{w:3,n:3,d:8}],
+    hint:'대분수는 <b>자연수는 자연수끼리, 분수는 분수끼리</b> 빼요. 3−1과 4/8−1/8을 따로 계산!' },
+
+  { diff:'하', guest:'🧓', item:{e:'🍞',name:'우유 식빵'},
+    order:'식빵을 아침에 <b>1과 5/8덩이</b>, 점심에 <b>1과 2/8덩이</b> 구웠어요!',
+    q:'{a} + {b} = ?',
+    visual:{mode:'bar', d:8, a:13, b:10, flavor:'bread'},
+    a:{w:1,n:5,d:8}, b:{w:1,n:2,d:8}, answer:0,
+    choices:[{w:2,n:7,d:8},{w:2,n:3,d:8},{w:3,n:7,d:8},{w:2,n:7,d:16}],
+    hint:'자연수끼리 1+1, 분수끼리 5/8+2/8을 각각 더한 뒤 합쳐 보세요.' },
+
+  { diff:'하', guest:'🧕', item:{e:'🍩',name:'딸기 도넛'},
+    order:'도넛 반죽 <b>5/6통</b>에 <b>3/6통</b>을 더 부었어요. 전부 몇 통?',
+    q:'{a} + {b} = ?',
+    visual:{mode:'add', d:6, a:5, b:3, flavor:'donut'},
+    a:{w:0,n:5,d:6}, b:{w:0,n:3,d:6}, answer:0,
+    choices:[{w:1,n:2,d:6},{w:0,n:8,d:12},{w:0,n:2,d:6},{w:1,n:3,d:6}],
+    hint:'5+3=8이니까 8/6이 돼요. 6/6은 1이니까, <b>남은 조각</b>은 몇 개일까요?' },
+
+  { diff:'중', guest:'🚶', item:{e:'🥐',name:'버터 크루아상'},
+    order:'예준이가 집에서 <b>2/9km</b> 걸어 문구점에 들렀다가 <b>8/9km</b>를 더 걸어 학교에 갔어요.',
+    q:'예준이가 걸은 전체 거리는?\n{a} + {b} = ?',
+    visual:{mode:'add', d:9, a:2, b:8, flavor:'croissant'},
+    a:{w:0,n:2,d:9}, b:{w:0,n:8,d:9}, answer:0,
+    choices:[{w:1,n:1,d:9},{w:0,n:8,d:9},{w:1,n:2,d:9},{w:0,n:10,d:18}],
+    hint:'2+8=10이라 10/9예요. 9/9는 1이니까 <b>대분수</b>로 바꿔 보세요.' },
+
+  { diff:'중', guest:'👨', item:{e:'🥖',name:'통밀 바게트'},
+    order:'민지 몸무게는 <b>32와 4/15kg</b>, 정수는 민지보다 <b>3과 8/15kg</b> 더 무거워요.',
+    q:'정수의 몸무게는?\n{a} + {b} = ?',
+    visual:{mode:'bar', d:15, a:4, b:8, flavor:'baguette', hideWhole:true},
+    a:{w:32,n:4,d:15}, b:{w:3,n:8,d:15}, answer:0,
+    choices:[{w:35,n:12,d:15},{w:35,n:2,d:15},{w:34,n:12,d:15},{w:36,n:2,d:15}],
+    hint:'자연수는 32+3, 분수는 4/15+8/15로 나눠서 더해요. 분수 부분이 1을 넘나요?' },
+
+  { diff:'중', guest:'👵', item:{e:'🧇',name:'벨기에 와플'},
+    order:'와플 반죽 <b>12/15통</b>에서 <b>5/15통</b>을 사용했어요.',
+    q:'{a} − {b} = ?',
+    visual:{mode:'sub', d:15, total:12, take:5, flavor:'waffle'},
+    a:{w:0,n:12,d:15}, b:{w:0,n:5,d:15}, answer:0,
+    choices:[{w:0,n:7,d:15},{w:0,n:7,d:30},{w:0,n:17,d:15},{w:0,n:8,d:15}],
+    hint:'분모 15는 그대로! <b>12 − 5</b>만 하면 돼요.' },
+
+  { diff:'중', guest:'🧑‍🎓', item:{e:'🥞',name:'수플레 팬케이크'},
+    order:'팬케이크 반죽 <b>2와 8/10컵</b>에서 <b>15/10컵</b>을 덜어냈어요!',
+    q:'{a} − {b} = ?',
+    visual:{mode:'borrow', d:10, whole:2, extra:8, take:15, flavor:'pancake'},
+    a:{w:2,n:8,d:10}, b:{w:0,n:15,d:10}, answer:0,
+    choices:[{w:1,n:3,d:10},{w:1,n:7,d:10},{w:2,n:3,d:10},{w:0,n:13,d:100}],
+    hint:'2와 8/10을 <b>가분수 28/10</b>으로 바꿔 보세요. 그러면 28/10 − 15/10!' },
+
+  { diff:'중', guest:'🧑‍🍳', item:{e:'🥨',name:'소금 프레첼'},
+    order:'프레첼 반죽에 <b>4/9</b>통을 넣고 조금 더 넣어도 <b>1통을 넘지 않게</b> 하려고 해요.',
+    q:'□ 안에 들어갈 수 <b>없는</b> 수는?\n{a} + □/9 &lt; 1',
+    visual:{mode:'add', d:9, a:4, b:0, flavor:'pretzel', question:true},
+    a:{w:0,n:4,d:9}, answer:0,
+    choices:[{text:'5'},{text:'1'},{text:'2'},{text:'4'}],
+    hint:'1은 9/9예요. 4/9 + □/9가 9/9보다 <b>작아야</b> 하니까 4+□가 9보다 작아야 해요.' },
+
+  { diff:'중', guest:'👶', item:{e:'🍮',name:'커스터드 푸딩'},
+    order:'푸딩 두 개 중 어느 쪽이 더 클까요? 잘 비교해 주세요!',
+    q:'㉠ 19/20 보다 5/20 만큼 더 작은 수\n㉡ 15/20 보다 3/20 만큼 더 작은 수\n더 큰 것은?',
+    visual:{mode:'compare', d:20, left:14, right:12, flavor:'pudding'},
+    answer:0,
+    choices:[{text:'㉠'},{text:'㉡'},{text:'두 수는 같아요'},{text:'알 수 없어요'}],
+    hint:'㉠은 19/20−5/20, ㉡은 15/20−3/20을 각각 계산해서 <b>분자를 비교</b>해 보세요.' },
+
+  { diff:'중', guest:'🕵️', item:{e:'🍫',name:'초콜릿 케이크'},
+    order:'초콜릿 케이크 계산서 4장 중, <b>차가 다른 하나</b>를 찾아주세요!',
+    q:'다음 중 계산 결과(차)가 <b>다른</b> 하나는?',
+    visual:{mode:'bar', d:9, a:4, b:3, flavor:'chocolate', hideWhole:true},
+    answer:1,
+    choices:[
+      {text:'8과 7/9 − 2과 3/9'},
+      {text:'7과 5/9 − 11/9'},
+      {text:'9와 5/9 − 3과 1/9'},
+      {text:'8과 6/9 − 2과 2/9'}
+    ],
+    hint:'식 하나에 <b>11/9라는 가분수</b>가 숨어 있어요. 먼저 1과 2/9로 바꾼 뒤 빼 보세요. 나머지 세 개는 모두 6과 4/9랍니다.' },
+
+  { diff:'상', guest:'🤴', item:{e:'👑',name:'로얄 크라운 케이크'},
+    order:'통케이크 <b>4판</b>에서 <b>1과 4/5판</b>을 포장해 드릴게요!',
+    q:'{a} − {b} = ?',
+    visual:{mode:'borrow', d:5, whole:4, extra:0, take:9, flavor:'royal'},
+    a:{w:4,n:0,d:0}, b:{w:1,n:4,d:5}, answer:0,
+    choices:[{w:2,n:1,d:5},{w:3,n:1,d:5},{w:2,n:4,d:5},{w:3,n:4,d:5}],
+    hint:'자연수 4에서 분수를 뺄 수 없죠? 통케이크 1판을 <b>5조각(5/5)</b>으로 쪼개서 3과 5/5로 만들어 보세요!' },
+
+  { diff:'상', guest:'👨‍👩‍👧', item:{e:'🍕',name:'디저트 피자'},
+    order:'승원이네가 피자 <b>2판</b>을 시켜서 <b>1과 3/8판</b>을 먹었어요.',
+    q:'먹고 남은 피자는 몇 판일까요?\n{a} − {b} = ?',
+    visual:{mode:'borrow', d:8, whole:2, extra:0, take:11, flavor:'pizza'},
+    a:{w:2,n:0,d:0}, b:{w:1,n:3,d:8}, answer:0,
+    choices:[{w:0,n:5,d:8},{w:0,n:3,d:8},{w:1,n:5,d:8},{w:0,n:4,d:8}],
+    hint:'2판을 <b>1과 8/8판</b>으로 바꾸면 뺄 수 있어요. 1과 8/8 − 1과 3/8은?' },
+
+  { diff:'상', guest:'🧙', item:{e:'🫐',name:'블루베리 머핀'},
+    order:'분모가 8인 진분수 머핀 2개가 있어요. 합은 <b>7/8</b>, 차는 <b>1/8</b>이래요!',
+    q:'두 진분수는 각각 얼마일까요?',
+    visual:{mode:'compare', d:8, left:4, right:3, flavor:'blueberry'},
+    answer:0,
+    choices:[{text:'4/8 와 3/8'},{text:'5/8 와 2/8'},{text:'6/8 와 1/8'},{text:'7/8 와 1/8'}],
+    hint:'두 수를 <b>더하면 7/8</b>, <b>빼면 1/8</b>이 되는 짝을 하나씩 넣어서 확인해 보세요.' },
+
+  { diff:'상', guest:'🎨', item:{e:'🎀',name:'리본 롤케이크'},
+    order:'길이가 <b>1과 1/5m</b>인 색 테이프 2장을 <b>3/5m</b>만큼 겹쳐서 이어 붙였어요!',
+    q:'이어 붙인 색 테이프의 전체 길이는?',
+    visual:{mode:'overlap', d:5, len:6, over:3, flavor:'ribbon'},
+    answer:0,
+    choices:[{w:1,n:4,d:5},{w:2,n:2,d:5},{w:1,n:2,d:5},{w:2,n:4,d:5}],
+    hint:'두 장을 <b>먼저 더한 뒤</b>, 겹친 만큼을 <b>빼야</b> 해요. (1과1/5 + 1과1/5) − 3/5' },
+
+  { diff:'상', guest:'🧑‍🔬', item:{e:'🌰',name:'밤 타르트'},
+    order:'타르트 4종류 중 <b>2개를 골라 차가 가장 크게</b> 만들어 주세요!',
+    q:'3과 2/7,  2와 2/7,  17/7,  3과 6/7\n두 개를 골라 만든 가장 큰 차는?',
+    visual:{mode:'compare', d:7, left:27, right:16, flavor:'chestnut', maxDenomParts:7},
+    answer:0,
+    choices:[{w:1,n:4,d:7},{w:1,n:3,d:7},{w:2,n:4,d:7},{w:1,n:5,d:7}],
+    hint:'가장 <b>큰 수</b>에서 가장 <b>작은 수</b>를 빼면 차가 제일 커요. 17/7은 2와 3/7이랍니다!' },
+
+  { diff:'상', guest:'🦸', item:{e:'🍯',name:'허니 브레드'},
+    order:'허니브레드 계산서 4장 중 <b>결과가 가장 작은</b> 것을 찾아주세요!',
+    q:'계산 결과가 가장 <b>작은</b> 것은?',
+    visual:{mode:'bar', d:4, a:3, b:1, flavor:'honey', hideWhole:true},
+    answer:1,
+    choices:[
+      {text:'3 − 1과 1/2'},
+      {text:'3/4 + 1/4'},
+      {text:'1과 1/3 + 1과 1/3'},
+      {text:'5와 4/5 − 1과 1/5'}
+    ],
+    hint:'네 식을 각각 계산하면 1과 1/2, 2와 2/3, 4와 3/5가 나와요. <b>분모와 분자가 같아지는 식</b> 하나를 찾아보세요!' }
+];
+const TOTAL_Q = QUESTIONS.length;
+
+/* ══════════ 케이크 SVG 렌더링 ══════════ */
+const FLAVORS = {
+  strawberry:{body:'#ffd6e0',edge:'#f9a8c4',top:'#ff6b9d',crumb:'#ffeef3'},
+  vanilla   :{body:'#fff0cc',edge:'#f5cf82',top:'#f9b64b',crumb:'#fffaeb'},
+  choco     :{body:'#c79268',edge:'#9c6640',top:'#6b3f22',crumb:'#e8cbaf'},
+  apple     :{body:'#ffe0b2',edge:'#e9a95c',top:'#d97706',crumb:'#fff3e0'},
+  birthday  :{body:'#ffd9f0',edge:'#f3a3d8',top:'#e0399a',crumb:'#ffeef8'},
+  bread     :{body:'#f7dcb4',edge:'#d9a86a',top:'#b57c3c',crumb:'#fdf1e0'},
+  donut     :{body:'#ffd0e8',edge:'#f79fd0',top:'#ff5fa8',crumb:'#ffeaf5'},
+  croissant :{body:'#fbdfa8',edge:'#dfae5d',top:'#c2842f',crumb:'#fdf3dd'},
+  baguette  :{body:'#f0d4a8',edge:'#cfa363',top:'#a9762f',crumb:'#fbeed6'},
+  waffle    :{body:'#fde3ad',edge:'#e2b767',top:'#c08a2c',crumb:'#fef5df'},
+  pancake   :{body:'#fbd9a0',edge:'#dfae5d',top:'#b9782b',crumb:'#fdf0d8'},
+  pretzel   :{body:'#dcb183',edge:'#b78450',top:'#7d5326',crumb:'#f2ddc4'},
+  pudding   :{body:'#ffe9ae',edge:'#f2c368',top:'#d99a22',crumb:'#fff6dd'},
+  chocolate :{body:'#a9714a',edge:'#7d4a28',top:'#4d2a13',crumb:'#d8b294'},
+  royal     :{body:'#ffe9b0',edge:'#e8bf5e',top:'#c99311',crumb:'#fff7dc'},
+  pizza     :{body:'#ffd79a',edge:'#e2a24f',top:'#c85f2b',crumb:'#fff0d6'},
+  blueberry :{body:'#d6d4f7',edge:'#a3a0e6',top:'#5b56c9',crumb:'#eeedfc'},
+  ribbon    :{body:'#ffd4e4',edge:'#f5a0c2',top:'#e04f8c',crumb:'#ffeaf2'},
+  chestnut  :{body:'#e8c9a0',edge:'#c39a63',top:'#8a5d28',crumb:'#f7e8d3'},
+  honey     :{body:'#ffe1a3',edge:'#efbc5c',top:'#cd8f1c',crumb:'#fff4d9'}
+};
+function flavorOf(name){ return FLAVORS[name] || FLAVORS.vanilla; }
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const n = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+/** 원형 케이크의 한 조각(부채꼴) path를 만든다. */
+function slicePath(cx, cy, r, startDeg, endDeg){
+  const s = (startDeg-90) * Math.PI/180, e = (endDeg-90) * Math.PI/180;
+  const x1 = cx + r*Math.cos(s), y1 = cy + r*Math.sin(s);
+  const x2 = cx + r*Math.cos(e), y2 = cy + r*Math.sin(e);
+  const large = (endDeg - startDeg) > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+}
+/** 원형 케이크 1판을 그린다. filled 조각만 색칠, 나머지는 빈 접시.
+    denom이 1이면(아직 쪼개지 않은 통케이크) 360° 원호는 시작점과 끝점이 겹쳐
+    아무것도 그려지지 않으므로 온전한 원으로 그린다. */
+function drawRoundCake(parent, cx, cy, r, denom, filled, fl, opts){
+  opts = opts || {};
+  const g = el('g', {});
+  // 접시
+  g.appendChild(el('ellipse', {cx:cx, cy:cy+r*0.16, rx:r*1.22, ry:r*0.42, fill:'rgba(150,100,60,.10)'}));
+  if(denom <= 1){
+    const c = el('circle', {cx:cx, cy:cy, r:r,
+      fill: filled > 0 ? fl.body : '#fdf6ee',
+      stroke: filled > 0 ? fl.edge : '#e8d5c0', 'stroke-width':2, opacity:'0'});
+    c.appendChild(el('animate', {attributeName:'opacity', from:'0', to:'1',
+      dur:'0.3s', begin:`${opts.delay||0}s`, fill:'freeze'}));
+    g.appendChild(c);
+  } else {
+    const step = 360/denom;
+    for(let i=0;i<denom;i++){
+      const isOn = i < filled;
+      const p = el('path', {
+        d: slicePath(cx, cy, r, i*step, (i+1)*step),
+        fill: isOn ? fl.body : '#fdf6ee',
+        stroke: isOn ? fl.edge : '#e8d5c0',
+        'stroke-width': 2, 'stroke-linejoin':'round'
+      });
+      if(isOn){
+        p.setAttribute('opacity','0');
+        p.appendChild(el('animate', {attributeName:'opacity', from:'0', to:'1',
+          dur:'0.28s', begin:`${(opts.delay||0) + i*0.07}s`, fill:'freeze'}));
+      }
+      g.appendChild(p);
+    }
+  }
+  // 크림 토핑
+  if(filled > 0){
+    const c = el('circle', {cx:cx, cy:cy, r:r*0.24, fill:fl.crumb, stroke:fl.edge, 'stroke-width':2});
+    g.appendChild(c);
+    const dot = el('circle', {cx:cx, cy:cy, r:r*0.1, fill:fl.top});
+    g.appendChild(dot);
+  }
+  parent.appendChild(g);
+  return g;
+}
+/** 조각이 떨어져 나가는 뺄셈 연출 */
+function drawRemovedSlices(parent, cx, cy, r, denom, from, count, fl, delay){
+  const step = 360/denom;
+  for(let k=0;k<count;k++){
+    const i = from + k;
+    const midDeg = (i*step + step/2) - 90;
+    const rad = midDeg*Math.PI/180;
+    const dx = Math.cos(rad)*r*1.55, dy = Math.sin(rad)*r*1.55;
+    const p = el('path', {
+      d: slicePath(cx, cy, r, i*step, (i+1)*step),
+      fill: fl.body, stroke: fl.edge, 'stroke-width':2, 'stroke-linejoin':'round', opacity:'1'
+    });
+    const at = el('animateTransform', {attributeName:'transform', type:'translate',
+      from:'0 0', to:`${dx.toFixed(1)} ${dy.toFixed(1)}`,
+      dur:'0.75s', begin:`${delay + k*0.1}s`, fill:'freeze'});
+    const ao = el('animate', {attributeName:'opacity', from:'1', to:'0',
+      dur:'0.75s', begin:`${delay + k*0.1}s`, fill:'freeze'});
+    p.appendChild(at); p.appendChild(ao);
+    parent.appendChild(p);
+  }
+}
+/** 띠(식빵) 모델 한 줄.
+    filled 가 denom 보다 크면(대분수) 필요한 만큼 칸을 늘려 그리고,
+    1(=denom칸)이 끝나는 자리마다 진한 경계선을 그어 자연수 경계를 보여준다. */
+function drawBar(parent, x, y, w, h, denom, filled, totalCells, fl, delay){
+  const g = el('g', {});
+  const cells = Math.max(totalCells, denom, 1);
+  const cw = w / cells;
+  g.appendChild(el('rect', {x:x, y:y, width:w, height:h, rx:8, fill:'#fdf6ee', stroke:'#e8d5c0', 'stroke-width':2}));
+  for(let i=0;i<Math.min(filled, cells);i++){
+    const r = el('rect', {x:(x+i*cw).toFixed(2), y:y, width:cw.toFixed(2), height:h,
+      fill:fl.body, stroke:fl.edge, 'stroke-width':1.2, opacity:'0'});
+    r.appendChild(el('animate', {attributeName:'opacity', from:'0', to:'1',
+      dur:'0.22s', begin:`${delay + i*0.04}s`, fill:'freeze'}));
+    g.appendChild(r);
+  }
+  for(let i=1;i<cells;i++){
+    const isWholeEdge = (i % denom === 0);
+    g.appendChild(el('line', {x1:(x+i*cw).toFixed(2), y1:y, x2:(x+i*cw).toFixed(2), y2:y+h,
+      stroke: isWholeEdge ? '#c2410c' : '#e0c8ae',
+      'stroke-width': isWholeEdge ? 2.6 : 1.1,
+      'stroke-dasharray': isWholeEdge ? 'none' : '3 3'}));
+  }
+  g.appendChild(el('rect', {x:x, y:y, width:w, height:h, rx:8, fill:'none', stroke:'#d9b892', 'stroke-width':2.5}));
+  parent.appendChild(g);
+  return g;
+}
+function svgText(parent, x, y, str, size, color, weight){
+  const t = el('text', {x:x, y:y, 'text-anchor':'middle', 'font-size':size,
+    fill:color||'#8a6249', 'font-weight':weight||800, 'font-family':'inherit'});
+  t.textContent = str;
+  parent.appendChild(t);
+  return t;
+}
+
+/** 문제의 visual 설정에 따라 작업대 연출을 그린다. */
+function renderCake(cfg){
+  const stage = document.getElementById('cakeStage');
+  stage.innerHTML = '';
+  const label = document.getElementById('benchLabel');
+  const fl = flavorOf(cfg.flavor);
+  const W = 460, H = 168;
+  const svg = el('svg', {viewBox:`0 0 ${W} ${H}`, role:'img'});
+
+  if(cfg.mode === 'add'){
+    label.textContent = '🥣 두 반죽을 합쳐요!';
+    const r = 44;
+    drawRoundCake(svg, 96, 74, r, cfg.d, cfg.a, fl, {delay:0.1});
+    svgText(svg, 96, 152, `${cfg.a}/${cfg.d}`, 19, '#a15c2d', 900);
+    svgText(svg, 197, 84, '+', 30, '#d97706', 900);
+    if(cfg.question){
+      // □ 자리를 물음표 접시로 표시
+      drawRoundCake(svg, 298, 74, r, cfg.d, 0, fl, {delay:0.3});
+      svgText(svg, 298, 82, '?', 34, '#d97706', 900);
+      svgText(svg, 298, 152, `□/${cfg.d}`, 19, '#a15c2d', 900);
+    } else {
+      drawRoundCake(svg, 298, 74, r, cfg.d, cfg.b, fl, {delay:0.4});
+      svgText(svg, 298, 152, `${cfg.b}/${cfg.d}`, 19, '#a15c2d', 900);
+    }
+    svgText(svg, 396, 84, '=', 30, '#d97706', 900);
+    svgText(svg, 396, 122, '?', 36, '#ec4899', 900);
+
+  } else if(cfg.mode === 'sub'){
+    label.textContent = '🔪 조각을 덜어내요!';
+    const cakes = Math.ceil(cfg.total / cfg.d);
+    if(cakes <= 1){
+      // 한 판 안에서 조각을 덜어내는 경우 — 날아가는 연출을 함께 보여준다
+      const r = 52, cx = W/2, cy = 72;
+      drawRoundCake(svg, cx, cy, r, cfg.d, cfg.total, fl, {delay:0.1});
+      drawRemovedSlices(svg, cx, cy, r, cfg.d, cfg.total - cfg.take, cfg.take, fl, 0.95);
+      svgText(svg, cx, 152, `${cfg.total}/${cfg.d} 중 ${cfg.take}조각을 덜어내면?`, 15, '#dc2626', 900);
+    } else {
+      // 대분수: 통케이크 여러 판을 가운데 정렬해 나란히 늘어놓는다
+      const fullCakes = Math.floor(cfg.total / cfg.d);
+      const rest = cfg.total % cfg.d;
+      const shapes = fullCakes + (rest > 0 ? 1 : 0);
+      const rr = shapes >= 5 ? 28 : (shapes === 4 ? 33 : 38);
+      const gap = Math.min(rr*2 + 22, (W - 56) / Math.max(shapes,1));
+      const startX = W/2 - ((shapes-1) * gap)/2;
+      const cy = 66;
+      for(let i=0;i<fullCakes;i++){
+        drawRoundCake(svg, startX + i*gap, cy, rr, cfg.d, cfg.d, fl, {delay:0.1+i*0.13});
+      }
+      if(rest > 0){
+        const x = startX + fullCakes*gap;
+        drawRoundCake(svg, x, cy, rr, cfg.d, rest, fl, {delay:0.1+fullCakes*0.13});
+        svgText(svg, x, cy+rr+20, `${rest}/${cfg.d}`, 12.5, '#a15c2d', 900);
+      }
+      svgText(svg, W/2, 152, `여기서 ${cfg.take}조각(${cfg.take}/${cfg.d})을 덜어내면?`, 15, '#dc2626', 900);
+    }
+
+  } else if(cfg.mode === 'borrow'){
+    label.textContent = '✂️ 통케이크를 조각으로 쪼개요!';
+    const shapes = cfg.whole + (cfg.extra > 0 ? 1 : 0);
+    const rr = shapes >= 5 ? 28 : (shapes === 4 ? 32 : 38);
+    const gap = Math.min(rr*2 + 26, (W - 60) / Math.max(shapes,1));
+    const startX = W/2 - ((shapes-1) * gap)/2;   // 가운데 정렬
+    const cy = 64;
+    for(let i=0;i<cfg.whole;i++){
+      const x = startX + i*gap;
+      const isSplit = (i === cfg.whole-1);       // 마지막 1판만 조각으로 쪼갠다
+      const g = drawRoundCake(svg, x, cy, rr, isSplit ? cfg.d : 1, isSplit ? cfg.d : 1, fl, {delay:0.1+i*0.12});
+      if(isSplit){
+        // 칼이 케이크 위를 지나가는 연출
+        const knife = el('line', {x1:x-rr-14, y1:cy-rr-9, x2:x-rr-14, y2:cy+rr+9,
+          stroke:'#94a3b8', 'stroke-width':4, 'stroke-linecap':'round', opacity:'0'});
+        knife.appendChild(el('animate', {attributeName:'opacity', values:'0;1;1;0',
+          dur:'1s', begin:'0.55s', fill:'freeze'}));
+        knife.appendChild(el('animateTransform', {attributeName:'transform', type:'translate',
+          from:'0 0', to:`${(rr+14)*2} 0`, dur:'1s', begin:'0.55s', fill:'freeze'}));
+        svg.appendChild(knife);
+        // 쪼개진 순간 통통 튀는 느낌
+        g.appendChild(el('animateTransform', {attributeName:'transform', type:'scale',
+          values:'1;1.09;1', dur:'0.5s', begin:'1.5s', additive:'sum'}));
+        svgText(svg, x, cy+rr+21, `1판 = ${cfg.d}/${cfg.d}`, 12.5, '#dc2626', 900);
+      } else {
+        svgText(svg, x, cy+rr+21, '1판', 12.5, '#a15c2d', 800);
+      }
+    }
+    if(cfg.extra > 0){
+      const x = startX + cfg.whole*gap;
+      drawRoundCake(svg, x, cy, rr, cfg.d, cfg.extra, fl, {delay:0.1+cfg.whole*0.12});
+      svgText(svg, x, cy+rr+21, `${cfg.extra}/${cfg.d}`, 12.5, '#a15c2d', 900);
+    }
+    svgText(svg, W/2, 158, `여기서 ${cfg.take}조각(${cfg.take}/${cfg.d})을 빼면?`, 15, '#dc2626', 900);
+
+  } else if(cfg.mode === 'bar'){
+    label.textContent = '🍞 띠 모델로 살펴봐요!';
+    const bw = 330, bh = 34, bx = 78;
+    // 대분수여도 잘리지 않도록 필요한 칸 수를 먼저 구한다
+    const cells = Math.max(cfg.d, cfg.a, cfg.b);
+    const totalCells = Math.ceil(cells / cfg.d) * cfg.d;
+    drawBar(svg, bx, 34, bw, bh, cfg.d, cfg.a, totalCells, fl, 0.15);
+    svgText(svg, 42, 56, `${cfg.a}/${cfg.d}`, 15, '#a15c2d', 900);
+    drawBar(svg, bx, 92, bw, bh, cfg.d, cfg.b, totalCells, fl, 0.5);
+    svgText(svg, 42, 114, `${cfg.b}/${cfg.d}`, 15, '#a15c2d', 900);
+    svgText(svg, W/2, 150,
+      `한 칸이 1/${cfg.d} — 진한 선이 1(${cfg.d}칸)이 되는 자리예요`, 13.5, '#a97c62', 800);
+
+  } else if(cfg.mode === 'compare'){
+    label.textContent = '⚖️ 두 개를 비교해요!';
+    const r = 43;
+    const leftCakes = Math.ceil(cfg.left / cfg.d), rightCakes = Math.ceil(cfg.right / cfg.d);
+    if(leftCakes <= 1 && rightCakes <= 1){
+      drawRoundCake(svg, 130, 72, r, cfg.d, cfg.left, fl, {delay:0.1});
+      svgText(svg, 130, 150, `${cfg.left}/${cfg.d}`, 19, '#a15c2d', 900);
+      drawRoundCake(svg, 330, 72, r, cfg.d, cfg.right, fl, {delay:0.4});
+      svgText(svg, 330, 150, `${cfg.right}/${cfg.d}`, 19, '#a15c2d', 900);
+      svgText(svg, 230, 84, 'VS', 24, '#ec4899', 900);
+    } else {
+      const bw = 300, bh = 30, bx = 90;
+      const maxUnits = Math.max(cfg.left, cfg.right);
+      const scale = bw / maxUnits;
+      svg.appendChild(el('rect', {x:bx, y:36, width:(cfg.left*scale).toFixed(1), height:bh, rx:7,
+        fill:fl.body, stroke:fl.edge, 'stroke-width':2}));
+      svgText(svg, 52, 57, '㉠', 17, '#a15c2d', 900);
+      svg.appendChild(el('rect', {x:bx, y:90, width:(cfg.right*scale).toFixed(1), height:bh, rx:7,
+        fill:fl.crumb, stroke:fl.edge, 'stroke-width':2}));
+      svgText(svg, 52, 111, '㉡', 17, '#a15c2d', 900);
+      svgText(svg, W/2, 152, `길이를 견주어 보세요!`, 14, '#a97c62', 800);
+    }
+
+  } else if(cfg.mode === 'overlap'){
+    label.textContent = '🎀 겹쳐서 이어 붙여요!';
+    const unit = 30;                       // 1/d 한 칸의 픽셀 폭
+    const bx = 40, bh = 30;
+    const w1 = cfg.len * unit;
+    // 첫 번째 테이프
+    svg.appendChild(el('rect', {x:bx, y:38, width:w1, height:bh, rx:6,
+      fill:fl.body, stroke:fl.edge, 'stroke-width':2}));
+    svgText(svg, bx + w1/2, 30, '테이프 1', 12, '#a15c2d', 800);
+    // 두 번째 테이프(겹치게)
+    const x2 = bx + w1 - cfg.over*unit;
+    svg.appendChild(el('rect', {x:x2, y:78, width:w1, height:bh, rx:6,
+      fill:fl.crumb, stroke:fl.edge, 'stroke-width':2}));
+    svgText(svg, x2 + w1/2, 128, '테이프 2', 12, '#a15c2d', 800);
+    // 겹친 구간 표시
+    svg.appendChild(el('rect', {x:x2, y:38, width:cfg.over*unit, height:bh+40, rx:5,
+      fill:'rgba(236,72,153,.16)', stroke:'#ec4899', 'stroke-width':2, 'stroke-dasharray':'5 4'}));
+    svgText(svg, x2 + (cfg.over*unit)/2, 152, `겹친 부분 ${cfg.over}/${cfg.d}m`, 13, '#be185d', 900);
+  }
+
+  stage.appendChild(svg);
+}
+
+/* ══════════ 사운드 ══════════ */
+let actx = null, muted = false, masterGain = null;
+function ensureAudio(){
+  if(!actx){
+    try{
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = actx.createGain();
+      masterGain.gain.value = 0.9;
+      masterGain.connect(actx.destination);
+    }catch(e){ actx = null; }
+  }
+  if(actx && actx.state === 'suspended') actx.resume().catch(()=>{});
+}
+function tone(freq, dur, type, vol, when){
+  if(muted || !actx) return;
+  try{
+    const t = (when || actx.currentTime);
+    const osc = actx.createOscillator(), g = actx.createGain();
+    osc.type = type || 'sine'; osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol || 0.08, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(masterGain);
+    osc.start(t); osc.stop(t + dur + 0.03);
+  }catch(e){}
+}
+function seq(freqs, dur, type, vol, gap){
+  if(muted) return;
+  ensureAudio();
+  if(!actx) return;
+  let t = actx.currentTime;
+  freqs.forEach(f=>{ tone(f, dur, type, vol, t); t += (dur + (gap===undefined?0.02:gap)); });
+}
+const sfx = {
+  click  : ()=>seq([620], .05, 'triangle', .06),
+  correct: ()=>seq([523.25,659.25,783.99,1046.5], .12, 'triangle', .09, .015),
+  wrong  : ()=>seq([311.13,246.94], .16, 'sawtooth', .06, .02),
+  serve  : ()=>seq([784,1046.5], .1, 'sine', .08, .01),
+  combo  : ()=>seq([659.25,880,1174.66], .09, 'square', .06, .012),
+  ach    : ()=>seq([659.25,830.61,987.77,1318.5], .12, 'triangle', .075, .015),
+  finish : ()=>seq([523.25,659.25,783.99,1046.5,783.99,1046.5], .17, 'triangle', .09, .02),
+  slice  : ()=>seq([1400,900], .05, 'sawtooth', .04, .005)
+};
+
+/* ══════════ BGM ══════════
+   경쾌한 요리 게임 분위기의 오리지널 곡을 오실레이터로 직접 합성한다.
+
+   ◆ 직접 준비하신 음원을 쓰고 싶다면?
+     ① mp3 파일을 이 HTML 파일과 같은 폴더에 넣고
+     ② 아래 CUSTOM_BGM_FILE 에 파일 이름을 적어주세요. (예: 'bakery-bgm.mp3')
+     비워두면 아래의 합성 BGM이 재생됩니다.
+     ※ 저작권이 있는 음원은 수업용으로만 쓰시고, 웹에 공개 배포하지 마세요. */
+const CUSTOM_BGM_FILE = '';
+const NOTE = {C:-9,'C#':-8,D:-7,'D#':-6,E:-5,F:-4,'F#':-3,G:-2,'G#':-1,A:0,'A#':1,B:2};
+function nf(note){
+  if(!note) return null;
+  const m = /^([A-G]#?)(\d)$/.exec(note);
+  if(!m) return null;
+  return 440 * Math.pow(2, (NOTE[m[1]] + (parseInt(m[2],10)-4)*12) / 12);
+}
+// [음, 8분음표 길이] — 밝은 F장조, 통통 튀는 리듬
+const BGM_MELODY = [
+  ['F5',1],['A5',1],['C6',2],['A5',1],['F5',1],['G5',2],
+  ['E5',1],['G5',1],['C6',2],['B5',1],['G5',1],['E5',2],
+  ['D5',1],['F5',1],['A5',2],['G5',1],['F5',1],['D5',2],
+  ['C5',1],['E5',1],['G5',2],['F5',1],['E5',1],['C5',2],
+  ['F5',1],['G5',1],['A5',1],['A#5',1],['C6',2],['A5',2],
+  ['G5',1],['A5',1],['A#5',1],['C6',1],['D6',2],['C6',2],
+  ['A5',1],['G5',1],['F5',1],['E5',1],['D5',2],['F5',2],
+  ['C5',2],['F5',2],['A5',2],['F5',2],
+  ['C6',1],['A#5',1],['A5',1],['G5',1],['F5',2],['A5',2],
+  ['A#5',1],['A5',1],['G5',1],['F5',1],['E5',2],['G5',2],
+  ['F5',1],['A5',1],['C6',1],['F6',1],['C6',2],['A5',2],
+  ['G5',1],['E5',1],['C5',1],['E5',1],['F5',4],
+  [null,2],['A5',1],['C6',1],['D6',2],['C6',2],
+  ['A#5',1],['G5',1],['A#5',2],['A5',1],['F5',1],['A5',2],
+  ['G5',1],['A5',1],['A#5',1],['A5',1],['G5',2],['F5',2],
+  ['E5',1],['F5',1],['G5',1],['E5',1],['F5',4]
+];
+// 코드 진행 F - C - Dm - A# (2마디씩)
+const BGM_BASS = ['F2','C3','A2','F2', 'C2','G2','E2','C2', 'D2','A2','F2','D2', 'A#1','F2','D2','A#1'];
+const EIGHTH = 0.152;       // 8분음표 길이(초) ≈ 197 BPM 느낌의 경쾌한 템포
+let bgmIdx = 0, bgmTimer = null, bgmBeat = 0, bgmStarted = false;
+let bgmAudioEl = null, bgmUseFile = false, noiseBuf = null;
+
+function makeNoise(){
+  const len = Math.floor(actx.sampleRate * 0.2);
+  const b = actx.createBuffer(1, len, actx.sampleRate);
+  const d = b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = Math.random()*2 - 1;
+  return b;
+}
+function hit(vol, dur, freq, type){
+  if(muted || !actx) return;
+  try{
+    if(!noiseBuf) noiseBuf = makeNoise();
+    const t = actx.currentTime;
+    const s = actx.createBufferSource(); s.buffer = noiseBuf;
+    const f = actx.createBiquadFilter(); f.type = type || 'highpass'; f.frequency.value = freq || 5000;
+    const g = actx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(masterGain);
+    s.start(t); s.stop(t + dur);
+  }catch(e){}
+}
+function kick(){
+  if(muted || !actx) return;
+  try{
+    const t = actx.currentTime;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(160, t);
+    o.frequency.exponentialRampToValueAtTime(48, t+0.11);
+    g.gain.setValueAtTime(0.16, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.15);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t+0.16);
+  }catch(e){}
+}
+function bgmStep(){
+  if(muted){ scheduleNext(EIGHTH*1000); return; }
+  const note = BGM_MELODY[bgmIdx % BGM_MELODY.length];
+  const dur = note[1] * EIGHTH;
+  const freq = nf(note[0]);
+  if(freq){
+    // 메인 멜로디 + 옥타브 위 반짝임
+    tone(freq, dur*0.92, 'triangle', 0.062);
+    tone(freq*2, dur*0.5, 'sine', 0.016);
+  }
+  // 베이스 & 드럼 (8분음표 단위)
+  for(let k=0;k<note[1];k++){
+    const beat = (bgmBeat + k) % (BGM_BASS.length*4);
+    const bassNote = nf(BGM_BASS[Math.floor(beat/4) % BGM_BASS.length]);
+    const when = actx ? actx.currentTime + k*EIGHTH : 0;
+    if(bassNote && (beat % 2 === 0)) tone(bassNote, EIGHTH*1.5, 'square', 0.05, when);
+    if(beat % 4 === 0) setTimeout(kick, k*EIGHTH*1000);
+    if(beat % 4 === 2) setTimeout(()=>hit(0.045, 0.11, 2000, 'highpass'), k*EIGHTH*1000);
+    setTimeout(()=>hit(0.012, 0.028, 8000, 'highpass'), k*EIGHTH*1000);
+  }
+  bgmBeat += note[1];
+  bgmIdx++;
+  scheduleNext(dur*1000);
+}
+function scheduleNext(ms){
+  bgmTimer = setTimeout(bgmStep, ms);
+}
+function startBGM(){
+  ensureAudio();
+  stopBGM();
+  if(bgmUseFile && bgmAudioEl){
+    bgmAudioEl.currentTime = 0;
+    bgmAudioEl.play().catch(()=>{ bgmUseFile = false; bgmIdx = 0; bgmBeat = 0; bgmStep(); });
+    return;
+  }
+  bgmIdx = 0; bgmBeat = 0;
+  bgmStep();
+}
+function stopBGM(){
+  if(bgmTimer){ clearTimeout(bgmTimer); bgmTimer = null; }
+  if(bgmAudioEl){ try{ bgmAudioEl.pause(); }catch(e){} }
+}
+function maybeStartBgm(){
+  ensureAudio();
+  if(bgmStarted) return;
+  bgmStarted = true;
+  startBGM();
+}
+// CUSTOM_BGM_FILE 이 지정된 경우에만 외부 음원을 불러온다.
+// (지정하지 않으면 네트워크 요청 자체가 없으므로 콘솔 오류가 발생하지 않는다)
+if(CUSTOM_BGM_FILE){
+  const a = new Audio();
+  a.loop = true; a.volume = 0.42; a.preload = 'auto';
+  a.addEventListener('canplaythrough', ()=>{ bgmUseFile = true; bgmAudioEl = a; }, {once:true});
+  a.addEventListener('error', ()=>{ bgmUseFile = false; }, {once:true});
+  a.src = CUSTOM_BGM_FILE;
+}
+
+function toggleMute(){
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  if(bgmAudioEl) bgmAudioEl.muted = muted;
+}
+document.getElementById('muteBtn').onclick = toggleMute;
+
+/* ══════════ 전체화면 ══════════ */
+const fsBtn = document.getElementById('fsBtn');
+function toggleFullscreen(){
+  try{
+    const de = document.documentElement;
+    if(!document.fullscreenElement && !document.webkitFullscreenElement){
+      const fn = de.requestFullscreen || de.webkitRequestFullscreen;
+      if(fn) fn.call(de);
+    } else {
+      const fn = document.exitFullscreen || document.webkitExitFullscreen;
+      if(fn) fn.call(document);
+    }
+  }catch(e){}
+}
+fsBtn.onclick = toggleFullscreen;
+document.addEventListener('fullscreenchange', ()=>{
+  fsBtn.textContent = document.fullscreenElement ? '🡼' : '⛶';
+});
+if(!document.documentElement.requestFullscreen && !document.documentElement.webkitRequestFullscreen){
+  fsBtn.style.display = 'none';
+}
+
+/* ══════════ 저장 데이터 (최고기록 / 업적) ══════════ */
+const HS_KEY = 'bakery_highscores', ACH_KEY = 'bakery_achievements', NICK_KEY = 'bakery_nickname';
+function loadJSON(k, fallback){
+  try{ const v = JSON.parse(localStorage.getItem(k) || 'null'); return v === null ? fallback : v; }
+  catch(e){ return fallback; }
+}
+let highScores = loadJSON(HS_KEY, []);
+if(!Array.isArray(highScores)) highScores = [];
+let achUnlocked = new Set(loadJSON(ACH_KEY, []));
+let sessionAch = [];
+
+function renderHallOfFame(){
+  const box = document.getElementById('hallOfFame');
+  if(highScores.length === 0){
+    box.innerHTML = '<div class="hsEmpty">아직 기록이 없어요. 첫 손님을 맞아보세요!</div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉','4.','5.'];
+  box.innerHTML = highScores.slice(0,5).map((h,i)=>
+    `<div class="hofRow"><span>${medals[i]} ${escapeHtml(h.name)}</span><b>${h.score.toLocaleString()}원</b></div>`
+  ).join('');
+}
+renderHallOfFame();
+
+const ACHIEVEMENTS = [
+  {id:'first',  icon:'🍞', name:'첫 손님',        desc:'첫 주문을 성공적으로 서빙했어요',        check:()=> breadMade >= 1},
+  {id:'five',   icon:'🥐', name:'바쁜 아침',      desc:'빵 5개를 만들었어요',                    check:()=> breadMade >= 5},
+  {id:'ten',    icon:'🎂', name:'인기 베이커리',  desc:'빵 10개를 만들었어요',                   check:()=> breadMade >= 10},
+  {id:'all',    icon:'🏪', name:'완판 신화',      desc:'주문 20개를 모두 처리했어요',            check:()=> served >= TOTAL_Q},
+  {id:'combo5', icon:'🔥', name:'불타는 손놀림',  desc:'5연속 한 번에 정답을 맞혔어요',          check:()=> combo >= 5},
+  {id:'combo10',icon:'⚡', name:'전설의 스피드',  desc:'10연속 한 번에 정답을 맞혔어요',         check:()=> combo >= 10},
+  {id:'perfect',icon:'💯', name:'무결점 파티시에',desc:'10문제 이상을 한 번에 모두 맞혔어요',     check:()=> perfect >= 10},
+  {id:'rich',   icon:'💰', name:'대박 매출',      desc:'매출 3,000원을 넘겼어요',                check:()=> score >= 3000},
+  {id:'star5',  icon:'⭐', name:'별 다섯 개',     desc:'가게 별점 5개를 달성했어요',             check:()=> starCount() >= 5}
+];
+function saveAch(){ try{ localStorage.setItem(ACH_KEY, JSON.stringify([...achUnlocked])); }catch(e){} }
+function checkAch(){
+  ACHIEVEMENTS.forEach(a=>{
+    if(!achUnlocked.has(a.id) && a.check()){
+      achUnlocked.add(a.id); sessionAch.push(a.id); saveAch(); showToast(a);
+    }
+  });
+}
+function showToast(a){
+  const c = document.getElementById('toastContainer');
+  const d = document.createElement('div');
+  d.className = 'achToast';
+  d.innerHTML = `<div class="achToastIcon">${a.icon}</div><div><div class="achToastTitle">🏅 업적 달성!</div><div class="achToastName">${escapeHtml(a.name)}</div></div>`;
+  c.appendChild(d);
+  sfx.ach();
+  setTimeout(()=>{ d.classList.add('out'); setTimeout(()=>d.remove(), 400); }, 3000);
+}
+function renderAchModal(){
+  document.getElementById('achList').innerHTML = ACHIEVEMENTS.map(a=>{
+    const on = achUnlocked.has(a.id);
+    return `<div class="achRow ${on?'':'locked'}">
+      <div class="achIcon">${on ? a.icon : '🔒'}</div>
+      <div><div class="achName">${escapeHtml(a.name)}</div><div class="achDesc">${escapeHtml(a.desc)}</div></div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('achBtn').onclick = ()=>{ sfx.click(); renderAchModal(); document.getElementById('achOverlay').classList.remove('hidden'); };
+document.getElementById('achCloseBtn').onclick = ()=>{ sfx.click(); document.getElementById('achOverlay').classList.add('hidden'); };
+
+/* ══════════ 게임 상태 ══════════ */
+let order = [], qIndex = 0, curQ = null, wrongThisQ = 0;
+let score = 0, served = 0, perfect = 0, combo = 0, maxCombo = 0;
+let breadMade = 0, collection = [], startTime = 0, nickname = '파티시에';
+let state = 'idle';   // idle | playing | over
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+/** 선택지 순서를 섞고 정답 위치를 다시 계산한다.
+    (원본 데이터는 정답이 모두 앞쪽에 몰려 있어 반드시 섞어야 한다) */
+function withShuffledChoices(q){
+  const idx = shuffle(q.choices.map((_,i)=>i));
+  return Object.assign({}, q, {
+    choices: idx.map(i=>q.choices[i]),
+    answer : idx.indexOf(q.answer)
+  });
+}
+function buildOrder(){
+  // 난이도 순으로 진행하되 같은 난이도 안에서는 섞는다
+  const e = shuffle(QUESTIONS.filter(q=>q.diff==='하'));
+  const m = shuffle(QUESTIONS.filter(q=>q.diff==='중'));
+  const h = shuffle(QUESTIONS.filter(q=>q.diff==='상'));
+  return e.concat(m, h).map(withShuffledChoices);
+}
+function starCount(){
+  if(served === 0) return 0;
+  const rate = perfect / served;
+  if(rate >= 0.95) return 5;
+  if(rate >= 0.80) return 4;
+  if(rate >= 0.60) return 3;
+  if(rate >= 0.40) return 2;
+  return 1;
+}
+function updateHUD(){
+  document.getElementById('scoreVal').textContent = score.toLocaleString();
+  const satisfy = served === 0 ? 100 : Math.round(perfect/served*100);
+  document.getElementById('satisfyVal').textContent = satisfy + '%';
+  document.getElementById('perfectVal').textContent = perfect + '개';
+  document.getElementById('progressText').textContent = `${served} / ${TOTAL_Q}`;
+  document.getElementById('progressBarInner').style.width = Math.round(served/TOTAL_Q*100) + '%';
+  const s = starCount();
+  document.getElementById('starRow').textContent = '★'.repeat(s) + '☆'.repeat(5-s);
+}
+function updateShelf(){
+  const shelf = document.getElementById('shelf');
+  if(collection.length === 0){
+    shelf.innerHTML = '<span class="shelfEmpty">아직 없어요!</span>';
+    return;
+  }
+  shelf.innerHTML = collection.map(c=>`<span class="shelfItem" title="${escapeHtml(c.name)}">${c.e}</span>`).join('');
+}
+
+/* ══════════ 문제 표시 ══════════ */
+function showQuestion(){
+  curQ = order[qIndex];
+  wrongThisQ = 0;
+
+  document.getElementById('guestAvatar').textContent = curQ.guest;
+  document.getElementById('orderNo').textContent = `주문 ${qIndex+1} / ${TOTAL_Q}`;
+  document.getElementById('orderText').innerHTML = curQ.order;
+  const badge = document.getElementById('diffBadge');
+  badge.textContent = curQ.diff;
+  badge.className = 'diffBadge diff-' + curQ.diff;
+
+  // 문제 식 — {a}, {b} 자리에 분수를 예쁘게 끼워 넣는다
+  let qHtml = curQ.q;
+  if(curQ.a) qHtml = qHtml.replace('{a}', fracHTML(curQ.a));
+  if(curQ.b) qHtml = qHtml.replace('{b}', fracHTML(curQ.b));
+  document.getElementById('questionBox').innerHTML = qHtml;
+
+  renderCake(curQ.visual);
+
+  const box = document.getElementById('choicesBox');
+  box.innerHTML = '';
+  const labels = ['1','2','3','4'];
+  curQ.choices.forEach((c, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.innerHTML = `<span class="cLabel">${labels[i]}</span><span>${fracHTML(c)}</span>`;
+    btn.addEventListener('click', ()=>pickChoice(i, btn));
+    box.appendChild(btn);
+  });
+
+  const hb = document.getElementById('hintBox');
+  hb.style.display = 'none';
+  hb.innerHTML = '';
+  updateHUD();
+}
+
+function pickChoice(i, btn){
+  if(state !== 'playing' || btn.disabled) return;
+  if(i === curQ.answer){
+    btn.classList.add('right');
+    document.querySelectorAll('.choice').forEach(b=>{ b.disabled = true; });
+    sfx.correct();
+
+    const base = ({'하':100, '중':160, '상':240})[curQ.diff];
+    let gain = base;
+    if(wrongThisQ === 0){
+      perfect++; combo++;
+      maxCombo = Math.max(maxCombo, combo);
+      if(combo >= 2){ gain += 40 * (combo - 1); sfx.combo(); }
+      document.getElementById('comboText').textContent = combo >= 2 ? `${combo} 연속!` : '좋아요!';
+    } else {
+      combo = 0;
+      document.getElementById('comboText').textContent = '-';
+    }
+    score += gain;
+    served++;
+    breadMade++;
+    collection.push(curQ.item);
+
+    floatText(`+${gain}원`, '#16a34a');
+    setTimeout(()=>{ sfx.serve(); confettiBurst(); }, 240);
+    updateShelf();
+    updateHUD();
+    checkAch();
+
+    setTimeout(()=>{
+      qIndex++;
+      if(qIndex >= order.length) finishGame();
+      else showQuestion();
+    }, 1250);
+
+  } else {
+    btn.classList.add('wrong');
+    btn.disabled = true;
+    wrongThisQ++;
+    combo = 0;
+    document.getElementById('comboText').textContent = '-';
+    sfx.wrong();
+    const hb = document.getElementById('hintBox');
+    hb.style.display = 'block';
+    hb.innerHTML = `<span class="hintTitle">💡 파티시에 힌트</span>${curQ.hint} <b>다시 한번 골라볼까요?</b>`;
+    updateHUD();
+  }
+}
+
+/* ══════════ 연출 ══════════ */
+function floatText(txt, color){
+  const el2 = document.createElement('div');
+  el2.className = 'floatUp';
+  el2.textContent = txt;
+  el2.style.color = color;
+  const stage = document.getElementById('cakeStage').getBoundingClientRect();
+  el2.style.left = (stage.left + stage.width/2 - 40) + 'px';
+  el2.style.top  = (stage.top + stage.height/2) + 'px';
+  document.body.appendChild(el2);
+  setTimeout(()=>el2.remove(), 1150);
+}
+function confettiBurst(){
+  const colors = ['#fbbf24','#f472b6','#60a5fa','#4ade80','#fb923c','#c084fc'];
+  const stage = document.getElementById('cakeStage').getBoundingClientRect();
+  for(let i=0;i<22;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.background = colors[i % colors.length];
+    c.style.left = (stage.left + Math.random()*stage.width) + 'px';
+    c.style.top  = (stage.top + stage.height*0.3) + 'px';
+    c.style.animationDuration = (1.1 + Math.random()*0.7) + 's';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 2000);
+  }
+}
+
+/* ══════════ 시작 / 종료 ══════════ */
+function startGame(){
+  order = buildOrder();
+  qIndex = 0; score = 0; served = 0; perfect = 0;
+  combo = 0; maxCombo = 0; breadMade = 0; collection = [];
+  sessionAch = [];
+  startTime = Date.now();
+  state = 'playing';
+  document.getElementById('comboText').textContent = '-';
+  updateShelf();
+  updateHUD();
+  showQuestion();
+  maybeStartBgm();
+}
+
+function finishGame(){
+  state = 'over';
+  stopBGM();
+  bgmStarted = false;
+  sfx.finish();
+  checkAch();
+
+  const ms = Date.now() - startTime;
+  const mm = Math.floor(ms/60000), ss = Math.floor((ms%60000)/1000);
+  const acc = served === 0 ? 0 : Math.round(perfect/served*100);
+  const kinds = new Set(collection.map(c=>c.e)).size;
+  const stars = starCount();
+
+  document.getElementById('overTitle').textContent = `🎉 ${nickname}님의 베이커리 결산!`;
+  document.getElementById('resultStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(5-stars);
+  document.getElementById('stScore').textContent = score.toLocaleString();
+  document.getElementById('stAcc').textContent   = acc + '%';
+  document.getElementById('stBread').textContent = breadMade + '개';
+  document.getElementById('stKinds').textContent = kinds + '종';
+  document.getElementById('stTime').textContent  = `${mm}:${String(ss).padStart(2,'0')}`;
+  document.getElementById('stCombo').textContent = maxCombo + '연속';
+
+  let rank, sub;
+  if(score >= 3600)      { rank = '👑 전설의 마스터 파티시에'; }
+  else if(score >= 2800) { rank = '🏆 인기 폭발 베이커리 사장'; }
+  else if(score >= 2000) { rank = '🥐 실력파 제빵사'; }
+  else if(score >= 1200) { rank = '🧁 성실한 견습 파티시에'; }
+  else                   { rank = '🐣 오늘 막 시작한 신입 제빵사'; }
+  if(acc >= 90)      sub = '한 번에 정답률 90% 이상! 분수 계산의 달인이에요 🎓';
+  else if(acc >= 60) sub = '분수 실력이 쑥쑥 자라고 있어요! 조금만 더!';
+  else               sub = '힌트를 잘 읽으면 다음엔 훨씬 잘할 수 있어요!';
+  document.getElementById('rankTitle').textContent = rank;
+  document.getElementById('rankSub').textContent = sub;
+
+  const prevBest = highScores.length ? highScores[0].score : 0;
+  document.getElementById('newRecordBadge').classList.toggle('hidden', !(score > prevBest && score > 0));
+  highScores.push({name:nickname, score:score, acc:acc, date:new Date().toISOString().slice(0,10)});
+  highScores.sort((a,b)=>b.score - a.score);
+  highScores = highScores.slice(0,5);
+  try{ localStorage.setItem(HS_KEY, JSON.stringify(highScores)); }catch(e){}
+  renderHallOfFame();
+
+  const cl = document.getElementById('collectionList');
+  const ce = document.getElementById('collectionEmpty');
+  if(collection.length){
+    cl.innerHTML = collection.map(c=>`<span title="${escapeHtml(c.name)}">${c.e}</span>`).join('');
+    cl.classList.remove('hidden'); ce.classList.add('hidden');
+  } else {
+    cl.innerHTML = ''; ce.classList.remove('hidden');
+  }
+
+  const ab = document.getElementById('sessionAchList');
+  if(sessionAch.length){
+    ab.textContent = '🏅 이번에 얻은 업적: ' + sessionAch.map(id=>{
+      const a = ACHIEVEMENTS.find(x=>x.id===id);
+      return a ? `${a.icon} ${a.name}` : '';
+    }).filter(Boolean).join('  ');
+  } else { ab.textContent = ''; }
+
+  document.getElementById('overOverlay').classList.remove('hidden');
+}
+
+/* ══════════ 결과 이미지 저장 / 공유 ══════════ */
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function buildResultCanvas(){
+  const W = 720, H = 1010;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  const bg = g.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#fff6ec'); bg.addColorStop(1,'#ffe1ee');
+  g.fillStyle = bg; g.fillRect(0,0,W,H);
+  g.strokeStyle = '#f0c19a'; g.lineWidth = 6;
+  roundRect(g, 18, 18, W-36, H-36, 26); g.stroke();
+
+  g.textAlign = 'center';
+  g.fillStyle = '#c2410c'; g.font = 'bold 40px sans-serif';
+  g.fillText('🧁 분수 베이커리 🍰', W/2, 92);
+  g.fillStyle = '#a97c62'; g.font = 'bold 18px sans-serif';
+  g.fillText('4학년 2학기 수학 1단원 · 분수의 덧셈과 뺄셈', W/2, 124);
+
+  g.fillStyle = '#d97706'; g.font = 'bold 30px sans-serif';
+  g.fillText(`${nickname}님의 베이커리 결산`, W/2, 186);
+  g.font = '30px sans-serif';
+  g.fillText(document.getElementById('resultStars').textContent, W/2, 228);
+  g.fillStyle = '#c2410c'; g.font = 'bold 25px sans-serif';
+  g.fillText(document.getElementById('rankTitle').textContent, W/2, 270);
+
+  const stats = [
+    ['오늘의 매출',   document.getElementById('stScore').textContent],
+    ['한 번에 정답률', document.getElementById('stAcc').textContent],
+    ['만든 빵 개수',  document.getElementById('stBread').textContent],
+    ['빵 종류',      document.getElementById('stKinds').textContent],
+    ['영업 시간',     document.getElementById('stTime').textContent],
+    ['최고 연속 성공', document.getElementById('stCombo').textContent]
+  ];
+  const cols = 2, gap = 20, cw = (W - 160 - gap)/cols, ch = 106, sx = 80, sy = 312;
+  stats.forEach((s,i)=>{
+    const x = sx + (i%cols)*(cw+gap);
+    const y = sy + Math.floor(i/cols)*(ch+16);
+    g.fillStyle = 'rgba(255,255,255,.72)';
+    roundRect(g, x, y, cw, ch, 16); g.fill();
+    g.strokeStyle = '#f5d7ba'; g.lineWidth = 2;
+    roundRect(g, x, y, cw, ch, 16); g.stroke();
+    g.fillStyle = '#ea580c'; g.font = 'bold 32px sans-serif';
+    g.fillText(s[1], x+cw/2, y+50);
+    g.fillStyle = '#a97c62'; g.font = 'bold 16px sans-serif';
+    g.fillText(s[0], x+cw/2, y+78);
+  });
+
+  let y = sy + Math.ceil(stats.length/cols)*(ch+16) + 44;
+  g.fillStyle = '#b0805f'; g.font = 'bold 18px sans-serif';
+  g.fillText('🧺 오늘 만든 빵', W/2, y);
+  g.font = '32px sans-serif';
+  const emojis = collection.map(c=>c.e);
+  const perLine = 10;
+  for(let i=0;i<emojis.length;i+=perLine){
+    y += 46;
+    g.fillText(emojis.slice(i, i+perLine).join(' '), W/2, y);
+  }
+  g.fillStyle = '#bb9276'; g.font = 'bold 15px sans-serif';
+  g.fillText('분수 베이커리 · 분수의 덧셈과 뺄셈', W/2, H-40);
+  return cv;
+}
+function shareResult(){
+  sfx.click();
+  const cv = buildResultCanvas();
+  cv.toBlob(async (blob)=>{
+    if(!blob) return;
+    const fname = `분수베이커리_결과_${nickname}.png`;
+    try{
+      const file = new File([blob], fname, {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:'분수 베이커리 결과', text:`${nickname}님의 베이커리 결산!`});
+        return;
+      }
+    }catch(e){}
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }, 'image/png');
+}
+document.getElementById('shareBtn').onclick = shareResult;
+
+/* ══════════ 버튼 연결 ══════════ */
+try{
+  const saved = localStorage.getItem(NICK_KEY);
+  if(saved) document.getElementById('nicknameInput').value = saved;
+}catch(e){}
+
+const nickInput = document.getElementById('nicknameInput');
+['pointerdown','keydown','input','focus'].forEach(ev=>{
+  nickInput.addEventListener(ev, maybeStartBgm);
+});
+
+document.getElementById('startBtn').onclick = ()=>{
+  maybeStartBgm();
+  sfx.click();
+  const v = nickInput.value.trim();
+  nickname = v || '파티시에';
+  try{ localStorage.setItem(NICK_KEY, nickname); }catch(e){}
+  document.getElementById('playerTag').textContent = `🎀 ${nickname} 파티시에의 가게`;
+  document.getElementById('startOverlay').classList.add('hidden');
+  startGame();
+};
+document.getElementById('retryBtn').onclick = ()=>{
+  sfx.click();
+  document.getElementById('overOverlay').classList.add('hidden');
+  startGame();
+};
+document.getElementById('closeBtn').onclick = ()=>{
+  sfx.click();
+  document.getElementById('overOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+  renderHallOfFame();
+  state = 'idle';
+};
+document.getElementById('skipBtn').onclick = ()=>{
+  if(state !== 'playing') return;
+  sfx.click();
+  finishGame();
+};
+
+/* 초기 작업대 안내 화면 */
+renderCake({mode:'add', d:8, a:3, b:2, flavor:'strawberry'});
+document.getElementById('benchLabel').textContent = '🔪 작업대';
+})();
+</script>
+</body>
+</html>
