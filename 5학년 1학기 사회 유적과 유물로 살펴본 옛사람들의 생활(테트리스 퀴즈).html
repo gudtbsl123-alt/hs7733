@@ -15,123 +15,139 @@
     color:#f4f0ff; position:relative;
   }
   #stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
-  .wrap { position:relative; z-index:1; height:100dvh; display:flex; flex-direction:column; align-items:center; padding:10px 12px 14px; }
+  .wrap { position:relative; z-index:1; height:100dvh; display:flex; flex-direction:column; align-items:center; padding:10px 14px 12px; }
 
-  header { text-align:center; margin-bottom:8px; }
+  header { text-align:center; margin-bottom:6px; }
   header h1 {
-    font-size:22px; font-weight:900; letter-spacing:0.5px;
+    font-size:30px; font-weight:900; letter-spacing:0.5px;
     background:linear-gradient(90deg,#7dd3fc,#c4b5fd,#f0abfc,#fbbf24);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     background-size:200% auto; animation:hueMove 6s linear infinite;
     text-shadow: 0 0 30px rgba(196,181,253,0.25);
   }
-  header p { font-size:12px; color:#a5b4c8; margin-top:2px; }
+  header p { font-size:14px; color:#a5b4c8; margin-top:2px; }
+  #playerTag { font-size:14px; font-weight:800; color:#ffe066; margin-top:4px; min-height:18px; }
   @keyframes hueMove { to { background-position:200% center; } }
 
-  .stage { display:flex; gap:16px; align-items:flex-start; justify-content:center; flex:1; min-height:0; width:100%; max-width:920px; }
+  .stage { display:flex; gap:20px; align-items:flex-start; justify-content:center; flex:1; min-height:0; width:100%; max-width:1300px; }
 
-  .board-col { position:relative; display:flex; flex-direction:column; align-items:center; }
+  .board-col { position:relative; display:flex; flex-direction:column; align-items:center; min-height:0; }
   #boardWrap {
-    position:relative; border-radius:18px; padding:8px;
+    position:relative; border-radius:18px; padding:9px;
     background:linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
     border:1px solid rgba(255,255,255,0.14);
     box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset, 0 20px 60px rgba(0,0,0,0.55), 0 0 40px rgba(124,58,237,0.15);
   }
   #board { display:block; border-radius:10px; background:#0b0a1a; }
-  #fx { position:absolute; left:8px; top:8px; pointer-events:none; border-radius:10px; }
+  #fx { position:absolute; left:9px; top:9px; pointer-events:none; border-radius:10px; }
 
   .shake { animation: shakeAnim 0.35s ease; }
   @keyframes shakeAnim { 0%,100%{transform:translate(0,0);} 20%{transform:translate(-6px,3px);} 40%{transform:translate(6px,-3px);} 60%{transform:translate(-4px,2px);} 80%{transform:translate(4px,-2px);} }
 
-  .floatText { position:absolute; font-weight:900; font-size:18px; pointer-events:none; text-shadow:0 2px 8px rgba(0,0,0,0.6); animation: floatUp 0.9s ease forwards; z-index:5; }
-  @keyframes floatUp { 0%{opacity:1; transform:translateY(0) scale(1);} 100%{opacity:0; transform:translateY(-46px) scale(1.15);} }
+  .floatText { position:absolute; font-weight:900; font-size:26px; pointer-events:none; text-shadow:0 2px 10px rgba(0,0,0,0.6); animation: floatUp 0.9s ease forwards; z-index:5; }
+  @keyframes floatUp { 0%{opacity:1; transform:translateY(0) scale(1);} 100%{opacity:0; transform:translateY(-52px) scale(1.15);} }
 
-  .touch-controls { display:flex; gap:8px; margin-top:10px; }
+  .touch-controls { display:none; gap:10px; margin-top:12px; }
   .tbtn {
-    width:52px; height:46px; border-radius:12px; border:1px solid rgba(255,255,255,0.18);
-    background:rgba(255,255,255,0.08); color:#fff; font-size:20px; display:flex; align-items:center; justify-content:center;
+    width:60px; height:52px; border-radius:14px; border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.08); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center;
     cursor:pointer; backdrop-filter:blur(6px); transition:all .15s;
   }
   .tbtn:active { background:rgba(255,255,255,0.28); transform:scale(0.92); }
 
-  .side { width:220px; display:flex; flex-direction:column; gap:10px; }
+  .side { width:280px; display:flex; flex-direction:column; gap:12px; }
   .panel {
-    background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:14px;
+    background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px;
     backdrop-filter: blur(10px);
   }
-  .panel h3 { font-size:11px; color:#9fb0d0; letter-spacing:1px; margin-bottom:8px; font-weight:700; }
-  .scoreVal { font-size:26px; font-weight:900; color:#ffe066; text-shadow:0 0 18px rgba(255,224,102,0.5); }
-  .rowline { display:flex; justify-content:space-between; font-size:13px; color:#d7ddf0; margin-top:6px; }
+  .panel h3 { font-size:13px; color:#9fb0d0; letter-spacing:1px; margin-bottom:9px; font-weight:700; }
+  .scoreVal { font-size:34px; font-weight:900; color:#ffe066; text-shadow:0 0 18px rgba(255,224,102,0.5); }
+  .rowline { display:flex; justify-content:space-between; font-size:15px; color:#d7ddf0; margin-top:7px; }
   .rowline b { color:#fff; }
 
   #nextCanvas { display:block; margin:4px auto 0; background:#0b0a1a; border-radius:10px; }
 
-  .gaugeBox { display:flex; gap:5px; margin-top:6px; }
-  .gseg { flex:1; height:16px; border-radius:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); transition:all .25s; }
+  .gaugeBox { display:flex; gap:6px; margin-top:6px; }
+  .gseg { flex:1; height:20px; border-radius:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); transition:all .25s; }
   .gseg.on { background:linear-gradient(180deg,#34d399,#059669); box-shadow:0 0 12px rgba(52,211,153,0.7); border-color:transparent; }
-  .gaugeHint { font-size:11px; color:#8fd6b0; margin-top:6px; }
+  .gaugeHint { font-size:13px; color:#8fd6b0; margin-top:8px; }
+
+  .progressRow { font-size:17px; font-weight:800; color:#7dd3fc; margin-bottom:8px; }
+  .progressBarOuter { height:14px; border-radius:8px; background:rgba(255,255,255,0.08); overflow:hidden; border:1px solid rgba(255,255,255,0.12); }
+  .progressBarInner { height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#c084fc); transition:width .3s; }
 
   .comboWrap { text-align:center; }
-  #comboText { font-size:22px; font-weight:900; color:#ff6ec7; text-shadow:0 0 16px rgba(255,110,199,0.7); min-height:26px; }
+  #comboText { font-size:26px; font-weight:900; color:#ff6ec7; text-shadow:0 0 16px rgba(255,110,199,0.7); min-height:32px; }
 
-  #pauseBtn {
-    width:100%; padding:9px; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
-    background:rgba(255,255,255,0.08); color:#fff; font-weight:700; font-size:13px; cursor:pointer;
+  .ctrlRow { display:flex; gap:8px; }
+  .ctrlBtn {
+    padding:11px; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.08); color:#fff; font-weight:700; font-size:14px; cursor:pointer;
   }
-  #pauseBtn:hover { background:rgba(255,255,255,0.18); }
+  .ctrlBtn:hover { background:rgba(255,255,255,0.18); }
+  #pauseBtn { flex:1; }
+  #muteBtn { width:52px; }
 
   /* overlays */
-  .overlay { position:fixed; inset:0; background:rgba(4,2,14,0.78); backdrop-filter: blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; }
+  .overlay { position:fixed; inset:0; background:rgba(4,2,14,0.78); backdrop-filter: blur(6px); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
   .hidden { display:none !important; }
   .card {
-    width:min(92vw,460px); max-height:88vh; overflow-y:auto; border-radius:22px; padding:26px 24px;
+    width:min(92vw,560px); max-height:90vh; overflow-y:auto; border-radius:24px; padding:30px 28px;
     background:linear-gradient(165deg,#1c1440,#100a2c); border:1px solid rgba(255,255,255,0.16);
     box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.25);
   }
-  .card h2 { font-size:20px; font-weight:900; margin-bottom:10px; text-align:center; background:linear-gradient(90deg,#7dd3fc,#f0abfc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  .card p.desc { font-size:13px; color:#c3c9e6; line-height:1.65; margin-bottom:14px; }
-  .rules { background:rgba(255,255,255,0.06); border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.9; color:#dfe3f7; margin-bottom:16px; }
+  .card h2 { font-size:24px; font-weight:900; margin-bottom:12px; text-align:center; background:linear-gradient(90deg,#7dd3fc,#f0abfc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .card p.desc { font-size:14.5px; color:#c3c9e6; line-height:1.65; margin-bottom:16px; }
+  .rules { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 16px; font-size:13.5px; line-height:1.95; color:#dfe3f7; margin-bottom:18px; }
   .rules b { color:#ffe066; }
+  .formGroup { margin-bottom:18px; }
+  .formGroup label { display:block; font-size:13.5px; color:#c3c9e6; margin-bottom:7px; font-weight:700; }
+  .formGroup input {
+    width:100%; padding:14px 16px; border-radius:13px; border:1px solid rgba(255,255,255,0.22);
+    background:rgba(255,255,255,0.08); color:#fff; font-size:16px; font-weight:700;
+  }
+  .formGroup input:focus { outline:none; border-color:#a78bfa; background:rgba(255,255,255,0.14); }
   .bigBtn {
-    display:block; width:100%; padding:14px; border:none; border-radius:14px; font-size:16px; font-weight:900; cursor:pointer;
+    display:block; width:100%; padding:16px; border:none; border-radius:15px; font-size:18px; font-weight:900; cursor:pointer;
     background:linear-gradient(90deg,#f472b6,#a78bfa,#60a5fa); color:#0a0620; letter-spacing:0.5px;
     box-shadow:0 10px 26px rgba(124,58,237,0.45); transition:transform .12s;
   }
   .bigBtn:active { transform:scale(0.97); }
   .ghostBtn {
-    display:block; width:100%; padding:11px; margin-top:8px; border-radius:12px; text-align:center;
-    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#e6e9fa; font-weight:700; font-size:13px; cursor:pointer;
+    display:block; width:100%; padding:12px; margin-top:9px; border-radius:12px; text-align:center;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#e6e9fa; font-weight:700; font-size:14px; cursor:pointer;
   }
 
   /* quiz modal */
-  .diffBadge { display:inline-block; font-size:11px; font-weight:900; padding:4px 12px; border-radius:20px; margin-bottom:10px; }
+  .diffBadge { display:inline-block; font-size:13px; font-weight:900; padding:5px 14px; border-radius:20px; margin-bottom:12px; }
   .diff-하 { background:#134e2c; color:#6ee7a8; }
   .diff-중 { background:#4a3a10; color:#fcd34d; }
   .diff-상 { background:#4a1425; color:#fb7185; }
-  #quizQ { font-size:16.5px; font-weight:700; line-height:1.55; margin-bottom:16px; white-space:pre-line; }
+  #quizQ { font-size:19px; font-weight:700; line-height:1.6; margin-bottom:18px; white-space:pre-line; }
   .choice {
-    display:block; width:100%; text-align:left; padding:13px 16px; margin-bottom:9px; border-radius:13px;
-    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:#f1f3fb; font-size:14px; font-weight:600;
+    display:block; width:100%; text-align:left; padding:15px 18px; margin-bottom:10px; border-radius:14px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:#f1f3fb; font-size:16px; font-weight:600;
     cursor:pointer; transition:all .15s;
   }
   .choice:hover:not(:disabled) { background:rgba(255,255,255,0.16); border-color:rgba(255,255,255,0.35); }
   .choice.wrong { background:rgba(239,68,68,0.28); border-color:#ef4444; opacity:0.55; }
   .choice.correctFlash { background:rgba(52,211,153,0.35); border-color:#34d399; }
   .choice:disabled { cursor:not-allowed; }
-  #hintBox { display:none; background:rgba(255,224,102,0.12); border:1px dashed #ffe066; border-radius:12px; padding:11px 13px; font-size:13px; color:#ffe066; margin-top:6px; line-height:1.5; }
-  #attemptInfo { font-size:11.5px; color:#93a1c6; margin-top:10px; text-align:center; }
+  #hintBox { display:none; background:rgba(255,224,102,0.12); border:1px dashed #ffe066; border-radius:12px; padding:12px 14px; font-size:14.5px; color:#ffe066; margin-top:8px; line-height:1.55; }
+  #attemptInfo { font-size:12.5px; color:#93a1c6; margin-top:12px; text-align:center; }
 
   /* result modal */
-  .statGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0; }
-  .statCell { background:rgba(255,255,255,0.06); border-radius:12px; padding:11px; text-align:center; }
-  .statCell .v { font-size:20px; font-weight:900; color:#7dd3fc; }
-  .statCell .l { font-size:11px; color:#9fb0d0; margin-top:3px; }
-  #rankTitle { text-align:center; font-size:19px; font-weight:900; margin:6px 0 2px; color:#ffe066; text-shadow:0 0 20px rgba(255,224,102,0.5); }
-  #rankSub { text-align:center; font-size:12px; color:#c3c9e6; margin-bottom:6px; }
+  .statGrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0; }
+  .statCell { background:rgba(255,255,255,0.06); border-radius:12px; padding:13px; text-align:center; }
+  .statCell .v { font-size:26px; font-weight:900; color:#7dd3fc; }
+  .statCell .l { font-size:12.5px; color:#9fb0d0; margin-top:4px; }
+  #rankTitle { text-align:center; font-size:22px; font-weight:900; margin:8px 0 3px; color:#ffe066; text-shadow:0 0 20px rgba(255,224,102,0.5); }
+  #rankSub { text-align:center; font-size:13.5px; color:#c3c9e6; margin-bottom:6px; }
 
-  @media (max-width:720px) {
+  @media (max-width:900px) {
+    .touch-controls { display:flex; }
     .stage { flex-direction:column-reverse; align-items:center; }
-    .side { width:min(92vw,340px); flex-direction:row; flex-wrap:wrap; }
+    .side { width:min(94vw,420px); flex-direction:row; flex-wrap:wrap; }
     .panel { flex:1; min-width:150px; }
   }
 </style>
@@ -143,13 +159,14 @@
   <header>
     <h1>🧱 유적유물 테트리스 퀴즈</h1>
     <p>5학년 사회 1단원 · 선사 시대와 고조선 사람들의 생활</p>
+    <div id="playerTag"></div>
   </header>
 
   <div class="stage">
     <div class="board-col">
       <div id="boardWrap">
-        <canvas id="board" width="260" height="520"></canvas>
-        <canvas id="fx" width="260" height="520"></canvas>
+        <canvas id="board"></canvas>
+        <canvas id="fx"></canvas>
       </div>
       <div class="touch-controls">
         <div class="tbtn" id="btnLeft">◀</div>
@@ -170,13 +187,19 @@
 
       <div class="panel">
         <h3>다음 블록</h3>
-        <canvas id="nextCanvas" width="96" height="96"></canvas>
+        <canvas id="nextCanvas"></canvas>
       </div>
 
       <div class="panel">
-        <h3>문제풀이 게이지 (5줄 = 문제 출제)</h3>
+        <h3>문제풀이 게이지 (3줄 = 문제 출제)</h3>
         <div class="gaugeBox" id="gaugeBox"></div>
         <div class="gaugeHint" id="gaugeHint">1줄 터트릴 때마다 1칸씩 채워져요!</div>
+      </div>
+
+      <div class="panel">
+        <h3>문제 진행 상황</h3>
+        <div class="progressRow"><span id="progressText">0 / 20</span></div>
+        <div class="progressBarOuter"><div class="progressBarInner" id="progressBarInner"></div></div>
       </div>
 
       <div class="panel comboWrap">
@@ -184,7 +207,10 @@
         <div id="comboText">-</div>
       </div>
 
-      <button id="pauseBtn">⏸ 일시정지</button>
+      <div class="ctrlRow">
+        <button id="pauseBtn" class="ctrlBtn">⏸ 일시정지</button>
+        <button id="muteBtn" class="ctrlBtn">🔊</button>
+      </div>
     </div>
   </div>
 </div>
@@ -194,11 +220,16 @@
   <div class="card">
     <h2>🧱 유적유물 테트리스 퀴즈</h2>
     <p class="desc">테트리스를 하며 <b>선사 시대와 고조선</b>을 정복해 보세요! 줄을 없앨수록 게이지가 차오르고, 게이지가 가득 차면 사회 문제가 등장합니다.</p>
+    <div class="formGroup">
+      <label>닉네임을 입력하세요</label>
+      <input type="text" id="nicknameInput" maxlength="10" placeholder="예: 역사탐험대장">
+    </div>
     <div class="rules">
       🎮 <b>이동</b> ← → · <b>회전</b> ↑ · <b>소프트드롭</b> ↓ · <b>하드드롭</b> Space<br>
-      🔥 1줄 제거 = 게이지 <b>+1</b>, 게이지 <b>5칸</b>이 되면 문제 출제!<br>
+      🔥 1줄 제거 = 게이지 <b>+1</b>, 게이지 <b>3칸</b>이 되면 문제 출제!<br>
       ❌ 오답을 고르면 정답을 바로 알려주지 않고 <b>힌트 1개</b>를 주고 다시 풀어요.<br>
-      💥 여러 줄을 한번에 없애거나 연속으로 없애면 <b>콤보 점수</b>가 폭발해요!
+      💥 여러 줄을 한번에 없애거나 연속으로 없애면 <b>콤보 점수</b>가 폭발해요!<br>
+      🎯 블록 아래 <b>점선 그림자</b>가 착지 위치를 알려줘요.
     </div>
     <button class="bigBtn" id="startBtn">게임 시작하기 ▶</button>
   </div>
@@ -218,7 +249,7 @@
 <!-- GAME OVER -->
 <div class="overlay hidden" id="overOverlay">
   <div class="card">
-    <h2>🏁 게임 종료!</h2>
+    <h2 id="overTitle">🏁 게임 종료!</h2>
     <div id="rankTitle"></div>
     <div id="rankSub"></div>
     <div class="statGrid">
@@ -283,6 +314,7 @@ const QUESTIONS = [
   {diff:'상', q:'한반도에 고인돌이 많이 분포하고 있다는 사실을 통해 알 수 있는 사실로 가장 알맞은 것은 무엇입니까?', choices:['한반도에는 지배 세력이 전혀 없었다','한반도 곳곳에 강한 지배 세력을 가진 집단들이 있었다','고인돌은 다른 나라에서 만들어져 옮겨온 것이다','한반도에는 청동기 시대가 없었다'], answer:1, hint:'고인돌을 만들려면 많은 사람을 동원할 힘 있는 지배자가 필요했다는 점을 떠올려 보세요.'},
   {diff:'상', q:"고조선 8조법에 '남에게 상처를 입힌 사람은 곡식으로 갚는다'는 조항이 있었다는 사실을 통해 알 수 있는 것으로 가장 알맞은 것은 무엇입니까?", choices:['고조선에는 화폐의 역할을 하는 것이 있었다','고조선 사람들은 곡식을 먹지 않았다','고조선에는 법이 존재하지 않았다','고조선은 사냥으로만 생활하였다'], answer:0, hint:"곡식으로 '갚는다'는 표현에서 곡식이 어떤 역할을 했는지 생각해 보세요."}
 ];
+const TOTAL_QUESTIONS = QUESTIONS.length;
 
 function shuffle(arr){
   const a = arr.slice();
@@ -302,11 +334,20 @@ function nextQuizQuestion(){
 }
 buildQuizQueue();
 
-/* ===================== 사운드 (WebAudio 간단 효과음) ===================== */
+/* ===================== 사운드 (WebAudio 효과음 + BGM) ===================== */
 let actx;
+let muted = false;
+function ensureAudio(){
+  if(!actx){
+    try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  }
+  if(actx && actx.state === 'suspended') actx.resume();
+}
 function beep(freqs, dur=0.12, type='sine', gap=0.02){
+  if(muted) return;
   try{
-    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    ensureAudio();
+    if(!actx) return;
     let t = actx.currentTime;
     freqs.forEach(f=>{
       const osc = actx.createOscillator();
@@ -323,6 +364,7 @@ function beep(freqs, dur=0.12, type='sine', gap=0.02){
 const sfx = {
   move: ()=>{},
   rotate: ()=>beep([440],0.05,'square'),
+  lock: ()=>beep([180],0.05,'square'),
   clear: (n)=>beep(n>=4?[523,659,784,1047]:[523,659],0.09,'triangle',0.03),
   correct: ()=>beep([523,659,784,1047],0.11,'sine',0.02),
   wrong: ()=>beep([220,180],0.14,'sawtooth',0.02),
@@ -330,14 +372,83 @@ const sfx = {
   levelup: ()=>beep([392,523,659],0.1,'square',0.02)
 };
 
+/* 간단한 8비트풍 반복 BGM (오실레이터로 직접 합성, 외부 음원 불필요) */
+const BGM_MELODY = [261.63,329.63,392.00,329.63,349.23,440.00,392.00,329.63];
+const BGM_BASS    = [130.81,130.81,174.61,174.61,174.61,174.61,130.81,130.81];
+let bgmTimer = null, bgmStep = 0;
+function playBgmNote(freq, vol, dur, type){
+  if(muted || !actx) return;
+  try{
+    const t = actx.currentTime;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(t); osc.stop(t+dur);
+  }catch(e){}
+}
+function startBGM(){
+  ensureAudio();
+  stopBGM();
+  bgmStep = 0;
+  bgmTimer = setInterval(()=>{
+    if(!muted){
+      playBgmNote(BGM_MELODY[bgmStep % BGM_MELODY.length], 0.045, 0.22, 'triangle');
+      playBgmNote(BGM_BASS[bgmStep % BGM_BASS.length], 0.05, 0.24, 'square');
+    }
+    bgmStep++;
+  }, 260);
+}
+function stopBGM(){
+  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+}
+function toggleMute(){
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+}
+document.getElementById('muteBtn').onclick = toggleMute;
+
 /* ===================== 테트리스 엔진 ===================== */
-const COLS=10, ROWS=20, BS=26;
+const COLS=10, ROWS=20, GAUGE_MAX=3;
+let BS = 30;
 const boardCanvas = document.getElementById('board');
 const bctx = boardCanvas.getContext('2d');
 const fxCanvas = document.getElementById('fx');
 const fctx = fxCanvas.getContext('2d');
 const nextCanvas = document.getElementById('nextCanvas');
 const nctx = nextCanvas.getContext('2d');
+
+function calcBS(){
+  const isNarrow = window.innerWidth <= 900;
+  const headerEl = document.querySelector('header');
+  const headerH = headerEl ? headerEl.offsetHeight : 80;
+  const reserveTop = headerH + 40;
+  const reserveBottom = isNarrow ? 100 : 20;
+  const availH = Math.max(200, window.innerHeight - reserveTop - reserveBottom);
+  const availW = isNarrow ? window.innerWidth*0.94 : window.innerWidth*0.5;
+  let bs = Math.floor(Math.min(availH/ROWS, availW/COLS));
+  bs = Math.max(22, Math.min(bs, 60));
+  return bs;
+}
+function applyBoardSize(){
+  BS = calcBS();
+  boardCanvas.width = COLS*BS;
+  boardCanvas.height = ROWS*BS;
+  fxCanvas.width = boardCanvas.width;
+  fxCanvas.height = boardCanvas.height;
+  const nextSize = Math.max(90, Math.min(150, Math.floor(BS*3.4)));
+  nextCanvas.width = nextSize;
+  nextCanvas.height = nextSize;
+  if(board) drawBoard();
+  if(nextType!==undefined) drawNext();
+}
+let resizeTimer;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(applyBoardSize, 150);
+});
 
 const PIECES = [
   { name:'I', color:'#22d3ee', m:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] },
@@ -350,8 +461,8 @@ const PIECES = [
 ];
 
 let board, cur, bag, nextType, score, level, totalLines, blocksPlaced, comboCounter, maxCombo;
-let gauge, dropInterval, dropTimer, lastTime, state, startTime, pausedAccum, pauseStart;
-let quizStats;
+let gauge, dropInterval, lastTime, state, startTime, pausedAccum, pauseStart;
+let quizStats, nickname = '플레이어';
 
 function freshBoard(){ return Array.from({length:ROWS}, ()=>Array(COLS).fill(-1)); }
 
@@ -390,6 +501,12 @@ function collides(m, row, col){
     }
   }
   return false;
+}
+
+function ghostDropRow(){
+  let gr = cur.row;
+  while(!collides(cur.m, gr+1, cur.col)) gr++;
+  return gr;
 }
 
 function merge(){
@@ -458,7 +575,7 @@ function floatText(text, color){
   el.className = 'floatText';
   el.textContent = text;
   el.style.color = color;
-  el.style.left = (boardCanvas.width/2 - 30) + 'px';
+  el.style.left = (boardCanvas.width/2 - 40) + 'px';
   el.style.top = (boardCanvas.height/2 - 40) + 'px';
   document.getElementById('boardWrap').appendChild(el);
   setTimeout(()=>el.remove(), 900);
@@ -477,6 +594,18 @@ function drawCell(ctx, x, y, size, color){
   ctx.strokeStyle = 'rgba(255,255,255,0.35)';
   ctx.lineWidth = 1;
   ctx.strokeRect(x+1.5,y+1.5,size-3,size-3);
+}
+function drawGhostCell(ctx, x, y, size, color){
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = color;
+  ctx.fillRect(x+2,y+2,size-4,size-4);
+  ctx.globalAlpha = 0.6;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5,4]);
+  ctx.strokeRect(x+2,y+2,size-4,size-4);
+  ctx.restore();
 }
 function lighten(hex, amt){
   const num = parseInt(hex.slice(1),16);
@@ -498,6 +627,16 @@ function drawBoard(){
     }
   }
   if(cur){
+    const gr = ghostDropRow();
+    if(gr > cur.row){
+      for(let r=0;r<cur.m.length;r++){
+        for(let c=0;c<cur.m.length;c++){
+          if(!cur.m[r][c]) continue;
+          const br = gr+r, bc = cur.col+c;
+          if(br>=0) drawGhostCell(bctx, bc*BS, br*BS, BS, cur.color);
+        }
+      }
+    }
     for(let r=0;r<cur.m.length;r++){
       for(let c=0;c<cur.m.length;c++){
         if(!cur.m[r][c]) continue;
@@ -512,7 +651,7 @@ function drawBoard(){
 function drawNext(){
   nctx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
   const p = PIECES[nextType];
-  const size = 20;
+  const size = Math.floor(nextCanvas.width/5);
   const m = p.m;
   const offX = (nextCanvas.width - m.length*size)/2;
   const offY = (nextCanvas.height - m.length*size)/2;
@@ -554,6 +693,7 @@ const LINE_SCORE = {1:100,2:300,3:500,4:800};
 
 function lockPiece(){
   merge();
+  sfx.lock();
   blocksPlaced++;
   const cleared = clearLines();
   if(cleared>0){
@@ -583,9 +723,9 @@ function lockPiece(){
   updateGaugeUI();
   updateHUD();
 
-  if(gauge >= 5){
-    pendingQuizCount += Math.floor(gauge/5);
-    gauge = gauge % 5;
+  if(gauge >= GAUGE_MAX){
+    pendingQuizCount += Math.floor(gauge/GAUGE_MAX);
+    gauge = gauge % GAUGE_MAX;
     updateGaugeUI();
     startQuizIfPending();
     return; // quiz will handle spawning next piece after answered
@@ -611,12 +751,18 @@ function updateHUD(){
 function updateGaugeUI(){
   const box = document.getElementById('gaugeBox');
   box.innerHTML = '';
-  for(let i=0;i<5;i++){
+  for(let i=0;i<GAUGE_MAX;i++){
     const d = document.createElement('div');
     d.className = 'gseg' + (i<gauge ? ' on' : '');
     box.appendChild(d);
   }
-  document.getElementById('gaugeHint').textContent = gauge>=5 ? '문제 출제 준비 완료!' : `${5-gauge}줄 더 지우면 문제가 출제돼요!`;
+  document.getElementById('gaugeHint').textContent = gauge>=GAUGE_MAX ? '문제 출제 준비 완료!' : `${GAUGE_MAX-gauge}줄 더 지우면 문제가 출제돼요!`;
+}
+function updateProgressUI(){
+  const solved = quizStats.attempted;
+  const pct = Math.min(100, Math.round(solved/TOTAL_QUESTIONS*100));
+  document.getElementById('progressText').textContent = `${solved} / ${TOTAL_QUESTIONS}`;
+  document.getElementById('progressBarInner').style.width = pct+'%';
 }
 
 /* ===================== 퀴즈 흐름 ===================== */
@@ -631,6 +777,7 @@ function startQuizIfPending(){
   curQuiz = nextQuizQuestion();
   quizWrongCount = 0;
   quizStats.attempted++;
+  updateProgressUI();
   renderQuiz();
   document.getElementById('quizOverlay').classList.remove('hidden');
 }
@@ -642,7 +789,7 @@ function renderQuiz(){
   document.getElementById('quizQ').textContent = curQuiz.q;
   document.getElementById('hintBox').style.display = 'none';
   document.getElementById('hintBox').textContent = '';
-  document.getElementById('attemptInfo').textContent = `남은 게이지 문제 ${pendingQuizCount>0 ? pendingQuizCount+'개 더 대기중' : ''}`;
+  document.getElementById('attemptInfo').textContent = pendingQuizCount>0 ? `대기 중인 문제 ${pendingQuizCount}개 더 있어요` : '';
   const box = document.getElementById('choicesBox');
   box.innerHTML = '';
   curQuiz.choices.forEach((choiceText, idx)=>{
@@ -704,6 +851,7 @@ function tick(){
 
 /* ===================== 시작 / 종료 ===================== */
 function resetGame(){
+  applyBoardSize();
   board = freshBoard();
   score = 0; level = 1; totalLines = 0; blocksPlaced = 0;
   comboCounter = 0; maxCombo = 0; gauge = 0; pendingQuizCount = 0;
@@ -712,19 +860,22 @@ function resetGame(){
   bag = null; nextType = undefined;
   buildQuizQueue();
   startTime = Date.now(); pausedAccum = 0;
-  updateHUD(); updateGaugeUI();
+  updateHUD(); updateGaugeUI(); updateProgressUI();
   document.getElementById('comboText').textContent = '-';
   newActivePiece();
   state = 'playing';
+  startBGM();
   tick();
 }
 
 function gameOver(){
   state = 'gameover';
+  stopBGM();
   sfx.gameover();
   const playMs = Date.now() - startTime - pausedAccum;
   const mm = Math.floor(playMs/60000);
   const ss = Math.floor((playMs%60000)/1000);
+  document.getElementById('overTitle').textContent = `🏁 ${nickname}님의 탐험 결과!`;
   document.getElementById('stScore').textContent = score;
   document.getElementById('stLines').textContent = totalLines;
   document.getElementById('stBlocks').textContent = totalLines*COLS;
@@ -783,7 +934,16 @@ function togglePause(){
 }
 document.getElementById('pauseBtn').onclick = togglePause;
 
+try{
+  const saved = localStorage.getItem('ttq_nickname');
+  if(saved) document.getElementById('nicknameInput').value = saved;
+}catch(e){}
+
 document.getElementById('startBtn').onclick = ()=>{
+  const val = document.getElementById('nicknameInput').value.trim();
+  nickname = val || '플레이어';
+  try{ localStorage.setItem('ttq_nickname', nickname); }catch(e){}
+  document.getElementById('playerTag').textContent = `🙋 ${nickname}님, 화이팅!`;
   document.getElementById('startOverlay').classList.add('hidden');
   resetGame();
 };
@@ -797,6 +957,7 @@ document.getElementById('closeBtn').onclick = ()=>{
 };
 
 /* 초기 화면용 빈 보드 렌더링 */
+applyBoardSize();
 board = freshBoard();
 drawBoard();
 })();
