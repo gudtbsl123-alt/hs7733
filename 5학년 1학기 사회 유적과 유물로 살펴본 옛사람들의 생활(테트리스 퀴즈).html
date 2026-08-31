@@ -6,13 +6,18 @@
 <title>유적유물 테트리스 퀴즈</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; -webkit-tap-highlight-color: transparent; user-select:none; }
-  html,body { height:100%; overflow:hidden; overscroll-behavior:none; touch-action:none; }
+  /* 문서가 자연스럽게 세로 스크롤되도록 둔다.
+     예전에는 overflow:hidden + touch-action:none 이라, 화면이 세로로 길어지는 기기에서
+     아래쪽 조작 버튼이 잘린 채 스크롤조차 되지 않아 누를 수 없었다. */
+  html { height:100%; }
+  body { min-height:100%; overscroll-behavior-y:contain; -webkit-text-size-adjust:100%; }
   body {
     background: radial-gradient(circle at 15% 20%, #241a4d 0%, #0a0620 45%, #050310 100%);
     color:#f4f0ff; position:relative;
   }
   #stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
-  .wrap { position:relative; z-index:1; height:100dvh; display:flex; flex-direction:column; align-items:center; padding:10px 14px 12px; }
+  /* 높이를 고정하지 않는다. 내용이 길어지면 문서가 늘어나 그대로 스크롤된다. */
+  .wrap { position:relative; z-index:1; min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:10px 14px 24px; }
 
   header { text-align:center; margin-bottom:6px; }
   header h1 {
@@ -180,7 +185,7 @@
   .achToastName { font-size:13.5px; font-weight:700; }
 
   @media (max-width:900px) {
-    .wrap { height:auto; min-height:100dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; touch-action:pan-y; padding-bottom:24px; }
+    .wrap { padding-bottom:30px; }
     header { margin-bottom:2px; }
     header h1 { font-size:19px; }
     header p { font-size:11px; }
@@ -1304,10 +1309,13 @@ document.addEventListener('keydown', (e)=>{
 
 function bindTouch(id, fn){
   const el = document.getElementById(id);
-  el.addEventListener('pointerdown', (e)=>{
-    e.preventDefault();
+  // preventDefault 를 하지 않는다. pointerdown 에서 기본동작을 막으면 그 버튼 위에서
+  // 시작한 손가락 드래그로는 페이지를 스크롤할 수 없어, 조작판이 화면을 가릴 때
+  // 아래 내용으로 내려가지 못하는 문제가 생긴다.
+  // touch-action:manipulation 이 이미 더블탭 확대와 클릭 지연을 막아준다.
+  el.addEventListener('pointerdown', ()=>{
     if(state==='playing') fn();
-  }, { passive:false });
+  });
   el.addEventListener('contextmenu', (e)=>e.preventDefault());
 }
 bindTouch('btnLeft', ()=>tryMove(0,-1));
