@@ -6,7 +6,11 @@
 <title>분수 베이커리</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;}
-  html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none;}
+  /* 문서 전체가 자연스럽게 세로 스크롤되도록 둔다.
+     예전에는 overflow:hidden + touch-action:none 이라 조각 담기처럼 화면이 길어지는
+     경우 아래 내용이 잘린 채 스크롤조차 되지 않아 버튼을 누를 수 없었다. */
+  html{height:100%;}
+  body{min-height:100%;overscroll-behavior-y:contain;-webkit-text-size-adjust:100%;}
   body{
     background:
       radial-gradient(circle at 12% 15%, #ffe8d6 0%, transparent 45%),
@@ -18,10 +22,10 @@
   .floatEmoji{position:absolute;font-size:26px;opacity:.20;animation:floatUpSlow linear infinite;}
   @keyframes floatUpSlow{0%{transform:translateY(0) rotate(0deg);}100%{transform:translateY(-115vh) rotate(360deg);}}
 
-  /* 조각 담기 영역이 켜지면 세로로 길어질 수 있어, 잘려서 못 누르는 일이 없도록 항상 스크롤 가능하게 둔다 */
+  /* 높이를 고정하지 않는다. 내용이 길어지면 문서가 그대로 늘어나 body가 스크롤된다. */
   .wrap{
-    position:relative;z-index:1;height:100dvh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
-    display:flex;flex-direction:column;align-items:center;padding:10px 14px 18px;
+    position:relative;z-index:1;min-height:100dvh;
+    display:flex;flex-direction:column;align-items:center;padding:10px 14px 28px;
   }
 
   /* ── 헤더 ── */
@@ -353,7 +357,7 @@
 
   /* 반응형 */
   @media (max-width:940px){
-    .wrap{height:auto;min-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-bottom:22px;}
+    .wrap{padding-bottom:30px;}
     header h1{font-size:21px;}
     header p{font-size:11.5px;}
     .stage{flex-direction:column;align-items:center;gap:11px;}
