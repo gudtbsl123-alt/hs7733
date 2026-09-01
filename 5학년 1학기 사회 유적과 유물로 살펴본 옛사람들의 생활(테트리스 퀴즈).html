@@ -14,16 +14,49 @@
   html { height:100%; }
   body { min-height:100%; overscroll-behavior-y:contain; -webkit-text-size-adjust:100%; }
   body {
-    background: radial-gradient(circle at 15% 20%, #241a4d 0%, #0a0620 45%, #050310 100%);
+    /* 시대에 따라 색이 바뀐다. 아래 .era-* 규칙이 이 변수만 갈아 끼운다. */
+    --era-1:#241a4d; --era-2:#0a0620; --era-3:#050310; --era-glow:rgba(124,58,237,0.15);
+    background: radial-gradient(circle at 15% 20%, var(--era-1) 0%, var(--era-2) 45%, var(--era-3) 100%);
     color:#f4f0ff; position:relative;
   }
-  #stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
-  /* 높이를 고정하지 않는다. 내용이 길어지면 문서가 늘어나 그대로 스크롤된다. */
-  .wrap { position:relative; z-index:1; min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:10px 14px 24px; }
+  /* 구석기 — 동굴 속 모닥불빛 */
+  body.era-paleo  { --era-1:#3a2415; --era-2:#150c07; --era-3:#080402; --era-glow:rgba(251,146,60,0.18); }
+  /* 신석기 — 강가에 정착한 초록빛 */
+  body.era-neo    { --era-1:#123a2e; --era-2:#07160f; --era-3:#030805; --era-glow:rgba(52,211,153,0.18); }
+  /* 청동기 — 청동빛 푸른 새벽 */
+  body.era-bronze { --era-1:#1a3350; --era-2:#08131f; --era-3:#03070c; --era-glow:rgba(96,165,250,0.20); }
+  /* 고조선 — 왕국의 보랏빛 */
+  body.era-gojo   { --era-1:#3a1c52; --era-2:#170a22; --era-3:#08030d; --era-glow:rgba(217,70,239,0.22); }
+  /* 배경 전환을 부드럽게 보여 주는 겹layer */
+  body::after {
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background: radial-gradient(circle at 15% 20%, var(--era-1) 0%, var(--era-2) 45%, var(--era-3) 100%);
+    transition: background 1.4s ease;
+  }
 
-  header { text-align:center; margin-bottom:6px; }
+  /* 지금 시대 표시 */
+  #eraTag {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:13px; font-weight:800; color:#ffd9a0;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16);
+    padding:4px 13px; border-radius:999px; margin-top:6px;
+    transition: all .5s ease;
+  }
+  #eraTag .eraIcon { font-size:15px; }
+  #eraTag.eraPop { animation: eraPop 1s ease; }
+  @keyframes eraPop {
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.22); box-shadow:0 0 26px rgba(255,224,102,.7); }
+    100%{ transform:scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){ #eraTag.eraPop { animation:none; } }
+  #stars { position:fixed; inset:0; z-index:1; pointer-events:none; }
+  /* 높이를 고정하지 않는다. 내용이 길어지면 문서가 늘어나 그대로 스크롤된다. */
+  .wrap { position:relative; z-index:2; min-height:100dvh; display:flex; flex-direction:column; align-items:center; padding:10px 14px 24px; }
+
+  header { text-align:center; margin-bottom:4px; }
   header h1 {
-    font-size:30px; font-weight:900; letter-spacing:0.5px;
+    font-size:27px; font-weight:900; letter-spacing:0.5px;
     background:linear-gradient(90deg,#7dd3fc,#c4b5fd,#f0abfc,#fbbf24);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     background-size:200% auto; animation:hueMove 6s linear infinite;
@@ -60,13 +93,13 @@
   .tbtn.wide { width:auto; padding:0 14px; font-size:14px; font-weight:800; }
   .tbtn:active { background:rgba(255,255,255,0.28); transform:scale(0.92); }
 
-  .side { width:280px; display:flex; flex-direction:column; gap:12px; }
+  .side { width:280px; display:flex; flex-direction:column; gap:10px; }
   .panel {
-    background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px;
+    background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:13px 15px;
     backdrop-filter: blur(10px);
   }
-  .panel h3 { font-size:13px; color:#9fb0d0; letter-spacing:1px; margin-bottom:9px; font-weight:700; }
-  .scoreVal { font-size:34px; font-weight:900; color:#ffe066; text-shadow:0 0 18px rgba(255,224,102,0.5); }
+  .panel h3 { font-size:12.5px; color:#9fb0d0; letter-spacing:0.8px; margin-bottom:7px; font-weight:700; }
+  .scoreVal { font-size:31px; font-weight:900; color:#ffe066; text-shadow:0 0 18px rgba(255,224,102,0.5); }
   .rowline { display:flex; justify-content:space-between; font-size:15px; color:#d7ddf0; margin-top:7px; }
   .rowline b { color:#fff; }
 
@@ -75,21 +108,45 @@
   .holdNextCol .lbl { font-size:11px; color:#9fb0d0; margin-bottom:4px; font-weight:700; }
   #holdCanvas, #nextCanvas { display:block; background:#0b0a1a; border-radius:10px; }
 
+  /* 합친 점수 패널 */
+  .scoreHead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .scoreHead .comboWrap { text-align:right; }
+  .statRow { display:flex; gap:8px; margin-top:10px; }
+  .stat { flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); border-radius:11px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; }
+  .stat span { font-size:13px; color:#9fb0d0; }
+  .stat b { font-size:17px; color:#fff; }
+  .panel h3 .hSub { font-size:11px; color:#7d8cab; letter-spacing:0; font-weight:600; margin-left:4px; }
+  .panelDiv { height:1px; background:rgba(255,255,255,0.10); margin:11px 0 9px; }
+
+  /* 게이지 — 교실 TV에서도 보이도록 채워질 때 빛나게 */
   .gaugeBox { display:flex; gap:6px; margin-top:6px; }
-  .gseg { flex:1; height:20px; border-radius:7px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); transition:all .25s; }
-  .gseg.on { background:linear-gradient(180deg,#34d399,#059669); box-shadow:0 0 12px rgba(52,211,153,0.7); border-color:transparent; }
-  .gaugeHint { font-size:13px; color:#8fd6b0; margin-top:8px; }
+  .gseg { flex:1; height:22px; border-radius:7px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.14); transition:all .25s; position:relative; overflow:hidden; }
+  .gseg.on {
+    background:linear-gradient(180deg,#6ee7b7,#10b981 55%,#047857);
+    box-shadow:0 0 16px rgba(52,211,153,0.85), inset 0 1px 0 rgba(255,255,255,0.5);
+    border-color:transparent; animation: segPop .32s ease;
+  }
+  .gseg.on::after { content:""; position:absolute; inset:0; background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%); transform:translateX(-120%); animation: segShine 2.2s ease-in-out infinite; }
+  @keyframes segPop { 0%{transform:scaleY(0.5);} 60%{transform:scaleY(1.18);} 100%{transform:scaleY(1);} }
+  @keyframes segShine { 0%,60%{transform:translateX(-120%);} 100%{transform:translateX(120%);} }
+  /* 게이지가 가득 차면 상자 전체가 두근거린다 */
+  .gaugeBox.ready { animation: gaugeReady .85s ease-in-out infinite; }
+  @keyframes gaugeReady { 0%,100%{filter:brightness(1);} 50%{filter:brightness(1.45) drop-shadow(0 0 12px rgba(52,211,153,.8));} }
+  .gaugeHint { font-size:13px; color:#8fd6b0; margin-top:8px; font-weight:700; }
+  .gaugeHint.ready { color:#ffe066; }
+  @media (prefers-reduced-motion: reduce){
+    .gseg.on::after, .gaugeBox.ready { animation:none; }
+  }
 
   .progressRow { font-size:17px; font-weight:800; color:#7dd3fc; margin-bottom:8px; }
   .progressBarOuter { height:14px; border-radius:8px; background:rgba(255,255,255,0.08); overflow:hidden; border:1px solid rgba(255,255,255,0.12); }
   .progressBarInner { height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#c084fc); transition:width .3s; }
 
-  .comboWrap { text-align:center; }
-  #comboText { font-size:26px; font-weight:900; color:#ff6ec7; text-shadow:0 0 16px rgba(255,110,199,0.7); min-height:32px; }
+  #comboText { font-size:24px; font-weight:900; color:#ff6ec7; text-shadow:0 0 16px rgba(255,110,199,0.7); min-height:30px; line-height:1.15; }
 
   .ctrlRow { display:flex; gap:8px; }
   .ctrlBtn {
-    padding:11px; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+    padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
     background:rgba(255,255,255,0.08); color:#fff; font-weight:700; font-size:14px; cursor:pointer; touch-action:manipulation;
   }
   .ctrlBtn:hover { background:rgba(255,255,255,0.18); }
@@ -213,6 +270,7 @@
     <h1>🧱 유적유물 테트리스 퀴즈</h1>
     <p>5학년 사회 1단원 · 선사 시대와 고조선 사람들의 생활</p>
     <div id="playerTag"></div>
+  <div id="eraTag"><span class="eraIcon">🦴</span> 구석기 시대</div>
   </header>
 
   <div class="stage">
@@ -232,11 +290,23 @@
     </div>
 
     <div class="side">
+      <!-- 점수 + 콤보를 한 패널로. 패널이 다섯 개나 세로로 쌓이면
+           노트북 화면에서 아래쪽 패널이 잘려 보이지 않았다. -->
       <div class="panel">
-        <h3>SCORE</h3>
-        <div class="scoreVal" id="scoreVal">0</div>
-        <div class="rowline"><span>레벨</span><b id="levelVal">1</b></div>
-        <div class="rowline"><span>줄 수</span><b id="linesVal">0</b></div>
+        <div class="scoreHead">
+          <div>
+            <h3>SCORE</h3>
+            <div class="scoreVal" id="scoreVal">0</div>
+          </div>
+          <div class="comboWrap">
+            <h3>COMBO</h3>
+            <div id="comboText">-</div>
+          </div>
+        </div>
+        <div class="statRow">
+          <div class="stat"><span>레벨</span><b id="levelVal">1</b></div>
+          <div class="stat"><span>줄 수</span><b id="linesVal">0</b></div>
+        </div>
       </div>
 
       <div class="panel">
@@ -247,21 +317,15 @@
         </div>
       </div>
 
+      <!-- 게이지와 진행 상황도 한 패널로 합쳤다 -->
       <div class="panel">
-        <h3>문제풀이 게이지 (3줄 = 문제 출제)</h3>
+        <h3>문제풀이 게이지 <span class="hSub">3줄 = 문제 출제</span></h3>
         <div class="gaugeBox" id="gaugeBox"></div>
         <div class="gaugeHint" id="gaugeHint">1줄 터트릴 때마다 1칸씩 채워져요!</div>
-      </div>
-
-      <div class="panel">
+        <div class="panelDiv"></div>
         <h3>문제 진행 상황</h3>
         <div class="progressRow"><span id="progressText">0 / 20</span></div>
         <div class="progressBarOuter"><div class="progressBarInner" id="progressBarInner"></div></div>
-      </div>
-
-      <div class="panel comboWrap">
-        <h3 style="text-align:center;">COMBO</h3>
-        <div id="comboText">-</div>
       </div>
 
       <div class="ctrlRow">
@@ -836,19 +900,60 @@ function floatText(text, color){
   setTimeout(()=>el.remove(), 900);
 }
 
+/** 블록 한 칸을 입체적으로 그린다.
+    위에서 빛이 오는 것처럼 위·왼쪽은 밝게, 아래·오른쪽은 어둡게 칠하고
+    윗면에 하이라이트 띠를 얹어 평평한 사각형이 아니라 '조각'처럼 보이게 한다. */
 function drawCell(ctx, x, y, size, color){
-  const g = ctx.createLinearGradient(x,y,x+size,y+size);
-  g.addColorStop(0, lighten(color, 25));
-  g.addColorStop(1, color);
+  const p = Math.max(1, size*0.055);          // 칸 사이 여백
+  const b = Math.max(2, size*0.16);           // 베벨 두께
+  const w = size - p*2, h = size - p*2;
+  const X = x+p, Y = y+p;
+  const r = Math.max(2, size*0.14);           // 둥근 모서리
+
   ctx.save();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 8;
-  ctx.fillStyle = g;
-  ctx.fillRect(x+1,y+1,size-2,size-2);
+  // 몸통: 위에서 아래로 밝음 → 어두움
+  const body = ctx.createLinearGradient(X, Y, X, Y+h);
+  body.addColorStop(0,   lighten(color, 34));
+  body.addColorStop(0.5, color);
+  body.addColorStop(1,   lighten(color, -34));
+  ctx.shadowColor = color; ctx.shadowBlur = size*0.28;
+  roundRect(ctx, X, Y, w, h, r); ctx.fillStyle = body; ctx.fill();
   ctx.restore();
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+
+  // 윗면·왼쪽 베벨 (밝은 면)
+  ctx.save();
+  roundRect(ctx, X, Y, w, h, r); ctx.clip();
+  ctx.fillStyle = 'rgba(255,255,255,0.34)';
+  ctx.beginPath();
+  ctx.moveTo(X, Y); ctx.lineTo(X+w, Y); ctx.lineTo(X+w-b, Y+b); ctx.lineTo(X+b, Y+b); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.moveTo(X, Y); ctx.lineTo(X+b, Y+b); ctx.lineTo(X+b, Y+h-b); ctx.lineTo(X, Y+h); ctx.closePath(); ctx.fill();
+  // 아랫면·오른쪽 베벨 (어두운 면)
+  ctx.fillStyle = 'rgba(0,0,0,0.30)';
+  ctx.beginPath();
+  ctx.moveTo(X, Y+h); ctx.lineTo(X+b, Y+h-b); ctx.lineTo(X+w-b, Y+h-b); ctx.lineTo(X+w, Y+h); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.20)';
+  ctx.beginPath();
+  ctx.moveTo(X+w, Y); ctx.lineTo(X+w, Y+h); ctx.lineTo(X+w-b, Y+h-b); ctx.lineTo(X+w-b, Y+b); ctx.closePath(); ctx.fill();
+  // 윗면 광택 한 줄
+  ctx.fillStyle = 'rgba(255,255,255,0.42)';
+  ctx.fillRect(X+b*1.1, Y+b*0.42, w-b*2.2, Math.max(1, size*0.05));
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
   ctx.lineWidth = 1;
-  ctx.strokeRect(x+1.5,y+1.5,size-3,size-3);
+  roundRect(ctx, X+0.5, Y+0.5, w-1, h-1, r); ctx.stroke();
+}
+function roundRect(ctx, x, y, w, h, r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y,   x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x,   y+h, r);
+  ctx.arcTo(x,   y+h, x,   y,   r);
+  ctx.arcTo(x,   y,   x+w, y,   r);
+  ctx.closePath();
 }
 function drawGhostCell(ctx, x, y, size, color){
   ctx.save();
@@ -862,10 +967,11 @@ function drawGhostCell(ctx, x, y, size, color){
   ctx.strokeRect(x+2,y+2,size-4,size-4);
   ctx.restore();
 }
+/** amt 가 양수면 밝게, 음수면 어둡게 만든다 */
 function lighten(hex, amt){
   const num = parseInt(hex.slice(1),16);
-  let r=(num>>16)+amt, g=((num>>8)&0xff)+amt, b=(num&0xff)+amt;
-  r=Math.min(255,r); g=Math.min(255,g); b=Math.min(255,b);
+  const cl = v => Math.max(0, Math.min(255, v));
+  const r=cl((num>>16)+amt), g=cl(((num>>8)&0xff)+amt), b=cl((num&0xff)+amt);
   return `rgb(${r},${g},${b})`;
 }
 
@@ -1042,13 +1148,44 @@ function updateGaugeUI(){
     d.className = 'gseg' + (i<gauge ? ' on' : '');
     box.appendChild(d);
   }
-  document.getElementById('gaugeHint').textContent = gauge>=GAUGE_MAX ? '문제 출제 준비 완료!' : `${GAUGE_MAX-gauge}줄 더 지우면 문제가 출제돼요!`;
+  const ready = gauge >= GAUGE_MAX;
+  box.classList.toggle('ready', ready);
+  const hint = document.getElementById('gaugeHint');
+  hint.classList.toggle('ready', ready);
+  hint.textContent = ready ? '✨ 문제 출제 준비 완료!' : `${GAUGE_MAX-gauge}줄 더 지우면 문제가 출제돼요!`;
 }
 function updateProgressUI(){
   const solved = quizStats.attempted;
   const pct = Math.min(100, Math.round(solved/TOTAL_QUESTIONS*100));
   document.getElementById('progressText').textContent = `${solved} / ${TOTAL_QUESTIONS}`;
   document.getElementById('progressBarInner').style.width = pct+'%';
+  updateEra(solved);
+}
+
+/* ===================== 시대 배경 =====================
+   문제를 풀수록 배경이 구석기 → 신석기 → 청동기 → 고조선으로 바뀐다.
+   화면만 바뀌는 연출이지만, 지금 배우는 시대가 무엇인지 계속 눈에 들어온다. */
+const ERAS = [
+  { key:'paleo',  name:'구석기 시대', icon:'🦴', from:0  },
+  { key:'neo',    name:'신석기 시대', icon:'🏺', from:6  },
+  { key:'bronze', name:'청동기 시대', icon:'🗡️', from:12 },
+  { key:'gojo',   name:'고조선',      icon:'🏛️', from:17 }
+];
+let curEraKey = null;
+function updateEra(solved){
+  let era = ERAS[0];
+  for(const e of ERAS) if(solved >= e.from) era = e;
+  const tag = document.getElementById('eraTag');
+  if(tag) tag.innerHTML = `<span class="eraIcon">${era.icon}</span> ${era.name}`;
+  if(era.key === curEraKey) return;
+  const first = curEraKey === null;
+  curEraKey = era.key;
+  document.body.classList.remove('era-paleo','era-neo','era-bronze','era-gojo');
+  document.body.classList.add('era-'+era.key);
+  if(!first){
+    if(tag){ tag.classList.remove('eraPop'); void tag.offsetWidth; tag.classList.add('eraPop'); }
+    floatText(era.icon+' '+era.name+'!', '#ffe066');
+  }
 }
 
 /* ===================== 퀴즈 흐름 ===================== */
@@ -1153,6 +1290,7 @@ function resetGame(){
   bag = null;
   holdType = null; holdUsed = false;
   lastClearedCount = 0; consecutiveFirstTryCorrect = 0;
+  curEraKey = null;   // 다시 시작하면 시대도 처음(구석기)부터
   sessionUnlocked = [];
   nextQueue = [drawFromBag(), drawFromBag(), drawFromBag()];
   buildQuizQueue();
