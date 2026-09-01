@@ -209,7 +209,17 @@
   /* 선택지 */
   /* 보기 4개 — 사이드바 하단 조작 버튼(가게 닫기/음소거/전체화면)과 같은 높이에 오도록
      주문판과의 간격을 넓혀 아래로 내린다 */
-  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px;}
+  .choiceCard{
+    margin-top:24px;
+    background:linear-gradient(165deg,#fffdf9,#fff4e6);
+    border:3px solid #f0c9a4;border-radius:24px;padding:13px 15px 15px;
+    box-shadow:0 8px 0 #e9b98f,0 16px 30px rgba(180,110,60,.20);
+  }
+  .choiceCardHead{
+    font-size:12.5px;font-weight:900;color:#b0805f;letter-spacing:.3px;
+    text-align:center;margin-bottom:10px;
+  }
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .choice{
     display:flex;align-items:center;justify-content:center;gap:8px;min-height:62px;
     background:linear-gradient(170deg,#fff,#fff3e4);border:2.5px solid #f2c6a0;border-radius:17px;
@@ -251,8 +261,10 @@
   .progressRow{font-size:16px;font-weight:900;color:#ea580c;margin-bottom:6px;}
 
   .starRow{font-size:22px;letter-spacing:2px;line-height:1.25;}
-  #comboText{font-size:23px;font-weight:900;color:#ec4899;text-align:center;min-height:30px;line-height:1.3;}
-  .comboWrap{text-align:center;}
+  #comboText{font-size:21px;font-weight:900;color:#ec4899;text-align:right;min-height:26px;line-height:1.2;}
+  .comboWrap{text-align:right;}
+  .sideHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;}
+  .panelDiv{height:2px;background:#f6ddc5;border-radius:2px;margin:11px 0 9px;}
 
   /* 만든 빵 진열장 */
   #shelf{display:flex;flex-wrap:wrap;gap:5px;min-height:34px;align-content:flex-start;}
@@ -426,7 +438,13 @@
         <div class="questionBox" id="questionBox"></div>
       </div>
 
-      <div class="choices" id="choicesBox"></div>
+      <!-- 보기를 주문판과 같은 재질의 카드로 감쌌다.
+           카드 밖에 버튼만 떠 있던 때보다 '한 화면'으로 읽힌다.
+           바깥 여백은 그대로라 사이드바 아래 버튼과의 일직선 정렬도 유지된다. -->
+      <div class="choiceCard" id="choiceCard">
+        <div class="choiceCardHead">알맞은 답을 골라 손님께 드리세요</div>
+        <div class="choices" id="choicesBox"></div>
+      </div>
 
       <!-- 조각 담기(조작식) 영역 -->
       <div class="buildArea" id="buildArea">
@@ -459,27 +477,29 @@
 
     <!-- 사이드 -->
     <div class="side">
+      <!-- 패널이 다섯 개나 세로로 늘어서 시선이 흩어지던 것을 세 덩어리로 합쳤다 -->
       <div class="panel">
-        <h3>💰 오늘의 매출</h3>
-        <div class="scoreVal" id="scoreVal">0</div>
+        <div class="sideHead">
+          <div>
+            <h3>💰 오늘의 매출</h3>
+            <div class="scoreVal" id="scoreVal">0</div>
+          </div>
+          <div class="comboWrap">
+            <h3>🔥 연속</h3>
+            <div id="comboText">-</div>
+          </div>
+        </div>
         <div class="rowline"><span>손님 만족</span><b id="satisfyVal">100%</b></div>
         <div class="rowline"><span>한 번에 성공</span><b id="perfectVal">0</b></div>
+        <div class="panelDiv"></div>
+        <h3>⭐ 가게 별점</h3>
+        <div class="starRow" id="starRow">☆☆☆☆☆</div>
       </div>
 
       <div class="panel">
         <h3>📋 주문 진행</h3>
         <div class="progressRow" id="progressText">0 / 20</div>
         <div class="progressBarOuter"><div class="progressBarInner" id="progressBarInner"></div></div>
-      </div>
-
-      <div class="panel">
-        <h3>⭐ 가게 별점</h3>
-        <div class="starRow" id="starRow">☆☆☆☆☆</div>
-      </div>
-
-      <div class="panel comboWrap">
-        <h3 style="text-align:center;">🔥 연속 성공</h3>
-        <div id="comboText">-</div>
       </div>
 
       <div class="panel">
@@ -813,27 +833,30 @@ const QUESTIONS = [
 const TOTAL_Q = QUESTIONS.length;
 
 /* ══════════ 케이크 SVG 렌더링 ══════════ */
+/* 맛별 색.
+   교실 TV·빔프로젝터에서는 연한 파스텔이 빈 접시와 잘 구분되지 않아,
+   채워진 조각(body)의 채도를 올리고 테두리(edge)를 더 진하게 잡았다. */
 const FLAVORS = {
-  strawberry:{body:'#ffd6e0',edge:'#f9a8c4',top:'#ff6b9d',crumb:'#ffeef3'},
-  vanilla   :{body:'#fff0cc',edge:'#f5cf82',top:'#f9b64b',crumb:'#fffaeb'},
-  choco     :{body:'#c79268',edge:'#9c6640',top:'#6b3f22',crumb:'#e8cbaf'},
-  apple     :{body:'#ffe0b2',edge:'#e9a95c',top:'#d97706',crumb:'#fff3e0'},
-  birthday  :{body:'#ffd9f0',edge:'#f3a3d8',top:'#e0399a',crumb:'#ffeef8'},
-  bread     :{body:'#f7dcb4',edge:'#d9a86a',top:'#b57c3c',crumb:'#fdf1e0'},
-  donut     :{body:'#ffd0e8',edge:'#f79fd0',top:'#ff5fa8',crumb:'#ffeaf5'},
-  croissant :{body:'#fbdfa8',edge:'#dfae5d',top:'#c2842f',crumb:'#fdf3dd'},
-  baguette  :{body:'#f0d4a8',edge:'#cfa363',top:'#a9762f',crumb:'#fbeed6'},
-  waffle    :{body:'#fde3ad',edge:'#e2b767',top:'#c08a2c',crumb:'#fef5df'},
-  pancake   :{body:'#fbd9a0',edge:'#dfae5d',top:'#b9782b',crumb:'#fdf0d8'},
-  pretzel   :{body:'#dcb183',edge:'#b78450',top:'#7d5326',crumb:'#f2ddc4'},
-  pudding   :{body:'#ffe9ae',edge:'#f2c368',top:'#d99a22',crumb:'#fff6dd'},
-  chocolate :{body:'#a9714a',edge:'#7d4a28',top:'#4d2a13',crumb:'#d8b294'},
-  royal     :{body:'#ffe9b0',edge:'#e8bf5e',top:'#c99311',crumb:'#fff7dc'},
-  pizza     :{body:'#ffd79a',edge:'#e2a24f',top:'#c85f2b',crumb:'#fff0d6'},
-  blueberry :{body:'#d6d4f7',edge:'#a3a0e6',top:'#5b56c9',crumb:'#eeedfc'},
-  ribbon    :{body:'#ffd4e4',edge:'#f5a0c2',top:'#e04f8c',crumb:'#ffeaf2'},
-  chestnut  :{body:'#e8c9a0',edge:'#c39a63',top:'#8a5d28',crumb:'#f7e8d3'},
-  honey     :{body:'#ffe1a3',edge:'#efbc5c',top:'#cd8f1c',crumb:'#fff4d9'}
+  strawberry:{body:'#ffb3c8',edge:'#e8629a',top:'#e11d6f',crumb:'#ffe3ec'},
+  vanilla   :{body:'#ffe08a',edge:'#e0a52f',top:'#e8890a',crumb:'#fff6d9'},
+  choco     :{body:'#b4794d',edge:'#7a4a25',top:'#4a2a12',crumb:'#e3c3a4'},
+  apple     :{body:'#ffc47a',edge:'#d98324',top:'#b45309',crumb:'#ffeacd'},
+  birthday  :{body:'#ffb0e0',edge:'#dd5eb2',top:'#c01f7e',crumb:'#ffe0f4'},
+  bread     :{body:'#f0c58a',edge:'#c08840',top:'#8f5e22',crumb:'#fbe8cd'},
+  donut     :{body:'#ffaad8',edge:'#e560ac',top:'#e02589',crumb:'#ffdff0'},
+  croissant :{body:'#f7cd72',edge:'#c98f28',top:'#9c6712',crumb:'#fdeec4'},
+  baguette  :{body:'#e9bf7d',edge:'#b8863c',top:'#8a5c18',crumb:'#f8e4c2'},
+  waffle    :{body:'#fbd479',edge:'#cf9a2c',top:'#a2700f',crumb:'#fdefc8'},
+  pancake   :{body:'#f8c56f',edge:'#c68c2c',top:'#96600f',crumb:'#fce7bd'},
+  pretzel   :{body:'#cf9a5e',edge:'#9c6a2e',top:'#653f16',crumb:'#eccfae'},
+  pudding   :{body:'#ffd977',edge:'#dda426',top:'#b07c08',crumb:'#fff0c4'},
+  chocolate :{body:'#9a5f36',edge:'#63360f',top:'#3a1d07',crumb:'#cfa274'},
+  royal     :{body:'#ffd873',edge:'#d3a01e',top:'#a37806',crumb:'#fff0c2'},
+  pizza     :{body:'#ffc06e',edge:'#d9862b',top:'#b04713',crumb:'#ffe6c0'},
+  blueberry :{body:'#bcb8f2',edge:'#7a75d8',top:'#4038b8',crumb:'#e4e2fb'},
+  ribbon    :{body:'#ffb4cf',edge:'#ec6f9f',top:'#cf2f6e',crumb:'#ffdde9'},
+  chestnut  :{body:'#dfb47f',edge:'#ad7f42',top:'#6f4514',crumb:'#f3ddbf'},
+  honey     :{body:'#ffcf72',edge:'#dc9d24',top:'#ab7205',crumb:'#ffedc4'}
 };
 function flavorOf(name){ return FLAVORS[name] || FLAVORS.vanilla; }
 
@@ -861,8 +884,8 @@ function drawRoundCake(parent, cx, cy, r, denom, filled, fl, opts){
   g.appendChild(el('ellipse', {cx:cx, cy:cy+r*0.16, rx:r*1.22, ry:r*0.42, fill:'rgba(150,100,60,.10)'}));
   if(denom <= 1){
     const c = el('circle', {cx:cx, cy:cy, r:r,
-      fill: filled > 0 ? fl.body : '#fdf6ee',
-      stroke: filled > 0 ? fl.edge : '#e8d5c0', 'stroke-width':2, opacity:'0'});
+      fill: filled > 0 ? fl.body : '#f2e4d3',
+      stroke: filled > 0 ? fl.edge : '#d3b795', 'stroke-width':2, opacity:'0'});
     c.appendChild(el('animate', {attributeName:'opacity', from:'0', to:'1',
       dur:'0.3s', begin:`${opts.delay||0}s`, fill:'freeze'}));
     g.appendChild(c);
@@ -872,8 +895,8 @@ function drawRoundCake(parent, cx, cy, r, denom, filled, fl, opts){
       const isOn = i < filled;
       const p = el('path', {
         d: slicePath(cx, cy, r, i*step, (i+1)*step),
-        fill: isOn ? fl.body : '#fdf6ee',
-        stroke: isOn ? fl.edge : '#e8d5c0',
+        fill: isOn ? fl.body : '#f2e4d3',
+        stroke: isOn ? fl.edge : '#d3b795',
         'stroke-width': 2, 'stroke-linejoin':'round'
       });
       if(isOn){
@@ -922,7 +945,7 @@ function drawBar(parent, x, y, w, h, denom, filled, totalCells, fl, delay){
   const g = el('g', {});
   const cells = Math.max(totalCells, denom, 1);
   const cw = w / cells;
-  g.appendChild(el('rect', {x:x, y:y, width:w, height:h, rx:8, fill:'#fdf6ee', stroke:'#e8d5c0', 'stroke-width':2}));
+  g.appendChild(el('rect', {x:x, y:y, width:w, height:h, rx:8, fill:'#f2e4d3', stroke:'#d3b795', 'stroke-width':2}));
   for(let i=0;i<Math.min(filled, cells);i++){
     const r = el('rect', {x:(x+i*cw).toFixed(2), y:y, width:cw.toFixed(2), height:h,
       fill:fl.body, stroke:fl.edge, 'stroke-width':1.2, opacity:'0'});
@@ -1607,7 +1630,7 @@ function miniCakeSVG(denom, filled, size){
   } else {
     // 조각 1개 — 부채꼴을 크게 그려 한눈에 '조각'임을 알 수 있게 한다
     const step = 360/denom;
-    svg.appendChild(el('circle', {cx:50, cy:50, r:42, fill:'#fffaf3', stroke:'#e8d5c0',
+    svg.appendChild(el('circle', {cx:50, cy:50, r:42, fill:'#fffaf3', stroke:'#d3b795',
       'stroke-width':3, 'stroke-dasharray':'5 4'}));
     svg.appendChild(el('path', {d: slicePath(50, 50, 42, 0, step),
       fill:fl.body, stroke:fl.top, 'stroke-width':4, 'stroke-linejoin':'round'}));
@@ -1679,7 +1702,7 @@ function setupBuild(q){
   stockWhole = Math.max(3, (ans.w || 0) + 2);
   stockSlice = 0;
   document.getElementById('buildArea').classList.add('on');
-  document.getElementById('choicesBox').style.display = 'none';
+  document.getElementById('choiceCard').style.display = 'none';
   document.getElementById('buildHelpWhole').innerHTML = '통케이크를 누르면 접시에 담겨요.';
   document.getElementById('buildHelpSlice').innerHTML =
     `<b>쪼개기</b>를 누르면 통케이크 1판이 <b>${buildDen}조각</b>이 돼요.`;
@@ -1688,7 +1711,7 @@ function setupBuild(q){
 function teardownBuild(){
   buildOn = false;
   document.getElementById('buildArea').classList.remove('on');
-  document.getElementById('choicesBox').style.display = '';
+  document.getElementById('choiceCard').style.display = '';
 }
 document.getElementById('splitBtn').onclick = ()=>{
   if(!buildOn || state !== 'playing' || stockWhole <= 0) return;

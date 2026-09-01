@@ -8,45 +8,127 @@
 <title>✨에듀테크 게임 저장소✨</title>
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; }
-    body { min-height: 100dvh; overflow-x: hidden; color: #f8fafc; background: linear-gradient(-45deg, #071a52, #0f3460, #1b1b7a, #533483, #7c3aed, #c026d3, #ea580c); background-size: 400% 400%; animation: gradientMove 15s ease infinite; position: relative; }
+    /* ── 디자인 토큰 ─────────────────────────────────
+       색·간격·모서리·그림자를 한곳에서 관리한다.
+       게임이 늘어나도 화면 톤이 흐트러지지 않게 하는 기준값. */
+    :root{
+      --bg-scrim: linear-gradient(180deg, rgba(2,6,23,.62) 0%, rgba(2,6,23,.78) 100%);
+      --surface:      rgba(255,255,255,.07);
+      --surface-hi:   rgba(255,255,255,.12);
+      --line:         rgba(255,255,255,.16);
+      --line-strong:  rgba(255,255,255,.30);
+      --ink:      #f8fafc;
+      --ink-mid:  #cbd5e1;
+      --ink-dim:  #94a3b8;
+      --r-sm: 12px;  --r-md: 16px;  --r-lg: 22px;  --r-pill: 999px;
+      --sp-1: 6px; --sp-2: 10px; --sp-3: 16px; --sp-4: 24px; --sp-5: 36px;
+      --shadow-card: 0 10px 30px rgba(2,6,23,.38);
+      --shadow-lift: 0 18px 44px rgba(2,6,23,.52);
+      /* 과목별 색 — 카드 위 띠와 배지에 함께 쓴다.
+         color-mix 는 조금 오래된 아이패드 사파리에서 지원되지 않아
+         투명도까지 미리 계산한 값을 함께 둔다. */
+      --s-국어:#f472b6; --s-국어-soft:rgba(244,114,182,.20); --s-국어-line:rgba(244,114,182,.45);
+      --s-수학:#60a5fa; --s-수학-soft:rgba(96,165,250,.20);  --s-수학-line:rgba(96,165,250,.45);
+      --s-사회:#fb923c; --s-사회-soft:rgba(251,146,60,.20);  --s-사회-line:rgba(251,146,60,.45);
+      --s-과학:#34d399; --s-과학-soft:rgba(52,211,153,.20);  --s-과학-line:rgba(52,211,153,.45);
+      --s-창체:#a78bfa; --s-창체-soft:rgba(167,139,250,.20); --s-창체-line:rgba(167,139,250,.45);
+      --s-기타:#94a3b8; --s-기타-soft:rgba(148,163,184,.20); --s-기타-line:rgba(148,163,184,.45);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body {
+      min-height: 100dvh; overflow-x: hidden; color: var(--ink);
+      background: linear-gradient(-45deg, #071a52, #0f3460, #1b1b7a, #533483, #7c3aed, #c026d3, #ea580c);
+      background-size: 400% 400%; animation: gradientMove 28s ease infinite; position: relative;
+    }
     @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    body::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.03) 0%, transparent 40%); pointer-events: none; z-index: 0; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 80px 20px; position: relative; z-index: 1; }
-    header { text-align: center; margin-bottom: 30px; }
-    .admin-trigger { display: inline-block; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 10px 20px; border-radius: 30px; color: #f8fafc; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-bottom: 24px; text-decoration: none; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-    .hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(to right, #ffffff, #f1f5f9, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
-    .category-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-    .tab-btn { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 10px 24px; border-radius: 30px; color: #cbd5e1; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-    .tab-btn:hover { background: rgba(255, 255, 255, 0.2); color: #fff; }
-    .tab-btn.active { background: #ffffff; color: #0f172a; border-color: #ffffff; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25); }
+    /* 어두운 막을 한 겹 덮어 카드가 배경에 묻히지 않게 한다 */
+    body::before { content:""; position: fixed; inset: 0; background: var(--bg-scrim); pointer-events: none; z-index: 0; }
+    @media (prefers-reduced-motion: reduce){ body { animation: none; } }
 
-    .subject-tabs { margin-bottom: 35px; gap: 8px; }
-    .subject-btn { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 20px; border-radius: 20px; color: #94a3b8; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-    .subject-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
-    .subject-btn.active { background: #cbd5e1; color: #0f172a; border-color: #cbd5e1; box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15); }
+    .container { max-width: 1220px; margin: 0 auto; padding: 32px 20px 80px; position: relative; z-index: 1; }
 
-    .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
-    .game-card { background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 28px; display: flex; flex-direction: column; transition: all 0.35s ease; }
-    .game-card h3 { font-size: 20px; font-weight: 700; line-height: 1.4; word-break: keep-all; }
-    .launch-btn { margin-top: auto; background: #ffffff; color: #0f172a; text-align: center; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; border: none; transition: background 0.2s; }
+    /* ── 헤더 ── */
+    header { text-align: center; margin-bottom: var(--sp-5); }
+    .admin-trigger { display:inline-block; background: var(--surface); backdrop-filter: blur(8px); border: 1px solid var(--line); padding: 9px 18px; border-radius: var(--r-pill); color: var(--ink-mid); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s ease; margin-bottom: var(--sp-4); }
+    .admin-trigger:hover { background: var(--surface-hi); color: var(--ink); }
+    .hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(to right, #ffffff, #f1f5f9, #cbd5e1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero .sub { margin-top: 10px; font-size: 15px; color: var(--ink-mid); font-weight: 600; }
+    .hero .count { margin-top: 6px; font-size: 13px; color: var(--ink-dim); }
+
+    /* ── 검색 ── */
+    .searchWrap { max-width: 460px; margin: var(--sp-4) auto var(--sp-3); position: relative; }
+    .searchWrap .ico { position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:15px; opacity:.7; pointer-events:none; }
+    #searchInput { width:100%; background: var(--surface); border:1px solid var(--line); border-radius: var(--r-pill); padding: 13px 44px 13px 42px; color: var(--ink); font-size: 15px; font-weight:600; transition: all .2s; }
+    #searchInput::placeholder { color: var(--ink-dim); font-weight:500; }
+    #searchInput:focus { outline:none; border-color: var(--line-strong); background: var(--surface-hi); }
+    .searchClear { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--ink-dim); font-size:17px; cursor:pointer; padding:4px 8px; display:none; }
+    .searchClear.on { display:block; }
+
+    /* ── 필터 탭 ── */
+    .category-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: var(--sp-2); flex-wrap: wrap; }
+    .tab-btn { background: var(--surface); backdrop-filter: blur(8px); border: 1px solid var(--line); padding: 9px 20px; border-radius: var(--r-pill); color: var(--ink-mid); font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s ease; }
+    .tab-btn:hover { background: var(--surface-hi); color: #fff; }
+    .tab-btn.active { background: #ffffff; color: #0f172a; border-color: #ffffff; box-shadow: 0 4px 14px rgba(255,255,255,.2); }
+
+    .subject-tabs { margin-bottom: var(--sp-5); gap: 7px; }
+    .subject-btn { background: rgba(255,255,255,.05); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.12); padding: 7px 17px; border-radius: var(--r-pill); color: var(--ink-dim); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .2s ease; }
+    .subject-btn:hover { background: var(--surface-hi); color: #fff; }
+    .subject-btn.active { background: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
+
+    /* ── 게임 카드 ── */
+    .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); gap: 20px; align-items: stretch; }
+    .game-card {
+      position: relative; overflow: hidden;
+      background: var(--surface); backdrop-filter: blur(16px);
+      border: 1px solid var(--line); border-radius: var(--r-lg);
+      padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 14px;
+      box-shadow: var(--shadow-card);
+      transition: transform .22s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease;
+    }
+    /* 카드 위쪽 과목 색 띠 — 목록에서 과목이 한눈에 구분된다 */
+    .game-card::before { content:""; position:absolute; top:0; left:0; right:0; height:4px; background: var(--accent, var(--s-기타)); opacity:.95; }
+    .game-card:hover { transform: translateY(-4px); background: var(--surface-hi); border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
+
+    .cardTop { display:flex; align-items:flex-start; gap: 12px; }
+    .cardIcon { font-size: 30px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
+    .cardHead { flex: 1; min-width: 0; }
+    .badgeRow { display:flex; flex-wrap:wrap; gap: 5px; margin-bottom: 7px; }
+    .badge { font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: var(--r-pill); letter-spacing: .2px; white-space: nowrap; }
+    .badge.grade { background: rgba(255,255,255,.14); color: #e2e8f0; border: 1px solid rgba(255,255,255,.16); }
+    .badge.subject { background: var(--accent-soft, rgba(148,163,184,.20)); color: var(--accent, #94a3b8); border: 1px solid var(--accent-line, rgba(148,163,184,.45)); }
+    .game-card h3 { font-size: 17.5px; font-weight: 800; line-height: 1.38; word-break: keep-all; color: #fff; }
+    .genreLine { font-size: 12.5px; color: var(--ink-dim); font-weight: 600; display:flex; align-items:center; gap:5px; }
+
+    .launch-btn { margin-top: auto; background: #ffffff; color: #0f172a; text-align: center; padding: 13px; border-radius: var(--r-md); font-weight: 800; font-size: 15px; cursor: pointer; border: none; transition: background .18s, transform .12s; }
     .launch-btn:hover { background: #f1f5f9; }
-    
+    .launch-btn:active { transform: scale(.985); }
+
+    .emptyState { grid-column: 1/-1; text-align:center; padding: 60px 20px; color: var(--ink-mid); }
+    .emptyState .big { font-size: 40px; margin-bottom: 12px; }
+    .emptyState .msg { font-size: 16px; font-weight: 700; }
+    .emptyState .hintTxt { font-size: 13.5px; color: var(--ink-dim); margin-top: 6px; }
+
+    /* ── 게임 실행 화면 / 관리자 모달 ── */
     .game-master-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; align-items: center; justify-content: center; }
     #gameConsoleBox { width: 100vw; height: 100dvh; display: flex; justify-content: center; align-items: center; background: #000; }
     .game-frame-iframe { width: 100%; height: 100%; border: none; }
-    
-    .floating-close-btn { position: absolute; top: 20px; right: 20px; z-index: 10000; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); padding: 10px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-    .floating-close-btn:hover { background: rgba(255, 255, 255, 0.2); }
+    .floating-close-btn { position: absolute; top: 16px; right: 16px; z-index: 10000; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 10px 16px; border-radius: var(--r-sm); font-weight: 700; cursor: pointer; transition: all .25s ease; box-shadow: 0 4px 10px rgba(0,0,0,.5); }
+    .floating-close-btn:hover { background: rgba(255,255,255,.2); }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-box { background: #1e1b4b; border-radius: 28px; padding: 36px; width: 100%; max-width: 520px; color: white; }
-    .form-group { margin-bottom: 18px; }
-    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #cbd5e1; }
-    input, select, textarea { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; color: #ffffff; font-size: 15px; transition: all 0.2s; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.1); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(2,6,23,.68); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-box { background: #1e1b4b; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 32px; width: 100%; max-width: 520px; color: white; box-shadow: var(--shadow-lift); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 7px; font-size: 13.5px; font-weight: 700; color: var(--ink-mid); }
+    input, select, textarea { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: var(--r-sm); padding: 12px 15px; color: #fff; font-size: 15px; transition: all .2s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--line-strong); background: rgba(255,255,255,.1); }
     select option { background-color: #1e1b4b; color: #ffffff; }
+
+    @media (max-width: 520px){
+      .container { padding: 22px 14px 60px; }
+      .games-grid { grid-template-columns: 1fr; gap: 14px; }
+      .game-card { padding: 18px 18px 16px; }
+    }
   </style>
 </head>
 <body>
@@ -54,7 +136,17 @@
   <div class="container">
     <header>
       <button class="admin-trigger" onclick="checkAdminPassword()">⚙️ 관리자 설정</button>
-      <div class="hero"><h1>Play. Learn. Enjoy! ✨</h1></div>
+      <div class="hero">
+        <h1>Play. Learn. Enjoy! ✨</h1>
+        <p class="sub">교과서 단원별로 골라 쓰는 초등 문제풀이 게임 모음</p>
+        <p class="count" id="gameCount"></p>
+      </div>
+
+      <div class="searchWrap">
+        <span class="ico">🔍</span>
+        <input type="text" id="searchInput" placeholder="단원·주제로 검색 (예: 분수, 고조선)" autocomplete="off">
+        <button class="searchClear" id="searchClear" title="검색어 지우기">✕</button>
+      </div>
     </header>
     
     <div class="category-tabs" id="gradeTabs">
@@ -180,28 +272,104 @@
       return '기타';
     }
 
+    /** 제목 한 줄을 배지로 나눠 담는다.
+        "5학년 1학기 사회 유적과 유물로 …(테트리스 퀴즈)"
+          → 학년 5학년 · 학기 1학기 · 과목 사회 · 제목 "유적과 유물로 …" · 장르 "테트리스 퀴즈"
+        카드에서 제목만 크게 보이고 나머지는 배지로 빠져, 길어서 줄이 깨지던 문제가 사라진다. */
+    function parseTitle(full){
+      let rest = String(full).trim();
+      let grade = '', term = '', subject = '';
+      let m = rest.match(/^([3-6]학년)\s*/);
+      if(m){ grade = m[1]; rest = rest.slice(m[0].length); }
+      m = rest.match(/^([1-2]학기)\s*/);
+      if(m){ term = m[1]; rest = rest.slice(m[0].length); }
+      m = rest.match(/^(국어|수학|사회|과학|창체|영어|도덕|실과|음악|미술|체육)\s*/);
+      if(m){ subject = m[1]; rest = rest.slice(m[0].length); }
+      // 끝의 괄호는 게임 장르로 뽑아낸다
+      let genre = '';
+      const g = rest.match(/[（(]([^()（）]+)[）)]\s*$/);
+      if(g){ genre = g[1].trim(); rest = rest.slice(0, g.index).trim(); }
+      return {
+        grade, term,
+        subject: subject || getSubjectFromTitle(full),
+        name: rest.trim() || String(full).trim(),
+        genre
+      };
+    }
+
+    function escapeHtml(v){
+      return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
     function renderGamesGrid() {
       const grid = document.getElementById('gamesGrid');
       grid.innerHTML = "";
-      
+
+      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+
       const filteredGames = currentGames.filter(game => {
         const matchGrade = (selectedGrade === 'all') || (getGradeFromTitle(game.title) === selectedGrade);
         const matchSubject = (selectedSubject === 'all') || (getSubjectFromTitle(game.title) === selectedSubject);
-        return matchGrade && matchSubject;
+        const matchQuery = !q || game.title.toLowerCase().includes(q);
+        return matchGrade && matchSubject && matchQuery;
       });
 
+      const countEl = document.getElementById('gameCount');
+      if(countEl){
+        countEl.textContent = (q || selectedGrade !== 'all' || selectedSubject !== 'all')
+          ? `전체 ${currentGames.length}개 중 ${filteredGames.length}개 표시 중`
+          : `모두 ${currentGames.length}개의 게임이 준비되어 있어요`;
+      }
+
       if (filteredGames.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; color:#cbd5e1; font-size:16px;">선택한 카테고리에 해당하는 게임이 없습니다.</div>`;
+        grid.innerHTML = `<div class="emptyState">
+          <div class="big">🔍</div>
+          <div class="msg">조건에 맞는 게임이 없어요</div>
+          <div class="hintTxt">검색어를 지우거나 학년·과목 필터를 "전체"로 바꿔 보세요.</div>
+        </div>`;
         return;
       }
 
       filteredGames.forEach(game => {
+        const info = parseTitle(game.title);
         const card = document.createElement('div');
         card.className = "game-card";
-        card.innerHTML = `<h3>${game.icon} ${game.title}</h3><br><button class="launch-btn" onclick="bootUpGameConsole('${game.url}')">실행하기</button>`;
+        card.style.setProperty('--accent',      `var(--s-${info.subject})`);
+        card.style.setProperty('--accent-soft', `var(--s-${info.subject}-soft)`);
+        card.style.setProperty('--accent-line', `var(--s-${info.subject}-line)`);
+
+        const badges = [];
+        if(info.grade) badges.push(`<span class="badge grade">${escapeHtml(info.grade)}${info.term ? ' ' + escapeHtml(info.term) : ''}</span>`);
+        badges.push(`<span class="badge subject">${escapeHtml(info.subject)}</span>`);
+
+        card.innerHTML = `
+          <div class="cardTop">
+            <span class="cardIcon">${game.icon}</span>
+            <div class="cardHead">
+              <div class="badgeRow">${badges.join('')}</div>
+              <h3>${escapeHtml(info.name)}</h3>
+            </div>
+          </div>
+          ${info.genre ? `<div class="genreLine">🎮 ${escapeHtml(info.genre)}</div>` : ''}
+          <button class="launch-btn" type="button">실행하기</button>`;
+        card.querySelector('.launch-btn').addEventListener('click', ()=>bootUpGameConsole(game.url));
         grid.appendChild(card);
       });
     }
+
+    // 검색 입력 연결
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const input = document.getElementById('searchInput');
+      const clear = document.getElementById('searchClear');
+      if(!input) return;
+      input.addEventListener('input', ()=>{
+        clear.classList.toggle('on', input.value.length > 0);
+        renderGamesGrid();
+      });
+      clear.addEventListener('click', ()=>{
+        input.value = ''; clear.classList.remove('on'); renderGamesGrid(); input.focus();
+      });
+    });
 
     function filterGrade(grade) {
       selectedGrade = grade;
