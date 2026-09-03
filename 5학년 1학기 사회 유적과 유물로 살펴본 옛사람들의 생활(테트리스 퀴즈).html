@@ -162,6 +162,12 @@
     box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,58,237,0.25);
     touch-action:pan-y;
   }
+  #overReason {
+    background:rgba(239,68,68,0.14); border:1px solid rgba(248,113,113,0.42); border-radius:14px;
+    padding:12px 15px; font-size:14.5px; line-height:1.7; color:#ffd9d9; font-weight:700;
+    text-align:center; margin-bottom:14px;
+  }
+  #overReason b { color:#fff; }
   .card h2 { font-size:24px; font-weight:900; margin-bottom:12px; text-align:center; background:linear-gradient(90deg,#7dd3fc,#f0abfc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   .card p.desc { font-size:14.5px; color:#c3c9e6; line-height:1.65; margin-bottom:16px; }
   .rules { background:rgba(255,255,255,0.06); border-radius:14px; padding:14px 16px; font-size:13.5px; line-height:1.95; color:#dfe3f7; margin-bottom:18px; }
@@ -355,7 +361,8 @@
       🔥 1줄 제거 = 게이지 <b>+1</b>, 게이지 <b>3칸</b>이 되면 문제 출제!<br>
       ❌ 오답을 고르면 정답을 바로 알려주지 않고 <b>힌트 1개</b>를 주고 다시 풀어요.<br>
       💥 여러 줄을 한번에 없애거나 연속으로 없애면 <b>콤보 점수</b>가 폭발해요!<br>
-      🎯 블록 아래 <b>점선 그림자</b>가 착지 위치를, <b>다음 블록 3개</b>를 미리 보여줘요.
+      🎯 블록 아래 <b>점선 그림자</b>가 착지 위치를, <b>다음 블록 3개</b>를 미리 보여줘요.<br>
+      🚨 화면 위쪽 <b>빨간 경계선</b>까지 블록이 쌓이면 게임이 끝나요! (떨어지는 블록이 지나가는 건 괜찮아요)
     </div>
     <div class="twoCol">
       <button class="bigBtn" id="startBtn">게임 시작하기 ▶</button>
@@ -379,6 +386,7 @@
 <div class="overlay hidden" id="overOverlay">
   <div class="card">
     <h2 id="overTitle">🏁 게임 종료!</h2>
+    <div id="overReason"></div>
     <div id="rankTitle"></div>
     <div id="rankSub"></div>
     <div id="newRecordBadge" class="hidden">🏆 신기록 달성!</div>
@@ -391,7 +399,7 @@
       <div class="statCell"><div class="v" id="stCombo">0</div><div class="l">최고 콤보</div></div>
     </div>
     <div id="sessionAchList"></div>
-    <button class="bigBtn" id="retryBtn">다시 도전하기 🔁</button>
+    <button class="bigBtn" id="retryBtn">🔁 처음부터 다시 시작하기</button>
     <div class="ghostBtn" id="shareBtn">📸 결과 이미지 저장/공유</div>
     <div class="ghostBtn" id="closeBtn">닫기</div>
   </div>
@@ -718,6 +726,8 @@ document.getElementById('achCloseBtn').onclick = ()=>{
 
 /* ===================== 테트리스 엔진 ===================== */
 const COLS=10, ROWS=20, GAUGE_MAX=3, NEXT_QUEUE_SIZE=3;
+/* 블록을 쌓을 수 없는 경계선. 이 줄 위(0~1행)에 블록이 놓이면 게임 종료. */
+const DANGER_ROW = 2;
 let BS = 30;
 const boardCanvas = document.getElementById('board');
 const bctx = boardCanvas.getContext('2d');
@@ -796,7 +806,20 @@ function rotateMatrix(m){
 function spawnPiece(typeIdx){
   const p = PIECES[typeIdx];
   const m = p.m.map(r=>r.slice());
-  return { type:typeIdx, color:p.color, m, row:-2, col: Math.floor((COLS - m.length)/2) };
+  // 채워진 칸이 모두 보드 안(row>=0)에서 시작하도록 맞춘다.
+  // 예전에는 무조건 row=-2 로 시작했는데, collides() 는 row<0 인 칸을 검사하지 않기 때문에
+  // 블록이 꼭대기까지 쌓여도 스폰 충돌이 잡히지 않아 게임이 영원히 끝나지 않았다.
+  let top = 0;
+  for(let r=0;r<m.length;r++){ if(m[r].some(v=>v)){ top = r; break; } }
+  return { type:typeIdx, color:p.color, m, row:-top, col: Math.floor((COLS - m.length)/2) };
+}
+
+/** 경계선 위쪽(0 ~ DANGER_ROW-1 행)에 굳어버린 블록이 있는지 */
+function overDangerLine(){
+  for(let r=0;r<DANGER_ROW;r++){
+    for(let c=0;c<COLS;c++) if(board[r][c] !== -1) return true;
+  }
+  return false;
 }
 
 function newActivePiece(){
@@ -806,7 +829,7 @@ function newActivePiece(){
   holdUsed = false;
   drawNextQueue();
   if(collides(cur.m, cur.row, cur.col)){
-    gameOver();
+    gameOver('full');
   }
 }
 
@@ -975,12 +998,50 @@ function lighten(hex, amt){
   return `rgb(${r},${g},${b})`;
 }
 
+/** 경계선 — 여기에 블록이 닿으면 게임이 끝난다는 것을 눈으로 알려 준다.
+    쌓인 높이가 가까워질수록 붉게 진해지고 깜빡여서 위험을 미리 느낄 수 있다. */
+function drawDangerLine(){
+  const y = DANGER_ROW * BS;
+  // 스택이 경계선에 얼마나 가까운지 (0 = 여유, 1 = 코앞)
+  let topFilled = ROWS;
+  for(let r=0;r<ROWS && topFilled===ROWS;r++){
+    for(let c=0;c<COLS;c++) if(board[r][c] !== -1){ topFilled = r; break; }
+  }
+  const gapRows = topFilled - DANGER_ROW;          // 경계선까지 남은 줄 수
+  const danger = Math.max(0, Math.min(1, 1 - gapRows/6));
+  const pulse = danger > 0 ? 0.55 + 0.45*Math.abs(Math.sin(Date.now()/ (330 - danger*160))) : 1;
+
+  bctx.save();
+  // 경계선 위쪽 금지 구역을 옅은 붉은 띠로
+  bctx.fillStyle = `rgba(239,68,68,${(0.06 + danger*0.22) * pulse})`;
+  bctx.fillRect(0, 0, COLS*BS, y);
+
+  // 경계선 자체
+  bctx.strokeStyle = `rgba(248,113,113,${(0.75 + danger*0.25) * pulse})`;
+  bctx.lineWidth = Math.max(2, BS*0.09);
+  bctx.setLineDash([BS*0.42, BS*0.3]);
+  bctx.shadowColor = 'rgba(239,68,68,0.9)';
+  bctx.shadowBlur = 8 + danger*14;
+  bctx.beginPath(); bctx.moveTo(0, y); bctx.lineTo(COLS*BS, y); bctx.stroke();
+  bctx.restore();
+
+  // 안내 문구
+  bctx.save();
+  bctx.setLineDash([]);
+  bctx.font = `800 ${Math.max(10, BS*0.36)}px 'Apple SD Gothic Neo','Malgun Gothic',sans-serif`;
+  bctx.fillStyle = `rgba(254,202,202,${0.8*pulse})`;
+  bctx.textBaseline = 'bottom';
+  bctx.fillText('여기 쌓이면 끝!', 6, y - Math.max(3, BS*0.12));
+  bctx.restore();
+}
+
 function drawBoard(){
   bctx.clearRect(0,0,boardCanvas.width,boardCanvas.height);
   // grid
   bctx.strokeStyle = 'rgba(255,255,255,0.045)';
   for(let c=0;c<=COLS;c++){ bctx.beginPath(); bctx.moveTo(c*BS,0); bctx.lineTo(c*BS,ROWS*BS); bctx.stroke(); }
   for(let r=0;r<=ROWS;r++){ bctx.beginPath(); bctx.moveTo(0,r*BS); bctx.lineTo(COLS*BS,r*BS); bctx.stroke(); }
+  drawDangerLine();
 
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
@@ -1075,7 +1136,7 @@ function tryHold(){
   }
   drawHold();
   drawNextQueue();
-  if(collides(cur.m, cur.row, cur.col)){ gameOver(); return; }
+  if(collides(cur.m, cur.row, cur.col)){ gameOver('full'); return; }
   drawBoard();
 }
 
@@ -1085,7 +1146,15 @@ function lockPiece(){
   merge();
   sfx.lock();
   blocksPlaced++;
+  // 줄을 지우기 전에 검사한다. 줄이 지워지면 위 칸이 내려와 흔적이 사라지기 때문.
+  const crossedLine = overDangerLine();
   const cleared = clearLines();
+  // 경계선을 넘었더라도 그 줄이 마침 지워졌다면 살려 준다(운 좋은 역전).
+  if(crossedLine && overDangerLine()){
+    updateHUD();
+    gameOver('line');
+    return;
+  }
   lastClearedCount = cleared;
   if(cleared>0){
     comboCounter++;
@@ -1304,12 +1373,27 @@ function resetGame(){
   tick();
 }
 
-function gameOver(){
+function gameOver(reason){
   state = 'gameover';
   stopBGM();
   bgmStarted = false;
   sfx.gameover();
   checkAchievements();
+
+  // 왜 끝났는지, 이제 무엇을 해야 하는지 분명히 알려 준다
+  const solved = quizStats.attempted;
+  const left = Math.max(0, TOTAL_QUESTIONS - solved);
+  const why = document.getElementById('overReason');
+  if(why){
+    const head = (reason === 'line')
+      ? '🚨 블록이 <b>경계선</b>을 넘었어요!'
+      : '🚨 블록이 꼭대기까지 가득 찼어요!';
+    why.innerHTML =
+      `${head}<br>` +
+      (left > 0
+        ? `아직 <b>${left}문제</b>가 남았어요. 문제풀이를 이어가려면 <b>게임을 처음부터 다시 시작</b>해야 해요!`
+        : `20문제를 모두 풀었어요! 한 번 더 도전해 볼까요?`);
+  }
   const playMs = Date.now() - startTime - pausedAccum;
   const mm = Math.floor(playMs/60000);
   const ss = Math.floor((playMs%60000)/1000);
