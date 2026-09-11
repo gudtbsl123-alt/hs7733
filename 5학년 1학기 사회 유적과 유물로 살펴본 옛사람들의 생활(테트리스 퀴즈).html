@@ -1276,7 +1276,7 @@ function startQuizIfPending(){
 
 function renderQuiz(){
   const badge = document.getElementById('quizDiffBadge');
-  badge.textContent = curQuiz.diff+'난이도';
+  badge.textContent = '난이도 ' + curQuiz.diff;   // '하난이도' 처럼 붙어 읽히던 것을 바로잡음
   badge.className = 'diffBadge diff-'+curQuiz.diff;
   document.getElementById('quizQ').textContent = curQuiz.q;
   document.getElementById('hintBox').style.display = 'none';
