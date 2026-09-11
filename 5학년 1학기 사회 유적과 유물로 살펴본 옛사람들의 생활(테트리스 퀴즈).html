@@ -25,6 +25,8 @@
   body.era-neo    { --era-1:#123a2e; --era-2:#07160f; --era-3:#030805; --era-glow:rgba(52,211,153,0.18); }
   /* 청동기 — 청동빛 푸른 새벽 */
   body.era-bronze { --era-1:#1a3350; --era-2:#08131f; --era-3:#03070c; --era-glow:rgba(96,165,250,0.20); }
+  /* 철기 — 달구어진 쇠의 붉은빛 */
+  body.era-iron   { --era-1:#4a1f1a; --era-2:#1c0a08; --era-3:#0a0303; --era-glow:rgba(239,68,68,0.20); }
   /* 고조선 — 왕국의 보랏빛 */
   body.era-gojo   { --era-1:#3a1c52; --era-2:#170a22; --era-3:#08030d; --era-glow:rgba(217,70,239,0.22); }
   /* 배경 전환을 부드럽게 보여 주는 겹layer */
@@ -330,7 +332,7 @@
         <div class="gaugeHint" id="gaugeHint">1줄 터트릴 때마다 1칸씩 채워져요!</div>
         <div class="panelDiv"></div>
         <h3>문제 진행 상황</h3>
-        <div class="progressRow"><span id="progressText">0 / 20</span></div>
+        <div class="progressRow"><span id="progressText">0 / 0</span></div>
         <div class="progressBarOuter"><div class="progressBarInner" id="progressBarInner"></div></div>
       </div>
 
@@ -450,10 +452,12 @@ const QUESTIONS = [
   {diff:'하', q:'단군왕검이 세웠다고 전해지는, 우리 역사 속 최초의 국가는 무엇입니까?', choices:['신라','고구려','고조선','백제'], answer:2, hint:'곰과 호랑이 이야기가 전해지는 건국 이야기를 가진 나라예요.'},
   {diff:'하', q:'신석기 시대에 실을 뽑을 때 사용한 도구는 무엇입니까?', choices:['가락바퀴','반달돌칼','비파형 동검','돌괭이'], answer:0, hint:'동그란 도구를 돌려서 실을 만드는 데 썼어요.'},
   {diff:'하', q:'청동기 시대에 곡식의 이삭을 자르는 데 사용한 도구는 무엇입니까?', choices:['뼈바늘','반달돌칼','돌창','가락바퀴'], answer:1, hint:'반달 모양처럼 생긴 돌 도구예요.'},
+  {diff:'하', q:'철기 시대에 철로 농기구를 만들어 사용하면서 나타난 변화로 알맞은 것은 무엇입니까?', choices:['농사를 짓지 않게 되었다','농업 생산량이 크게 늘어났다','농기구를 모두 청동으로 바꾸었다','사람들이 다시 동굴에서 살았다'], answer:1, hint:'철로 만든 농기구는 돌이나 나무보다 훨씬 단단해서 땅을 깊게 갈 수 있었어요.'},
   {diff:'중', q:'다음 중 구석기 시대 사람들의 생활 모습으로 알맞지 않은 것은 어느 것입니까?', choices:['사냥을 하였다','불을 사용하였다','토기를 만들어 사용하였다','동굴이나 막집에서 살았다'], answer:2, hint:'토기는 구석기 시대가 아니라 신석기 시대부터 만들어졌어요.'},
   {diff:'중', q:'신석기 시대에 사람들의 생활에 새롭게 나타난 변화로 알맞은 것은 무엇입니까?', choices:['이동 생활만 계속하였다','농사를 짓고 가축을 기르기 시작했다','청동으로 무기를 만들었다','계급이 뚜렷하게 나뉘었다'], answer:1, hint:'정착 생활과 관련된, 식량을 얻는 새로운 방법이 시작되었어요.'},
   {diff:'중', q:'청동기 시대에도 농사지을 때 여전히 돌이나 나무로 만든 도구를 사용한 까닭으로 가장 알맞은 것은 무엇입니까?', choices:['청동이 너무 흔했기 때문에','청동 도구 사용이 법으로 금지되었기 때문에','청동은 구하기 어렵고 만들기도 어려웠기 때문에','돌 도구가 청동보다 훨씬 단단했기 때문에'], answer:2, hint:'청동의 재료가 되는 광물은 쉽게 구할 수 없었어요.'},
   {diff:'중', q:'청동기 시대에 돌 하나의 무게가 수십 톤에 달하는 고인돌도 있었습니다. 이를 통해 알 수 있는 사실로 가장 알맞은 것은 무엇입니까?', choices:['모든 사람이 평등한 사회였다','많은 사람을 동원할 수 있는 지배자가 있었다','화폐를 사용하는 사회였다','고인돌을 만드는 기계가 있었다'], answer:1, hint:'혼자서는 절대 옮길 수 없는 크기의 돌이라는 점을 생각해 보세요.'},
+  {diff:'중', q:'철기 문화를 바탕으로 만주와 한반도에 등장한 여러 나라끼리 알맞게 짝지은 것은 무엇입니까?', choices:['고려, 조선, 대한 제국','발해, 고려, 조선','부여, 고구려, 옥저, 동예, 삼한','신라, 백제, 고려'], answer:2, hint:'철로 만든 무기를 앞세운 세력들이 곳곳에 나라를 세웠어요. 고려와 조선은 훨씬 뒤에 세워진 나라랍니다.'},
   {diff:'중', q:"고조선의 8조법 중 '남의 물건을 훔친 사람은 노비로 삼는다'는 내용을 통해 알 수 있는 사실로 알맞은 것은 무엇입니까?", choices:['고조선에는 신분 구분이 없었다','고조선은 개인의 재산을 인정하였다','고조선 사람들은 화폐를 몰랐다','고조선에는 법이 존재하지 않았다'], answer:1, hint:"'물건을 훔쳤다'는 표현은 무엇을 인정하는 사회였는지를 보여줘요."},
   {diff:'중', q:'고조선의 문화 범위를 짐작하게 해 주는 대표적인 유물 두 가지를 알맞게 짝지은 것은 무엇입니까?', choices:['뗀석기, 빗살무늬 토기','비파형 동검, 탁자식 고인돌','가락바퀴, 뼈바늘','반달돌칼, 돌괭이'], answer:1, hint:'청동으로 만든 검과 탁자 모양의 무덤 유적을 떠올려 보세요.'},
   {diff:'중', q:'신석기 시대 사람들이 가락바퀴와 뼈바늘을 사용했다는 사실을 통해 알 수 있는 생활 모습은 무엇입니까?', choices:['사냥을 전혀 하지 않았다','실을 뽑아 옷감을 만들어 입었다','청동 그릇을 사용하였다','전쟁을 자주 벌였다'], answer:1, hint:'실과 바늘로 무엇을 만들 수 있을지 생각해 보세요.'},
@@ -681,7 +685,7 @@ const ACHIEVEMENTS = [
   { id:'combo5', icon:'🔥', name:'콤보 마스터', desc:'5콤보를 달성했어요', check:()=> comboCounter>=5 },
   { id:'combo10', icon:'⚡', name:'콤보의 신', desc:'10콤보를 달성했어요', check:()=> comboCounter>=10 },
   { id:'streak5', icon:'🧠', name:'척척박사', desc:'문제 5개를 연속으로 한 번에 맞혔어요', check:()=> consecutiveFirstTryCorrect>=5 },
-  { id:'allq', icon:'📚', name:'전 문제 정복', desc:'한 게임에서 20문제를 모두 풀었어요', check:()=> quizStats.attempted>=TOTAL_QUESTIONS },
+  { id:'allq', icon:'📚', name:'전 문제 정복', desc:'한 게임에서 모든 문제를 풀었어요', check:()=> quizStats.attempted>=TOTAL_QUESTIONS },
   { id:'score3000', icon:'🥉', name:'구석기 탐험가', desc:'점수 3,000점을 넘었어요', check:()=> score>=3000 },
   { id:'score6000', icon:'🏆', name:'고조선 사관', desc:'점수 6,000점을 넘었어요', check:()=> score>=6000 },
   { id:'level5', icon:'🚀', name:'스피드러너', desc:'레벨 5에 도달했어요', check:()=> level>=5 }
@@ -1234,22 +1238,24 @@ function updateProgressUI(){
 /* ===================== 시대 배경 =====================
    문제를 풀수록 배경이 구석기 → 신석기 → 청동기 → 고조선으로 바뀐다.
    화면만 바뀌는 연출이지만, 지금 배우는 시대가 무엇인지 계속 눈에 들어온다. */
+/* from 은 전체 문항 수에 대한 비율이다. 문항이 늘거나 줄어도 시대 전환이 고르게 나뉜다. */
 const ERAS = [
-  { key:'paleo',  name:'구석기 시대', icon:'🦴', from:0  },
-  { key:'neo',    name:'신석기 시대', icon:'🏺', from:6  },
-  { key:'bronze', name:'청동기 시대', icon:'🗡️', from:12 },
-  { key:'gojo',   name:'고조선',      icon:'🏛️', from:17 }
+  { key:'paleo',  name:'구석기 시대', icon:'🦴',  at:0.00 },
+  { key:'neo',    name:'신석기 시대', icon:'🏺',  at:0.30 },
+  { key:'bronze', name:'청동기 시대', icon:'🗡️', at:0.55 },
+  { key:'iron',   name:'철기 시대',   icon:'⚒️', at:0.72 },
+  { key:'gojo',   name:'고조선',      icon:'🏛️', at:0.85 }
 ];
 let curEraKey = null;
 function updateEra(solved){
   let era = ERAS[0];
-  for(const e of ERAS) if(solved >= e.from) era = e;
+  for(const e of ERAS) if(solved >= Math.round(e.at * TOTAL_QUESTIONS)) era = e;
   const tag = document.getElementById('eraTag');
   if(tag) tag.innerHTML = `<span class="eraIcon">${era.icon}</span> ${era.name}`;
   if(era.key === curEraKey) return;
   const first = curEraKey === null;
   curEraKey = era.key;
-  document.body.classList.remove('era-paleo','era-neo','era-bronze','era-gojo');
+  document.body.classList.remove('era-paleo','era-neo','era-bronze','era-iron','era-gojo');
   document.body.classList.add('era-'+era.key);
   if(!first){
     if(tag){ tag.classList.remove('eraPop'); void tag.offsetWidth; tag.classList.add('eraPop'); }
@@ -1392,7 +1398,7 @@ function gameOver(reason){
       `${head}<br>` +
       (left > 0
         ? `아직 <b>${left}문제</b>가 남았어요. 문제풀이를 이어가려면 <b>게임을 처음부터 다시 시작</b>해야 해요!`
-        : `20문제를 모두 풀었어요! 한 번 더 도전해 볼까요?`);
+        : `${TOTAL_QUESTIONS}문제를 모두 풀었어요! 한 번 더 도전해 볼까요?`);
   }
   const playMs = Date.now() - startTime - pausedAccum;
   const mm = Math.floor(playMs/60000);
