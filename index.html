@@ -89,7 +89,37 @@
   .field input, .field select { width:100%; background:#fff; border:1px solid #d6d6d6; border-radius:10px; padding:12px 14px; font-size:17px; color:#1d1d1f; outline:none; }
   .admin-actions { display:flex; gap:12px; margin-top:4px; }
 
-  @media (prefers-reduced-motion: reduce) { .card { transition:none; } }
+  /* hero entrance */
+  @keyframes wordRise {
+    0%   { transform: translateY(115%) rotate(5deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+  @keyframes fadeUp {
+    0%   { opacity:0; transform: translateY(14px); }
+    100% { opacity:1; transform: translateY(0); }
+  }
+  @keyframes ruleGrow { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+
+  h1 { display:flex; flex-wrap:wrap; justify-content:center; gap:0 .28em; }
+  .word { display:inline-block; overflow:hidden; padding:0 .04em .16em; margin:0 -.04em -.16em; }
+  .word > span { display:inline-block; transform: translateY(115%) rotate(5deg);
+    animation: wordRise 1s cubic-bezier(.16,1,.3,1) both; }
+  .word:nth-child(1) > span { animation-delay:.10s; }
+  .word:nth-child(2) > span { animation-delay:.22s; }
+  .word:nth-child(3) > span { animation-delay:.34s; }
+
+  .hero .eyebrow { opacity:0; animation: fadeUp .7s cubic-bezier(.2,0,0,1) .02s both; }
+  .hero .rule { width:64px; height:3px; background:#1d1d1f; transform-origin:left center;
+    animation: ruleGrow .6s cubic-bezier(.2,0,0,1) .62s both; }
+  .hero .lede { opacity:0; animation: fadeUp .7s cubic-bezier(.2,0,0,1) .70s both; }
+  .hero .cta-row { opacity:0; animation: fadeUp .7s cubic-bezier(.2,0,0,1) .80s both; }
+  .hero .muted { opacity:0; animation: fadeUp .7s cubic-bezier(.2,0,0,1) .90s both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition:none; }
+    .word > span, .hero .eyebrow, .hero .lede, .hero .cta-row, .hero .muted, .hero .rule {
+      animation:none !important; opacity:1 !important; transform:none !important; }
+  }
 </style>
 </head>
 <body>
@@ -107,7 +137,8 @@
 <section class="hero">
   <div class="hero-in">
     <p class="eyebrow">초등 교과 수업용 게임</p>
-    <h1>Play. Learn. Enjoy.</h1>
+    <h1 aria-label="Play. Learn. Enjoy."><span class="word"><span>Play.</span></span><span class="word"><span>Learn.</span></span><span class="word"><span>Enjoy.</span></span></h1>
+    <span class="rule" aria-hidden="true"></span>
     <p class="lede">교과서 단원별로 골라 쓰는 초등 문제풀이 게임 모음</p>
     <div class="cta-row">
       <a class="btn-primary" href="#browse">게임 둘러보기</a>
@@ -184,7 +215,7 @@ const INITIAL = [
   { id: 8, icon: "🧩", title: "5학년 1학기 수학 분수의 덧셈과 뺄셈", url: "./5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라).html" },
   { id: 9, icon: "🍄", title: "5학년 1학기 수학 약분 통분 기약분수", url: "./5학년 1학기 수학 약분 통분 기약분수(마리오).html" },
   { id: 10, icon: "🏛️", title: "6학년 1학기 사회 민주주의", url: "./6학년 1학기 사회 민주주의(젭스타일).html" },
-  { id: 11, icon: "🌍", title: "6학년 1학기 사회 세계 여러 국가", url: "./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모험.html" },
+  { id: 11, icon: "🎢", title: "6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤)", url: "./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤).html" },
   { id: 12, icon: "🌍", title: "6학년 1학기 사회 지구 탐구 대모험", url: "./6학년 1학기 사회 지구 탐구 대모험.html" },
   { id: 13, icon: "🔢", title: "6학년 1학기 수학 비와 비율(마리오)", url: "./6학년 1학기 수학 비와 비율(마리오).html" },
   { id: 14, icon: "⚔️", title: "6학년 1학기 수학 비와비율(서바이벌)", url: "./6학년 1학기 수학 비와비율(서바이벌).html" },
@@ -215,7 +246,8 @@ const INITIAL = [
   { id: 39, icon: "📖", title: "5학년 1학기 국어 비유적표현 마법연구소", url: "./5학년 1학기 국어 비유적표현 마법연구소.html" },
   { id: 40, icon: "🧱", title: "5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈)", url: "./5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈).html" },
   { id: 41, icon: "🧁", title: "4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)", url: "./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html" },
-  { id: 42, icon: "🎢", title: "6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)", url: "./6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤).html" }
+  { id: 42, icon: "🎢", title: "6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)", url: "./6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤).html" },
+  { id: 43, icon: "📦", title: "5학년 2학기 수학 수의 범위와 어림하기(택배 물류센터)", url: "./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html" }
 ];
 
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
