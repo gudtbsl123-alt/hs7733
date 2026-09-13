@@ -251,7 +251,7 @@
 <div id="toast" role="status"></div>
 
 <script>
-// 강제로 최신 데이터를 바라보도록 버전을 34로 상향했습니다.
+// 내부 데이터를 34버전으로 강제합니다. (총 45개 게임)
 const FALLBACK = { version: 34, games: [
   {"id":1,"icon":"🎢","title":"3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)","url":"./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html"},
   {"id":2,"icon":"🔢","title":"3학년 1학기 수학 분수와 소수(에듀런)","url":"./3학년 1학기 수학 분수와 소수(에듀런).html"},
@@ -522,8 +522,8 @@ function openGame(id, pushHash) {
   const g = games.find(x => String(x.id) === String(id));
   if (!g) return;
   
-  // 수정된 부분: 띄어쓰기 및 한글 경로 404 에러 방지를 위해 encodeURI 적용
-  $('#launchFrame').src = encodeURI(g.url);
+  // 수정 2: encodeURI가 오히려 정상적인 브라우저 주소 파싱을 방해할 수 있으므로 제거합니다.
+  $('#launchFrame').src = g.url;
   
   $('#launch').style.display = 'block';
   document.body.style.overflow = 'hidden';
@@ -609,7 +609,7 @@ $('#resetLocal').onclick = () => {
   location.reload();
 };
 
-/* ── boot: games.json wins when newer ── */
+/* ── boot: 수정 1 ── */
 async function boot() {
   const local = loadLocal();
   try {
@@ -618,8 +618,16 @@ async function boot() {
       const data = await res.json();
       if (Array.isArray(data.games) && data.games.length) {
         remoteVersion = Number(data.version) || 0;
-        const stale = !local || Number(local.base || 0) < remoteVersion;
-        games = stale ? data.games : local.games;
+        
+        // 중요 수정: 서버의 games.json 버전(2)이 index.html의 최신 버전(34)보다 낮을 경우
+        // 옛날 데이터로 덮어쓰지 못하도록 안전장치를 추가했습니다.
+        if (remoteVersion >= FALLBACK.version) {
+          const stale = !local || Number(local.base || 0) < remoteVersion;
+          games = stale ? data.games : local.games;
+        } else {
+          remoteVersion = FALLBACK.version;
+          games = FALLBACK.games;
+        }
       }
     } else if (local) { games = local.games; }
   } catch (e) {
