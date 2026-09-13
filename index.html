@@ -1,471 +1,632 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 탭 아이콘. 없으면 브라우저가 /favicon.ico 를 찾다가 404 콘솔 오류를 남긴다. -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8E%AE%3C%2Ftext%3E%3C%2Fsvg%3E">
-<title>✨에듀테크 게임 저장소✨</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>에듀테크 게임 저장소 · 초등 교과 수업용 게임 모음</title>
+<meta name="description" content="교과서 단원별로 골라 쓰는 초등 문제풀이 게임 45개. 학년·과목으로 찾아 바로 실행하세요." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="에듀테크 게임 저장소" />
+<meta property="og:description" content="교과서 단원별로 골라 쓰는 초등 문제풀이 게임 45개. 학년·과목으로 찾아 바로 실행하세요." />
+<meta property="og:image" content="https://gudtbsl123-alt.github.io/hs7733/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d1d1f'/%3E%3Ctext x='32' y='45' font-family='Helvetica,Arial,sans-serif' font-size='34' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; background:#fff; color:#1d1d1f; -webkit-font-smoothing:antialiased;
+    font-family:'Inter','Apple SD Gothic Neo','Pretendard','Malgun Gothic','Noto Sans KR',sans-serif;
+    font-variant-numeric:tabular-nums; }
+  a { color:#1d1d1f; text-decoration:none; }
+  a:hover { text-decoration:none; }
+  input, select, button { font-family:inherit; }
+  input::placeholder { color:#707070; }
 
-  <style>
-    /* ── 디자인 토큰 ─────────────────────────────────
-       색·간격·모서리·그림자를 한곳에서 관리한다.
-       게임이 늘어나도 화면 톤이 흐트러지지 않게 하는 기준값. */
-    :root{
-      --bg-scrim: linear-gradient(180deg, rgba(2,6,23,.62) 0%, rgba(2,6,23,.78) 100%);
-      --surface:      rgba(255,255,255,.07);
-      --surface-hi:   rgba(255,255,255,.12);
-      --line:         rgba(255,255,255,.16);
-      --line-strong:  rgba(255,255,255,.30);
-      --ink:      #f8fafc;
-      --ink-mid:  #cbd5e1;
-      --ink-dim:  #94a3b8;
-      --r-sm: 12px;  --r-md: 16px;  --r-lg: 22px;  --r-pill: 999px;
-      --sp-1: 6px; --sp-2: 10px; --sp-3: 16px; --sp-4: 24px; --sp-5: 36px;
-      --shadow-card: 0 10px 30px rgba(2,6,23,.38);
-      --shadow-lift: 0 18px 44px rgba(2,6,23,.52);
-      /* 과목별 색 — 카드 위 띠와 배지에 함께 쓴다.
-         color-mix 는 조금 오래된 아이패드 사파리에서 지원되지 않아
-         투명도까지 미리 계산한 값을 함께 둔다. */
-      --s-국어:#f472b6; --s-국어-soft:rgba(244,114,182,.20); --s-국어-line:rgba(244,114,182,.45);
-      --s-수학:#60a5fa; --s-수학-soft:rgba(96,165,250,.20);  --s-수학-line:rgba(96,165,250,.45);
-      --s-사회:#fb923c; --s-사회-soft:rgba(251,146,60,.20);  --s-사회-line:rgba(251,146,60,.45);
-      --s-과학:#34d399; --s-과학-soft:rgba(52,211,153,.20);  --s-과학-line:rgba(52,211,153,.45);
-      --s-창체:#a78bfa; --s-창체-soft:rgba(167,139,250,.20); --s-창체-line:rgba(167,139,250,.45);
-      --s-기타:#94a3b8; --s-기타-soft:rgba(148,163,184,.20); --s-기타-line:rgba(148,163,184,.45);
-    }
+  /* ── nav ── */
+  .nav { position:sticky; top:0; z-index:60; background:#fff; border-bottom:2px solid #1d1d1f; }
+  .nav-in { max-width:1200px; margin:0 auto; height:52px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .nav-brand { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; letter-spacing:-.2px; }
+  .nav-mark { width:24px; height:24px; border:2px solid #1d1d1f; border-radius:6px; background:#1d1d1f; color:#fff;
+    display:grid; place-items:center; font-size:13px; font-weight:700; }
+  .nav-right { display:flex; align-items:center; gap:10px; }
+  .hard { border:2px solid #1d1d1f; border-radius:10px; background:#fff; color:#1d1d1f; box-shadow:4px 4px 0 0 #1d1d1f;
+    transition:transform 150ms cubic-bezier(.2,0,0,1), box-shadow 150ms cubic-bezier(.2,0,0,1); cursor:pointer; }
+  .hard:hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 0 #1d1d1f; }
+  .hard:active { transform:translate(2px,2px); box-shadow:0 0 0 0 #1d1d1f; }
+  .nav-btn { padding:7px 14px; font-size:13px; font-weight:600; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body {
-      min-height: 100dvh; overflow-x: hidden; color: var(--ink);
-      background: linear-gradient(-45deg, #071a52, #0f3460, #1b1b7a, #533483, #7c3aed, #c026d3, #ea580c);
-      background-size: 400% 400%; animation: gradientMove 28s ease infinite; position: relative;
-    }
-    @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    /* 어두운 막을 한 겹 덮어 카드가 배경에 묻히지 않게 한다 */
-    body::before { content:""; position: fixed; inset: 0; background: var(--bg-scrim); pointer-events: none; z-index: 0; }
-    @media (prefers-reduced-motion: reduce){ body { animation: none; } }
+  /* ── hero ── */
+  .hero { padding:104px 24px 96px; border-bottom:2px solid #1d1d1f; }
+  .hero-in { max-width:1000px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:22px; text-align:center; }
+  .eyebrow { margin:0; display:inline-block; padding:6px 14px; border:2px solid #1d1d1f; border-radius:999px;
+    font-size:13px; font-weight:700; letter-spacing:.02em; background:#fff; box-shadow:3px 3px 0 0 #1d1d1f; }
+  h1 { margin:0; display:flex; flex-wrap:wrap; justify-content:center; gap:0 .28em;
+    font-size:clamp(46px,8.4vw,104px); font-weight:700; line-height:1.02; letter-spacing:-.035em; }
+  .lede { margin:0; max-width:620px; font-size:20px; line-height:1.45; color:#474747; word-break:keep-all; }
+  .cta-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:4px; }
+  .btn-lg { display:inline-flex; align-items:center; white-space:nowrap; font-size:16px; font-weight:700; padding:13px 24px; border-radius:12px; box-shadow:6px 6px 0 0 #1d1d1f; }
+  .btn-lg:hover { transform:translate(-2px,-2px); box-shadow:9px 9px 0 0 #1d1d1f; }
+  .btn-fill { background:#1d1d1f; color:#fff; }
+  .stat { margin:6px 0 0; font-size:14px; font-weight:600; color:#474747; }
 
-    .container { max-width: 1220px; margin: 0 auto; padding: 32px 20px 80px; position: relative; z-index: 1; }
+  /* ── browse ── */
+  .browse { background:#f5f5f7; padding:64px 24px 120px; }
+  .browse-in { max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:32px; }
+  h2 { margin:0; font-size:34px; font-weight:700; letter-spacing:-.02em; }
+  .head { display:flex; flex-direction:column; gap:8px; }
+  #countText { margin:0; font-size:15px; font-weight:500; color:#474747; }
 
-    /* ── 헤더 ── */
-    header { text-align: center; margin-bottom: var(--sp-5); }
-    .admin-trigger { display:inline-block; background: var(--surface); backdrop-filter: blur(8px); border: 1px solid var(--line); padding: 9px 18px; border-radius: var(--r-pill); color: var(--ink-mid); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s ease; margin-bottom: var(--sp-4); }
-    .admin-trigger:hover { background: var(--surface-hi); color: var(--ink); }
-    .hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(to right, #ffffff, #f1f5f9, #cbd5e1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero .sub { margin-top: 10px; font-size: 15px; color: var(--ink-mid); font-weight: 600; }
-    .hero .count { margin-top: 6px; font-size: 13px; color: var(--ink-dim); }
+  .controls { display:flex; flex-direction:column; gap:16px; }
+  .search-wrap { position:relative; max-width:520px; width:100%; }
+  #search { width:100%; background:#fff; border:2px solid #1d1d1f; border-radius:12px; box-shadow:4px 4px 0 0 #1d1d1f;
+    padding:14px 46px 14px 18px; font-size:16px; font-weight:500; color:#1d1d1f; outline:none; }
+  #search:focus { box-shadow:6px 6px 0 0 #1d1d1f; }
+  #clear { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:28px; height:28px;
+    border:2px solid #1d1d1f; border-radius:8px; background:#fff; color:#1d1d1f; font-size:13px; cursor:pointer; display:none; padding:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; }
+  .chip { display:inline-flex; align-items:center; white-space:nowrap; border:2px solid #1d1d1f; border-radius:999px;
+    background:#fff; color:#1d1d1f; cursor:pointer; box-shadow:3px 3px 0 0 #1d1d1f;
+    transition:transform 140ms cubic-bezier(.2,0,0,1), box-shadow 140ms cubic-bezier(.2,0,0,1), background 140ms; }
+  .chip:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 0 #1d1d1f; }
+  .chip.on { background:#1d1d1f; color:#fff; box-shadow:0 0 0 0 #1d1d1f; transform:translate(3px,3px); }
+  .chips.grade .chip { padding:9px 18px; font-size:14px; font-weight:700; }
+  .chips.subject .chip { padding:7px 15px; font-size:13px; font-weight:600; }
 
-    /* ── 검색 ── */
-    .searchWrap { max-width: 460px; margin: var(--sp-4) auto var(--sp-3); position: relative; }
-    .searchWrap .ico { position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:15px; opacity:.7; pointer-events:none; }
-    #searchInput { width:100%; background: var(--surface); border:1px solid var(--line); border-radius: var(--r-pill); padding: 13px 44px 13px 42px; color: var(--ink); font-size: 15px; font-weight:600; transition: all .2s; }
-    #searchInput::placeholder { color: var(--ink-dim); font-weight:500; }
-    #searchInput:focus { outline:none; border-color: var(--line-strong); background: var(--surface-hi); }
-    .searchClear { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--ink-dim); font-size:17px; cursor:pointer; padding:4px 8px; display:none; }
-    .searchClear.on { display:block; }
+  /* ── sections + cards ── */
+  #results { display:flex; flex-direction:column; gap:44px; }
+  .section-head { position:sticky; top:52px; z-index:40; margin:0 0 18px; padding:10px 0;
+    background:#f5f5f7; display:flex; align-items:baseline; gap:12px; border-bottom:2px solid #1d1d1f; }
+  .section-head h3 { margin:0; font-size:22px; font-weight:700; letter-spacing:-.01em; }
+  .section-head span { font-size:13px; font-weight:600; color:#474747; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,292px),1fr)); gap:24px; align-items:stretch; }
 
-    /* ── 필터 탭 ── */
-    .category-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: var(--sp-2); flex-wrap: wrap; }
-    .tab-btn { background: var(--surface); backdrop-filter: blur(8px); border: 1px solid var(--line); padding: 9px 20px; border-radius: var(--r-pill); color: var(--ink-mid); font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s ease; }
-    .tab-btn:hover { background: var(--surface-hi); color: #fff; }
-    .tab-btn.active { background: #ffffff; color: #0f172a; border-color: #ffffff; box-shadow: 0 4px 14px rgba(255,255,255,.2); }
+  .card { position:relative; background:#fff; border:2px solid #1d1d1f; border-radius:14px; overflow:hidden;
+    display:flex; flex-direction:column; cursor:pointer; box-shadow:8px 8px 0 0 #1d1d1f;
+    transition:transform 180ms cubic-bezier(.2,0,0,1), box-shadow 180ms cubic-bezier(.2,0,0,1); }
+  .card:hover { transform:translate(-3px,-3px); box-shadow:13px 13px 0 0 #1d1d1f; }
+  .card:active { transform:translate(3px,3px); box-shadow:0 0 0 0 #1d1d1f; }
+  .thumb { position:relative; aspect-ratio:16/10; border-bottom:2px solid #1d1d1f; background:#f5f5f7;
+    display:grid; place-items:center; overflow:hidden; }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .thumb .glyph { font-size:52px; line-height:1; filter:saturate(.95); }
+  .card-body { padding:18px 20px 20px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .card-meta { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#474747; }
+  .card h4 { margin:0; font-size:20px; font-weight:700; line-height:1.25; letter-spacing:-.015em; word-break:keep-all; }
+  .card-genre { margin:0; font-size:14px; font-weight:500; line-height:1.4; color:#474747; }
+  .card-foot { margin-top:auto; padding-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .card-go { font-size:14px; font-weight:700; }
+  .share { border:2px solid #1d1d1f; border-radius:8px; background:#fff; color:#1d1d1f; font-size:11px; font-weight:700;
+    padding:5px 10px; cursor:pointer; }
+  .share:hover { background:#1d1d1f; color:#fff; }
 
-    .subject-tabs { margin-bottom: var(--sp-5); gap: 7px; }
-    .subject-btn { background: rgba(255,255,255,.05); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.12); padding: 7px 17px; border-radius: var(--r-pill); color: var(--ink-dim); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .2s ease; }
-    .subject-btn:hover { background: var(--surface-hi); color: #fff; }
-    .subject-btn.active { background: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
+  #empty { display:none; background:#fff; border:2px solid #1d1d1f; border-radius:14px; box-shadow:8px 8px 0 0 #1d1d1f;
+    padding:72px 28px; text-align:center; flex-direction:column; gap:10px; }
+  #empty p:first-child { margin:0; font-size:26px; font-weight:700; }
+  #empty p:last-child { margin:0; font-size:15px; color:#474747; }
 
-    /* ── 게임 카드 ── */
-    .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(288px, 1fr)); gap: 20px; align-items: stretch; }
-    .game-card {
-      position: relative; overflow: hidden;
-      background: var(--surface); backdrop-filter: blur(16px);
-      border: 1px solid var(--line); border-radius: var(--r-lg);
-      padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 14px;
-      box-shadow: var(--shadow-card);
-      transition: transform .22s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease;
-    }
-    /* 카드 위쪽 과목 색 띠 — 목록에서 과목이 한눈에 구분된다 */
-    .game-card::before { content:""; position:absolute; top:0; left:0; right:0; height:4px; background: var(--accent, var(--s-기타)); opacity:.95; }
-    .game-card:hover { transform: translateY(-4px); background: var(--surface-hi); border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
+  footer { padding:40px 24px 72px; border-top:2px solid #1d1d1f; }
+  .foot-in { max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:baseline; }
+  .foot-in p { margin:0; font-size:12px; font-weight:500; line-height:1.4; color:#474747; }
 
-    .cardTop { display:flex; align-items:flex-start; gap: 12px; }
-    .cardIcon { font-size: 30px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
-    .cardHead { flex: 1; min-width: 0; }
-    .badgeRow { display:flex; flex-wrap:wrap; gap: 5px; margin-bottom: 7px; }
-    .badge { font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: var(--r-pill); letter-spacing: .2px; white-space: nowrap; }
-    .badge.grade { background: rgba(255,255,255,.14); color: #e2e8f0; border: 1px solid rgba(255,255,255,.16); }
-    .badge.subject { background: var(--accent-soft, rgba(148,163,184,.20)); color: var(--accent, #94a3b8); border: 1px solid var(--accent-line, rgba(148,163,184,.45)); }
-    .game-card h3 { font-size: 17.5px; font-weight: 800; line-height: 1.38; word-break: keep-all; color: #fff; }
-    .genreLine { font-size: 12.5px; color: var(--ink-dim); font-weight: 600; display:flex; align-items:center; gap:5px; }
+  /* ── overlays ── */
+  #launch { display:none; position:fixed; inset:0; z-index:99999; background:#000; }
+  #launch iframe { width:100%; height:100%; border:none; display:block; }
+  #closeLaunch { position:absolute; top:16px; right:16px; padding:11px 20px; font-size:15px; font-weight:700; }
 
-    .launch-btn { margin-top: auto; background: #ffffff; color: #0f172a; text-align: center; padding: 13px; border-radius: var(--r-md); font-weight: 800; font-size: 15px; cursor: pointer; border: none; transition: background .18s, transform .12s; }
-    .launch-btn:hover { background: #f1f5f9; }
-    .launch-btn:active { transform: scale(.985); }
+  #admin { display:none; position:fixed; inset:0; z-index:1000; background:rgba(29,29,31,.5);
+    align-items:center; justify-content:center; padding:24px; }
+  .admin-box { background:#fff; border:2px solid #1d1d1f; border-radius:16px; box-shadow:12px 12px 0 0 #1d1d1f;
+    padding:32px; width:100%; max-width:540px; display:flex; flex-direction:column; gap:18px; max-height:88vh; overflow:auto; }
+  .admin-box h2 { font-size:28px; }
+  .admin-note { margin:0; font-size:13px; font-weight:500; line-height:1.5; color:#474747; }
+  .field { display:flex; flex-direction:column; gap:7px; }
+  .field label { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#474747; }
+  .field input, .field select { width:100%; background:#fff; border:2px solid #1d1d1f; border-radius:10px;
+    padding:11px 13px; font-size:15px; font-weight:500; color:#1d1d1f; outline:none; }
+  .admin-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:2px; }
+  .admin-actions button { padding:11px 18px; font-size:14px; font-weight:700; }
 
-    .emptyState { grid-column: 1/-1; text-align:center; padding: 60px 20px; color: var(--ink-mid); }
-    .emptyState .big { font-size: 40px; margin-bottom: 12px; }
-    .emptyState .msg { font-size: 16px; font-weight: 700; }
-    .emptyState .hintTxt { font-size: 13.5px; color: var(--ink-dim); margin-top: 6px; }
+  #toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,14px); z-index:100000;
+    background:#1d1d1f; color:#fff; border-radius:999px; padding:11px 20px; font-size:14px; font-weight:600;
+    opacity:0; pointer-events:none; transition:opacity 200ms, transform 200ms; }
+  #toast.show { opacity:1; transform:translate(-50%,0); }
 
-    /* ── 게임 실행 화면 / 관리자 모달 ── */
-    .game-master-overlay { position: fixed; inset: 0; background: #000; z-index: 99999; display: none; align-items: center; justify-content: center; }
-    #gameConsoleBox { width: 100vw; height: 100dvh; display: flex; justify-content: center; align-items: center; background: #000; }
-    .game-frame-iframe { width: 100%; height: 100%; border: none; }
-    .floating-close-btn { position: absolute; top: 16px; right: 16px; z-index: 10000; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); color: #fff; border: 1px solid rgba(255,255,255,.3); padding: 10px 16px; border-radius: var(--r-sm); font-weight: 700; cursor: pointer; transition: all .25s ease; box-shadow: 0 4px 10px rgba(0,0,0,.5); }
-    .floating-close-btn:hover { background: rgba(255,255,255,.2); }
+  /* ── hero entrance ── */
+  @keyframes wordRise { 0% { transform:translateY(115%) rotate(5deg); } 100% { transform:translateY(0) rotate(0); } }
+  @keyframes fadeUp { 0% { opacity:0; transform:translateY(14px); } 100% { opacity:1; transform:translateY(0); } }
+  @keyframes popIn { 0% { opacity:0; transform:translateY(10px) scale(.94); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+  .word { display:inline-block; overflow:hidden; padding:0 .04em .16em; margin:0 -.04em -.16em; }
+  .word > span { display:inline-block; transform:translateY(115%) rotate(5deg); animation:wordRise 1s cubic-bezier(.16,1,.3,1) both; }
+  .word:nth-child(1) > span { animation-delay:.12s; }
+  .word:nth-child(2) > span { animation-delay:.24s; }
+  .word:nth-child(3) > span { animation-delay:.36s; }
+  .hero .eyebrow { opacity:0; animation:popIn .6s cubic-bezier(.16,1,.3,1) .02s both; }
+  .hero .lede { opacity:0; animation:fadeUp .7s cubic-bezier(.2,0,0,1) .70s both; }
+  .hero .cta-row { opacity:0; animation:fadeUp .7s cubic-bezier(.2,0,0,1) .80s both; }
+  .hero .stat { opacity:0; animation:fadeUp .7s cubic-bezier(.2,0,0,1) .90s both; }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(2,6,23,.68); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-    .modal-box { background: #1e1b4b; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 32px; width: 100%; max-width: 520px; color: white; box-shadow: var(--shadow-lift); }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; margin-bottom: 7px; font-size: 13.5px; font-weight: 700; color: var(--ink-mid); }
-    input, select, textarea { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: var(--r-sm); padding: 12px 15px; color: #fff; font-size: 15px; transition: all .2s; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--line-strong); background: rgba(255,255,255,.1); }
-    select option { background-color: #1e1b4b; color: #ffffff; }
-
-    @media (max-width: 520px){
-      .container { padding: 22px 14px 60px; }
-      .games-grid { grid-template-columns: 1fr; gap: 14px; }
-      .game-card { padding: 18px 18px 16px; }
-    }
-  </style>
+  @media (prefers-reduced-motion: reduce) {
+    .card, .chip, .hard { transition:none; }
+    .word > span, .hero .eyebrow, .hero .lede, .hero .cta-row, .hero .stat {
+      animation:none !important; opacity:1 !important; transform:none !important; }
+  }
+  @media (max-width:560px) {
+    .hero { padding:72px 20px 64px; }
+    .browse { padding:48px 20px 88px; }
+    .section-head { top:52px; }
+  }
+</style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <button class="admin-trigger" onclick="checkAdminPassword()">⚙️ 관리자 설정</button>
-      <div class="hero">
-        <h1>Play. Learn. Enjoy! ✨</h1>
-        <p class="sub">교과서 단원별로 골라 쓰는 초등 문제풀이 게임 모음</p>
-        <p class="count" id="gameCount"></p>
-      </div>
-
-      <div class="searchWrap">
-        <span class="ico">🔍</span>
-        <input type="text" id="searchInput" placeholder="단원·주제로 검색 (예: 분수, 고조선)" autocomplete="off">
-        <button class="searchClear" id="searchClear" title="검색어 지우기">✕</button>
-      </div>
-    </header>
-    
-    <div class="category-tabs" id="gradeTabs">
-      <button class="tab-btn active" onclick="filterGrade('all')">전체학년</button>
-      <button class="tab-btn" onclick="filterGrade('3학년')">3학년</button>
-      <button class="tab-btn" onclick="filterGrade('4학년')">4학년</button>
-      <button class="tab-btn" onclick="filterGrade('5학년')">5학년</button>
-      <button class="tab-btn" onclick="filterGrade('6학년')">6학년</button>
-    </div>
-
-    <div class="category-tabs subject-tabs" id="subjectTabs">
-      <button class="subject-btn active" onclick="filterSubject('all')">전체과목</button>
-      <button class="subject-btn" onclick="filterSubject('국어')">국어</button>
-      <button class="subject-btn" onclick="filterSubject('수학')">수학</button>
-      <button class="subject-btn" onclick="filterSubject('사회')">사회</button>
-      <button class="subject-btn" onclick="filterSubject('과학')">과학</button>
-      <button class="subject-btn" onclick="filterSubject('창체')">창체</button>
-      <button class="subject-btn" onclick="filterSubject('기타')">기타</button>
-    </div>
-
-    <main>
-      <div class="games-grid" id="gamesGrid"></div>
-    </main>
-  </div>
-
-  <div id="adminModal" class="modal-overlay">
-    <div class="modal-box">
-      <h2 id="modalTitle">➕ 관리자 패널</h2>
-      <div class="form-group"><label>게임 선택</label><select id="adminGameSelect" onchange="handleAdminGameSelect(this.value)"></select></div>
-      <div class="form-group"><label>타이틀 (학년 및 과목 포함 권장)</label><input type="text" id="gameTitleInput" placeholder="예: 5학년 수학 분수의 덧셈과 뺄셈"></div>
-      <div class="form-group"><label>파일 경로</label><input type="text" id="gameUrlInput" placeholder="예: ./5학년 수학 분수의 덧셈과 뺄셈.html"></div>
-      <button class="launch-btn" onclick="saveGameCard()" style="width: 100%;">저장하기</button>
-      <button onclick="closeModal('adminModal')" style="width: 100%; background:none; color:#aaa; margin-top:10px; border:none; cursor:pointer; font-weight:600;">닫기</button>
+<div class="nav">
+  <div class="nav-in">
+    <a class="nav-brand" href="#top"><span class="nav-mark">P</span>에듀테크 게임 저장소</a>
+    <div class="nav-right">
+      <a class="hard nav-btn" href="#browse">게임 모음</a>
+      <button type="button" class="hard nav-btn" id="openAdmin">관리자</button>
     </div>
   </div>
+</div>
 
-  <div id="gameMasterConsole" class="game-master-overlay">
-      <button class="floating-close-btn" onclick="shutdownConsole()">✖ 닫기</button>
-      <div id="gameConsoleBox">
-          <iframe src="" class="game-frame-iframe" id="gameMasterIframe" allow="autoplay; fullscreen" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
-      </div>
+<section class="hero" id="top">
+  <div class="hero-in">
+    <p class="eyebrow">초등 교과 수업용 게임</p>
+    <h1 aria-label="Play. Learn. Enjoy."><span class="word"><span>Play.</span></span><span class="word"><span>Learn.</span></span><span class="word"><span>Enjoy.</span></span></h1>
+    <p class="lede">교과서 단원별로 골라 쓰는 초등 문제풀이 게임 모음</p>
+    <div class="cta-row">
+      <a class="hard btn-lg btn-fill" href="#browse">게임 둘러보기</a>
+      <a class="hard btn-lg" href="#browse">학년별로 보기</a>
+    </div>
+    <p class="stat" id="heroCount"></p>
   </div>
+</section>
 
-  <script>
-    let isAdminAuthenticated = false;
-    let selectedGrade = 'all';
-    let selectedSubject = 'all'; 
-    
-    // 강제 버전 동기화 번호 상향 조정 (버전 32 - 캐시 초기화 및 404 방지)
-    const CURRENT_DATA_VERSION = 32;
+<section class="browse" id="browse">
+  <div class="browse-in">
+    <div class="head">
+      <h2>게임 모음.</h2>
+      <p id="countText"></p>
+    </div>
 
-    const initialGames = [
-      { id: 1, icon: "🎢", title: "3학년 1학기 수학 길이와 시간", url: "./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html" },
-      { id: 2, icon: "🔢", title: "3학년 1학기 수학 분수와 소수", url: "./3학년 1학기 수학 분수와 소수(에듀런).html" },
-      { id: 3, icon: "🧪", title: "5학년 1학기 과학 용해 용액 단어", url: "./5학년 1학기 과학 용해 용액 단어.html" },
-      { id: 4, icon: "☁️", title: "5학년 1학기 사회 기후", url: "./5학년 1학기 사회 기후(탱크).html" },
-      { id: 5, icon: "🏯", title: "5학년 1학기 사회 인구", url: "./5학년 1학기 사회 인구(조선 마을 대모험).html" },
-      { id: 6, icon: "🚀", title: "5학년 1학기 수학 분수 크기 비교 2", url: "./5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2.html" },
-      { id: 7, icon: "🚀", title: "5학년 1학기 수학 분수 크기 비교", url: "./5학년 1학기 수학 분수 크기 비교(우주 디펜스).html" },
-      { id: 8, icon: "🧩", title: "5학년 1학기 수학 분수의 덧셈과 뺄셈", url: "./5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라).html" },
-      { id: 9, icon: "🍄", title: "5학년 1학기 수학 약분 통분 기약분수", url: "./5학년 1학기 수학 약분 통분 기약분수(마리오).html" },
-      { id: 10, icon: "🏛️", title: "6학년 1학기 사회 민주주의", url: "./6학년 1학기 사회 민주주의(젭스타일).html" },
-      { id: 11, icon: "🌍", title: "6학년 1학기 사회 세계 여러 국가", url: "./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모험.html" },
-      { id: 12, icon: "🌍", title: "6학년 1학기 사회 지구 탐구 대모험", url: "./6학년 1학기 사회 지구 탐구 대모험.html" },
-      { id: 13, icon: "🔢", title: "6학년 1학기 수학 비와 비율(마리오)", url: "./6학년 1학기 수학 비와 비율(마리오).html" },
-      { id: 14, icon: "⚔️", title: "6학년 1학기 수학 비와비율(서바이벌)", url: "./6학년 1학기 수학 비와비율(서바이벌).html" },
-      { id: 15, icon: "📊", title: "6학년 1학기 수학 여러 가지 그래프", url: "./6학년 1학기 수학 여러 가지 그래프(에듀런).html" },
-      { id: 16, icon: "🏃", title: "6학년 1학기 수학 여러가지 그래프 선수학습", url: "./6학년 1학기 수학 여러가지 그래프 선수학습(추격전).html" },
-      { id: 17, icon: "📦", title: "6학년 1학기 수학 직육면체의 부피와 겉넓이", url: "./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html" },
-      { id: 18, icon: "🎨", title: "5학년 창체 캐치 1", url: "./catch1.html" },
-      { id: 19, icon: "🎨", title: "5학년 창체 캐치 2", url: "./catch2.html" },
-      { id: 20, icon: "🎨", title: "5학년 창체 캐치 3", url: "./catch3.html" },
-      { id: 21, icon: "🎨", title: "5학년 창체 캐치 4", url: "./catch4.html" },
-      { id: 22, icon: "⚽", title: "5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥)", url: "./5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥).html" },
-      { id: 23, icon: "⌨️", title: "창체 타자 연습", url: "./타자 연습.html" },
-      { id: 24, icon: "🔐", title: "4학년 1학기 수학 규칙과 관계(암호해독)", url: "./4학년 1학기 수학 규칙과 관계(암호해독).html" },
-      { id: 25, icon: "🎨", title: "5학년 창체 캐치 5", url: "./catch5.html" },
-      { id: 26, icon: "🌍", title: "4학년 1학기 사회 합리적 소비(디펜스)", url: "./4학년 1학기 사회 합리적 소비(디펜스).html" },
-      { id: 27, icon: "🎨", title: "5학년 창체 캐치 6", url: "./catch6.html" },
-      { id: 28, icon: "⚔️", title: "5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌)", url: "./5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌).html" },
-      { id: 29, icon: "📝", title: "학교업무경감 생기부", url: "./학교업무경감 생기부.html" },
-      { id: 30, icon: "💣", title: "창체 초성 단어 폭탄돌리기", url: "./초성 단어 폭탄돌리기.html" },
-      { id: 31, icon: "🕹️", title: "창체 미니게임천국 1탄", url: "./미니게임천국 1탄.html" },
-      { id: 32, icon: "🕹️", title: "창체 미니 게임 천국 2탄", url: "./미니 게임 천국 2탄.html" },
-      { id: 33, icon: "🕹️", title: "창체 미니 게임 천국 3탄", url: "./미니 게임 천국 3탄.html" },
-      { id: 34, icon: "🧪", title: "3학년 1학기 수학 분수와 소수(마법 물약 제조소)", url: "./3학년 1학기 수학 분수와 소수(마법 물약 제조소).html" },
-      { id: 35, icon: "🎨", title: "5학년 창체 캐치 마인드 7", url: "./캐치 마인드 7.html" },
-      { id: 36, icon: "🌍", title: "4학년 1학기 사회 교류하며 발전하는 우리 지역", url: "./4학년 1학기 사회 교류하며 발전하는 우리 지역.html" },
-      { id: 37, icon: "🧪", title: "6학년 1학기 과학 지구의 운동", url: "./6학년 1학기 과학 지구의 운동.HTML" },
-      { id: 38, icon: "🎨", title: "5학년 창체 캐치 8", url: "./catch8.html" },
-      { id: 39, icon: "📖", title: "5학년 1학기 국어 비유적표현 마법연구소", url: "./5학년 1학기 국어 비유적표현 마법연구소.html" },
-      { id: 40, icon: "🧱", title: "5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈)", url: "./5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈).html" },
-      { id: 41, icon: "🧁", title: "4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)", url: "./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html" },
-      { id: 42, icon: "🎢", title: "6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)", url: "./6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤).html" },
-      { id: 43, icon: "📦", title: "5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터)", url: "./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html" },
-      { id: 44, icon: "🎢", title: "5학년 2학기 수학 분수의 곱셈(수학 코스터 타이쿤)", url: "./5학년 2학기 수학 분수의 곱셈(수학 코스터 타이쿤).html" },
-      { id: 45, icon: "🌱", title: "5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)", url: "./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html" }
-    ];
+    <div class="controls">
+      <div class="search-wrap">
+        <input type="text" id="search" placeholder="단원·주제로 검색 (예: 분수, 고조선)" autocomplete="off" />
+        <button type="button" id="clear" aria-label="검색어 지우기">✕</button>
+      </div>
+      <div class="chips grade" id="gradeTabs"></div>
+      <div class="chips subject" id="subjectTabs"></div>
+    </div>
 
-    let currentGames = [];
+    <div id="results"></div>
+    <div id="empty">
+      <p>조건에 맞는 게임이 없어요.</p>
+      <p>검색어를 지우거나 학년·과목 필터를 전체로 바꿔 보세요.</p>
+    </div>
+  </div>
+</section>
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const storedVersion = localStorage.getItem('edutech_data_version');
-      
-      if (!storedVersion || parseInt(storedVersion) !== CURRENT_DATA_VERSION) {
-        currentGames = initialGames;
-        localStorage.setItem('edutech_games', JSON.stringify(currentGames));
-        localStorage.setItem('edutech_data_version', CURRENT_DATA_VERSION.toString());
-      } else {
-        const stored = localStorage.getItem('edutech_games');
-        currentGames = stored ? JSON.parse(stored) : initialGames;
-      }
-      renderGamesGrid();
+<footer>
+  <div class="foot-in">
+    <p>에듀테크 게임 저장소 · 교과서 단원에 맞춰 만든 초등 수업용 웹게임 모음</p>
+    <p id="footCount"></p>
+  </div>
+</footer>
+
+<div id="launch"><iframe id="launchFrame" allow="autoplay; fullscreen" allowfullscreen></iframe><button type="button" class="hard" id="closeLaunch">닫기</button></div>
+
+<div id="admin">
+  <div class="admin-box">
+    <h2>관리자 패널.</h2>
+    <p class="admin-note">여기서 저장한 내용은 이 브라우저에만 남습니다. 모든 선생님께 반영하려면 <strong>JSON 복사</strong>로 목록을 복사해 저장소의 <code>games.json</code> 파일에 붙여 넣고 커밋하세요.</p>
+    <div class="field">
+      <label for="adminSel">게임 선택</label>
+      <select id="adminSel"></select>
+    </div>
+    <div class="field">
+      <label for="adminTitle">타이틀 (학년 및 과목 포함 권장)</label>
+      <input type="text" id="adminTitle" placeholder="예: 5학년 1학기 수학 분수의 덧셈과 뺄셈" />
+    </div>
+    <div class="field">
+      <label for="adminUrl">파일 경로</label>
+      <input type="text" id="adminUrl" placeholder="예: ./5학년 1학기 수학 분수의 덧셈과 뺄셈.html" />
+    </div>
+    <div class="field">
+      <label for="adminThumb">썸네일 경로 (선택)</label>
+      <input type="text" id="adminThumb" placeholder="예: ./screenshots/07_후반_고조선시대_플레이화면.png" />
+    </div>
+    <div class="admin-actions">
+      <button type="button" class="hard" style="background:#1d1d1f; color:#fff" id="saveGame">저장하기</button>
+      <button type="button" class="hard" id="copyJson">JSON 복사</button>
+      <button type="button" class="hard" id="resetLocal">저장소 목록으로 되돌리기</button>
+      <button type="button" class="hard" id="closeAdmin">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+// 강제로 최신 데이터를 바라보도록 버전을 높입니다.
+const FALLBACK = { version: 33, games: [
+  { "id": 1, "icon": "🎢", "title": "3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)", "url": "./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html" },
+  { "id": 2, "icon": "🔢", "title": "3학년 1학기 수학 분수와 소수(에듀런)", "url": "./3학년 1학기 수학 분수와 소수(에듀런).html" },
+  { "id": 3, "icon": "🧪", "title": "5학년 1학기 과학 용해 용액 단어", "url": "./5학년 1학기 과학 용해 용액 단어.html" },
+  { "id": 4, "icon": "☁️", "title": "5학년 1학기 사회 기후(탱크)", "url": "./5학년 1학기 사회 기후(탱크).html" },
+  { "id": 5, "icon": "🏯", "title": "5학년 1학기 사회 인구(조선 마을 대모험)", "url": "./5학년 1학기 사회 인구(조선 마을 대모험).html" },
+  { "id": 6, "icon": "🚀", "title": "5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2", "url": "./5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2.html" },
+  { "id": 7, "icon": "🚀", "title": "5학년 1학기 수학 분수 크기 비교(우주 디펜스)", "url": "./5학년 1학기 수학 분수 크기 비교(우주 디펜스).html" },
+  { "id": 8, "icon": "🧩", "title": "5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라)", "url": "./5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라).html" },
+  { "id": 9, "icon": "🍄", "title": "5학년 1학기 수학 약분 통분 기약분수(마리오)", "url": "./5학년 1학기 수학 약분 통분 기약분수(마리오).html" },
+  { "id": 10, "icon": "🏛️", "title": "6학년 1학기 사회 민주주의(젭스타일)", "url": "./6학년 1학기 사회 민주주의(젭스타일).html" },
+  { "id": 11, "icon": "🎢", "title": "6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤)", "url": "./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤).html" },
+  { "id": 12, "icon": "🌍", "title": "6학년 1학기 사회 지구 탐구 대모험", "url": "./6학년 1학기 사회 지구 탐구 대모험.html" },
+  { "id": 13, "icon": "🔢", "title": "6학년 1학기 수학 비와 비율(마리오)", "url": "./6학년 1학기 수학 비와 비율(마리오).html" },
+  { "id": 14, "icon": "⚔️", "title": "6학년 1학기 수학 비와비율(서바이벌)", "url": "./6학년 1학기 수학 비와비율(서바이벌).html" },
+  { "id": 15, "icon": "📊", "title": "6학년 1학기 수학 여러 가지 그래프(에듀런)", "url": "./6학년 1학기 수학 여러 가지 그래프(에듀런).html" },
+  { "id": 16, "icon": "🏃", "title": "6학년 1학기 수학 여러가지 그래프 선수학습(추격전)", "url": "./6학년 1학기 수학 여러가지 그래프 선수학습(추격전).html" },
+  { "id": 17, "icon": "📦", "title": "6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런)", "url": "./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html" },
+  { "id": 18, "icon": "🎨", "title": "5학년 창체 캐치 1", "url": "./catch1.html" },
+  { "id": 19, "icon": "🎨", "title": "5학년 창체 캐치 2", "url": "./catch2.html" },
+  { "id": 20, "icon": "🎨", "title": "5학년 창체 캐치 3", "url": "./catch3.html" },
+  { "id": 21, "icon": "🎨", "title": "5학년 창체 캐치 4", "url": "./catch4.html" },
+  { "id": 22, "icon": "⚽", "title": "5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥)", "url": "./5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥).html" },
+  { "id": 23, "icon": "⌨️", "title": "창체 타자 연습", "url": "./타자 연습.html" },
+  { "id": 24, "icon": "🔐", "title": "4학년 1학기 수학 규칙과 관계(암호해독)", "url": "./4학년 1학기 수학 규칙과 관계(암호해독).html" },
+  { "id": 25, "icon": "🎨", "title": "5학년 창체 캐치 5", "url": "./catch5.html" },
+  { "id": 26, "icon": "🌍", "title": "4학년 1학기 사회 합리적 소비(디펜스)", "url": "./4학년 1학기 사회 합리적 소비(디펜스).html" },
+  { "id": 27, "icon": "🎨", "title": "5학년 창체 캐치 6", "url": "./catch6.html" },
+  { "id": 28, "icon": "⚔️", "title": "5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌)", "url": "./5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌).html" },
+  { "id": 29, "icon": "📝", "title": "학교업무경감 생기부", "url": "./학교업무경감 생기부.html" },
+  { "id": 30, "icon": "💣", "title": "창체 초성 단어 폭탄돌리기", "url": "./초성 단어 폭탄돌리기.html" },
+  { "id": 31, "icon": "🕹️", "title": "창체 미니게임천국 1탄", "url": "./미니게임천국 1탄.html" },
+  { "id": 32, "icon": "🕹️", "title": "창체 미니 게임 천국 2탄", "url": "./미니 게임 천국 2탄.html" },
+  { "id": 33, "icon": "🕹️", "title": "창체 미니 게임 천국 3탄", "url": "./미니 게임 천국 3탄.html" },
+  { "id": 34, "icon": "🧪", "title": "3학년 1학기 수학 분수와 소수(마법 물약 제조소)", "url": "./3학년 1학기 수학 분수와 소수(마법 물약 제조소).html" },
+  { "id": 35, "icon": "🎨", "title": "5학년 창체 캐치 마인드 7", "url": "./캐치 마인드 7.html" },
+  { "id": 36, "icon": "🌍", "title": "4학년 1학기 사회 교류하며 발전하는 우리 지역", "url": "./4학년 1학기 사회 교류하며 발전하는 우리 지역.html" },
+  { "id": 37, "icon": "🧪", "title": "6학년 1학기 과학 지구의 운동", "url": "./6학년 1학기 과학 지구의 운동.HTML" },
+  { "id": 38, "icon": "🎨", "title": "5학년 창체 캐치 8", "url": "./catch8.html" },
+  { "id": 39, "icon": "📖", "title": "5학년 1학기 국어 비유적표현 마법연구소", "url": "./5학년 1학기 국어 비유적표현 마법연구소.html" },
+  { "id": 40, "icon": "🧱", "title": "5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈)", "url": "./5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈).html", "thumb": "./screenshots/07_후반_고조선시대_플레이화면.png" },
+  { "id": 41, "icon": "🧁", "title": "4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)", "url": "./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html" },
+  { "id": 42, "icon": "🎢", "title": "6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)", "url": "./6-2 소수의 나눗셈(수학 코스터 타이쿤).html" },
+  { "id": 43, "icon": "📦", "title": "5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터)", "url": "./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html" },
+  { "id": 44, "icon": "🎢", "title": "5학년 2학기 수학 분수의 곱셈(수학 코스터 타이쿤)", "url": "./5학년 2학기 수학 분수의 곱셈(수학 코스터 타이쿤).html" },
+  { "id": 45, "icon": "🌱", "title": "5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)", "url": "./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html" }
+] };
+const LS_KEY = 'edutech_games_v2';
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let games = FALLBACK.games, remoteVersion = FALLBACK.version;
+let grade = 'all', subject = 'all', q = '', shownCount = null, raf = 0;
+
+const $ = s => document.querySelector(s);
+const results = $('#results');
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    return p && Array.isArray(p.games) && p.games.length ? p : null;
+  } catch (e) { return null; }
+}
+function saveLocal(list) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ base: remoteVersion, games: list })); } catch (e) {}
+}
+
+function subjectOf(t) {
+  for (const s of ['국어','수학','사회','과학','창체']) if (t.includes(s)) return s;
+  return '기타';
+}
+function gradeOf(t) { const m = t.match(/([3-6])학년/); return m ? m[1] + '학년' : '기타'; }
+
+function parseTitle(full) {
+  let rest = String(full).trim(), g = '', term = '', subj = '', m;
+  if ((m = rest.match(/^([3-6]학년)\s*/))) { g = m[1]; rest = rest.slice(m[0].length); }
+  if ((m = rest.match(/^([1-2]학기)\s*/))) { term = m[1]; rest = rest.slice(m[0].length); }
+  if ((m = rest.match(/^(국어|수학|사회|과학|창체|영어|도덕|실과|음악|미술|체육)\s*/))) { subj = m[1]; rest = rest.slice(m[0].length); }
+  let genre = '';
+  const gm = rest.match(/[（(]([^()（）]+)[）)]\s*$/);
+  if (gm) { genre = gm[1].trim(); rest = rest.slice(0, gm.index).trim(); }
+  return { grade: g, term, subject: subj || subjectOf(full), name: rest.trim() || String(full).trim(), genre };
+}
+
+let toastTimer = 0;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function playRise(el, i) {
+  if (el.dataset.revealed === '1') return;
+  el.dataset.revealed = '1';
+  if (REDUCED || typeof el.animate !== 'function') return;
+  el.animate(
+    [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }],
+    { duration: 480, delay: i * 40, easing: 'cubic-bezier(0.2,0,0,1)', fill: 'backwards' }
+  );
+}
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+  let i = 0;
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    io.unobserve(e.target);
+    playRise(e.target, i++);
+  });
+}, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 }) : null;
+
+function tweenCount(to) {
+  cancelAnimationFrame(raf);
+  const from = shownCount == null ? to : shownCount;
+  if (from === to || REDUCED) { shownCount = to; paintCount(); return; }
+  let t0 = null;
+  const step = t => {
+    if (t0 === null) t0 = t;
+    const p = Math.max(0, Math.min(1, (t - t0) / 340));
+    shownCount = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+    paintCount();
+    if (p < 1) raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+}
+function paintCount() {
+  const active = q.trim() || grade !== 'all' || subject !== 'all';
+  $('#countText').textContent = active
+    ? '전체 ' + games.length + '개 중 ' + (shownCount ?? 0) + '개 표시 중'
+    : '학년과 과목으로 좁혀서 찾아보세요';
+}
+
+function chips(host, values, current, onPick) {
+  host.innerHTML = '';
+  values.forEach(v => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip' + (current === v.value ? ' on' : '');
+    b.textContent = v.label;
+    b.onclick = () => onPick(v.value);
+    host.appendChild(b);
+  });
+}
+function renderChips() {
+  chips($('#gradeTabs'),
+    [['all','전체 학년'],['3학년','3학년'],['4학년','4학년'],['5학년','5학년'],['6학년','6학년'],['기타','기타']].map(([value,label]) => ({value,label})),
+    grade, v => { grade = v; render(); });
+  chips($('#subjectTabs'),
+    [['all','전체 과목'],['국어','국어'],['수학','수학'],['사회','사회'],['과학','과학'],['창체','창체'],['기타','기타']].map(([value,label]) => ({value,label})),
+    subject, v => { subject = v; render(); });
+}
+
+function buildCard(g) {
+  const i = parseTitle(g.title);
+  const meta = [i.grade && i.term ? i.grade + ' ' + i.term : i.grade, i.subject].filter(Boolean).join(' · ') || '기타';
+
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.dataset.gid = String(g.id);
+  card.onclick = () => openGame(g.id, true);
+
+  const thumb = document.createElement('div');
+  thumb.className = 'thumb';
+  const glyph = document.createElement('span');
+  glyph.className = 'glyph';
+  glyph.textContent = g.icon || '🎮';
+  thumb.appendChild(glyph);
+  if (g.thumb) {
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = '';
+    img.style.display = 'none';
+    img.onload = () => { img.style.display = 'block'; glyph.remove(); };
+    img.onerror = () => img.remove();
+    img.src = g.thumb;
+    thumb.appendChild(img);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'card-body';
+  const mt = document.createElement('span'); mt.className = 'card-meta'; mt.textContent = meta;
+  const h4 = document.createElement('h4'); h4.textContent = i.name;
+  const gen = document.createElement('p'); gen.className = 'card-genre'; gen.textContent = i.genre;
+  const foot = document.createElement('div'); foot.className = 'card-foot';
+  const go = document.createElement('span'); go.className = 'card-go'; go.textContent = '실행하기 ›';
+  const share = document.createElement('button');
+  share.type = 'button'; share.className = 'share'; share.textContent = '링크 복사';
+  share.onclick = e => {
+    e.stopPropagation();
+    const link = location.origin + location.pathname + '#game=' + g.id;
+    const done = () => toast('링크를 복사했어요');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => prompt('링크', link));
+    else prompt('링크', link);
+  };
+  foot.append(go, share);
+  body.append(mt, h4, gen, foot);
+  card.append(thumb, body);
+  return card;
+}
+
+const GRADE_ORDER = ['3학년','4학년','5학년','6학년','기타'];
+
+function render() {
+  const snap = new Map();
+  if (!REDUCED) results.querySelectorAll('.card').forEach(el => snap.set(el.dataset.gid, el.getBoundingClientRect()));
+
+  const query = q.trim().toLowerCase();
+  const filtered = games.filter(g =>
+    (grade === 'all' || gradeOf(g.title) === grade) &&
+    (subject === 'all' || subjectOf(g.title) === subject) &&
+    (!query || g.title.toLowerCase().includes(query))
+  );
+
+  results.innerHTML = '';
+  const groupBy = grade === 'all';
+
+  if (!groupBy) {
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    filtered.forEach(g => grid.appendChild(buildCard(g)));
+    results.appendChild(grid);
+  } else {
+    GRADE_ORDER.forEach(gr => {
+      const list = filtered.filter(g => gradeOf(g.title) === gr);
+      if (!list.length) return;
+      const sec = document.createElement('section');
+      const head = document.createElement('div');
+      head.className = 'section-head';
+      const h3 = document.createElement('h3'); h3.textContent = gr;
+      const n = document.createElement('span'); n.textContent = list.length + '개';
+      head.append(h3, n);
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      list.forEach(g => grid.appendChild(buildCard(g)));
+      sec.append(head, grid);
+      results.appendChild(sec);
     });
+  }
 
-    function getGradeFromTitle(title) {
-      const match = title.match(/([3-6])학년/);
-      return match ? `${match[1]}학년` : '기타';
+  $('#empty').style.display = filtered.length ? 'none' : 'flex';
+  $('#clear').style.display = q ? 'block' : 'none';
+
+  results.querySelectorAll('.card').forEach(el => {
+    const prev = snap.get(el.dataset.gid);
+    if (prev && !REDUCED) {
+      el.dataset.revealed = '1';
+      const now = el.getBoundingClientRect();
+      const dx = prev.left - now.left, dy = prev.top - now.top;
+      if (dx || dy) el.animate(
+        [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
+        { duration: 340, easing: 'cubic-bezier(0.2,0,0,1)' });
+    } else if (io && !REDUCED) {
+      io.observe(el);
+    } else {
+      el.dataset.revealed = '1';
     }
+  });
 
-    function getSubjectFromTitle(title) {
-      if (title.includes('국어')) return '국어';
-      if (title.includes('수학')) return '수학';
-      if (title.includes('사회')) return '사회';
-      if (title.includes('과학')) return '과학';
-      if (title.includes('창체')) return '창체';
-      return '기타';
-    }
+  renderChips();
+  tweenCount(filtered.length);
+  $('#heroCount').textContent = '모두 ' + games.length + '개의 게임이 준비되어 있어요';
+  $('#footCount').textContent = '게임 ' + games.length + '개';
+}
 
-    /** 제목 한 줄을 배지로 나눠 담는다.
-        "5학년 1학기 사회 유적과 유물로 …(테트리스 퀴즈)"
-          → 학년 5학년 · 학기 1학기 · 과목 사회 · 제목 "유적과 유물로 …" · 장르 "테트리스 퀴즈"
-        카드에서 제목만 크게 보이고 나머지는 배지로 빠져, 길어서 줄이 깨지던 문제가 사라진다. */
-    function parseTitle(full){
-      let rest = String(full).trim();
-      let grade = '', term = '', subject = '';
-      let m = rest.match(/^([3-6]학년)\s*/);
-      if(m){ grade = m[1]; rest = rest.slice(m[0].length); }
-      m = rest.match(/^([1-2]학기)\s*/);
-      if(m){ term = m[1]; rest = rest.slice(m[0].length); }
-      m = rest.match(/^(국어|수학|사회|과학|창체|영어|도덕|실과|음악|미술|체육)\s*/);
-      if(m){ subject = m[1]; rest = rest.slice(m[0].length); }
-      // 끝의 괄호는 게임 장르로 뽑아낸다
-      let genre = '';
-      const g = rest.match(/[（(]([^()（）]+)[）)]\s*$/);
-      if(g){ genre = g[1].trim(); rest = rest.slice(0, g.index).trim(); }
-      return {
-        grade, term,
-        subject: subject || getSubjectFromTitle(full),
-        name: rest.trim() || String(full).trim(),
-        genre
-      };
-    }
+/* ── launch + hash routing ── */
+function openGame(id, pushHash) {
+  const g = games.find(x => String(x.id) === String(id));
+  if (!g) return;
+  // 한글 및 공백 파일명 404 에러 방지를 위해 encodeURI 적용
+  $('#launchFrame').src = encodeURI(g.url); 
+  $('#launch').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  document.title = g.title + ' · 에듀테크 게임 저장소';
+  if (pushHash && location.hash !== '#game=' + g.id) history.pushState(null, '', '#game=' + g.id);
+}
+function closeLaunch(popBack) {
+  $('#launch').style.display = 'none';
+  $('#launchFrame').src = 'about:blank';
+  document.body.style.overflow = '';
+  document.title = '에듀테크 게임 저장소 · 초등 교과 수업용 게임 모음';
+  if (popBack && /^#game=/.test(location.hash)) history.pushState(null, '', location.pathname + '#browse');
+}
+$('#closeLaunch').onclick = () => closeLaunch(true);
 
-    function escapeHtml(v){
-      return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
+function syncHash() {
+  const m = location.hash.match(/^#game=(.+)$/);
+  if (m) openGame(decodeURIComponent(m[1]), false);
+  else closeLaunch(false);
+}
+addEventListener('hashchange', syncHash);
+addEventListener('popstate', syncHash);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#launch').style.display === 'block') closeLaunch(true);
+  else if ($('#admin').style.display === 'flex') closeAdmin();
+});
 
-    function renderGamesGrid() {
-      const grid = document.getElementById('gamesGrid');
-      grid.innerHTML = "";
+$('#search').addEventListener('input', e => { q = e.target.value; render(); });
+$('#clear').onclick = () => { q = ''; $('#search').value = ''; render(); };
 
-      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+/* ── admin ── */
+function fillAdminOptions() {
+  const sel = $('#adminSel');
+  sel.innerHTML = '';
+  const blank = document.createElement('option'); blank.value = ''; blank.textContent = '＋ 새 게임 등록';
+  sel.appendChild(blank);
+  games.forEach(g => {
+    const o = document.createElement('option'); o.value = String(g.id); o.textContent = g.title;
+    sel.appendChild(o);
+  });
+}
+function closeAdmin() { $('#admin').style.display = 'none'; document.body.style.overflow = ''; }
+$('#closeAdmin').onclick = closeAdmin;
+$('#openAdmin').onclick = () => {
+  if (prompt('관리자 암호를 입력하세요.') !== 'gudtns12') return;
+  fillAdminOptions();
+  $('#adminSel').value = ''; $('#adminTitle').value = ''; $('#adminUrl').value = ''; $('#adminThumb').value = '';
+  $('#admin').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+$('#adminSel').addEventListener('change', e => {
+  const g = games.find(x => String(x.id) === e.target.value);
+  $('#adminTitle').value = g ? g.title : '';
+  $('#adminUrl').value = g ? g.url : '';
+  $('#adminThumb').value = g && g.thumb ? g.thumb : '';
+});
+$('#saveGame').onclick = () => {
+  const title = $('#adminTitle').value.trim(), url = $('#adminUrl').value.trim(), thumb = $('#adminThumb').value.trim();
+  if (!title || !url) { alert('타이틀과 파일 경로를 모두 입력해주세요.'); return; }
+  const sel = $('#adminSel').value;
+  if (sel) {
+    games = games.map(g => String(g.id) === sel ? Object.assign({}, g, { title, url, thumb: thumb || undefined }) : g);
+  } else {
+    const icon = title.includes('수학') ? '🔢' : title.includes('사회') ? '🌍'
+      : title.includes('과학') ? '🧪' : title.includes('국어') ? '📖' : '🎮';
+    games = games.concat([{ id: games.length ? Math.max.apply(null, games.map(g => Number(g.id) || 0)) + 1 : 1,
+      icon, title, url, thumb: thumb || undefined }]);
+  }
+  saveLocal(games);
+  closeAdmin();
+  render();
+  toast('저장했어요 · JSON 복사로 저장소에 반영하세요');
+};
+$('#copyJson').onclick = () => {
+  const text = JSON.stringify({ version: remoteVersion + 1, games }, null, 2);
+  const done = () => toast('games.json 내용을 복사했어요');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => prompt('games.json', text));
+  else prompt('games.json', text);
+};
+$('#resetLocal').onclick = () => {
+  try { localStorage.removeItem(LS_KEY); } catch (e) {}
+  location.reload();
+};
 
-      const filteredGames = currentGames.filter(game => {
-        const matchGrade = (selectedGrade === 'all') || (getGradeFromTitle(game.title) === selectedGrade);
-        const matchSubject = (selectedSubject === 'all') || (getSubjectFromTitle(game.title) === selectedSubject);
-        const matchQuery = !q || game.title.toLowerCase().includes(q);
-        return matchGrade && matchSubject && matchQuery;
-      });
-
-      const countEl = document.getElementById('gameCount');
-      if(countEl){
-        countEl.textContent = (q || selectedGrade !== 'all' || selectedSubject !== 'all')
-          ? `전체 ${currentGames.length}개 중 ${filteredGames.length}개 표시 중`
-          : `모두 ${currentGames.length}개의 게임이 준비되어 있어요`;
+/* ── boot: games.json wins when newer ── */
+async function boot() {
+  const local = loadLocal();
+  try {
+    const res = await fetch('./games.json', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.games) && data.games.length) {
+        remoteVersion = Number(data.version) || 0;
+        const stale = !local || Number(local.base || 0) < remoteVersion;
+        games = stale ? data.games : local.games;
       }
-
-      if (filteredGames.length === 0) {
-        grid.innerHTML = `<div class="emptyState">
-          <div class="big">🔍</div>
-          <div class="msg">조건에 맞는 게임이 없어요</div>
-          <div class="hintTxt">검색어를 지우거나 학년·과목 필터를 "전체"로 바꿔 보세요.</div>
-        </div>`;
-        return;
-      }
-
-      filteredGames.forEach(game => {
-        const info = parseTitle(game.title);
-        const card = document.createElement('div');
-        card.className = "game-card";
-        card.style.setProperty('--accent',      `var(--s-${info.subject})`);
-        card.style.setProperty('--accent-soft', `var(--s-${info.subject}-soft)`);
-        card.style.setProperty('--accent-line', `var(--s-${info.subject}-line)`);
-
-        const badges = [];
-        if(info.grade) badges.push(`<span class="badge grade">${escapeHtml(info.grade)}${info.term ? ' ' + escapeHtml(info.term) : ''}</span>`);
-        badges.push(`<span class="badge subject">${escapeHtml(info.subject)}</span>`);
-
-        card.innerHTML = `
-          <div class="cardTop">
-            <span class="cardIcon">${game.icon}</span>
-            <div class="cardHead">
-              <div class="badgeRow">${badges.join('')}</div>
-              <h3>${escapeHtml(info.name)}</h3>
-            </div>
-          </div>
-          ${info.genre ? `<div class="genreLine">🎮 ${escapeHtml(info.genre)}</div>` : ''}
-          <button class="launch-btn" type="button">실행하기</button>`;
-        card.querySelector('.launch-btn').addEventListener('click', ()=>bootUpGameConsole(game.url));
-        grid.appendChild(card);
-      });
-    }
-
-    // 검색 입력 연결
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const input = document.getElementById('searchInput');
-      const clear = document.getElementById('searchClear');
-      if(!input) return;
-      input.addEventListener('input', ()=>{
-        clear.classList.toggle('on', input.value.length > 0);
-        renderGamesGrid();
-      });
-      clear.addEventListener('click', ()=>{
-        input.value = ''; clear.classList.remove('on'); renderGamesGrid(); input.focus();
-      });
-    });
-
-    function filterGrade(grade) {
-      selectedGrade = grade;
-      document.querySelectorAll('#gradeTabs .tab-btn').forEach(btn => {
-        const btnText = btn.textContent === '전체학년' ? 'all' : btn.textContent;
-        if (btnText === grade) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-      renderGamesGrid();
-    }
-
-    function filterSubject(subject) {
-      selectedSubject = subject;
-      document.querySelectorAll('#subjectTabs .subject-btn').forEach(btn => {
-        const btnText = btn.textContent === '전체과목' ? 'all' : btn.textContent;
-        if (btnText === subject) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-      renderGamesGrid();
-    }
-
-    function bootUpGameConsole(url) {
-      if(url.startsWith('#')) return;
-      // 인코딩 처리를 추가하여 한글 및 띄어쓰기로 인한 404 방지
-      document.getElementById('gameMasterIframe').src = encodeURI(url);
-      document.getElementById('gameMasterConsole').style.display = 'flex';
-    }
-
-    function shutdownConsole() { 
-      document.getElementById('gameMasterConsole').style.display = 'none'; 
-      document.getElementById('gameMasterIframe').src = '';
-    }
-    
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function checkAdminPassword() { 
-        const pw = prompt("관리자 암호를 입력하세요.");
-        if(pw === "gudtns12") { isAdminAuthenticated = true; openAdminForm(); }
-    }
-
-    function openAdminForm() {
-        const select = document.getElementById('adminGameSelect');
-        select.innerHTML = '<option value="">➕ 새 게임 등록</option>';
-        currentGames.forEach(g => select.innerHTML += `<option value="${g.id}">${g.title}</option>`);
-        document.getElementById('gameTitleInput').value = '';
-        document.getElementById('gameUrlInput').value = '';
-        document.getElementById('adminModal').style.display = 'flex';
-    }
-
-    function handleAdminGameSelect(id) {
-        const game = currentGames.find(g => g.id == id);
-        if(game) {
-            document.getElementById('gameTitleInput').value = game.title;
-            document.getElementById('gameUrlInput').value = game.url;
-        } else {
-            document.getElementById('gameTitleInput').value = '';
-            document.getElementById('gameUrlInput').value = '';
-        }
-    }
-
-    function saveGameCard() {
-        const select = document.getElementById('adminGameSelect');
-        const title = document.getElementById('gameTitleInput').value.trim();
-        const url = document.getElementById('gameUrlInput').value.trim();
-        
-        if(!title || !url) {
-            alert("타이틀과 파일 경로를 모두 입력해주세요.");
-            return;
-        }
-        
-        const selectedId = select.value;
-        if(selectedId) {
-            const game = currentGames.find(g => g.id == selectedId);
-            if(game) {
-                game.title = title;
-                game.url = url;
-            }
-        } else {
-            const newId = currentGames.length > 0 ? Math.max(...currentGames.map(g => g.id)) + 1 : 1;
-            let icon = "🎮";
-            if(title.includes("수학")) icon = "🔢";
-            else if(title.includes("사회")) icon = "🌍";
-            else if(title.includes("과학")) icon = "🧪";
-            else if(title.includes("국어")) icon = "📖";
-            
-            currentGames.push({ id: newId, icon: icon, title: title, url: url });
-        }
-        
-        localStorage.setItem('edutech_games', JSON.stringify(currentGames));
-        renderGamesGrid();
-        alert("성공적으로 저장되었습니다.");
-        document.getElementById('adminModal').style.display = 'none';
-    }
-  </script>
+    } else if (local) { games = local.games; }
+  } catch (e) {
+    if (local) games = local.games;
+  }
+  render();
+  syncHash();
+}
+boot();
+</script>
 </body>
 </html>
