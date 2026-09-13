@@ -251,8 +251,8 @@
 <div id="toast" role="status"></div>
 
 <script>
-// 내부 데이터를 34버전으로 강제합니다. (총 45개 게임)
-const FALLBACK = { version: 34, games: [
+// 내부 데이터를 35버전으로 강제하여 캐시를 무조건 갱신합니다. (총 45개 게임)
+const FALLBACK = { version: 35, games: [
   {"id":1,"icon":"🎢","title":"3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)","url":"./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html"},
   {"id":2,"icon":"🔢","title":"3학년 1학기 수학 분수와 소수(에듀런)","url":"./3학년 1학기 수학 분수와 소수(에듀런).html"},
   {"id":3,"icon":"🧪","title":"5학년 1학기 과학 용해 용액 단어","url":"./5학년 1학기 과학 용해 용액 단어.html"},
@@ -295,7 +295,10 @@ const FALLBACK = { version: 34, games: [
   {"id":40,"icon":"🧱","title":"5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈)","url":"./5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈).html","thumb":"./screenshots/07_후반_고조선시대_플레이화면.png"},
   {"id":41,"icon":"🧁","title":"4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)","url":"./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html"},
   {"id":42,"icon":"🎢","title":"6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)","url":"./6-2 소수의 나눗셈(수학 코스터 타이쿤).html"},
-  {"id":43,"icon":"📦","title":"5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터)","url":"./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html"},
+  
+  /* 여기서 43번 경로 오류(5-2_수학_...) 수정됨! */
+  {"id":43,"icon":"📦","title":"5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터)","url":"./5-2_수학_1단원_수의범위와어림하기(택배물류센터).html"},
+  
   {"id":44,"icon":"🎢","title":"5학년 2학기 수학 분수의 곱셈(수학 코스터 타이쿤)","url":"./5학년 2학기 수학 분수의 곱셈(수학 코스터 타이쿤).html"},
   {"id":45,"icon":"🌱","title":"5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)","url":"./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html"}
 ]};
@@ -522,8 +525,9 @@ function openGame(id, pushHash) {
   const g = games.find(x => String(x.id) === String(id));
   if (!g) return;
   
-  // 수정 2: encodeURI가 오히려 정상적인 브라우저 주소 파싱을 방해할 수 있으므로 제거합니다.
-  $('#launchFrame').src = g.url;
+  // 브라우저가 주소를 더 완벽히 파악해 띄어쓰기 404를 방지하도록 절대 주소(Absolute URL)로 조립합니다.
+  const absoluteUrl = new URL(g.url, window.location.href).href;
+  $('#launchFrame').src = absoluteUrl;
   
   $('#launch').style.display = 'block';
   document.body.style.overflow = 'hidden';
@@ -609,7 +613,7 @@ $('#resetLocal').onclick = () => {
   location.reload();
 };
 
-/* ── boot: 수정 1 ── */
+/* ── 서버에서 옛날 버전을 가져오더라도 무시하도록 안전장치 추가 ── */
 async function boot() {
   const local = loadLocal();
   try {
@@ -618,13 +622,11 @@ async function boot() {
       const data = await res.json();
       if (Array.isArray(data.games) && data.games.length) {
         remoteVersion = Number(data.version) || 0;
-        
-        // 중요 수정: 서버의 games.json 버전(2)이 index.html의 최신 버전(34)보다 낮을 경우
-        // 옛날 데이터로 덮어쓰지 못하도록 안전장치를 추가했습니다.
         if (remoteVersion >= FALLBACK.version) {
           const stale = !local || Number(local.base || 0) < remoteVersion;
           games = stale ? data.games : local.games;
         } else {
+          // 서버 데이터가 낡았으면 무조건 index 파일 내부의 최신 데이터를 사용합니다
           remoteVersion = FALLBACK.version;
           games = FALLBACK.games;
         }
