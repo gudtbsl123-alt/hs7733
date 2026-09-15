@@ -1598,10 +1598,12 @@ function loadQ(){
 function updTicket(){ $('chipTicket').style.display=S.tickets>0?'':'none'; $('hudTicket').textContent=S.tickets; }
 function updDexDot(){ $('dexDot').textContent=S.crops.length; }
 function setPanels(o){
-  $('console').style.display = o.console===false?'none':'';
-  $('stepPredict').style.display = o.predict?'':'none';
-  $('stepAnswer').style.display = o.answer?'':'none';
-  $('gridArea').style.display = o.grid?'':'none';
+  /* 빈 문자열로 두면 스타일시트의 display:none 이 그대로 적용되어 버린다.
+     그래서 보여줄 때는 반드시 block 을 명시한다. */
+  $('console').style.display = (o.console===false) ? 'none' : 'block';
+  $('stepPredict').style.display = o.predict ? 'block' : 'none';
+  $('stepAnswer').style.display  = o.answer  ? 'block' : 'none';
+  $('gridArea').style.display    = o.grid    ? 'block' : 'none';
 }
 
 /* ---------- 수확 예측 ---------- */
