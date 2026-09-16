@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8C%8D%3C%2Ftext%3E%3C%2Fsvg%3E">
+<title>기후 벨트 지구본</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   기후 벨트 지구본 — 6학년 2학기 사회 1단원 (2) 세계의 기후
+   외부 파일·CDN·라이브러리 0개. 지도와 그래프는 인라인 SVG.
+   ══════════════════════════════════════════════════════════ */
+:root{
+  --bg1:#0b2239; --bg2:#0d3550; --bg3:#071626;
+  --ink:#f2f7fb; --ink-mid:#b9cbdb; --ink-dim:#8298ab;
+  --surface:rgba(255,255,255,.075);
+  --surface-hi:rgba(255,255,255,.13);
+  --line:rgba(255,255,255,.17);
+  --line-strong:rgba(255,255,255,.34);
+  --ok:#34d399; --no:#f87171; --gold:#fbbf24; --accent:#38bdf8;
+  --r-s:10px; --r-m:15px; --r-l:21px; --r-pill:999px;
+  --sp:clamp(6px,1.1vh,12px);
+  --shadow:0 10px 26px rgba(0,0,0,.36);
+
+  /* 6개 기후 — 색 + 무늬를 함께 써서 색약 학생도 구분할 수 있게 한다 */
+  --c-tro:#f97316; --c-dry:#eab308; --c-tem:#22c55e;
+  --c-con:#3b82f6; --c-pol:#cbd5e1; --c-hig:#a855f7;
+}
+*{margin:0;padding:0;box-sizing:border-box;
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+  -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:radial-gradient(circle at 20% 12%,var(--bg2) 0%,var(--bg1) 46%,var(--bg3) 100%);
+  color:var(--ink);
+  overflow:hidden;                 /* 아래 .stage 가 flex 로 높이를 확정하므로 안전 */
+  overscroll-behavior:none;
+  touch-action:manipulation;       /* 핀치줌·더블탭확대 차단, 스크롤 자체는 막지 않음 */
+  -webkit-text-size-adjust:100%;
+  user-select:none; -webkit-user-select:none;
+}
+button,input{font:inherit;color:inherit;}
+button{background:none;border:none;cursor:pointer;}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px;}
+.hidden{display:none !important;}
+
+/* ── 전체 뼈대 ── */
+.app{height:100dvh;display:flex;flex-direction:column;}
+
+/* ── 상단 HUD ── */
+.hud{
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;
+  padding:calc(var(--sp)*.8) clamp(8px,2vw,18px);
+  border-bottom:1px solid var(--line);background:rgba(3,14,26,.42);
+}
+.hud .title{font-size:clamp(13px,1.9vh,17px);font-weight:900;letter-spacing:-.3px;white-space:nowrap;}
+.hud .title .globe{margin-right:4px;}
+.zoneTag{
+  font-size:clamp(10px,1.4vh,12px);font-weight:800;padding:3px 10px;border-radius:var(--r-pill);
+  background:var(--surface-hi);border:1px solid var(--line);color:var(--ink-mid);white-space:nowrap;
+}
+.hudStats{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:nowrap;}
+.stat{
+  display:flex;align-items:baseline;gap:4px;padding:3px 9px;border-radius:var(--r-pill);
+  background:var(--surface);border:1px solid var(--line);white-space:nowrap;
+}
+.stat b{font-size:clamp(12px,1.9vh,16px);font-weight:900;}
+.stat span{font-size:clamp(9px,1.2vh,11px);color:var(--ink-dim);font-weight:700;}
+.stat.combo b{color:var(--gold);}
+.iconBtn{
+  min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-s);background:var(--surface);border:1px solid var(--line);
+  font-size:15px;transition:background .15s;
+}
+.iconBtn:hover{background:var(--surface-hi);}
+.iconBtn[aria-pressed="true"]{background:rgba(56,189,248,.26);border-color:var(--accent);}
+
+/* 진행 막대 */
+.progWrap{flex:0 0 auto;height:5px;background:rgba(255,255,255,.08);}
+.progBar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--c-tem));transition:width .4s cubic-bezier(.3,1.2,.6,1);}
+
+/* ── 본문: 지도 + 패널 ── */
+.stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:var(--sp);
+  padding:var(--sp) clamp(8px,2vw,16px);}
+.mapWrap{
+  flex:1 1 auto;min-height:0;position:relative;display:flex;
+  align-items:center;justify-content:center;
+}
+#mapSvg{display:block;border-radius:var(--r-m);background:#08243c;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),var(--shadow);touch-action:manipulation;}
+.panel{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;min-height:0;}
+
+/* 질문 상자 */
+.qBox{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);
+  padding:calc(var(--sp)*.9) clamp(10px,2vw,16px);min-height:0;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.qHead{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap;}
+.diffBadge{font-size:11px;font-weight:900;padding:2px 9px;border-radius:var(--r-pill);}
+.diff-하{background:rgba(52,211,153,.24);color:#6ee7b7;border:1px solid rgba(52,211,153,.5);}
+.diff-중{background:rgba(251,191,36,.24);color:#fcd34d;border:1px solid rgba(251,191,36,.5);}
+.diff-상{background:rgba(248,113,113,.24);color:#fca5a5;border:1px solid rgba(248,113,113,.5);}
+.qNo{font-size:11px;font-weight:800;color:var(--ink-dim);}
+.qType{font-size:11px;font-weight:800;color:var(--accent);}
+.qText{font-size:clamp(13px,2.1vh,17px);font-weight:800;line-height:1.5;word-break:keep-all;}
+.qSub{font-size:clamp(11px,1.6vh,13px);color:var(--ink-mid);margin-top:3px;line-height:1.5;word-break:keep-all;}
+.qStep{font-size:clamp(11px,1.6vh,13px);font-weight:800;color:var(--gold);margin-top:4px;}
+
+/* 카드 트레이(기후 띠 / 생활 모습) */
+.tray{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.card{
+  min-height:44px;display:flex;align-items:center;gap:6px;
+  padding:7px 11px;border-radius:var(--r-s);border:2px solid var(--line);
+  background:var(--surface);font-size:clamp(11px,1.7vh,14px);font-weight:800;
+  cursor:grab;transition:transform .12s,box-shadow .12s,border-color .12s;
+  touch-action:manipulation;
+}
+.card:hover{background:var(--surface-hi);}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.3);transform:translateY(-2px);}
+.card.done{opacity:.35;cursor:default;}
+.card .swatch{width:20px;height:20px;border-radius:5px;flex:0 0 auto;border:1px solid rgba(0,0,0,.35);}
+.card .emo{font-size:17px;}
+.card.big{font-size:clamp(12px,1.9vh,15px);padding:9px 13px;}
+
+/* 선택지 버튼 */
+.opts{display:grid;gap:6px;margin-top:7px;}
+.opt{
+  min-height:44px;text-align:left;padding:9px 12px;border-radius:var(--r-s);
+  background:var(--surface);border:2px solid var(--line);
+  font-size:clamp(12px,1.8vh,14.5px);font-weight:700;line-height:1.4;word-break:keep-all;
+  display:flex;align-items:center;gap:8px;transition:background .15s,border-color .15s;
+}
+.opt:hover:not(:disabled){background:var(--surface-hi);}
+.opt .num{flex:0 0 auto;width:21px;height:21px;border-radius:50%;background:var(--surface-hi);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;}
+.opt.right{background:rgba(52,211,153,.26);border-color:var(--ok);}
+.opt.wrong{background:rgba(248,113,113,.22);border-color:var(--no);opacity:.62;}
+.opt:disabled{cursor:not-allowed;}
+.optsOX{grid-template-columns:1fr 1fr;}
+
+/* 범례 */
+.legend{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;font-size:clamp(9px,1.3vh,11px);}
+.lg{display:flex;align-items:center;gap:4px;padding:2px 7px;border-radius:var(--r-pill);
+  background:var(--surface);border:1px solid var(--line);font-weight:800;color:var(--ink-mid);}
+.lg i{width:13px;height:13px;border-radius:3px;display:block;border:1px solid rgba(0,0,0,.35);}
+
+/* 무늬 — 색만으로 구분하지 않도록 각 기후에 고유 무늬를 준다 */
+.pt-tro{background:var(--c-tro);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.42) 0 2px,transparent 2px 6px);}
+.pt-dry{background:var(--c-dry);background-image:radial-gradient(rgba(0,0,0,.5) 1.4px,transparent 1.5px);background-size:6px 6px;}
+.pt-tem{background:var(--c-tem);background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.4) 0 2px,transparent 2px 6px);}
+.pt-con{background:var(--c-con);background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.42) 0 2px,transparent 2px 6px);}
+.pt-pol{background:var(--c-pol);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.34) 0 2px,transparent 2px 7px),repeating-linear-gradient(90deg,rgba(0,0,0,.34) 0 2px,transparent 2px 7px);}
+.pt-hig{background:var(--c-hig);background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.42) 0 2px,transparent 2px 5px),repeating-linear-gradient(45deg,rgba(0,0,0,.42) 0 2px,transparent 2px 5px);}
+
+/* ── 하단 조작 바 ── */
+.ctrlBar{flex:0 0 auto;display:flex;gap:6px;align-items:center;justify-content:center;
+  padding:calc(var(--sp)*.7) clamp(8px,2vw,16px);border-top:1px solid var(--line);
+  background:rgba(3,14,26,.42);flex-wrap:wrap;}
+.ctrlBar .hintTxt{font-size:clamp(10px,1.4vh,12px);color:var(--ink-dim);font-weight:700;}
+
+/* ── 모달 ── */
+.overlay{position:fixed;inset:0;background:rgba(3,12,22,.8);backdrop-filter:blur(5px);
+  display:flex;align-items:center;justify-content:center;z-index:60;padding:14px;}
+.modal{
+  width:min(94vw,560px);max-height:88dvh;overflow-y:auto;border-radius:var(--r-l);
+  padding:clamp(16px,3vh,26px);background:linear-gradient(165deg,#12395a,#0a2036);
+  border:1px solid var(--line-strong);box-shadow:0 26px 70px rgba(0,0,0,.6);
+  touch-action:pan-y;
+}
+.modal h2{font-size:clamp(17px,2.8vh,23px);font-weight:900;margin-bottom:8px;text-align:center;}
+.modal p{font-size:clamp(12px,1.8vh,15px);line-height:1.65;color:var(--ink-mid);word-break:keep-all;}
+.bigBtn{
+  width:100%;min-height:50px;margin-top:12px;border-radius:var(--r-m);font-size:clamp(14px,2.1vh,17px);
+  font-weight:900;color:#06283d;background:linear-gradient(90deg,#7dd3fc,#5eead4);
+  box-shadow:0 8px 20px rgba(94,234,212,.28);transition:transform .12s,filter .15s;
+}
+.bigBtn:hover:not(:disabled){filter:brightness(1.07);}
+.bigBtn:active:not(:disabled){transform:scale(.985);}
+.bigBtn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+.ghostBtn{width:100%;min-height:44px;margin-top:7px;border-radius:var(--r-m);
+  background:var(--surface);border:1px solid var(--line);font-weight:800;
+  font-size:clamp(12px,1.8vh,14px);transition:background .15s;}
+.ghostBtn:hover{background:var(--surface-hi);}
+.rules{background:var(--surface);border-radius:var(--r-m);padding:12px 14px;
+  font-size:clamp(11px,1.7vh,13.5px);line-height:1.85;color:var(--ink-mid);margin:10px 0;word-break:keep-all;}
+.rules b{color:var(--ink);}
+
+/* 힌트 모달 */
+.hintCard{border:2px dashed var(--gold);background:rgba(251,191,36,.1);}
+.hintCard h2{color:var(--gold);}
+.hintWhy{background:rgba(255,255,255,.07);border-radius:var(--r-m);padding:12px 14px;margin-top:10px;
+  font-size:clamp(12px,1.8vh,14.5px);line-height:1.7;word-break:keep-all;}
+.countdown{text-align:center;font-size:clamp(12px,1.8vh,14px);font-weight:800;color:var(--ink-dim);margin-top:9px;}
+
+/* 토스트 */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:90;
+  padding:9px 17px;border-radius:var(--r-pill);font-size:clamp(11px,1.7vh,14px);font-weight:800;
+  background:rgba(8,28,46,.95);border:1px solid var(--line-strong);box-shadow:var(--shadow);
+  pointer-events:none;opacity:0;transition:opacity .22s,top .22s;max-width:92vw;text-align:center;word-break:keep-all;
+}
+.toast.on{opacity:1;top:22px;}
+.toast.ok{border-color:var(--ok);color:#a7f3d0;}
+.toast.no{border-color:var(--no);color:#fecaca;}
+.toast.info{border-color:var(--accent);color:#bae6fd;}
+
+/* 파티클 */
+#fxLayer{position:fixed;inset:0;pointer-events:none;z-index:80;overflow:hidden;}
+.pt{position:absolute;width:9px;height:9px;border-radius:2px;opacity:0;will-change:transform,opacity;}
+
+/* 결과 화면 */
+.resGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0;}
+.resCell{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:9px;text-align:center;}
+.resCell .v{font-size:clamp(16px,2.6vh,22px);font-weight:900;color:var(--accent);}
+.resCell .l{font-size:clamp(9px,1.3vh,11px);color:var(--ink-dim);font-weight:700;margin-top:1px;}
+.barBlock{margin-top:12px;}
+.barBlock h3{font-size:clamp(11px,1.7vh,13px);font-weight:900;color:var(--ink-mid);margin-bottom:6px;}
+.barRow{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:clamp(10px,1.5vh,12px);}
+.barRow .nm{flex:0 0 76px;font-weight:800;color:var(--ink-mid);text-align:right;}
+.barOut{flex:1;height:14px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden;}
+.barIn{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--accent),var(--c-tem));}
+.barRow .vl{flex:0 0 58px;font-weight:800;}
+.summary{margin-top:12px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.4);
+  border-radius:var(--r-m);padding:12px 14px;font-size:clamp(12px,1.8vh,14.5px);line-height:1.7;word-break:keep-all;}
+.reviewItem{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);
+  padding:10px 12px;margin-top:7px;font-size:clamp(11px,1.6vh,13px);line-height:1.6;word-break:keep-all;}
+.reviewItem .rq{font-weight:900;margin-bottom:3px;}
+.reviewItem .ra{color:var(--ok);font-weight:800;}
+.badgeRow{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;justify-content:center;}
+.bdg{font-size:clamp(10px,1.4vh,12px);font-weight:800;padding:4px 10px;border-radius:var(--r-pill);
+  background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.45);color:#fde68a;}
+.bdg.off{background:var(--surface);border-color:var(--line);color:var(--ink-dim);opacity:.5;}
+.dexRow{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:8px;}
+.dexItem{font-size:clamp(9px,1.3vh,11px);font-weight:800;padding:3px 8px;border-radius:var(--r-pill);
+  background:var(--surface);border:1px solid var(--line);color:var(--ink-dim);}
+.dexItem.got{background:rgba(52,211,153,.2);border-color:rgba(52,211,153,.5);color:#a7f3d0;}
+
+/* 상점 */
+.shopGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:7px;margin-top:10px;}
+.shopItem{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);
+  padding:9px;text-align:center;min-height:44px;transition:background .15s;}
+.shopItem:hover:not(:disabled){background:var(--surface-hi);}
+.shopItem .ico{font-size:22px;}
+.shopItem .nm{font-size:clamp(10px,1.4vh,12px);font-weight:800;margin-top:2px;}
+.shopItem .pr{font-size:clamp(9px,1.3vh,11px);color:var(--gold);font-weight:800;}
+.shopItem.owned{opacity:.55;cursor:default;}
+.shopItem.owned .pr{color:var(--ok);}
+
+/* ── 반응형 ── */
+@media (min-width:760px){
+  .stage{flex-direction:row;align-items:stretch;}
+  .mapWrap{flex:1 1 auto;}
+  .panel{flex:0 0 clamp(290px,31vw,380px);}
+  .qBox{flex:1 1 auto;}
+}
+/* 폰 화면에서는 HUD 한 줄에 다 들어가지 않아 가로로 넘쳤다.
+   제목 줄과 지표 줄을 나누고, 상점·배경음악·저사양은 일시정지 창에서 쓰도록 옮긴다. */
+@media (max-width:900px){          /* 태블릿 세로에서도 한 줄에 다 들어가지 않는다 */
+  .hud{flex-wrap:wrap;row-gap:5px;}
+  .hudStats{width:100%;margin-left:0;justify-content:space-between;}
+}
+@media (max-width:560px){          /* 폰: 상점·배경음악·저사양은 일시정지 창에서 */
+  #btnShop,#btnBgm,#btnLow{display:none;}
+  .stat{padding:3px 7px;}
+  .hud .title{font-size:13px;}
+  .zoneTag{font-size:10px;padding:2px 8px;}
+}
+@media (min-width:561px){ .pauseOnly{display:none;} }
+@media (max-height:820px){
+  .rules{line-height:1.6;padding:10px 12px;}
+  .resGrid{gap:5px;}
+  .hud{padding-top:4px;padding-bottom:4px;}
+}
+@media (max-height:680px){
+  .hud .title{font-size:12px;}
+  .stat span{display:none;}
+  .legend{display:none;}          /* 아주 낮은 화면에서는 범례를 접는다(지도 안 범례는 유지) */
+  .ctrlBar .hintTxt{display:none;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- ── 상단 HUD ── -->
+  <div class="hud">
+    <div class="title"><span class="globe">🌍</span>기후 벨트 지구본</div>
+    <div class="zoneTag" id="zoneTag">1구역 · 적도 탐사대</div>
+    <div class="hudStats">
+      <div class="stat"><b id="sScore">0</b><span>점</span></div>
+      <div class="stat"><b id="sCoin">0</b><span>코인</span></div>
+      <div class="stat combo"><b id="sCombo">0</b><span>연속</span></div>
+      <div class="stat"><b id="sProg">0/20</b><span>문제</span></div>
+      <button class="iconBtn" id="btnShop" title="상점 (지구본 꾸미기)" aria-label="상점">🛍️</button>
+      <button class="iconBtn" id="btnMute" title="전체 음소거" aria-label="전체 음소거" aria-pressed="false">🔊</button>
+      <button class="iconBtn" id="btnBgm" title="배경음악" aria-label="배경음악" aria-pressed="false">🎵</button>
+      <button class="iconBtn" id="btnLow" title="저사양 모드" aria-label="저사양 모드" aria-pressed="false">🐢</button>
+      <button class="iconBtn" id="btnPause" title="일시정지 (Esc)" aria-label="일시정지">⏸</button>
+    </div>
+  </div>
+  <div class="progWrap"><div class="progBar" id="progBar"></div></div>
+
+  <!-- ── 지도 + 패널 ── -->
+  <div class="stage">
+    <div class="mapWrap" id="mapWrap">
+      <svg id="mapSvg" viewBox="0 0 360 180" preserveAspectRatio="xMidYMid meet"
+           role="img" aria-label="세계 기후 띠 지도"></svg>
+    </div>
+
+    <div class="panel">
+      <div class="qBox" id="qBox">
+        <div class="qHead">
+          <span class="diffBadge diff-하" id="qDiff">난이도 하</span>
+          <span class="qNo" id="qNo">1 / 20</span>
+          <span class="qType" id="qType">띠 얹기</span>
+        </div>
+        <div class="qText" id="qText">준비 중…</div>
+        <div class="qSub" id="qSub"></div>
+        <div class="qStep" id="qStep"></div>
+        <div class="opts" id="opts"></div>
+      </div>
+      <div class="tray" id="tray"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+
+  <!-- ── 하단 조작 바 ── -->
+  <div class="ctrlBar">
+    <span class="hintTxt" id="ctrlHint">카드를 누른 뒤 지도를 누르면 놓입니다 · 숫자키 선택 · Enter 확인 · Esc 일시정지</span>
+  </div>
+</div>
+
+<div id="fxLayer" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ══ 시작 화면 ══ -->
+<div class="overlay" id="ovStart">
+  <div class="modal">
+    <h2>🌍 기후 벨트 지구본</h2>
+    <p style="text-align:center">6학년 2학기 사회 1단원 · 세계의 기후와 다양한 생활 모습</p>
+    <div class="rules">
+      🧭 <b>1구역 적도 탐사대</b> — 기후 띠를 지도의 알맞은 위도에 얹어요.<br>
+      📍 <b>2구역 도시 탐사대</b> — 도시와 기후 그래프를 보고 지도에서 찾아요.<br>
+      🏠 <b>3구역 생활 탐사대</b> — 생활 모습 카드를 알맞은 기후에 놓고 <b>까닭까지</b> 골라요.<br><br>
+      🖱️ <b>조작</b> — 카드를 <b>끌어다 놓거나</b>, 카드를 <b>한 번 누르고</b> 지도를 <b>한 번 더</b> 눌러도 돼요.<br>
+      ⌨️ 숫자키 선택 · Enter 확인 · Esc 일시정지<br>
+      💡 틀리면 정답을 바로 알려주지 않고 <b>힌트</b>를 보여 준 뒤 다시 풀 수 있어요.
+    </div>
+    <label for="nickInput" style="display:block;font-size:13px;font-weight:800;color:var(--ink-mid);margin-bottom:5px">탐사대 이름</label>
+    <input type="text" id="nickInput" maxlength="12" placeholder="예: 6학년 1반 지구탐사대"
+      style="width:100%;min-height:46px;padding:10px 14px;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line);font-size:15px;font-weight:700">
+    <button class="bigBtn" id="btnStart">탐사 시작하기 ▶</button>
+    <button class="ghostBtn" id="btnHelp">📖 기후 6가지 미리 보기</button>
+  </div>
+</div>
+
+<!-- ══ 힌트 ══ -->
+<div class="overlay hidden" id="ovHint">
+  <div class="modal hintCard">
+    <h2>💡 탐사 힌트</h2>
+    <p id="hintText"></p>
+    <div class="hintWhy" id="hintWhy"></div>
+    <div class="countdown" id="hintCount">3초 뒤에 다시 풀 수 있어요</div>
+    <button class="bigBtn" id="btnHintOk" disabled>다시 풀어 보기</button>
+  </div>
+</div>
+
+<!-- ══ 일시정지 ══ -->
+<div class="overlay hidden" id="ovPause">
+  <div class="modal">
+    <h2>⏸ 잠시 멈춤</h2>
+    <p style="text-align:center">탐사를 이어가려면 아래 단추를 누르세요.</p>
+    <button class="bigBtn" id="btnResume">계속하기 ▶</button>
+    <button class="ghostBtn pauseOnly" id="btnShop2">🛍️ 지구본 꾸미기(상점)</button>
+    <button class="ghostBtn pauseOnly" id="btnBgm2">🎵 배경음악 켜기 / 끄기</button>
+    <button class="ghostBtn pauseOnly" id="btnLow2">🐢 저사양 모드 켜기 / 끄기</button>
+    <button class="ghostBtn" id="btnRestartPause">🔄 처음부터 다시</button>
+  </div>
+</div>
+
+<!-- ══ 기후 안내 ══ -->
+<div class="overlay hidden" id="ovHelp">
+  <div class="modal">
+    <h2>📖 기후 6가지</h2>
+    <div id="helpBody"></div>
+    <button class="bigBtn" id="btnHelpClose">닫기</button>
+  </div>
+</div>
+
+<!-- ══ 상점 ══ -->
+<div class="overlay hidden" id="ovShop">
+  <div class="modal">
+    <h2>🛍️ 지구본 꾸미기</h2>
+    <p style="text-align:center">코인으로 지구본에 장식을 달아 보세요. <b id="shopCoin">0</b>코인 보유</p>
+    <div class="shopGrid" id="shopGrid"></div>
+    <button class="bigBtn" id="btnShopClose">닫기</button>
+  </div>
+</div>
+
+<!-- ══ 구역 통과 ══ -->
+<div class="overlay hidden" id="ovZone">
+  <div class="modal">
+    <h2 id="zoneTitle">🎉 구역 통과!</h2>
+    <p id="zoneMsg" style="text-align:center"></p>
+    <div class="dexRow" id="zoneDex"></div>
+    <button class="bigBtn" id="btnZoneNext">다음 구역으로 ▶</button>
+  </div>
+</div>
+
+<!-- ══ 결과 ══ -->
+<div class="overlay hidden" id="ovResult">
+  <div class="modal">
+    <h2 id="resTitle">🏁 탐사 보고서</h2>
+    <p id="resRank" style="text-align:center;font-size:clamp(14px,2.2vh,18px);font-weight:900;color:var(--gold)"></p>
+    <div class="resGrid" id="resGrid"></div>
+    <div id="resBars"></div>
+    <div class="summary" id="resSummary"></div>
+    <div class="barBlock"><h3>🏅 배지</h3><div class="badgeRow" id="resBadges"></div></div>
+    <div class="barBlock"><h3>🗺️ 탐사 도감</h3><div class="dexRow" id="resDex"></div></div>
+    <div class="barBlock" id="resReviewBlock"><h3>📌 다시 볼 문제</h3><div id="resReview"></div></div>
+    <button class="bigBtn" id="btnAgain">🔄 처음부터 다시 탐사</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ════════════════════════════════════════════════════════════════
+   ■ 교사 수정 구역 ■
+   문항을 고치려면 아래 QUIZ_DATA 만 손보면 됩니다.
+   - diff : '하' | '중' | '상'
+   - hint : 오답일 때 보여 줄 힌트 (정답을 직접 말하지 마세요)
+   - explain : 정답 처리 후 보여 줄 해설 (정답 낱말이 반드시 들어가야 합니다)
+   - target : 지도에서 눌러야 할 자리. 아래 BANDS 의 id 또는 'MOUNTAIN'
+   - why : 두 번째 단계로 묻는 '까닭'. answer 는 opts 의 번호(0부터)
+   RANDOMIZE 를 false 로 두면 보기·문항 순서가 고정됩니다.
+   ════════════════════════════════════════════════════════════════ */
+const RANDOMIZE = true;
+const BGM_URL = "";   /* 배경음악 파일을 쓰고 싶으면 여기에 경로를 넣으세요. 비워 두면 합성음을 씁니다. */
+
+/* ── 6개 기후 (지도서 기준: 이보다 더 세분하지 않는다) ── */
+const CLIMATES = {
+  tropical   :{ name:'열대', emo:'🌴', cls:'pt-tro', color:'#f97316', pat:'patTro',
+                desc:'적도 주변 저위도 · 일 년 내내 기온이 높고 기온 변화가 거의 없음' },
+  dry        :{ name:'건조', emo:'🏜️', cls:'pt-dry', color:'#eab308', pat:'patDry',
+                desc:'강수량이 적은 저위도·중위도 · 낮과 밤의 기온 차가 큼' },
+  temperate  :{ name:'온대', emo:'🌾', cls:'pt-tem', color:'#22c55e', pat:'patTem',
+                desc:'중위도 · 사계절의 변화가 비교적 뚜렷함' },
+  continental:{ name:'냉대', emo:'🌲', cls:'pt-con', color:'#3b82f6', pat:'patCon',
+                desc:'북반구의 중위도와 고위도 · 겨울이 여름보다 길고 몹시 추움' },
+  polar      :{ name:'한대', emo:'❄️', cls:'pt-pol', color:'#cbd5e1', pat:'patPol',
+                desc:'남극과 북극 주변 고위도 · 겨울이 길고 기온이 매우 낮음' },
+  highland   :{ name:'고산', emo:'⛰️', cls:'pt-hig', color:'#a855f7', pat:'patHig',
+                desc:'해발 고도가 높은 지역 · 일 년 내내 날씨가 서늘함' }
+};
+const CLIMATE_KEYS = ['tropical','dry','temperate','continental','polar','highland'];
+
+/* ── 지도 위도 띠 (viewBox 360x180, x=경도+180, y=90-위도) ── */
+const BANDS = [
+  { id:'POLAR_N', climate:'polar',       lat:[ 70,  90], name:'북극 주변(고위도)' },
+  { id:'CONT_N',  climate:'continental', lat:[ 55,  70], name:'북반구 고위도' },
+  { id:'TEMP_N',  climate:'temperate',   lat:[ 35,  55], name:'북반구 중위도' },
+  { id:'DRY_N',   climate:'dry',         lat:[ 25,  35], name:'북위 30도 부근' },
+  { id:'TROPIC',  climate:'tropical',    lat:[-25,  25], name:'적도 주변(저위도)' },
+  { id:'DRY_S',   climate:'dry',         lat:[-35, -25], name:'남위 30도 부근' },
+  { id:'TEMP_S',  climate:'temperate',   lat:[-55, -35], name:'남반구 중위도' },
+  { id:'CONT_S',  climate:null, ocean:true, lat:[-70, -55], name:'남반구 고위도(바다)' },
+  { id:'POLAR_S', climate:'polar',       lat:[-90, -70], name:'남극 주변(고위도)' }
+];
+BANDS.forEach(function(b){ b.y = 90 - b.lat[1]; b.h = b.lat[1] - b.lat[0]; });
+
+/* ── 산지(고산 기후 자리) ── */
+const MOUNTAINS = [
+  { id:'MT_ANDES', name:'안데스 산지', lon:-70, lat:-18 },
+  { id:'MT_HIMAL', name:'히말라야 산지', lon:86, lat:31 }
+];
+
+/* ── 대륙 윤곽 (직접 찍은 경도·위도 좌표, 간략형) ── */
+const LANDS = [
+  { n:'북아메리카', p:[[-168,66],[-156,71],[-125,70],[-95,73],[-80,73],[-62,60],[-55,52],[-67,45],[-70,41],[-76,35],[-81,25],[-97,18],[-105,20],[-114,31],[-124,40],[-124,48],[-133,55],[-150,59],[-165,62]] },
+  { n:'그린란드',   p:[[-55,60],[-30,68],[-20,74],[-24,82],[-45,84],[-60,76],[-58,66]] },
+  { n:'남아메리카', p:[[-81,10],[-60,12],[-50,0],[-35,-6],[-38,-15],[-48,-25],[-58,-35],[-63,-41],[-68,-55],[-75,-52],[-73,-40],[-71,-25],[-70,-18],[-76,-5],[-79,2]] },
+  { n:'아프리카',   p:[[-17,15],[-5,25],[10,33],[25,32],[35,31],[43,12],[51,12],[48,0],[40,-15],[35,-25],[28,-34],[18,-34],[12,-18],[9,-1],[5,5],[-8,4],[-16,12]] },
+  { n:'유라시아',   p:[[-10,36],[0,44],[5,52],[8,58],[15,68],[30,71],[60,70],[75,73],[100,77],[130,72],[160,70],[170,66],[160,60],[142,52],[130,43],[122,32],[110,20],[100,10],[97,16],[88,21],[80,15],[72,20],[65,25],[57,25],[48,30],[43,37],[35,36],[28,40],[20,40],[15,38],[8,44],[-2,37]] },
+  { n:'오스트레일리아', p:[[113,-22],[130,-12],[142,-11],[147,-19],[153,-27],[150,-37],[141,-38],[130,-32],[115,-34],[113,-26]] },
+  { n:'남극',       p:[[-180,-72],[-120,-74],[-60,-70],[0,-72],[60,-68],[120,-70],[180,-73],[180,-90],[-180,-90]] }
+];
+
+/* ── 기후 그래프 자료 (기온 ℃ 12개월 / 강수량 mm 12개월) ── */
+const GRAPHS = {
+  tropical   :{ t:[27,27,28,28,28,28,28,28,28,28,27,27], r:[170,200,250,290,200,130,140,170,200,240,270,230] },
+  continental:{ t:[-20,-18,-10,0,8,15,18,15,8,-2,-12,-18], r:[15,12,14,18,25,45,55,50,40,30,20,18] },
+  dry        :{ t:[14,17,21,25,30,34,35,35,32,27,20,15], r:[3,2,1,0,0,0,0,0,1,1,2,3] }
+};
+
+/* ════════════════ 문항 20개 (하7 / 중7 / 상6) ════════════════ */
+const QUIZ_DATA = [
+/* ── 1구역 · 적도 탐사대 : 띠 얹기 4 + 오개념 2 ── */
+{ id:'b1', zone:1, type:'belt', diff:'하', dex:'적도',
+  text:'적도 주변 저위도에 얹을 기후 띠를 놓아 주세요.',
+  sub:'아래 카드를 누른 뒤 지도에서 알맞은 자리를 누르면 띠가 붙어요.',
+  steps:[{climate:'tropical', target:'TROPIC'}],
+  hint:'일 년 내내 기온이 높고 기온 변화가 거의 없는 기후예요. 적도가 지나는 한가운데 띠랍니다.',
+  explain:'적도 주변 저위도에는 <b>열대</b> 기후가 나타납니다. 일 년 내내 기온이 높고 기온 변화가 거의 없어요.' },
+
+{ id:'b2', zone:1, type:'belt', diff:'중', dex:'30도',
+  text:'열대 띠 바깥으로 건조 띠와 온대 띠를 순서대로 얹어 주세요.',
+  sub:'적도에서 극지방 쪽으로 갈수록 순서가 정해져 있어요. 적도를 기준으로 <b>남·북 양쪽 모두</b> 놓아야 합니다.',
+  steps:[{climate:'dry', target:'DRY_N'},{climate:'dry', target:'DRY_S'},
+         {climate:'temperate', target:'TEMP_N'},{climate:'temperate', target:'TEMP_S'}],
+  hint:'적도 → 극지방 순서는 열대 → 건조 → 온대 → 냉대 → 한대예요. 한쪽에만 놓으면 끝나지 않아요.',
+  explain:'기후 띠는 적도에서 극지방으로 <b>열대 → 건조 → 온대 → 냉대 → 한대</b> 순서로 나타나고, 적도를 기준으로 남북이 <b>대칭</b>을 이룹니다.' },
+
+{ id:'b3', zone:1, type:'belt', diff:'상', dex:'냉대',
+  text:'남은 냉대 띠와 한대 띠를 얹어 주세요.',
+  sub:'놓을 수 없는 자리가 하나 숨어 있어요. 잘 살펴보세요.',
+  steps:[{climate:'continental', target:'CONT_N'},
+         {climate:'polar', target:'POLAR_N'},{climate:'polar', target:'POLAR_S'}],
+  hint:'냉대 기후는 한쪽 반구에서만 나타나요. 지도에서 그 위도의 반대쪽에 무엇이 있는지 살펴보세요.',
+  explain:'<b>냉대</b> 기후는 <b>북반구</b>의 중위도와 고위도에만 나타납니다. 같은 위도의 남반구에는 육지가 거의 없고 바다뿐이기 때문이에요. <b>한대</b> 기후는 남극과 북극 주변에 모두 나타납니다.' },
+
+{ id:'b4', zone:1, type:'belt', diff:'중', dex:'산지',
+  text:'마지막으로 고산 띠를 놓아 주세요.',
+  sub:'고산 띠는 어느 위도에도 붙지 않아요. 지도에서 ▲ 표시를 찾아보세요.',
+  steps:[{climate:'highland', target:'MOUNTAIN'}],
+  hint:'고산 기후를 정하는 것은 위도가 아니에요. 땅이 얼마나 높은 곳에 있는지를 생각해 보세요.',
+  explain:'<b>고산</b> 기후는 위도가 아니라 <b>해발 고도</b>가 높은 곳에 나타납니다. 안데스 산지나 히말라야 산지처럼요.' },
+
+{ id:'m1', zone:1, type:'myth', diff:'중', dex:'위도',
+  text:'“극지방에서 적도로 갈수록 기온이 낮아진다.”',
+  sub:'맞는 설명일까요, 틀린 설명일까요?',
+  truth:false,
+  why:{ q:'그렇게 생각한 까닭을 골라 주세요.',
+        opts:['적도에 가까워질수록 기온이 <b>높아지기</b> 때문이다',
+              '적도에 가까워질수록 기온이 낮아지기 때문이다',
+              '위도와 기온은 서로 관계가 없기 때문이다',
+              '적도로 갈수록 해발 고도가 높아지기 때문이다'],
+        answer:0 },
+  hint:'적도는 태양 에너지를 가장 많이 받는 곳이에요. 우리가 지도에서 열대 띠를 어디에 놓았는지 떠올려 보세요.',
+  explain:'적도에 <b>가까울수록 기온이 높아지고</b>, 극지방으로 갈수록 낮아집니다. 그래서 적도 주변이 열대, 극지방 주변이 한대예요.' },
+
+{ id:'m2', zone:1, type:'myth', diff:'상', dex:'남반구',
+  text:'“냉대 기후는 남반구에도 널리 나타난다.”',
+  sub:'맞는 설명일까요, 틀린 설명일까요?',
+  truth:false,
+  why:{ q:'그렇게 생각한 까닭을 골라 주세요.',
+        opts:['남반구는 북반구보다 훨씬 따뜻하기 때문이다',
+              '그 위도의 남반구에는 <b>육지가 거의 없기</b> 때문이다',
+              '남반구에는 높은 산이 많기 때문이다',
+              '남반구는 인구 수가 적기 때문이다'],
+        answer:1 },
+  hint:'지도에서 남반구의 같은 위도 자리를 다시 보세요. 그곳에 무엇이 있었나요?',
+  explain:'냉대 기후는 <b>북반구</b>에만 널리 나타납니다. 같은 위도의 남반구에는 <b>육지가 거의 없어</b> 냉대 기후가 나타나기 어렵기 때문이에요.' },
+
+/* ── 2구역 · 도시 탐사대 : 핀 4 + 그래프 3 ── */
+{ id:'p1', zone:2, type:'pin', diff:'하', dex:'쿠알라룸푸르',
+  text:'쿠알라룸푸르(말레이시아)는 어느 기후 띠에 있을까요?',
+  sub:'일 년 내내 덥고 비가 많이 내리며, 기둥을 세워 바닥을 띄운 집을 볼 수 있어요.',
+  target:'TROPIC',
+  hint:'기온 변화가 거의 없이 일 년 내내 더운 곳이에요. 적도에서 가까울까요, 멀까요?',
+  explain:'쿠알라룸푸르는 적도 주변 저위도의 <b>열대</b> 기후 지역입니다.' },
+
+{ id:'p2', zone:2, type:'pin', diff:'하', dex:'사하라',
+  text:'사하라 사막은 어느 기후 띠에 있을까요?',
+  sub:'비가 거의 내리지 않고, 낮과 밤의 기온 차가 큽니다.',
+  target:'DRY_N',
+  hint:'강수량이 매우 적은 기후예요. 적도 바로 바깥, 북위 30도 부근을 찾아보세요.',
+  explain:'사하라 사막은 북위 30도 부근의 <b>건조</b> 기후 지역입니다. 강수량이 적고 낮과 밤의 기온 차가 커요.' },
+
+{ id:'p3', zone:2, type:'pin', diff:'중', dex:'오슬로',
+  text:'오슬로(노르웨이)는 어느 기후 띠에 있을까요?',
+  sub:'겨울이 여름보다 길고 몹시 추우며, 침엽수림에서 목재와 펄프 산업이 발달했어요.',
+  target:'CONT_N',
+  hint:'사계절이 있지만 겨울이 훨씬 길어요. 이 기후는 한쪽 반구에서만 나타난다는 점도 떠올려 보세요.',
+  explain:'오슬로는 북반구 고위도의 <b>냉대</b> 기후 지역입니다. 겨울이 길고 침엽수림이 넓게 발달했어요.' },
+
+{ id:'p4', zone:2, type:'pin', diff:'상', dex:'키토',
+  text:'키토(에콰도르)는 어느 기후 띠에 있을까요?',
+  sub:'적도 바로 가까이에 있는데도 일 년 내내 날씨가 서늘합니다.',
+  target:'MOUNTAIN',
+  why:{ q:'적도 가까이인데도 서늘한 까닭은 무엇일까요?',
+        opts:['위도가 높기 때문이다','바다에서 멀리 떨어져 있기 때문이다',
+              '인구 수가 적기 때문이다','<b>해발 고도</b>가 높기 때문이다'],
+        answer:3 },
+  hint:'적도에 있는데 서늘하다면 위도 말고 다른 까닭이 있어요. 키토는 안데스 산지에 있는 도시랍니다.',
+  explain:'키토는 안데스 산지에 있는 <b>고산</b> 기후 지역입니다. 기후는 위도뿐 아니라 위치와 지형, <b>해발 고도</b>에 따라서도 달라져요.' },
+
+{ id:'g1', zone:2, type:'graph', diff:'하', dex:'그래프1', graph:'tropical',
+  text:'이 기후 그래프에 알맞은 기후 띠를 지도에서 찾아 주세요.',
+  sub:'기온이 일 년 내내 높고 거의 변하지 않으며, 강수량도 많습니다.',
+  target:'TROPIC',
+  hint:'꺾은선이 거의 평평하고 높은 자리에 있어요. 기온 변화가 거의 없다는 뜻이에요.',
+  explain:'기온이 높은 채로 거의 변하지 않고 비가 많은 것은 <b>열대</b> 기후의 그래프입니다.' },
+
+{ id:'g2', zone:2, type:'graph', diff:'중', dex:'그래프2', graph:'continental',
+  text:'이 기후 그래프에 알맞은 기후 띠를 지도에서 찾아 주세요.',
+  sub:'여름은 짧고 따뜻하지만 겨울이 길고 몹시 춥습니다.',
+  target:'CONT_N',
+  hint:'영하로 내려가는 달이 여러 달 이어져요. 이 기후는 북반구에만 넓게 나타난답니다.',
+  explain:'겨울이 길고 몹시 추우며 여름이 짧은 것은 <b>냉대</b> 기후의 그래프입니다.' },
+
+{ id:'g3', zone:2, type:'graph', diff:'하', dex:'그래프3', graph:'dry',
+  text:'이 기후 그래프에 알맞은 기후 띠를 지도에서 찾아 주세요.',
+  sub:'기온은 높은 편인데 강수량 막대가 거의 보이지 않습니다.',
+  target:'DRY_N',
+  hint:'비가 거의 오지 않는 것이 가장 큰 특징이에요. 강수량 막대의 높이를 보세요.',
+  explain:'강수량이 매우 적은 것은 <b>건조</b> 기후의 그래프입니다.' },
+
+/* ── 3구역 · 생활 탐사대 : 생활 모습 6 + 오개념 1 ── */
+{ id:'l1', zone:3, type:'life', diff:'하', dex:'고상 가옥',
+  card:{emo:'🏠', label:'기둥을 세워 바닥을 땅에서 띄운 집'},
+  text:'이 집은 어느 기후에서 볼 수 있을까요?',
+  target:'TROPIC',
+  why:{ q:'바닥을 띄워 지은 까닭은 무엇일까요?',
+        opts:['<b>바람이 잘 통하게</b> 하고 열기와 습기를 피하려고','눈이 많이 쌓이는 것을 막으려고',
+              '모래바람을 막으려고','순록을 안에서 기르려고'],
+        answer:0 },
+  hint:'덥고 습한 곳에서 시원하게 지내려면 무엇이 잘 통해야 할까요?',
+  explain:'<b>열대</b> 기후 지역의 고상 가옥입니다. 바닥을 띄워 <b>바람이 잘 통하게</b> 하고 열기와 습기를 피했어요.' },
+
+{ id:'l2', zone:3, type:'life', diff:'하', dex:'게르',
+  card:{emo:'⛺', label:'쉽게 접었다 펼 수 있는 이동식 가옥'},
+  text:'이 집은 어느 기후에서 볼 수 있을까요?',
+  target:'DRY_N',
+  why:{ q:'이동식으로 지은 까닭은 무엇일까요?',
+        opts:['순록을 기르기 위해서','<b>가축과 함께 풀을 찾아</b> 옮겨 다니기 위해서',
+              '비가 많이 내려 물을 피하기 위해서','해발 고도가 높아 바람이 세기 때문에'],
+        answer:1 },
+  hint:'초원에서 가축을 기르는 사람들의 집이에요. 풀이 떨어지면 어떻게 해야 할까요?',
+  explain:'<b>건조</b> 기후 초원 지역의 이동식 가옥(게르)입니다. <b>가축과 함께 풀을 찾아</b> 옮겨 다니는 유목 생활에 맞게 지었어요.' },
+
+{ id:'l3', zone:3, type:'life', diff:'중', dex:'올리브',
+  card:{emo:'🫒', label:'올리브와 포도를 기르는 밭'},
+  text:'이 농업은 어느 기후에서 발달했을까요?',
+  target:'TEMP_N',
+  why:{ q:'이곳에서 잘 자라는 까닭은 무엇일까요?',
+        opts:['일 년 내내 기온이 높고 비가 많아서','겨울이 길고 몹시 추워서',
+              '<b>지중해 주변</b>의 여름이 덥고 건조한 날씨에 잘 맞아서','해발 고도가 높아 서늘해서'],
+        answer:2 },
+  hint:'사계절이 비교적 뚜렷한 중위도에서 나타나요. 지중해 주변을 떠올려 보세요.',
+  explain:'<b>온대</b> 기후 지역의 농업입니다. 지중해 주변에서는 여름이 덥고 건조해 <b>올리브와 포도</b>를 많이 기릅니다.' },
+
+{ id:'l4', zone:3, type:'life', diff:'중', dex:'침엽수림',
+  card:{emo:'🌲', label:'침엽수림에서 발달한 목재·펄프 산업'},
+  text:'이 산업은 어느 기후에서 발달했을까요?',
+  target:'CONT_N',
+  why:{ q:'이곳에 침엽수림이 넓게 발달한 까닭은 무엇일까요?',
+        opts:['비가 거의 내리지 않아서','<b>춥고 긴 겨울</b>을 견디는 침엽수가 넓게 자라서',
+              '일 년 내내 기온이 높아서','낮과 밤의 기온 차가 커서'],
+        answer:1 },
+  hint:'겨울이 여름보다 길고 눈이 많이 오는 기후예요. 그런 곳에서 잘 자라는 나무는 무엇일까요?',
+  explain:'<b>냉대</b> 기후 지역의 산업입니다. <b>춥고 긴 겨울</b>을 견디는 침엽수림이 넓게 발달해 목재와 펄프 산업이 발달했어요.' },
+
+{ id:'l5', zone:3, type:'life', diff:'상', dex:'순록',
+  card:{emo:'🦌', label:'순록을 몰며 옮겨 다니는 생활'},
+  text:'이 생활 모습은 어느 기후에서 볼 수 있을까요?',
+  target:'POLAR_N',
+  why:{ q:'순록과 함께 옮겨 다니는 까닭은 무엇일까요?',
+        opts:['<b>추위에 강한 순록</b>과 함께 먹이를 찾아 옮겨 다녀야 해서','초원에 풀이 아주 많아서',
+              '덥고 습해서 시원한 곳을 찾아야 해서','밀 농사를 짓기 위해서'],
+        answer:0 },
+  hint:'순록은 초원이 아니라 아주 추운 곳에서 기르는 가축이에요. 네네츠족을 떠올려 보세요.',
+  explain:'<b>한대</b> 기후 지역의 순록 유목입니다. <b>추위에 강한 순록</b>과 함께 먹이를 찾아 옮겨 다니며 살아갑니다. (초원의 유목은 건조 기후예요.)' },
+
+{ id:'l6', zone:3, type:'life', diff:'상', dex:'알파카',
+  card:{emo:'🦙', label:'알파카와 라마를 기르는 마을'},
+  text:'이 생활 모습은 어느 기후에서 볼 수 있을까요?',
+  target:'MOUNTAIN',
+  why:{ q:'이곳에서 알파카와 라마를 기르는 까닭은 무엇일까요?',
+        opts:['사막의 모래바람을 잘 견디는 가축이라서','바닷물고기를 잡는 데 도움이 되어서',
+              '겨울이 매우 길고 추운 곳에서만 살 수 있어서','<b>서늘한 높은 땅</b>에서도 잘 자라는 가축이라서'],
+        answer:3 },
+  hint:'안데스 산지 사람들이 기르는 가축이에요. 그곳은 위도보다 무엇이 더 중요했나요?',
+  explain:'<b>고산</b> 기후 지역인 안데스 산지의 생활입니다. <b>서늘한 높은 땅</b>에서도 잘 자라는 알파카와 라마를 길러요.' },
+
+{ id:'m3', zone:3, type:'myth', diff:'상', dex:'고산 옷차림',
+  text:'“고산 지역 사람들이 옷을 여러 겹 껴입고 망토를 두르는 까닭은 일 년 내내 몹시 춥기 때문이다.”',
+  sub:'맞는 설명일까요, 틀린 설명일까요?',
+  truth:false,
+  why:{ q:'그렇게 생각한 까닭을 골라 주세요.',
+        opts:['일 년 내내 몹시 춥기 때문이다',
+              '비가 자주 내려 옷이 젖기 때문이다',
+              '<b>낮과 밤의 기온 차</b>가 커서 옷을 더하거나 덜기 위해서다',
+              '바람이 거의 불지 않기 때문이다'],
+        answer:2 },
+  hint:'고산 기후는 일 년 내내 “서늘”하다고 배웠어요. 몹시 춥다와는 다르지요. 그렇다면 하루 중 언제가 문제일까요?',
+  explain:'고산 기후는 일 년 내내 <b>서늘</b>합니다. 옷을 여러 겹 입고 망토를 두르는 것은 <b>낮과 밤의 기온 차</b>가 커서 옷을 더하거나 덜기 위해서예요.' }
+];
+
+/* ════════════════ 공용 도우미 ════════════════ */
+const $ = function(id){ return document.getElementById(id); };
+/* ⚠ style.display='' 는 절대 쓰지 않는다. CSS 의 display:none 규칙으로 되돌아가 영영 안 보인다. */
+function show(el, mode){ if(el){ el.classList.remove('hidden'); el.style.display = mode || 'block'; } }
+function hide(el){ if(el){ el.classList.add('hidden'); el.style.display = 'none'; } }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+  return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+function shuffle(a){ const r=a.slice();
+  for(let i=r.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=r[i]; r[i]=r[j]; r[j]=t; }
+  return r; }
+function clamp(v,lo,hi){ return Math.max(lo, Math.min(hi, v)); }
+
+/* ⚠ 전역 풀은 반드시 사용처보다 위에서 선언한다(TDZ 방지). */
+const PARTICLES = [];
+let particlesReady = false;
+function initParticles(){
+  if(particlesReady) return;
+  const layer = $('fxLayer');
+  for(let i=0;i<26;i++){
+    const d = document.createElement('div');
+    d.className = 'pt';
+    layer.appendChild(d);
+    PARTICLES.push({ el:d, busy:false });
+  }
+  particlesReady = true;
+}
+function burst(x, y, color, n){
+  if(lowSpec || !particlesReady) return;
+  let used = 0;
+  for(let i=0;i<PARTICLES.length && used<(n||12);i++){
+    const p = PARTICLES[i];
+    if(p.busy) continue;
+    p.busy = true; used++;
+    const ang = Math.random()*Math.PI*2, dist = 40+Math.random()*80;
+    const dx = Math.cos(ang)*dist, dy = Math.sin(ang)*dist - 30;
+    const el = p.el;
+    el.style.background = color;
+    el.style.left = (x-4)+'px'; el.style.top = (y-4)+'px';
+    el.style.transition = 'none';
+    el.style.transform = 'translate(0,0) scale(1)';
+    el.style.opacity = '1';
+    void el.offsetWidth;
+    el.style.transition = 'transform .72s cubic-bezier(.2,.7,.4,1), opacity .72s ease';
+    el.style.transform = 'translate('+dx+'px,'+dy+'px) scale(.3)';
+    el.style.opacity = '0';
+    (function(pp){ setTimeout(function(){ pp.busy=false; }, 760); })(p);
+  }
+}
+
+/* ════════════════ 소리 (WebAudio 합성) ════════════════ */
+let AC = null, masterSfx = null, masterBgm = null;
+let audioReady = false, muted = false, bgmOn = false, bgmTimer = null, lowSpec = false;
+
+function ensureAudio(){
+  return new Promise(function(resolve){
+    try{
+      if(!AC){
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if(!Ctx){ resolve(false); return; }
+        AC = new Ctx();
+        masterSfx = AC.createGain(); masterSfx.gain.value = 0.32; masterSfx.connect(AC.destination);
+        masterBgm = AC.createGain(); masterBgm.gain.value = 0.00; masterBgm.connect(AC.destination);
+      }
+      /* ⚠ resume() 는 비동기다. 끝난 뒤에 소리를 내야 첫 소리가 삼켜지지 않는다. */
+      const done = function(){
+        if(!audioReady){
+          try{ /* 무음 버퍼를 한 번 재생해 확실히 깨운다 */
+            const b = AC.createBuffer(1, 1, AC.sampleRate);
+            const s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0);
+          }catch(e){}
+          audioReady = true;
+        }
+        resolve(true);
+      };
+      if(AC.state === 'suspended'){ AC.resume().then(done).catch(function(){ resolve(false); }); }
+      else done();
+    }catch(e){ resolve(false); }
+  });
+}
+function tone(freq, dur, type, gain, delay){
+  if(muted || !AC || !audioReady) return;
+  try{
+    const t0 = AC.currentTime + (delay||0);
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain||0.2, t0+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+(dur||0.18));
+    o.connect(g); g.connect(masterSfx); o.start(t0); o.stop(t0+(dur||0.18)+0.03);
+  }catch(e){}
+}
+const sfx = {
+  tap  : function(){ tone(520,0.07,'triangle',0.16); },
+  snap : function(){ tone(420,0.09,'square',0.14); tone(660,0.12,'triangle',0.17,0.05); },
+  right: function(){ [523,659,784,1047].forEach(function(f,i){ tone(f,0.16,'triangle',0.2,i*0.06); }); },
+  wrong: function(){ tone(210,0.2,'sawtooth',0.14); tone(160,0.26,'sine',0.13,0.09); },
+  coin : function(){ tone(988,0.08,'square',0.13); tone(1319,0.12,'square',0.12,0.06); },
+  zone : function(){ [392,523,659,784,1047].forEach(function(f,i){ tone(f,0.2,'triangle',0.2,i*0.08); }); },
+  done : function(){ [523,659,784,1047,1319].forEach(function(f,i){ tone(f,0.26,'sine',0.2,i*0.12); }); }
+};
+/* 배경음악 — 잔잔한 5음계 합성 루프 (BGM_URL 을 채우면 그 파일을 씁니다) */
+let bgmAudioEl = null;
+const BGM_SCALE = [262,294,330,392,440,523,587,659];
+let bgmStep = 0;
+function startBgm(){
+  if(BGM_URL){
+    if(!bgmAudioEl){ bgmAudioEl = new Audio(BGM_URL); bgmAudioEl.loop = true; bgmAudioEl.volume = 0.3; }
+    bgmAudioEl.play().catch(function(){});
+    return;
+  }
+  if(bgmTimer || !AC) return;
+  masterBgm.gain.value = 0.055;
+  bgmTimer = setInterval(function(){
+    if(muted || !audioReady) return;
+    try{
+      const t0 = AC.currentTime;
+      const f = BGM_SCALE[bgmStep % BGM_SCALE.length];
+      bgmStep += (Math.random()<0.5 ? 1 : 2);
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(f, t0);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.5,t0+0.12);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+1.1);
+      o.connect(g); g.connect(masterBgm); o.start(t0); o.stop(t0+1.2);
+    }catch(e){}
+  }, 620);
+}
+function stopBgm(){
+  if(bgmAudioEl){ try{ bgmAudioEl.pause(); }catch(e){} }
+  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+  if(masterBgm) masterBgm.gain.value = 0;
+}
+
+/* ════════════════ 지도 그리기 (인라인 SVG) ════════════════ */
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const n = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+const X = function(lon){ return lon + 180; };
+const Y = function(lat){ return 90 - lat; };
+
+/* 색약 학생을 위해 색과 함께 쓰는 무늬 정의 */
+function buildPatterns(defs){
+  const specs = {
+    patTro:{ c:CLIMATES.tropical.color,    d:'M0 3 h8 M0 7 h8', w:8, h:8 },
+    patDry:{ c:CLIMATES.dry.color,         dot:true, w:7, h:7 },
+    patTem:{ c:CLIMATES.temperate.color,   d:'M-2 8 l10 -10 M0 10 l10 -10 M-2 2 l4 -4', w:8, h:8 },
+    patCon:{ c:CLIMATES.continental.color, d:'M3 0 v8 M7 0 v8', w:8, h:8 },
+    patPol:{ c:CLIMATES.polar.color,       d:'M0 4 h9 M4 0 v9', w:9, h:9 },
+    patHig:{ c:CLIMATES.highland.color,    d:'M0 0 l7 7 M7 0 l-7 7', w:7, h:7 }
+  };
+  for(const id in specs){
+    const s = specs[id];
+    const p = el('pattern', {id:id, width:s.w, height:s.h, patternUnits:'userSpaceOnUse'});
+    p.appendChild(el('rect', {width:s.w, height:s.h, fill:s.c}));
+    if(s.dot){
+      p.appendChild(el('circle', {cx:s.w/2, cy:s.h/2, r:1.5, fill:'rgba(0,0,0,.55)'}));
+    }else{
+      p.appendChild(el('path', {d:s.d, stroke:'rgba(0,0,0,.5)', 'stroke-width':1.6, fill:'none'}));
+    }
+    defs.appendChild(p);
+  }
+}
+
+let mapSvg = null, bandEls = {}, mtEls = {}, decoLayer = null;
+function buildMap(){
+  mapSvg = $('mapSvg');
+  while(mapSvg.firstChild) mapSvg.removeChild(mapSvg.firstChild);
+  bandEls = {}; mtEls = {};
+
+  const defs = el('defs', {});
+  buildPatterns(defs);
+  mapSvg.appendChild(defs);
+
+  /* 바다 */
+  mapSvg.appendChild(el('rect', {x:0, y:0, width:360, height:180, fill:'#0d3554'}));
+
+  /* 대륙 밑판 — 띠가 없을 때도 육지가 보이도록 */
+  const landBase = el('g', {'pointer-events':'none'});
+  LANDS.forEach(function(L){
+    const pts = L.p.map(function(q){ return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
+    landBase.appendChild(el('polygon', {points:pts, fill:'#2f6b4f', 'stroke':'none'}));
+  });
+  mapSvg.appendChild(landBase);
+
+  /* 기후 띠 (처음에는 비어 있고, 학생이 놓으면 색과 무늬가 채워진다) */
+  const bandG = el('g', {});
+  BANDS.forEach(function(b){
+    const g = el('g', {});
+    const fillRect = el('rect', {x:0, y:b.y, width:360, height:b.h, fill:'transparent', opacity:'0'});
+    const hitRect  = el('rect', {x:0, y:b.y, width:360, height:b.h,
+      fill:'transparent', stroke:'rgba(255,255,255,.22)', 'stroke-width':0.4,
+      'stroke-dasharray':'3 3', style:'cursor:pointer', tabindex:'0', role:'button'});
+    hitRect.setAttribute('data-band', b.id);
+    hitRect.setAttribute('aria-label', b.name);
+    g.appendChild(fillRect); g.appendChild(hitRect);
+    bandG.appendChild(g);
+    bandEls[b.id] = { fill:fillRect, hit:hitRect, band:b };
+  });
+  mapSvg.appendChild(bandG);
+
+  /* 대륙 윤곽 — 띠 위에 반투명으로 한 번 더 올려, 띠를 칠해도 대륙이 보인다.
+     클릭은 아래 띠로 통과해야 하므로 pointer-events 를 끈다. */
+  const landTop = el('g', {'pointer-events':'none'});
+  LANDS.forEach(function(L){
+    const pts = L.p.map(function(q){ return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
+    landTop.appendChild(el('polygon', {points:pts, fill:'#0b3d2a', 'fill-opacity':0.3,
+      stroke:'#d8fbe8', 'stroke-width':0.9, 'stroke-linejoin':'round'}));
+  });
+  mapSvg.appendChild(landTop);
+
+  /* 위도선 — 교과서가 쓰는 0°, 30°, 60° 를 굵게 표시 */
+  const lineG = el('g', {});
+  [[0,'적도 0°'],[30,'북위 30°'],[-30,'남위 30°'],[60,'북위 60°'],[-60,'남위 60°']].forEach(function(p){
+    const y = Y(p[0]);
+    lineG.appendChild(el('line', {x1:0, y1:y, x2:360, y2:y,
+      stroke: p[0]===0 ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.45)',
+      'stroke-width': p[0]===0 ? 1 : 0.6,
+      'stroke-dasharray': p[0]===0 ? '' : '4 3'}));
+    const t = el('text', {x:3, y:y-1.6, fill:'rgba(255,255,255,.8)', 'font-size':4.6, 'font-weight':'700'});
+    t.textContent = p[1];
+    lineG.appendChild(t);
+  });
+  mapSvg.appendChild(lineG);
+
+  /* 산지 표시 (고산 기후 자리) */
+  const mtG = el('g', {});
+  MOUNTAINS.forEach(function(m){
+    const x = X(m.lon), y = Y(m.lat);
+    const g = el('g', {style:'cursor:pointer', tabindex:'0', role:'button'});
+    g.setAttribute('data-mt', m.id);
+    g.setAttribute('aria-label', m.name);
+    g.appendChild(el('circle', {cx:x, cy:y, r:9, fill:'transparent'}));   /* 넉넉한 터치 영역 */
+    const tri = el('polygon', {points:(x)+','+(y-6)+' '+(x-5.5)+','+(y+4)+' '+(x+5.5)+','+(y+4),
+      fill:'#6b7280', stroke:'#f8fafc', 'stroke-width':0.8, 'stroke-linejoin':'round'});
+    g.appendChild(tri);
+    const lb = el('text', {x:x, y:y+9.6, fill:'#f8fafc', 'font-size':4.2,
+      'font-weight':'800', 'text-anchor':'middle'});
+    lb.textContent = m.name;
+    g.appendChild(lb);
+    mtG.appendChild(g);
+    mtEls[m.id] = { g:g, tri:tri, mt:m, x:x, y:y };
+  });
+  mapSvg.appendChild(mtG);
+
+  /* 상점 장식이 올라갈 층 */
+  decoLayer = el('g', {});
+  mapSvg.appendChild(decoLayer);
+
+  /* 지도 안 작은 범례 (낮은 화면에서 바깥 범례가 접혀도 남는다) */
+  const lgG = el('g', {});
+  lgG.appendChild(el('rect', {x:246, y:150, width:112, height:28, rx:3,
+    fill:'rgba(4,20,34,.78)', stroke:'rgba(255,255,255,.25)', 'stroke-width':0.5}));
+  CLIMATE_KEYS.forEach(function(k, i){
+    const cx = 250 + (i%3)*37, cy = 155 + Math.floor(i/3)*12;
+    lgG.appendChild(el('rect', {x:cx, y:cy, width:7, height:7, rx:1.4,
+      fill:'url(#'+CLIMATES[k].pat+')', stroke:'rgba(0,0,0,.5)', 'stroke-width':0.4}));
+    const t = el('text', {x:cx+9, y:cy+5.8, fill:'#e6f0f8', 'font-size':4.6, 'font-weight':'700'});
+    t.textContent = CLIMATES[k].name;
+    lgG.appendChild(t);
+  });
+  mapSvg.appendChild(lgG);
+}
+
+/* 띠가 놓였을 때 지도에 색과 무늬를 채운다 */
+function paintBand(bandId, climateKey){
+  const b = bandEls[bandId];
+  if(!b) return;
+  b.fill.setAttribute('fill', 'url(#'+CLIMATES[climateKey].pat+')');
+  b.fill.setAttribute('opacity', '0.46');
+  b.hit.setAttribute('stroke', 'rgba(255,255,255,.5)');
+  b.hit.setAttribute('stroke-dasharray', '');
+}
+function paintMountain(){
+  MOUNTAINS.forEach(function(m){
+    const e = mtEls[m.id];
+    e.tri.setAttribute('fill', 'url(#'+CLIMATES.highland.pat+')');
+  });
+}
+function clearPaint(){
+  BANDS.forEach(function(b){
+    const e = bandEls[b.id];
+    if(!e) return;
+    e.fill.setAttribute('fill','transparent'); e.fill.setAttribute('opacity','0');
+    e.hit.setAttribute('stroke','rgba(255,255,255,.22)');
+    e.hit.setAttribute('stroke-dasharray','3 3');
+  });
+  MOUNTAINS.forEach(function(m){ mtEls[m.id].tri.setAttribute('fill','#6b7280'); });
+  while(decoLayer && decoLayer.firstChild) decoLayer.removeChild(decoLayer.firstChild);
+}
+/* 목표 자리를 잠깐 깜빡여 알려 준다 (대칭 미리보기 등) */
+function ghostHint(bandId){
+  const e = bandEls[bandId];
+  if(!e) return;
+  e.fill.setAttribute('fill', 'rgba(255,255,255,.28)');
+  e.fill.setAttribute('opacity', '0.55');
+  setTimeout(function(){
+    if(e.fill.getAttribute('fill') === 'rgba(255,255,255,.28)'){
+      e.fill.setAttribute('fill','transparent'); e.fill.setAttribute('opacity','0');
+    }
+  }, 900);
+}
+
+/* ════════════════ 게임 상태 ════════════════ */
+const DIFF_SCORE = { '하':100, '중':160, '상':240 };
+const ZONE_NAME  = { 1:'1구역 · 적도 탐사대', 2:'2구역 · 도시 탐사대', 3:'3구역 · 생활 탐사대' };
+const ZONE_TITLE = { 1:'🧭 적도 탐사대 통과!', 2:'📍 도시 탐사대 통과!', 3:'🏠 생활 탐사대 통과!' };
+const BADGES = [
+  { id:'first',  ico:'🌍', name:'첫 띠 얹기',   desc:'기후 띠를 처음 얹었어요' },
+  { id:'zone1',  ico:'🧭', name:'적도 탐사대',  desc:'1구역을 통과했어요' },
+  { id:'zone2',  ico:'📍', name:'도시 탐사대',  desc:'2구역을 통과했어요' },
+  { id:'zone3',  ico:'🏠', name:'생활 탐사대',  desc:'3구역을 통과했어요' },
+  { id:'combo5', ico:'🔥', name:'5연속 성공',   desc:'연속 5문제를 맞혔어요' },
+  { id:'quick',  ico:'⚡', name:'빠른 판단',    desc:'한 번에 맞힌 문제가 5개 이상' },
+  { id:'clean',  ico:'💎', name:'무결점 탐사',  desc:'한 번에 맞힌 문제가 15개 이상' },
+  { id:'dexall', ico:'🗺️', name:'도감 완성',    desc:'탐사 도감을 모두 채웠어요' }
+];
+const SHOP_ITEMS = [
+  { id:'sat',   ico:'🛰️', name:'인공위성', price:20 },
+  { id:'cloud', ico:'☁️', name:'구름',     price:30 },
+  { id:'plane', ico:'✈️', name:'비행기',   price:40 },
+  { id:'ship',  ico:'⛵', name:'탐사선',   price:50 },
+  { id:'light', ico:'🗼', name:'등대',     price:60 },
+  { id:'rain',  ico:'🌈', name:'무지개',   price:70 }
+];
+const DECO_POS = { sat:[40,18], cloud:[150,40], plane:[300,30], ship:[70,140], light:[210,120], rain:[255,95] };
+
+let S = null;      /* 판 전체 상태 */
+let cur = null;    /* 지금 문항 상태 */
+let selCard = null;
+let paused = false, started = false;
+
+function freshState(nick){
+  return {
+    nick: nick || '지구 탐사대',
+    order: buildOrder(),
+    idx: 0, score: 0, coins: 0, combo: 0, maxCombo: 0,
+    placed: {}, mountainPlaced: false,
+    dex: [], badges: {}, shop: {}, stats: [],
+    tStart: Date.now(), quickCount: 0, firstTryCount: 0
+  };
+}
+/* 문항 순서 — 띠 얹기는 쌓아 가는 활동이라 순서를 지키고, 나머지는 구역 안에서 섞는다 */
+function buildOrder(){
+  const out = [];
+  [1,2,3].forEach(function(z){
+    const inZone = QUIZ_DATA.filter(function(q){ return q.zone === z; });
+    const belts  = inZone.filter(function(q){ return q.type === 'belt'; });
+    let others   = inZone.filter(function(q){ return q.type !== 'belt'; });
+    if(RANDOMIZE) others = shuffle(others);
+    belts.forEach(function(q){ out.push(prep(q)); });
+    others.forEach(function(q){ out.push(prep(q)); });
+  });
+  return out;
+}
+/* 보기 순서를 섞고 정답 위치를 다시 계산한다 */
+function prep(q){
+  const c = JSON.parse(JSON.stringify(q));
+  if(c.why && RANDOMIZE){
+    const idx = shuffle(c.why.opts.map(function(_,i){ return i; }));
+    c.why.opts = idx.map(function(i){ return q.why.opts[i]; });
+    c.why.answer = idx.indexOf(q.why.answer);
+  }
+  if(c.steps && RANDOMIZE) c.steps = shuffle(c.steps);
+  return c;
+}
+
+/* ════════════════ 화면 갱신 ════════════════ */
+function updateHUD(){
+  $('sScore').textContent = S.score.toLocaleString();
+  $('sCoin').textContent  = S.coins;
+  $('sCombo').textContent = S.combo;
+  $('sProg').textContent  = S.idx + '/' + S.order.length;
+  $('zoneTag').textContent = ZONE_NAME[S.order[Math.min(S.idx, S.order.length-1)].zone];
+  $('progBar').style.width = Math.round(S.idx / S.order.length * 100) + '%';
+}
+function toast(msg, kind){
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + (kind || 'info');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(function(){ t.className = 'toast ' + (kind || 'info'); }, 2200);
+}
+function renderLegend(){
+  $('legend').innerHTML = CLIMATE_KEYS.map(function(k){
+    return '<span class="lg"><i class="'+CLIMATES[k].cls+'"></i>'+CLIMATES[k].name+'</span>';
+  }).join('');
+}
+function climateCardHTML(k, extra){
+  return '<button class="card'+(extra||'')+'" data-climate="'+k+'" type="button">'
+       + '<span class="swatch '+CLIMATES[k].cls+'"></span>'
+       + '<span>'+CLIMATES[k].name+'</span></button>';
+}
+
+/* 기후 그래프 — 라벨이 막대와 겹치지 않도록 여백을 넉넉히 두고, 글자는 회전시키지 않는다 */
+function graphSVG(key){
+  const g = GRAPHS[key];
+  const W=330, H=152, L=34, R=34, T=26, B=26;
+  const iw = W-L-R, ih = H-T-B;
+  const tMin=-25, tMax=40, rMax=300;
+  const ty = function(v){ return T + ih - (v-tMin)/(tMax-tMin)*ih; };
+  const ry = function(v){ return ih - (v/rMax)*ih; };
+  let s = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;margin:6px 0 2px;max-width:340px" role="img" aria-label="기후 그래프">';
+  s += '<rect x="0" y="0" width="'+W+'" height="'+H+'" rx="8" fill="rgba(255,255,255,.05)"/>';
+  s += '<text x="'+L+'" y="14" fill="#fca5a5" font-size="9" font-weight="800">기온(℃)</text>';
+  s += '<text x="'+(W-R)+'" y="14" fill="#7dd3fc" font-size="9" font-weight="800" text-anchor="end">강수량(mm)</text>';
+  /* 0℃ 기준선 */
+  s += '<line x1="'+L+'" y1="'+ty(0)+'" x2="'+(W-R)+'" y2="'+ty(0)+'" stroke="rgba(255,255,255,.3)" stroke-width="0.8" stroke-dasharray="3 3"/>';
+  s += '<text x="'+(L-4)+'" y="'+(ty(0)+3)+'" fill="rgba(255,255,255,.55)" font-size="8" text-anchor="end">0</text>';
+  s += '<text x="'+(L-4)+'" y="'+(ty(30)+3)+'" fill="rgba(255,255,255,.55)" font-size="8" text-anchor="end">30</text>';
+  s += '<text x="'+(L-4)+'" y="'+(ty(-20)+3)+'" fill="rgba(255,255,255,.55)" font-size="8" text-anchor="end">-20</text>';
+  const bw = iw/12;
+  for(let i=0;i<12;i++){
+    const x = L + i*bw + bw*0.2, w = bw*0.6;
+    const h = Math.max(0, ih - ry(Math.min(g.r[i], rMax)));
+    s += '<rect x="'+x.toFixed(1)+'" y="'+(T+ih-h).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1.5" fill="#38bdf8" opacity="0.72"/>';
+  }
+  let d = '';
+  for(let i=0;i<12;i++){
+    const x = L + i*bw + bw/2, y = ty(clamp(g.t[i], tMin, tMax));
+    d += (i===0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
+  }
+  s += '<path d="'+d+'" fill="none" stroke="#fb7185" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  for(let i=0;i<12;i++){
+    const x = L + i*bw + bw/2, y = ty(clamp(g.t[i], tMin, tMax));
+    s += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="1.8" fill="#fb7185"/>';
+  }
+  for(let i=0;i<12;i+=2){
+    const x = L + i*bw + bw/2;
+    s += '<text x="'+x.toFixed(1)+'" y="'+(H-8)+'" fill="rgba(255,255,255,.62)" font-size="8" text-anchor="middle">'+(i+1)+'월</text>';
+  }
+  s += '</svg>';
+  return s;
+}
+
+/* ════════════════ 문항 표시 ════════════════ */
+function renderQuestion(){
+  const q = S.order[S.idx];
+  cur = { q:q, phase:'map', wrong:0, tStart:Date.now(), remaining:null, hasty:false };
+  selCard = null;
+
+  if(q.type === 'belt') cur.remaining = q.steps.slice();
+  if(q.type === 'myth') cur.phase = 'ox';
+
+  $('qDiff').textContent = '난이도 ' + q.diff;
+  $('qDiff').className = 'diffBadge diff-' + q.diff;
+  $('qNo').textContent = (S.idx+1) + ' / ' + S.order.length;
+  $('qType').textContent = ({belt:'띠 얹기', pin:'지도 핀', graph:'그래프 판독', life:'생활 모습', myth:'오개념 판정'})[q.type];
+  $('qText').innerHTML = q.text;
+  $('qSub').innerHTML = (q.sub || '') + (q.type === 'graph' ? graphSVG(q.graph) : '');
+  updateHUD();
+  renderStep();
+}
+function renderStep(){
+  const q = cur.q;
+  const step = $('qStep'), opts = $('opts'), tray = $('tray');
+  opts.innerHTML = ''; tray.innerHTML = '';
+
+  if(cur.phase === 'map'){
+    if(q.type === 'belt'){
+      step.textContent = '남은 띠 ' + cur.remaining.length + '개 — 카드를 고른 뒤 지도를 누르세요';
+      tray.innerHTML = CLIMATE_KEYS.map(function(k){
+        const need = cur.remaining.some(function(s){ return s.climate === k; });
+        return climateCardHTML(k, need ? '' : ' done');
+      }).join('');
+    }else if(q.type === 'life'){
+      step.textContent = '1단계 — 카드를 고른 뒤 알맞은 기후 띠를 누르세요';
+      tray.innerHTML = '<button class="card big sel" data-life="1" type="button">'
+        + '<span class="emo">'+q.card.emo+'</span><span>'+esc(q.card.label)+'</span></button>';
+      selCard = 'LIFE';
+    }else{
+      step.textContent = (q.type==='graph' ? '그래프를 보고 ' : '') + '지도에서 알맞은 기후 띠를 누르세요';
+    }
+  }else if(cur.phase === 'ox'){
+    step.textContent = '1단계 — 맞으면 ⭕, 틀리면 ❌';
+    opts.className = 'opts optsOX';
+    opts.innerHTML = '<button class="opt" data-ox="1" type="button"><span class="num">1</span>⭕ 맞아요</button>'
+                   + '<button class="opt" data-ox="0" type="button"><span class="num">2</span>❌ 틀려요</button>';
+  }else if(cur.phase === 'why'){
+    step.textContent = '2단계 — ' + q.why.q;
+    opts.className = 'opts';
+    opts.innerHTML = q.why.opts.map(function(o,i){
+      return '<button class="opt" data-why="'+i+'" type="button"><span class="num">'+(i+1)+'</span><span>'+o+'</span></button>';
+    }).join('');
+  }
+  setMapInteractive(cur.phase === 'map');
+}
+function setMapInteractive(on){
+  BANDS.forEach(function(b){
+    const e = bandEls[b.id];
+    if(e) e.hit.style.pointerEvents = on ? 'auto' : 'none';
+  });
+  MOUNTAINS.forEach(function(m){ mtEls[m.id].g.style.pointerEvents = on ? 'auto' : 'none'; });
+}
+
+/* ════════════════ 판정 ════════════════ */
+function elapsed(){ return (Date.now() - cur.tStart) / 1000; }
+
+function onMapTap(targetId, clientX, clientY){
+  if(paused || !cur || cur.phase !== 'map') return;
+  const q = cur.q;
+  sfx.tap();
+
+  if(q.type === 'belt'){
+    if(!selCard){ toast('먼저 아래에서 기후 띠 카드를 골라 주세요', 'info'); return; }
+    const hitIdx = cur.remaining.findIndex(function(s){
+      return s.climate === selCard && s.target === targetId; });
+    if(hitIdx >= 0){
+      const st = cur.remaining[hitIdx];
+      cur.remaining.splice(hitIdx, 1);
+      placeBelt(st.climate, st.target);
+      sfx.snap();
+      if(clientX != null) burst(clientX, clientY, CLIMATES[st.climate].color, 10);
+      if(!S.badges.first){ S.badges.first = true; toast('🌍 배지 획득 — 첫 띠 얹기', 'ok'); }
+      /* 적도 대칭: 같은 기후의 반대쪽 자리가 남아 있으면 미리 보여 준다 */
+      const mate = cur.remaining.find(function(s){ return s.climate === st.climate; });
+      if(mate && mate.target !== 'MOUNTAIN'){
+        ghostHint(mate.target);
+        toast('적도를 기준으로 반대쪽에도 놓아 주세요!', 'info');
+      }
+      selCard = null;
+      if(cur.remaining.length === 0){ resolveCorrect(); } else { renderStep(); }
+      return;
+    }
+    /* 냉대를 남반구 고위도에 놓으려 한 경우 — 이 단원의 핵심 오개념 */
+    if(selCard === 'continental' && targetId === 'CONT_S'){
+      resolveWrong('이 위도의 <b>남반구</b>에는 육지가 거의 없고 <b>바다뿐</b>이에요. 그래서 냉대 기후가 나타나기 어렵답니다.');
+      return;
+    }
+    resolveWrong(null);
+    return;
+  }
+
+  /* pin · graph · life 는 지도에서 바로 고른다 */
+  if(q.type === 'life' && !selCard){ toast('먼저 생활 모습 카드를 눌러 주세요', 'info'); return; }
+  if(targetId === q.target){
+    if(q.type === 'life' || q.type === 'pin'){
+      const ck = (q.target === 'MOUNTAIN') ? 'highland' : bandEls[q.target].band.climate;
+      if(clientX != null) burst(clientX, clientY, CLIMATES[ck].color, 10);
+    }
+    sfx.snap();
+    if(q.why){ cur.phase = 'why'; renderStep(); }
+    else resolveCorrect();
+  }else{
+    resolveWrong(null);
+  }
+}
+function placeBelt(climateKey, targetId){
+  if(targetId === 'MOUNTAIN'){ S.mountainPlaced = true; paintMountain(); }
+  else { S.placed[targetId] = climateKey; paintBand(targetId, climateKey); }
+}
+function onOX(val){
+  if(paused || !cur || cur.phase !== 'ox') return;
+  const isTrue = (val === 1);
+  if(isTrue === cur.q.truth){ sfx.snap(); cur.phase = 'why'; renderStep(); }
+  else resolveWrong(null);
+}
+function onWhy(i){
+  if(paused || !cur || cur.phase !== 'why') return;
+  if(i === cur.q.why.answer){
+    const btns = $('opts').querySelectorAll('.opt');
+    if(btns[i]) btns[i].classList.add('right');
+    resolveCorrect();
+  }else{
+    const btns = $('opts').querySelectorAll('.opt');
+    if(btns[i]){ btns[i].classList.add('wrong'); btns[i].disabled = true; }
+    resolveWrong(null);
+  }
+}
+
+function resolveCorrect(){
+  const q = cur.q, secs = elapsed();
+  const firstTry = (cur.wrong === 0);
+  let gain = DIFF_SCORE[q.diff];
+  if(firstTry) gain += 50;
+  if(firstTry && secs >= 3) gain += 40;          /* 속도 보너스는 3초 이상 고민한 첫 시도에만 */
+  S.combo += 1;
+  S.maxCombo = Math.max(S.maxCombo, S.combo);
+  if(S.combo === 3 || S.combo === 5 || S.combo === 8 || S.combo === 12){
+    gain += S.combo * 25;
+    toast('🔥 ' + S.combo + '연속! 보너스 +' + (S.combo*25), 'ok');
+  }
+  S.score += gain;
+  S.coins += 3 + (firstTry ? 2 : 0);
+  if(firstTry){ S.firstTryCount++; if(secs < 5) S.quickCount++; }
+  if(S.dex.indexOf(q.dex) < 0) S.dex.push(q.dex);
+
+  /* ⚠ 기록은 여기 한 곳에서만 남긴다 (두 군데 두면 통계가 두 배가 된다) */
+  S.stats.push({ id:q.id, type:q.type, diff:q.diff, wrong:cur.wrong, secs:secs, text:q.text, explain:q.explain, target:q.target || (q.steps ? q.steps[0].target : null) });
+
+  cur.phase = 'done';        /* 해설을 보여 주는 동안에는 어떤 입력도 받지 않는다 */
+  checkBadges();
+  sfx.right();
+  const box = $('qBox').getBoundingClientRect();
+  burst(box.left + box.width/2, box.top + box.height/2, '#34d399', 14);
+  toast('정답! +' + gain + '점', 'ok');
+  setMapInteractive(false);
+  $('qStep').innerHTML = '✅ ' + q.explain;
+  $('opts').innerHTML = '';
+  $('tray').innerHTML = '';
+  updateHUD();
+  setTimeout(nextQuestion, 1500);
+}
+function resolveWrong(customHint){
+  cur.wrong += 1;
+  S.combo = 0;
+  sfx.wrong();
+  if(elapsed() < 3) cur.hasty = true;
+  updateHUD();
+  openHint(customHint);
+}
+function checkBadges(){
+  if(S.combo >= 5 && !S.badges.combo5){ S.badges.combo5 = true; toast('🔥 배지 획득 — 5연속 성공','ok'); }
+  if(S.quickCount >= 5 && !S.badges.quick){ S.badges.quick = true; toast('⚡ 배지 획득 — 빠른 판단','ok'); }
+  if(S.firstTryCount >= 15 && !S.badges.clean){ S.badges.clean = true; toast('💎 배지 획득 — 무결점 탐사','ok'); }
+  if(S.dex.length >= QUIZ_DATA.length && !S.badges.dexall){ S.badges.dexall = true; toast('🗺️ 배지 획득 — 도감 완성','ok'); }
+}
+
+/* ── 힌트 모달: 3초 강제 열람 후 곧바로 재도전 ── */
+let hintTimer = null;
+function openHint(customHint){
+  const q = cur.q;
+  cur.prevPhase = cur.phase;
+  cur.phase = 'hint';        /* 모달이 열린 동안 지도·선택지 입력을 막는다 */
+  $('hintText').innerHTML = customHint || q.hint;
+  $('hintWhy').innerHTML = '정답을 알려 주지 않아요. 힌트를 읽고 <b>다시 한 번</b> 찾아보세요.';
+  let left = cur.hasty ? 5 : 3;    /* 성급하게 누른 오답만 조금 더 기다린다 */
+  const btn = $('btnHintOk');
+  btn.disabled = true;
+  $('hintCount').textContent = left + '초 뒤에 다시 풀 수 있어요';
+  show($('ovHint'), 'flex');
+  clearInterval(hintTimer);
+  hintTimer = setInterval(function(){
+    left -= 1;
+    if(left <= 0){
+      clearInterval(hintTimer);
+      $('hintCount').textContent = '이제 다시 풀어 보세요!';
+      btn.disabled = false;
+    }else{
+      $('hintCount').textContent = left + '초 뒤에 다시 풀 수 있어요';
+    }
+  }, 1000);
+}
+function closeHint(){
+  clearInterval(hintTimer);
+  hide($('ovHint'));
+  cur.phase = cur.prevPhase || 'map';
+  cur.hasty = false;
+  cur.tStart = Date.now();   /* 다시 풀 때는 시간을 새로 잰다 */
+  renderStep();
+}
+
+function nextQuestion(){
+  const prevZone = S.order[S.idx].zone;
+  S.idx += 1;
+  updateHUD();
+  if(S.idx >= S.order.length){ finish(); return; }
+  const nowZone = S.order[S.idx].zone;
+  if(nowZone !== prevZone){ openZoneClear(prevZone); return; }
+  renderQuestion();
+}
+function openZoneClear(z){
+  S.badges['zone'+z] = true;
+  sfx.zone();
+  $('zoneTitle').textContent = ZONE_TITLE[z];
+  $('zoneMsg').innerHTML = '지금까지 <b>'+S.score.toLocaleString()+'점</b> · 코인 <b>'+S.coins+'</b>개를 모았어요.<br>'
+    + (z===1 ? '이제 지도에서 도시를 찾아볼 차례예요!' : '이제 기후에 따른 생활 모습을 살펴볼 차례예요!');
+  $('zoneDex').innerHTML = S.dex.map(function(d){ return '<span class="dexItem got">'+esc(d)+'</span>'; }).join('');
+  show($('ovZone'), 'flex');
+}
+
+/* ════════════════ 결과 보고서 ════════════════ */
+function miniMapSVG(targetId){
+  let s = '<svg viewBox="0 0 360 180" width="150" style="display:block;margin-top:6px;border-radius:6px;background:#0d3554" role="img" aria-label="정답 위치">';
+  LANDS.forEach(function(L){
+    const pts = L.p.map(function(q){ return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
+    s += '<polygon points="'+pts+'" fill="#2f6b4f" stroke="#7fd6a6" stroke-width="0.5"/>';
+  });
+  if(targetId === 'MOUNTAIN'){
+    MOUNTAINS.forEach(function(m){
+      const x = X(m.lon), y = Y(m.lat);
+      s += '<polygon points="'+x+','+(y-9)+' '+(x-8)+','+(y+6)+' '+(x+8)+','+(y+6)+'" fill="'+CLIMATES.highland.color+'" stroke="#fff" stroke-width="1.4"/>';
+    });
+  }else{
+    const b = BANDS.find(function(x){ return x.id === targetId; });
+    if(b){
+      const ck = b.climate || 'polar';
+      s += '<rect x="0" y="'+b.y+'" width="360" height="'+b.h+'" fill="'+CLIMATES[ck].color+'" opacity="0.62"/>';
+      s += '<rect x="0" y="'+b.y+'" width="360" height="'+b.h+'" fill="none" stroke="#fff" stroke-width="1.6"/>';
+    }
+  }
+  s += '<line x1="0" y1="90" x2="360" y2="90" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
+  s += '</svg>';
+  return s;
+}
+function bars(title, rows){
+  if(!rows.length) return '';
+  const max = Math.max.apply(null, rows.map(function(r){ return r.v; })) || 1;
+  return '<div class="barBlock"><h3>'+title+'</h3>' + rows.map(function(r){
+    return '<div class="barRow"><span class="nm">'+esc(r.n)+'</span>'
+      + '<span class="barOut"><span class="barIn" style="width:'+Math.max(3, Math.round(r.v/max*100))+'%"></span></span>'
+      + '<span class="vl">'+esc(r.t)+'</span></div>';
+  }).join('') + '</div>';
+}
+function finish(){
+  stopBgm(); sfx.done();
+  const st = S.stats;
+  const total = st.length;
+  const perfect = st.filter(function(x){ return x.wrong === 0; }).length;
+  const rate = total ? Math.round(perfect/total*100) : 0;
+  const totSec = Math.round((Date.now() - S.tStart)/1000);
+  const mm = Math.floor(totSec/60), ss = totSec % 60;
+  const avg = total ? (st.reduce(function(a,b){ return a+b.secs; },0)/total) : 0;
+  const slowest = st.slice().sort(function(a,b){ return b.secs - a.secs; })[0];
+
+  $('resTitle').textContent = '🏁 ' + S.nick + ' 탐사 보고서';
+  let rank;
+  if(rate >= 90) rank = '🏆 기후 박사 탐사대장';
+  else if(rate >= 70) rank = '🥇 베테랑 탐사 대원';
+  else if(rate >= 50) rank = '🥈 성장하는 탐사 대원';
+  else rank = '🌱 새내기 탐사 대원';
+  $('resRank').textContent = rank;
+
+  $('resGrid').innerHTML = [
+    ['점수', S.score.toLocaleString()], ['푼 문제', total + '개'],
+    ['한 번에 맞힘', perfect + '개'], ['첫 시도 정답률', rate + '%'],
+    ['최고 연속', S.maxCombo + '연속'], ['전체 시간', mm + ':' + String(ss).padStart(2,'0')],
+    ['문제당 평균', avg.toFixed(1) + '초'], ['코인', S.coins + '개']
+  ].map(function(p){ return '<div class="resCell"><div class="v">'+p[1]+'</div><div class="l">'+p[0]+'</div></div>'; }).join('');
+
+  const byDiff = ['하','중','상'].map(function(d){
+    const g = st.filter(function(x){ return x.diff === d; });
+    const ok = g.filter(function(x){ return x.wrong === 0; }).length;
+    return { n:'난이도 '+d, v:g.length ? ok/g.length*100 : 0, t:g.length ? ok+'/'+g.length : '-' };
+  });
+  const TYPE_NM = {belt:'띠 얹기', pin:'지도 핀', graph:'그래프', life:'생활 모습', myth:'오개념'};
+  const byType = Object.keys(TYPE_NM).map(function(k){
+    const g = st.filter(function(x){ return x.type === k; });
+    const ok = g.filter(function(x){ return x.wrong === 0; }).length;
+    return { n:TYPE_NM[k], v:g.length ? ok/g.length*100 : 0, t:g.length ? ok+'/'+g.length : '-' };
+  }).filter(function(r){ return r.t !== '-'; });
+  const byTime = st.map(function(x, i){
+    return { n:(i+1)+'번 '+TYPE_NM[x.type], v:x.secs, t:x.secs.toFixed(1)+'초' };
+  });
+  $('resBars').innerHTML = bars('📊 난이도별 첫 시도 정답', byDiff)
+                         + bars('🧩 유형별 첫 시도 정답', byType)
+                         + bars('⏱️ 문제별 걸린 시간', byTime);
+
+  /* 한 줄 총평 — 가장 두드러진 약점을 짚어 준다 */
+  let weak = null, weakV = 101;
+  byType.forEach(function(r){ const g = st.filter(function(x){ return TYPE_NM[x.type] === r.n; });
+    if(g.length >= 2 && r.v < weakV){ weakV = r.v; weak = r.n; } });
+  let msg;
+  if(rate >= 90) msg = '기후의 분포와 생활 모습을 아주 정확하게 이해하고 있어요. 친구에게 설명해 줄 수 있는 수준이에요!';
+  else if(weak && weakV < 70) msg = '<b>'+weak+'</b> 문제에서 가장 많이 헤맸어요. 그 부분을 한 번 더 살펴보면 크게 좋아질 거예요.';
+  else if(avg > 25) msg = '정답은 잘 찾았지만 시간이 조금 걸렸어요. 적도 → 극지방 순서를 외워 두면 훨씬 빨라져요.';
+  else msg = '기본기가 탄탄해요! 틀린 문제의 해설을 한 번씩만 다시 읽어 보세요.';
+  $('resSummary').innerHTML = '💬 ' + msg;
+
+  $('resBadges').innerHTML = BADGES.map(function(b){
+    const got = !!S.badges[b.id];
+    return '<span class="bdg'+(got?'':' off')+'" title="'+esc(b.desc)+'">'+b.ico+' '+b.name+'</span>';
+  }).join('');
+  $('resDex').innerHTML = QUIZ_DATA.map(function(q){
+    const got = S.dex.indexOf(q.dex) >= 0;
+    return '<span class="dexItem'+(got?' got':'')+'">'+(got?'✔ ':'')+esc(q.dex)+'</span>';
+  }).join('');
+
+  const review = st.filter(function(x){ return x.wrong > 0; });
+  if(review.length){
+    $('resReview').innerHTML = review.map(function(x){
+      return '<div class="reviewItem"><div class="rq">'+x.text+'</div>'
+        + '<div class="ra">'+x.explain+'</div>'
+        + (x.target ? miniMapSVG(x.target) : '') + '</div>';
+    }).join('');
+    show($('resReviewBlock'), 'block');
+  }else{
+    $('resReview').innerHTML = '<div class="reviewItem">모든 문제를 한 번에 맞혔어요! 다시 볼 문제가 없습니다. 🎉</div>';
+    show($('resReviewBlock'), 'block');
+  }
+  show($('ovResult'), 'flex');
+}
+
+/* ════════════════ 상점 ════════════════ */
+function renderShop(){
+  $('shopCoin').textContent = S.coins;
+  $('shopGrid').innerHTML = SHOP_ITEMS.map(function(it){
+    const owned = !!S.shop[it.id];
+    return '<button class="shopItem'+(owned?' owned':'')+'" data-shop="'+it.id+'" type="button"'
+      + (owned?' disabled':'') + '><div class="ico">'+it.ico+'</div><div class="nm">'+it.name+'</div>'
+      + '<div class="pr">'+(owned ? '보유 중' : it.price+'코인')+'</div></button>';
+  }).join('');
+}
+function buyShop(id){
+  const it = SHOP_ITEMS.find(function(x){ return x.id === id; });
+  if(!it || S.shop[id]) return;
+  if(S.coins < it.price){ toast('코인이 모자라요 ('+it.price+'코인 필요)', 'no'); return; }
+  S.coins -= it.price; S.shop[id] = true;
+  sfx.coin(); drawDeco(); renderShop(); updateHUD();
+  toast(it.ico + ' ' + it.name + '을(를) 지구본에 달았어요!', 'ok');
+}
+function drawDeco(){
+  while(decoLayer.firstChild) decoLayer.removeChild(decoLayer.firstChild);
+  SHOP_ITEMS.forEach(function(it){
+    if(!S.shop[it.id]) return;
+    const p = DECO_POS[it.id];
+    const t = el('text', {x:p[0], y:p[1], 'font-size':11, 'text-anchor':'middle'});
+    t.textContent = it.ico;
+    decoLayer.appendChild(t);
+  });
+}
+
+/* ════════════════ 화면 크기 맞추기 ════════════════ */
+/* ⚠ 칸을 aspect-ratio 로 고정하지 않고, 남은 공간을 재서 JS 로 지도 크기를 계산한다. */
+function fitLayout(){
+  const wrap = $('mapWrap'), svg = $('mapSvg'), panel = document.querySelector('.panel');
+  const stage = document.querySelector('.stage');
+  if(!wrap || !svg || !stage) return;
+  const wide = window.innerWidth >= 760;
+  if(panel) panel.style.maxHeight = wide ? 'none' : Math.round(stage.clientHeight * 0.56) + 'px';
+  const w = Math.max(80, wrap.clientWidth);
+  const h = Math.max(60, wrap.clientHeight);
+  let sw = w, sh = w / 2;
+  if(sh > h){ sh = h; sw = h * 2; }
+  svg.style.width = Math.floor(sw) + 'px';
+  svg.style.height = Math.floor(sh) + 'px';
+}
+
+/* ════════════════ 조작 연결 ════════════════ */
+let dragGhost = null, dragging = false;
+function startDragGhost(html, x, y){
+  if(!dragGhost){
+    dragGhost = document.createElement('div');
+    dragGhost.style.cssText = 'position:fixed;z-index:95;pointer-events:none;opacity:.9;transform:translate(-50%,-50%)';
+    document.body.appendChild(dragGhost);
+  }
+  dragGhost.innerHTML = html;
+  dragGhost.style.left = x+'px'; dragGhost.style.top = y+'px';
+  show(dragGhost, 'block');
+}
+function moveDragGhost(x,y){ if(dragGhost){ dragGhost.style.left=x+'px'; dragGhost.style.top=y+'px'; } }
+function endDragGhost(){ if(dragGhost) hide(dragGhost); }
+
+function targetFromPoint(x, y){
+  const els = document.elementsFromPoint ? document.elementsFromPoint(x,y) : [document.elementFromPoint(x,y)];
+  for(let i=0;i<els.length;i++){
+    const e = els[i]; if(!e) continue;
+    const mt = e.closest ? e.closest('[data-mt]') : null;
+    if(mt) return 'MOUNTAIN';
+    const bd = e.getAttribute && e.getAttribute('data-band');
+    if(bd) return bd;
+  }
+  return null;
+}
+function wireEvents(){
+  /* 카드 선택 + 드래그 */
+  $('tray').addEventListener('pointerdown', function(ev){
+    const c = ev.target.closest('.card');
+    if(!c || c.classList.contains('done')) return;
+    ensureAudio();
+    const key = c.getAttribute('data-climate');
+    selCard = key || 'LIFE';
+    $('tray').querySelectorAll('.card').forEach(function(x){ x.classList.remove('sel'); });
+    c.classList.add('sel');
+    sfx.tap();
+    dragging = true;
+    startDragGhost(c.outerHTML, ev.clientX, ev.clientY);
+    try{ c.setPointerCapture(ev.pointerId); }catch(e){}
+  });
+  document.addEventListener('pointermove', function(ev){ if(dragging) moveDragGhost(ev.clientX, ev.clientY); });
+  document.addEventListener('pointerup', function(ev){
+    if(!dragging) return;
+    dragging = false; endDragGhost();
+    const t = targetFromPoint(ev.clientX, ev.clientY);
+    if(t) onMapTap(t, ev.clientX, ev.clientY);
+  });
+  document.addEventListener('pointercancel', function(){ dragging = false; endDragGhost(); });
+
+  /* 지도 직접 누르기 (탭-탭 방식) */
+  $('mapSvg').addEventListener('click', function(ev){
+    if(dragging) return;
+    ensureAudio();
+    const mt = ev.target.closest('[data-mt]');
+    if(mt){ onMapTap('MOUNTAIN', ev.clientX, ev.clientY); return; }
+    const bd = ev.target.getAttribute && ev.target.getAttribute('data-band');
+    if(bd) onMapTap(bd, ev.clientX, ev.clientY);
+  });
+
+  /* 선택지 */
+  $('opts').addEventListener('click', function(ev){
+    const b = ev.target.closest('.opt');
+    if(!b || b.disabled) return;
+    ensureAudio();
+    const ox = b.getAttribute('data-ox'), wy = b.getAttribute('data-why');
+    if(ox !== null) onOX(parseInt(ox,10));
+    else if(wy !== null) onWhy(parseInt(wy,10));
+  });
+
+  /* 단추들 */
+  $('btnStart').addEventListener('click', function(){
+    ensureAudio().then(function(){ sfx.tap(); if(bgmOn) startBgm(); });
+    startGame($('nickInput').value.trim());
+  });
+  $('nickInput').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') $('btnStart').click(); });
+  $('btnHelp').addEventListener('click', function(){
+    $('helpBody').innerHTML = CLIMATE_KEYS.map(function(k){
+      return '<div class="rules" style="margin:7px 0"><b>'+CLIMATES[k].emo+' '+CLIMATES[k].name+'</b> — '+CLIMATES[k].desc+'</div>';
+    }).join('');
+    show($('ovHelp'), 'flex');
+  });
+  $('btnHelpClose').addEventListener('click', function(){ hide($('ovHelp')); });
+  $('btnHintOk').addEventListener('click', function(){ if(!$('btnHintOk').disabled) closeHint(); });
+  $('btnZoneNext').addEventListener('click', function(){ hide($('ovZone')); renderQuestion(); });
+  $('btnAgain').addEventListener('click', function(){ hide($('ovResult')); startGame(S.nick); });
+  $('btnShop').addEventListener('click', function(){ if(!started) return; renderShop(); show($('ovShop'), 'flex'); });
+  $('btnShopClose').addEventListener('click', function(){ hide($('ovShop')); });
+  $('shopGrid').addEventListener('click', function(ev){
+    const b = ev.target.closest('[data-shop]'); if(b) buyShop(b.getAttribute('data-shop'));
+  });
+  $('btnPause').addEventListener('click', togglePause);
+  /* 좁은 화면에서 HUD 에 자리가 없어 일시정지 창으로 옮긴 단추들 */
+  $('btnShop2').addEventListener('click', function(){
+    if(!started) return; hide($('ovPause')); paused = false; renderShop(); show($('ovShop'), 'flex'); });
+  $('btnBgm2').addEventListener('click', function(){ $('btnBgm').click(); });
+  $('btnLow2').addEventListener('click', function(){ $('btnLow').click(); });
+  $('btnResume').addEventListener('click', togglePause);
+  $('btnRestartPause').addEventListener('click', function(){ hide($('ovPause')); paused=false; startGame(S.nick); });
+  $('btnMute').addEventListener('click', function(){
+    muted = !muted;
+    $('btnMute').textContent = muted ? '🔇' : '🔊';
+    $('btnMute').setAttribute('aria-pressed', muted ? 'true' : 'false');
+    if(muted) stopBgm(); else if(bgmOn) startBgm();
+  });
+  $('btnBgm').addEventListener('click', function(){
+    bgmOn = !bgmOn;
+    $('btnBgm').setAttribute('aria-pressed', bgmOn ? 'true' : 'false');
+    ensureAudio().then(function(){ if(bgmOn && !muted) startBgm(); else stopBgm(); });
+  });
+  $('btnLow').addEventListener('click', function(){
+    lowSpec = !lowSpec;
+    $('btnLow').setAttribute('aria-pressed', lowSpec ? 'true' : 'false');
+    toast(lowSpec ? '저사양 모드 — 효과를 줄였어요' : '효과를 다시 켰어요', 'info');
+  });
+
+  /* 키보드 */
+  document.addEventListener('keydown', function(ev){
+    if(ev.key === 'Escape'){ if(started && !$('ovResult').classList.contains('hidden')===false) togglePause(); return; }
+    if(!started || paused || !cur) return;
+    if(cur.phase === 'hint' || cur.phase === 'done') return;
+    if(!$('ovZone').classList.contains('hidden')) return;
+    if(!$('ovResult').classList.contains('hidden')) return;
+    const n = parseInt(ev.key, 10);
+    if(!isNaN(n) && n >= 1 && n <= 9){
+      if(cur.phase === 'map' && cur.q.type === 'belt'){
+        const k = CLIMATE_KEYS[n-1];
+        if(k){ const c = $('tray').querySelector('[data-climate="'+k+'"]');
+          if(c && !c.classList.contains('done')){ selCard = k;
+            $('tray').querySelectorAll('.card').forEach(function(x){ x.classList.remove('sel'); });
+            c.classList.add('sel'); sfx.tap(); } }
+      }else{
+        const b = $('opts').querySelectorAll('.opt')[n-1];
+        if(b && !b.disabled) b.click();
+      }
+      ev.preventDefault(); return;
+    }
+    if(cur.phase === 'map' && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')){
+      const ids = BANDS.map(function(b){ return b.id; }).concat(['MOUNTAIN']);
+      kbIdx = clamp(kbIdx + (ev.key === 'ArrowDown' ? 1 : -1), 0, ids.length-1);
+      highlightKb(ids[kbIdx]); ev.preventDefault(); return;
+    }
+    if(cur.phase === 'map' && ev.key === 'Enter'){
+      const ids = BANDS.map(function(b){ return b.id; }).concat(['MOUNTAIN']);
+      onMapTap(ids[kbIdx], null, null); ev.preventDefault();
+    }
+  });
+
+  /* 확대·당겨서 새로고침·길게 눌러 메뉴 차단 */
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+  document.addEventListener('dblclick', function(e){ e.preventDefault(); });
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  document.addEventListener('wheel', function(e){ if(e.ctrlKey) e.preventDefault(); }, {passive:false});
+
+  window.addEventListener('resize', fitLayout);
+  window.addEventListener('orientationchange', function(){ setTimeout(fitLayout, 120); });
+}
+let kbIdx = 4;
+function highlightKb(id){
+  BANDS.forEach(function(b){ const e = bandEls[b.id];
+    if(e) e.hit.setAttribute('stroke-width', b.id === id ? '2' : '0.4'); });
+  MOUNTAINS.forEach(function(m){ mtEls[m.id].tri.setAttribute('stroke-width', id === 'MOUNTAIN' ? '2.4' : '0.8'); });
+}
+function togglePause(){
+  if(!started) return;
+  paused = !paused;
+  if(paused) show($('ovPause'), 'flex'); else hide($('ovPause'));
+}
+
+/* ════════════════ 시작 / 초기화 ════════════════ */
+function startGame(nick){
+  S = freshState(nick);
+  cur = null; selCard = null; paused = false; started = true;
+  clearPaint();
+  hide($('ovStart')); hide($('ovResult')); hide($('ovZone')); hide($('ovHint')); hide($('ovPause')); hide($('ovShop'));
+  $('opts').className = 'opts';
+  updateHUD();
+  renderQuestion();
+  fitLayout();
+}
+function init(){
+  buildMap();
+  initParticles();
+  renderLegend();
+  wireEvents();
+  fitLayout();
+  setTimeout(fitLayout, 60);
+  show($('ovStart'), 'flex');
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+/* ════════════════ 검증용 훅 (수업 중에는 쓰이지 않습니다) ════════════════ */
+window.__T = {
+  start: function(n){ startGame(n || '테스트'); },
+  q: function(){ return cur ? { id:cur.q.id, type:cur.q.type, diff:cur.q.diff, phase:cur.phase,
+      target:cur.q.target, remaining:(cur.remaining||[]).slice(), wrong:cur.wrong,
+      whyAnswer: cur.q.why ? cur.q.why.answer : null, truth: cur.q.truth } : null; },
+  pick: function(k){ selCard = k; },
+  tap: function(id){ onMapTap(id, null, null); },
+  ox: function(v){ onOX(v); },
+  why: function(i){ onWhy(i); },
+  hintOpen: function(){ return !$('ovHint').classList.contains('hidden'); },
+  hintOk: function(){ closeHint(); },
+  zoneOpen: function(){ return !$('ovZone').classList.contains('hidden'); },
+  zoneNext: function(){ hide($('ovZone')); renderQuestion(); },
+  done: function(){ return !$('ovResult').classList.contains('hidden'); },
+  state: function(){ return { idx:S.idx, total:S.order.length, score:S.score, coins:S.coins,
+      combo:S.combo, dex:S.dex.slice(), badges:Object.keys(S.badges), stats:S.stats.length,
+      placed:Object.assign({}, S.placed), mountain:S.mountainPlaced }; },
+  data: function(){ return { QUIZ_DATA:QUIZ_DATA, BANDS:BANDS, CLIMATES:CLIMATES, MOUNTAINS:MOUNTAINS, LANDS:LANDS, GRAPHS:GRAPHS }; },
+  fit: fitLayout,
+  buy: function(id){ buyShop(id); },
+  pause: togglePause
+};
+})();
+</script>
+</body>
+</html>
