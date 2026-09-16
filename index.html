@@ -4,161 +4,244 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>에듀테크 게임 저장소 · 초등 교과 수업용 게임 모음</title>
-<meta name="description" content="교과서 단원별로 골라 쓰는 초등 문제풀이 게임 47개. 학년·과목으로 찾아 바로 실행하세요." />
+<meta name="description" content="교과서 단원별로 골라 쓰는 초등 문제풀이 게임 43개. 학년·과목으로 찾아 바로 실행하세요." />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="에듀테크 게임 저장소" />
-<meta property="og:description" content="교과서 단원별로 골라 쓰는 초등 문제풀이 게임 47개. 학년·과목으로 찾아 바로 실행하세요." />
+<meta property="og:description" content="교과서 단원별로 골라 쓰는 초등 문제풀이 게임 43개. 학년·과목으로 찾아 바로 실행하세요." />
 <meta property="og:image" content="https://gudtbsl123-alt.github.io/hs7733/og.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d1d1f'/%3E%3Ctext x='32' y='45' font-family='Helvetica,Arial,sans-serif' font-size='34' font-weight='700' fill='%23fff' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='12' fill='%23699bf7' stroke='%23000' stroke-width='6'/%3E%3Ctext x='32' y='46' font-family='Archivo,Helvetica,Arial,sans-serif' font-size='36' font-weight='800' fill='%23000' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-  * { box-sizing: border-box; }
-  body { margin:0; background:#fff; color:#1d1d1f; -webkit-font-smoothing:antialiased;
-    font-family:'Inter','Apple SD Gothic Neo','Pretendard','Malgun Gothic','Noto Sans KR',sans-serif;
-    font-variant-numeric:tabular-nums; }
-  a { color:#1d1d1f; text-decoration:none; }
-  a:hover { text-decoration:none; }
-  input, select, button { font-family:inherit; }
-  input::placeholder { color:#707070; }
+:root{
+  --ink:rgb(0,0,0);
+  --ink-soft:rgb(34,34,34);
+  --paper:rgb(255,255,255);
+  --paper-lime:rgb(243,255,227);
+  --cornflower:rgb(105,155,247);
+  --periwinkle:rgb(199,185,255);
+  --mutagen:rgb(212,255,91);
+  --lime-tint:rgb(228,255,151);
+  --magenta:rgb(255,144,255);
+  --yellow:rgb(255,199,0);
+  --teal-bar:rgb(107,235,228);
+  --grey-100:rgb(217,217,217);
+  --grey-muted:rgb(161,167,176);
+  --blue-500:rgb(13,153,255);
+  --font-sans:'Inter','Apple SD Gothic Neo','Pretendard','Malgun Gothic','Noto Sans KR',sans-serif;
+  --font-display:'Archivo','Inter','Apple SD Gothic Neo',sans-serif;
+  --ease:cubic-bezier(0.2,0,0,1);
+  --spring:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;
+  font-family:var(--font-sans);font-variant-numeric:tabular-nums}
+a{color:var(--ink);text-decoration:none}
+a:hover{text-decoration:none}
+input,select,button{font-family:inherit}
+input::placeholder{color:var(--grey-muted)}
 
-  /* ── nav ── */
-  .nav { position:sticky; top:0; z-index:60; background:#fff; border-bottom:2px solid #1d1d1f; }
-  .nav-in { max-width:1200px; margin:0 auto; height:52px; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-  .nav-brand { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; letter-spacing:-.2px; }
-  .nav-mark { width:24px; height:24px; border:2px solid #1d1d1f; border-radius:6px; background:#1d1d1f; color:#fff;
-    display:grid; place-items:center; font-size:13px; font-weight:700; }
-  .nav-right { display:flex; align-items:center; gap:10px; }
-  .hard { border:2px solid #1d1d1f; border-radius:10px; background:#fff; color:#1d1d1f; box-shadow:4px 4px 0 0 #1d1d1f;
-    transition:transform 150ms cubic-bezier(.2,0,0,1), box-shadow 150ms cubic-bezier(.2,0,0,1); cursor:pointer; }
-  .hard:hover { transform:translate(-1px,-1px); box-shadow:6px 6px 0 0 #1d1d1f; }
-  .hard:active { transform:translate(2px,2px); box-shadow:0 0 0 0 #1d1d1f; }
-  .nav-btn { padding:7px 14px; font-size:13px; font-weight:600; }
+/* ── shared hard-shadow chrome ── */
+.hard{border:none;background:var(--paper);color:var(--ink);cursor:pointer;
+  box-shadow:inset 0 0 0 2px var(--ink), 4px 4px 0 0 var(--ink);
+  transition:transform 150ms var(--ease), box-shadow 150ms var(--ease)}
+.hard:hover{transform:translate(-1px,-1px);box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--ink)}
+.hard:active{transform:translate(2px,2px);box-shadow:inset 0 0 0 2px var(--ink), 0 0 0 0 var(--ink)}
 
-  /* ── hero ── */
-  .hero { padding:104px 24px 96px; border-bottom:2px solid #1d1d1f; }
-  .hero-in { max-width:1000px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:22px; text-align:center; }
-  .eyebrow { margin:0; display:inline-block; padding:6px 14px; border:2px solid #1d1d1f; border-radius:999px;
-    font-size:13px; font-weight:700; letter-spacing:.02em; background:#fff; box-shadow:3px 3px 0 0 #1d1d1f; }
-  h1 { margin:0; display:flex; flex-wrap:wrap; justify-content:center; gap:0 .28em;
-    font-size:clamp(46px,8.4vw,104px); font-weight:700; line-height:1.02; letter-spacing:-.035em; }
-  .lede { margin:0; max-width:620px; font-size:20px; line-height:1.45; color:#474747; word-break:keep-all; }
-  .cta-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:4px; }
-  .btn-lg { display:inline-flex; align-items:center; white-space:nowrap; font-size:16px; font-weight:700; padding:13px 24px; border-radius:12px; box-shadow:6px 6px 0 0 #1d1d1f; }
-  .btn-lg:hover { transform:translate(-2px,-2px); box-shadow:9px 9px 0 0 #1d1d1f; }
-  .btn-fill { background:#1d1d1f; color:#fff; }
-  .stat { margin:6px 0 0; font-size:14px; font-weight:600; color:#474747; }
+/* ── nav ── */
+.nav{position:sticky;top:0;z-index:60;background:var(--paper);box-shadow:inset 0 -2px 0 0 var(--ink)}
+.nav-in{max-width:1200px;margin:0 auto;height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;letter-spacing:-.01em}
+.nav-mark{width:26px;height:26px;border-radius:6px;background:var(--cornflower);
+  box-shadow:inset 0 0 0 2px var(--ink), 2px 2px 0 0 var(--ink);
+  display:grid;place-items:center;font-family:var(--font-display);font-size:14px;font-weight:800}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-btn{padding:8px 15px;font-size:13px;font-weight:700;border-radius:100px}
+#bar{position:absolute;left:0;bottom:-2px;height:4px;width:0;background:var(--blue-500);z-index:1}
 
-  /* ── browse ── */
-  .browse { background:#f5f5f7; padding:64px 24px 120px; }
-  .browse-in { max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:32px; }
-  h2 { margin:0; font-size:34px; font-weight:700; letter-spacing:-.02em; }
-  .head { display:flex; flex-direction:column; gap:8px; }
-  #countText { margin:0; font-size:15px; font-weight:500; color:#474747; }
+/* ── hero ── */
+.hero{position:relative;overflow:hidden;background:var(--paper-lime);padding:88px 24px 96px;
+  box-shadow:inset 0 -2px 0 0 var(--ink)}
+.hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(to right, rgba(0,0,0,.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,.055) 1px, transparent 1px);
+  background-size:34px 34px;
+  mask-image:radial-gradient(120% 90% at 50% 40%, #000 42%, transparent 82%);
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 40%, #000 42%, transparent 82%)}
+.hero-in{position:relative;z-index:2;max-width:1040px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center}
+.eyebrow{margin:0;display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:100px;
+  background:var(--paper);box-shadow:inset 0 0 0 2px var(--ink), 3px 3px 0 0 var(--ink);
+  font-size:13px;font-weight:700}
+.eyebrow b{font-family:var(--font-display);font-weight:800}
+h1{margin:0;display:flex;flex-wrap:wrap;justify-content:center;gap:0 .26em;
+  font-family:var(--font-display);font-size:clamp(48px,9vw,112px);font-weight:800;line-height:1;letter-spacing:-.035em}
+.lede{margin:0;max-width:640px;font-size:19px;font-weight:600;line-height:1.5;word-break:keep-all}
+.cta-row{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:6px}
+.btn-lg{display:inline-flex;align-items:center;white-space:nowrap;font-size:16px;font-weight:700;
+  padding:14px 26px;border-radius:100px;box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--ink)}
+.btn-lg:hover{transform:translate(-2px,-2px);box-shadow:inset 0 0 0 2px var(--ink), 9px 9px 0 0 var(--ink)}
+.btn-fill{background:var(--ink);color:var(--paper);box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 rgba(0,0,0,.35)}
+.btn-fill:hover{box-shadow:inset 0 0 0 2px var(--ink), 9px 9px 0 0 rgba(0,0,0,.35)}
+.btn-fill:active{box-shadow:inset 0 0 0 2px var(--ink), 0 0 0 0 rgba(0,0,0,.35)}
+.stat{margin:4px 0 0;font-size:14px;font-weight:700}
+/* handheld console mark */
+.console{display:block;width:clamp(116px,14vw,152px);height:auto;overflow:visible;margin-bottom:-2px}
+.console .body{fill:var(--paper)}
+.console .screen{fill:var(--cornflower)}
+.console .screen{animation:screenHue 15s steps(1,end) 1.2s infinite}
+.console .key{fill:var(--ink)}
+.console .pixel{fill:var(--ink)}
 
-  .controls { display:flex; flex-direction:column; gap:16px; }
-  .search-wrap { position:relative; max-width:520px; width:100%; }
-  #search { width:100%; background:#fff; border:2px solid #1d1d1f; border-radius:12px; box-shadow:4px 4px 0 0 #1d1d1f;
-    padding:14px 46px 14px 18px; font-size:16px; font-weight:500; color:#1d1d1f; outline:none; }
-  #search:focus { box-shadow:6px 6px 0 0 #1d1d1f; }
-  #clear { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:28px; height:28px;
-    border:2px solid #1d1d1f; border-radius:8px; background:#fff; color:#1d1d1f; font-size:13px; cursor:pointer; display:none; padding:0; }
-  .chips { display:flex; flex-wrap:wrap; gap:10px; }
-  .chip { display:inline-flex; align-items:center; white-space:nowrap; border:2px solid #1d1d1f; border-radius:999px;
-    background:#fff; color:#1d1d1f; cursor:pointer; box-shadow:3px 3px 0 0 #1d1d1f;
-    transition:transform 140ms cubic-bezier(.2,0,0,1), box-shadow 140ms cubic-bezier(.2,0,0,1), background 140ms; }
-  .chip:hover { transform:translate(-1px,-1px); box-shadow:5px 5px 0 0 #1d1d1f; }
-  .chip.on { background:#1d1d1f; color:#fff; box-shadow:0 0 0 0 #1d1d1f; transform:translate(3px,3px); }
-  .chips.grade .chip { padding:9px 18px; font-size:14px; font-weight:700; }
-  .chips.subject .chip { padding:7px 15px; font-size:13px; font-weight:600; }
+/* ── browse ── */
+.browse{background:var(--paper-lime);padding:64px 24px 120px}
+.browse-in{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+h2{margin:0;font-family:var(--font-display);font-size:38px;font-weight:800;letter-spacing:-.03em}
+.head{display:flex;flex-direction:column;gap:8px}
+#countText{margin:0;font-size:15px;font-weight:600;color:var(--ink-soft)}
+.controls{display:flex;flex-direction:column;gap:16px}
+.search-wrap{position:relative;max-width:520px;width:100%}
+#search{width:100%;background:var(--paper);border:none;border-radius:12px;
+  box-shadow:inset 0 0 0 2px var(--ink), 4px 4px 0 0 var(--ink);
+  padding:15px 48px 15px 18px;font-size:16px;font-weight:600;color:var(--ink);outline:none}
+#search:focus{box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--ink)}
+#clear{position:absolute;right:10px;top:50%;width:28px;height:28px;padding:0;border:none;border-radius:8px;
+  background:var(--paper);box-shadow:inset 0 0 0 2px var(--ink);font-size:12px;font-weight:700;cursor:pointer;display:none;
+  transform:translateY(-50%)}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;white-space:nowrap;border:none;border-radius:100px;
+  background:var(--paper);color:var(--ink);cursor:pointer;
+  box-shadow:inset 0 0 0 2px var(--ink), 3px 3px 0 0 var(--ink);
+  transition:transform 140ms var(--ease), box-shadow 140ms var(--ease), background 140ms}
+.chip:hover{transform:translate(-1px,-1px);box-shadow:inset 0 0 0 2px var(--ink), 5px 5px 0 0 var(--ink)}
+.chip.on{background:var(--ink);color:var(--paper);box-shadow:inset 0 0 0 2px var(--ink);transform:translate(3px,3px)}
+.chips.grade .chip{padding:10px 19px;font-size:14px;font-weight:700}
+.chips.subject .chip{padding:8px 16px;font-size:13px;font-weight:600}
 
-  /* ── sections + cards ── */
-  #results { display:flex; flex-direction:column; gap:44px; }
-  .section-head { position:sticky; top:52px; z-index:40; margin:0 0 18px; padding:10px 0;
-    background:#f5f5f7; display:flex; align-items:baseline; gap:12px; border-bottom:2px solid #1d1d1f; }
-  .section-head h3 { margin:0; font-size:22px; font-weight:700; letter-spacing:-.01em; }
-  .section-head span { font-size:13px; font-weight:600; color:#474747; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,292px),1fr)); gap:24px; align-items:stretch; }
+/* ── sections + cards ── */
+#results{display:flex;flex-direction:column;gap:52px}
+.section-head{position:sticky;top:56px;z-index:40;margin:0 0 20px;padding:12px 0 10px;
+  background:var(--paper-lime);display:flex;align-items:center;gap:12px;
+  box-shadow:inset 0 -2px 0 0 var(--ink)}
+.section-head h3{margin:0;font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.02em}
+.section-head .n{padding:4px 11px;border-radius:100px;background:var(--mutagen);
+  box-shadow:inset 0 0 0 2px var(--ink);font-size:12px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:26px;align-items:stretch}
 
-  .card { position:relative; background:#fff; border:2px solid #1d1d1f; border-radius:14px; overflow:hidden;
-    display:flex; flex-direction:column; cursor:pointer; box-shadow:8px 8px 0 0 #1d1d1f;
-    transition:transform 180ms cubic-bezier(.2,0,0,1), box-shadow 180ms cubic-bezier(.2,0,0,1); }
-  .card:hover { transform:translate(-3px,-3px); box-shadow:13px 13px 0 0 #1d1d1f; }
-  .card:active { transform:translate(3px,3px); box-shadow:0 0 0 0 #1d1d1f; }
-  .thumb { position:relative; aspect-ratio:16/10; border-bottom:2px solid #1d1d1f; background:#f5f5f7;
-    display:grid; place-items:center; overflow:hidden; }
-  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-  .thumb .glyph { font-size:52px; line-height:1; filter:saturate(.95); }
-  .card-body { padding:18px 20px 20px; display:flex; flex-direction:column; gap:8px; flex:1; }
-  .card-meta { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#474747; }
-  .card h4 { margin:0; font-size:20px; font-weight:700; line-height:1.25; letter-spacing:-.015em; word-break:keep-all; }
-  .card-genre { margin:0; font-size:14px; font-weight:500; line-height:1.4; color:#474747; }
-  .card-foot { margin-top:auto; padding-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .card-go { font-size:14px; font-weight:700; }
-  .share { border:2px solid #1d1d1f; border-radius:8px; background:#fff; color:#1d1d1f; font-size:11px; font-weight:700;
-    padding:5px 10px; cursor:pointer; }
-  .share:hover { background:#1d1d1f; color:#fff; }
+.card{position:relative;background:var(--paper);border-radius:12px;overflow:hidden;
+  display:flex;flex-direction:column;cursor:pointer;
+  box-shadow:inset 0 0 0 2px var(--ink), 8px 8px 0 0 var(--ink);
+  transition:transform 180ms var(--ease), box-shadow 180ms var(--ease)}
+.card:hover{transform:translate(-3px,-3px);box-shadow:inset 0 0 0 2px var(--ink), 13px 13px 0 0 var(--ink)}
+.card:active{transform:translate(3px,3px);box-shadow:inset 0 0 0 2px var(--ink), 0 0 0 0 var(--ink)}
+.thumb{position:relative;aspect-ratio:16/10;display:grid;place-items:center;overflow:hidden;
+  background:var(--grey-100);box-shadow:inset 0 -2px 0 0 var(--ink)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .glyph{font-size:54px;line-height:1;transition:transform 220ms var(--spring)}
+.card:hover .thumb .glyph{transform:scale(1.08) rotate(-4deg)}
+.card-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:9px;flex:1}
+.card-meta{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
+.card h4{margin:0;font-size:20px;font-weight:700;line-height:1.25;letter-spacing:-.015em;word-break:keep-all}
+.card-genre{margin:0;font-size:14px;font-weight:600;line-height:1.4;color:var(--ink-soft)}
+.card-foot{margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-go{font-size:14px;font-weight:800}
+.share{border:none;border-radius:8px;background:var(--paper);color:var(--ink);font-size:11px;font-weight:700;
+  padding:6px 11px;cursor:pointer;box-shadow:inset 0 0 0 2px var(--ink)}
+.share:hover{background:var(--ink);color:var(--paper)}
 
-  #empty { display:none; background:#fff; border:2px solid #1d1d1f; border-radius:14px; box-shadow:8px 8px 0 0 #1d1d1f;
-    padding:72px 28px; text-align:center; flex-direction:column; gap:10px; }
-  #empty p:first-child { margin:0; font-size:26px; font-weight:700; }
-  #empty p:last-child { margin:0; font-size:15px; color:#474747; }
+#empty{display:none;background:var(--paper);border-radius:12px;
+  box-shadow:inset 0 0 0 2px var(--ink), 8px 8px 0 0 var(--ink);
+  padding:72px 28px;text-align:center;flex-direction:column;gap:10px}
+#empty p:first-child{margin:0;font-family:var(--font-display);font-size:28px;font-weight:800}
+#empty p:last-child{margin:0;font-size:15px;font-weight:500;color:var(--ink-soft)}
 
-  footer { padding:40px 24px 72px; border-top:2px solid #1d1d1f; }
-  .foot-in { max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; align-items:baseline; }
-  .foot-in p { margin:0; font-size:12px; font-weight:500; line-height:1.4; color:#474747; }
+footer{padding:40px 24px 76px;box-shadow:inset 0 2px 0 0 var(--ink)}
+.foot-in{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:baseline}
+.foot-in p{margin:0;font-size:12px;font-weight:600;line-height:1.4;color:var(--ink-soft)}
 
-  /* ── overlays ── */
-  #launch { display:none; position:fixed; inset:0; z-index:99999; background:#000; }
-  #launch iframe { width:100%; height:100%; border:none; display:block; }
-  #closeLaunch { position:absolute; top:16px; right:16px; padding:11px 20px; font-size:15px; font-weight:700; }
+/* ── overlays ── */
+#launch{display:none;position:fixed;inset:0;z-index:99999;background:var(--ink)}
+#launch iframe{width:100%;height:100%;border:none;display:block}
+#closeLaunch{position:absolute;top:16px;right:16px;padding:12px 22px;font-size:15px;font-weight:700;border-radius:100px}
+#admin{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);
+  align-items:center;justify-content:center;padding:24px}
+.admin-box{background:var(--paper);border-radius:16px;box-shadow:inset 0 0 0 2px var(--ink), 12px 12px 0 0 var(--ink);
+  padding:32px;width:100%;max-width:540px;display:flex;flex-direction:column;gap:18px;max-height:88vh;overflow:auto}
+.admin-box h2{font-size:30px}
+.admin-note{margin:0;padding:12px 14px;border-radius:10px;background:var(--lime-tint);
+  box-shadow:inset 0 0 0 2px var(--ink);font-size:13px;font-weight:600;line-height:1.5}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.field input,.field select{width:100%;background:var(--paper);border:none;border-radius:10px;
+  box-shadow:inset 0 0 0 2px var(--ink);padding:12px 13px;font-size:15px;font-weight:600;color:var(--ink);outline:none}
+.admin-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
+.admin-actions button{padding:12px 18px;font-size:14px;font-weight:700;border-radius:100px}
+#toast{position:fixed;left:50%;bottom:28px;z-index:100000;background:var(--ink);color:var(--paper);
+  border-radius:100px;padding:12px 22px;font-size:14px;font-weight:700;
+  opacity:0;pointer-events:none;transform:translate(-50%,14px);transition:opacity 200ms,transform 200ms}
+#toast.show{opacity:1;transform:translate(-50%,0)}
 
-  #admin { display:none; position:fixed; inset:0; z-index:1000; background:rgba(29,29,31,.5);
-    align-items:center; justify-content:center; padding:24px; }
-  .admin-box { background:#fff; border:2px solid #1d1d1f; border-radius:16px; box-shadow:12px 12px 0 0 #1d1d1f;
-    padding:32px; width:100%; max-width:540px; display:flex; flex-direction:column; gap:18px; max-height:88vh; overflow:auto; }
-  .admin-box h2 { font-size:28px; }
-  .admin-note { margin:0; font-size:13px; font-weight:500; line-height:1.5; color:#474747; }
-  .field { display:flex; flex-direction:column; gap:7px; }
-  .field label { font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#474747; }
-  .field input, .field select { width:100%; background:#fff; border:2px solid #1d1d1f; border-radius:10px;
-    padding:11px 13px; font-size:15px; font-weight:500; color:#1d1d1f; outline:none; }
-  .admin-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:2px; }
-  .admin-actions button { padding:11px 18px; font-size:14px; font-weight:700; }
+/* ── entrance animation ── */
+@keyframes wordRise{0%{transform:translateY(118%) rotate(6deg)}100%{transform:translateY(0) rotate(0)}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{opacity:0;transform:translateY(10px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes navDrop{0%{transform:translateY(-100%)}100%{transform:translateY(0)}}
+@keyframes consoleIn{0%{opacity:0;transform:translateY(22px) rotate(-9deg) scale(.86)}
+  100%{opacity:1;transform:translateY(0) rotate(-3deg) scale(1)}}
+@keyframes bob{0%{transform:translateY(0) rotate(-3deg)}100%{transform:translateY(-7px) rotate(-1deg)}}
+@keyframes boot{0%,12%{opacity:0}18%,100%{opacity:1}}
+@keyframes blink{0%,48%{opacity:1}52%,100%{opacity:.15}}
+@keyframes screenHue{
+  0%{fill:var(--cornflower)}
+  20%{fill:var(--mutagen)}
+  40%{fill:var(--yellow)}
+  60%{fill:var(--periwinkle)}
+  80%{fill:var(--teal-bar)}
+  100%{fill:var(--cornflower)}}
+.word{display:inline-block;overflow:hidden;padding:0 .05em .18em;margin:0 -.05em -.18em}
+.word>span{display:inline-block;transform:translateY(118%) rotate(6deg);animation:wordRise 1.05s var(--spring) both}
+.word:nth-child(1)>span{animation-delay:.14s}
+.word:nth-child(2)>span{animation-delay:.26s}
+.word:nth-child(3)>span{animation-delay:.38s}
+.nav{animation:navDrop .6s var(--ease) both}
+.hero .eyebrow{opacity:0;animation:popIn .6s var(--spring) .04s both}
+.hero .lede{opacity:0;animation:fadeUp .7s var(--ease) .72s both}
+.hero .cta-row{opacity:0;animation:fadeUp .7s var(--ease) .82s both}
+.hero .stat{opacity:0;animation:fadeUp .7s var(--ease) .92s both}
+.console{opacity:0;animation:consoleIn .85s var(--spring) .06s both, bob 4.8s var(--ease) 1.1s infinite alternate}
+.console .screen-art{animation:boot 1.5s steps(1,end) .5s both}
+.console .pixel{animation:blink 1.1s steps(1,end) 1.1s infinite}
+.console .pixel.b{animation-delay:1.38s}
+.console .pixel.c{animation-delay:1.66s}
 
-  #toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,14px); z-index:100000;
-    background:#1d1d1f; color:#fff; border-radius:999px; padding:11px 20px; font-size:14px; font-weight:600;
-    opacity:0; pointer-events:none; transition:opacity 200ms, transform 200ms; }
-  #toast.show { opacity:1; transform:translate(-50%,0); }
+/* ── scroll reveal ── */
+[data-anim]{opacity:0;transition:opacity .6s var(--ease) var(--d,0ms), transform .6s var(--spring) var(--d,0ms), box-shadow .6s var(--ease) var(--d,0ms)}
+[data-anim="rise"]{transform:translateY(22px)}
+[data-anim="slide"]{transform:translateX(-26px)}
+[data-anim="pop"]{transform:scale(.9)}
+[data-anim].in{opacity:1;transform:none}
+.card[data-anim]:not(.in){box-shadow:inset 0 0 0 2px var(--ink), 0 0 0 0 var(--ink)}
+.section-head .rule{position:absolute;left:0;right:0;bottom:-2px;height:4px;background:var(--ink);
+  transform:scaleX(0);transform-origin:left center;transition:transform .7s var(--ease) 60ms}
+.section-head.in .rule{transform:scaleX(1)}
+.section-head{position:sticky;overflow:visible}
 
-  /* ── hero entrance ── */
-  @keyframes wordRise { 0% { transform:translateY(115%) rotate(5deg); } 100% { transform:translateY(0) rotate(0); } }
-  @keyframes fadeUp { 0% { opacity:0; transform:translateY(14px); } 100% { opacity:1; transform:translateY(0); } }
-  @keyframes popIn { 0% { opacity:0; transform:translateY(10px) scale(.94); } 100% { opacity:1; transform:translateY(0) scale(1); } }
-  .word { display:inline-block; overflow:hidden; padding:0 .04em .16em; margin:0 -.04em -.16em; }
-  .word > span { display:inline-block; transform:translateY(115%) rotate(5deg); animation:wordRise 1s cubic-bezier(.16,1,.3,1) both; }
-  .word:nth-child(1) > span { animation-delay:.12s; }
-  .word:nth-child(2) > span { animation-delay:.24s; }
-  .word:nth-child(3) > span { animation-delay:.36s; }
-  .hero .eyebrow { opacity:0; animation:popIn .6s cubic-bezier(.16,1,.3,1) .02s both; }
-  .hero .lede { opacity:0; animation:fadeUp .7s cubic-bezier(.2,0,0,1) .70s both; }
-  .hero .cta-row { opacity:0; animation:fadeUp .7s cubic-bezier(.2,0,0,1) .80s both; }
-  .hero .stat { opacity:0; animation:fadeUp .7s cubic-bezier(.2,0,0,1) .90s both; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .card, .chip, .hard { transition:none; }
-    .word > span, .hero .eyebrow, .hero .lede, .hero .cta-row, .hero .stat {
-      animation:none !important; opacity:1 !important; transform:none !important; }
-  }
-  @media (max-width:560px) {
-    .hero { padding:72px 20px 64px; }
-    .browse { padding:48px 20px 88px; }
-    .section-head { top:52px; }
-  }
+@media (prefers-reduced-motion: reduce){
+  .card,.chip,.hard,.thumb .glyph{transition:none}
+  .word>span,.hero .eyebrow,.hero .lede,.hero .cta-row,.hero .stat,.nav,.console,
+  .console .screen-art,.console .pixel,.console .screen{
+    animation:none !important;opacity:1 !important;transform:none !important}
+  [data-anim]{opacity:1 !important;transform:none !important;transition:none}
+  .section-head .rule{transform:scaleX(1) !important;transition:none}
+}
+@media (max-width:560px){
+  .hero{padding:80px 20px 68px}
+  .browse{padding:48px 20px 88px}
+  .grid{gap:22px}
+}
 </style>
 </head>
 <body>
@@ -171,11 +254,31 @@
       <button type="button" class="hard nav-btn" id="openAdmin">관리자</button>
     </div>
   </div>
+  <div id="bar"></div>
 </div>
 
 <section class="hero" id="top">
   <div class="hero-in">
-    <p class="eyebrow">초등 교과 수업용 게임</p>
+    <svg class="console" viewBox="0 0 132 168" role="img" aria-label="휴대용 게임기 그림">
+      <rect class="body" x="4" y="4" width="124" height="160" rx="16"
+        style="stroke:#000;stroke-width:4" />
+      <rect class="screen" x="18" y="18" width="96" height="70" rx="6"
+        style="stroke:#000;stroke-width:4" />
+      <g class="screen-art">
+        <rect class="pixel" x="28" y="66" width="76" height="6" />
+        <rect class="pixel b" x="34" y="34" width="10" height="10" />
+        <rect class="pixel c" x="56" y="46" width="10" height="10" />
+        <rect class="pixel" x="82" y="30" width="10" height="10" />
+      </g>
+      <g class="key">
+        <rect x="24" y="112" width="14" height="38" rx="3" />
+        <rect x="12" y="124" width="38" height="14" rx="3" />
+      </g>
+      <circle class="key" cx="96" cy="118" r="9" />
+      <circle class="key" cx="78" cy="136" r="9" />
+      <rect class="key" x="52" y="150" width="28" height="6" rx="3" />
+    </svg>
+    <p class="eyebrow">초등 교과 수업용 게임 <b id="heroBadge">43</b></p>
     <h1 aria-label="Play. Learn. Enjoy."><span class="word"><span>Play.</span></span><span class="word"><span>Learn.</span></span><span class="word"><span>Enjoy.</span></span></h1>
     <p class="lede">교과서 단원별로 골라 쓰는 초등 문제풀이 게임 모음</p>
     <div class="cta-row">
@@ -188,13 +291,13 @@
 
 <section class="browse" id="browse">
   <div class="browse-in">
-    <div class="head">
+    <div class="head" data-anim="rise">
       <h2>게임 모음.</h2>
       <p id="countText"></p>
     </div>
 
     <div class="controls">
-      <div class="search-wrap">
+      <div class="search-wrap" data-anim="rise">
         <input type="text" id="search" placeholder="단원·주제로 검색 (예: 분수, 고조선)" autocomplete="off" />
         <button type="button" id="clear" aria-label="검색어 지우기">✕</button>
       </div>
@@ -222,7 +325,7 @@
 <div id="admin">
   <div class="admin-box">
     <h2>관리자 패널.</h2>
-    <p class="admin-note">여기서 저장한 내용은 이 브라우저에만 남습니다. 모든 선생님께 반영하려면 <strong>JSON 복사</strong>로 목록을 복사해 저장소의 <code>games.json</code> 파일에 붙여 넣고 커밋하세요.</p>
+    <p class="admin-note">여기서 저장한 내용은 이 브라우저에만 남습니다. 모든 선생님께 반영하려면 <strong>JSON 복사</strong>로 목록을 복사해 저장소의 <code>games.json</code>에 붙여 넣고 커밋하세요.</p>
     <div class="field">
       <label for="adminSel">게임 선택</label>
       <select id="adminSel"></select>
@@ -240,7 +343,7 @@
       <input type="text" id="adminThumb" placeholder="예: ./screenshots/07_후반_고조선시대_플레이화면.png" />
     </div>
     <div class="admin-actions">
-      <button type="button" class="hard" style="background:#1d1d1f; color:#fff" id="saveGame">저장하기</button>
+      <button type="button" class="hard" style="background:var(--ink);color:var(--paper)" id="saveGame">저장하기</button>
       <button type="button" class="hard" id="copyJson">JSON 복사</button>
       <button type="button" class="hard" id="resetLocal">저장소 목록으로 되돌리기</button>
       <button type="button" class="hard" id="closeAdmin">닫기</button>
@@ -251,63 +354,11 @@
 <div id="toast" role="status"></div>
 
 <script>
-// 내부 데이터를 37버전으로 강제하여 캐시를 무조건 갱신합니다. (총 47개 게임)
-const FALLBACK = { version: 37, games: [
-  {"id":1,"icon":"🎢","title":"3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)","url":"./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html"},
-  {"id":2,"icon":"🔢","title":"3학년 1학기 수학 분수와 소수(에듀런)","url":"./3학년 1학기 수학 분수와 소수(에듀런).html"},
-  {"id":3,"icon":"🧪","title":"5학년 1학기 과학 용해 용액 단어","url":"./5학년 1학기 과학 용해 용액 단어.html"},
-  {"id":4,"icon":"☁️","title":"5학년 1학기 사회 기후(탱크)","url":"./5학년 1학기 사회 기후(탱크).html"},
-  {"id":5,"icon":"🏯","title":"5학년 1학기 사회 인구(조선 마을 대모험)","url":"./5학년 1학기 사회 인구(조선 마을 대모험).html"},
-  {"id":6,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2.html"},
-  {"id":7,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스)","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스).html"},
-  {"id":8,"icon":"🧩","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라).html"},
-  {"id":9,"icon":"🍄","title":"5학년 1학기 수학 약분 통분 기약분수(마리오)","url":"./5학년 1학기 수학 약분 통분 기약분수(마리오).html"},
-  {"id":10,"icon":"🏛️","title":"6학년 1학기 사회 민주주의(젭스타일)","url":"./6학년 1학기 사회 민주주의(젭스타일).html"},
-  {"id":11,"icon":"🎢","title":"6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤)","url":"./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤).html"},
-  {"id":12,"icon":"🌍","title":"6학년 1학기 사회 지구 탐구 대모험","url":"./6학년 1학기 사회 지구 탐구 대모험.html"},
-  {"id":13,"icon":"🔢","title":"6학년 1학기 수학 비와 비율(마리오)","url":"./6학년 1학기 수학 비와 비율(마리오).html"},
-  {"id":14,"icon":"⚔️","title":"6학년 1학기 수학 비와비율(서바이벌)","url":"./6학년 1학기 수학 비와비율(서바이벌).html"},
-  {"id":15,"icon":"📊","title":"6학년 1학기 수학 여러 가지 그래프(에듀런)","url":"./6학년 1학기 수학 여러 가지 그래프(에듀런).html"},
-  {"id":16,"icon":"🏃","title":"6학년 1학기 수학 여러가지 그래프 선수학습(추격전)","url":"./6학년 1학기 수학 여러가지 그래프 선수학습(추격전).html"},
-  {"id":17,"icon":"📦","title":"6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런)","url":"./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html"},
-  {"id":18,"icon":"🎨","title":"5학년 창체 캐치 1","url":"./catch1.html"},
-  {"id":19,"icon":"🎨","title":"5학년 창체 캐치 2","url":"./catch2.html"},
-  {"id":20,"icon":"🎨","title":"5학년 창체 캐치 3","url":"./catch3.html"},
-  {"id":21,"icon":"🎨","title":"5학년 창체 캐치 4","url":"./catch4.html"},
-  {"id":22,"icon":"⚽","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥).html"},
-  {"id":23,"icon":"⌨️","title":"창체 타자 연습","url":"./타자 연습.html"},
-  {"id":24,"icon":"🔐","title":"4학년 1학기 수학 규칙과 관계(암호해독)","url":"./4학년 1학기 수학 규칙과 관계(암호해독).html"},
-  {"id":25,"icon":"🎨","title":"5학년 창체 캐치 5","url":"./catch5.html"},
-  {"id":26,"icon":"🌍","title":"4학년 1학기 사회 합리적 소비(디펜스)","url":"./4학년 1학기 사회 합리적 소비(디펜스).html"},
-  {"id":27,"icon":"🎨","title":"5학년 창체 캐치 6","url":"./catch6.html"},
-  {"id":28,"icon":"⚔️","title":"5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌)","url":"./5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌).html"},
-  {"id":29,"icon":"📝","title":"학교업무경감 생기부","url":"./학교업무경감 생기부.html"},
-  {"id":30,"icon":"💣","title":"창체 초성 단어 폭탄돌리기","url":"./초성 단어 폭탄돌리기.html"},
-  {"id":31,"icon":"🕹️","title":"창체 미니게임천국 1탄","url":"./미니게임천국 1탄.html"},
-  {"id":32,"icon":"🕹️","title":"창체 미니 게임 천국 2탄","url":"./미니 게임 천국 2탄.html"},
-  {"id":33,"icon":"🕹️","title":"창체 미니 게임 천국 3탄","url":"./미니 게임 천국 3탄.html"},
-  {"id":34,"icon":"🧪","title":"3학년 1학기 수학 분수와 소수(마법 물약 제조소)","url":"./3학년 1학기 수학 분수와 소수(마법 물약 제조소).html"},
-  {"id":35,"icon":"🎨","title":"5학년 창체 캐치 마인드 7","url":"./캐치 마인드 7.html"},
-  {"id":36,"icon":"🌍","title":"4학년 1학기 사회 교류하며 발전하는 우리 지역","url":"./4학년 1학기 사회 교류하며 발전하는 우리 지역.html"},
-  {"id":37,"icon":"🧪","title":"6학년 1학기 과학 지구의 운동","url":"./6학년 1학기 과학 지구의 운동.HTML"},
-  {"id":38,"icon":"🎨","title":"5학년 창체 캐치 8","url":"./catch8.html"},
-  {"id":39,"icon":"📖","title":"5학년 1학기 국어 비유적표현 마법연구소","url":"./5학년 1학기 국어 비유적표현 마법연구소.html"},
-  {"id":40,"icon":"🧱","title":"5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈)","url":"./5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈).html","thumb":"./screenshots/07_후반_고조선시대_플레이화면.png"},
-  {"id":41,"icon":"🧁","title":"4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)","url":"./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html"},
-  {"id":42,"icon":"🎢","title":"6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)","url":"./6-2 소수의 나눗셈(수학 코스터 타이쿤).html"},
-  
-  /* 오류가 발생했던 44번 파일명 완벽하게 수정! (분수 코스터 타이쿤) */
-  {"id":43,"icon":"📦","title":"5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터)","url":"./5-2_수학_1단원_수의범위와어림하기(택배물류센터).html"},
-  {"id":44,"icon":"🎢","title":"5학년 2학기 수학 분수의 곱셈(분수 코스터 타이쿤)","url":"./5학년 2학기 수학 분수의 곱셈(분수 코스터 타이쿤).html"},
-  
-  {"id":45,"icon":"🌱","title":"5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)","url":"./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html"},
-  {"id":46,"icon":"🎢","title":"3학년 2학기 수학 나눗셈(수학 코스터 타이쿤)","url":"./3학년 2학기 수학 나눗셈 코스터 타이쿤.html"},
-  
-  /* 이전 대화에서 사라졌던 catch9 게임 복구! */
-  {"id":47,"icon":"🎨","title":"5학년 창체 캐치 9","url":"./catch9.html"}
-]};
+const FALLBACK = { version: 40, games: [{"id":1,"icon":"🎢","title":"3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)","url":"./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html"},{"id":2,"icon":"🔢","title":"3학년 1학기 수학 분수와 소수(에듀런)","url":"./3학년 1학기 수학 분수와 소수(에듀런).html"},{"id":34,"icon":"🧪","title":"3학년 1학기 수학 분수와 소수(마법 물약 제조소)","url":"./3학년 1학기 수학 분수와 소수(마법 물약 제조소).html"},{"id":24,"icon":"🔐","title":"4학년 1학기 수학 규칙과 관계(암호해독)","url":"./4학년 1학기 수학 규칙과 관계(암호해독).html"},{"id":26,"icon":"🛒","title":"4학년 1학기 사회 합리적 소비(디펜스)","url":"./4학년 1학기 사회 합리적 소비(디펜스).html"},{"id":36,"icon":"🌍","title":"4학년 1학기 사회 교류하며 발전하는 우리 지역","url":"./4학년 1학기 사회 교류하며 발전하는 우리 지역.html"},{"id":41,"icon":"🧁","title":"4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)","url":"./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html"},{"id":3,"icon":"🧪","title":"5학년 1학기 과학 용해 용액 단어","url":"./5학년 1학기 과학 용해 용액 단어.html"},{"id":39,"icon":"📖","title":"5학년 1학기 국어 비유적표현 마법연구소","url":"./5학년 1학기 국어 비유적표현 마법연구소.html"},{"id":4,"icon":"☁️","title":"5학년 1학기 사회 기후(탱크)","url":"./5학년 1학기 사회 기후(탱크).html"},{"id":5,"icon":"🏯","title":"5학년 1학기 사회 인구(조선 마을 대모험)","url":"./5학년 1학기 사회 인구(조선 마을 대모험).html"},{"id":40,"icon":"🧱","title":"5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈)","url":"./5학년 1학기 사회 유적과 유물로 살펴본 옛사람들의 생활(테트리스 퀴즈).html","thumb":"./screenshots/07_후반_고조선시대_플레이화면.png"},{"id":6,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2.html"},{"id":7,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스)","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스).html"},{"id":8,"icon":"🧩","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라).html"},{"id":22,"icon":"⚽","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥).html"},{"id":9,"icon":"🍄","title":"5학년 1학기 수학 약분 통분 기약분수(마리오)","url":"./5학년 1학기 수학 약분 통분 기약분수(마리오).html"},{"id":28,"icon":"⚔️","title":"5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌)","url":"./5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌).html"},{"id":43,"icon":"📦","title":"5학년 2학기 수학 수의 범위와 어림하기(택배 물류센터)","url":"./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html"},{"id":45,"icon":"🌱","title":"5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)","url":"./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html"},{"id":18,"icon":"🎨","title":"5학년 창체 캐치 1","url":"./catch1.html"},{"id":19,"icon":"🎨","title":"5학년 창체 캐치 2","url":"./catch2.html"},{"id":20,"icon":"🎨","title":"5학년 창체 캐치 3","url":"./catch3.html"},{"id":21,"icon":"🎨","title":"5학년 창체 캐치 4","url":"./catch4.html"},{"id":25,"icon":"🎨","title":"5학년 창체 캐치 5","url":"./catch5.html"},{"id":27,"icon":"🎨","title":"5학년 창체 캐치 6","url":"./catch6.html"},{"id":35,"icon":"🎨","title":"5학년 창체 캐치 마인드 7","url":"./캐치 마인드 7.html"},{"id":38,"icon":"🎨","title":"5학년 창체 캐치 8","url":"./catch8.html"},{"id":47,"icon":"🎨","title":"5학년 창체 캐치 9","url":"./catch9.html"},{"id":37,"icon":"🌗","title":"6학년 1학기 과학 지구의 운동","url":"./6학년 1학기 과학 지구의 운동.HTML"},{"id":10,"icon":"🏛️","title":"6학년 1학기 사회 민주주의(젭스타일)","url":"./6학년 1학기 사회 민주주의(젭스타일).html"},{"id":11,"icon":"🎢","title":"6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤)","url":"./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤).html"},{"id":12,"icon":"🌍","title":"6학년 1학기 사회 지구 탐구 대모험","url":"./6학년 1학기 사회 지구 탐구 대모험.html"},{"id":13,"icon":"🔢","title":"6학년 1학기 수학 비와 비율(마리오)","url":"./6학년 1학기 수학 비와 비율(마리오).html"},{"id":14,"icon":"⚔️","title":"6학년 1학기 수학 비와비율(서바이벌)","url":"./6학년 1학기 수학 비와비율(서바이벌).html"},{"id":15,"icon":"📊","title":"6학년 1학기 수학 여러 가지 그래프(에듀런)","url":"./6학년 1학기 수학 여러 가지 그래프(에듀런).html"},{"id":16,"icon":"🏃","title":"6학년 1학기 수학 여러가지 그래프 선수학습(추격전)","url":"./6학년 1학기 수학 여러가지 그래프 선수학습(추격전).html"},{"id":17,"icon":"📦","title":"6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런)","url":"./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html"},{"id":23,"icon":"⌨️","title":"창체 타자 연습","url":"./타자 연습.html"},{"id":30,"icon":"💣","title":"창체 초성 단어 폭탄돌리기","url":"./초성 단어 폭탄돌리기.html"},{"id":31,"icon":"🕹️","title":"창체 미니게임천국 1탄","url":"./미니게임천국 1탄.html"},{"id":32,"icon":"🕹️","title":"창체 미니 게임 천국 2탄","url":"./미니 게임 천국 2탄.html"},{"id":33,"icon":"🕹️","title":"창체 미니 게임 천국 3탄","url":"./미니 게임 천국 3탄.html"}] };
 const LS_KEY = 'edutech_games_v2';
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const GRADE_TINT = { '3학년':'var(--mutagen)', '4학년':'var(--yellow)', '5학년':'var(--cornflower)',
+  '6학년':'var(--periwinkle)', '기타':'var(--grey-100)' };
 
 let games = FALLBACK.games, remoteVersion = FALLBACK.version;
 let grade = 'all', subject = 'all', q = '', shownCount = null, raf = 0;
@@ -350,26 +401,31 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-function playRise(el, i) {
-  if (el.dataset.revealed === '1') return;
-  el.dataset.revealed = '1';
-  if (REDUCED || typeof el.animate !== 'function') return;
-  el.animate(
-    [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }],
-    { duration: 480, delay: i * 40, easing: 'cubic-bezier(0.2,0,0,1)', fill: 'backwards' }
-  );
-}
+/* ── scroll reveal: stagger by position within its batch ── */
 const io = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
   let i = 0;
   entries.forEach(e => {
     if (!e.isIntersecting) return;
     io.unobserve(e.target);
-    playRise(e.target, i++);
+    if (!REDUCED) e.target.style.setProperty('--d', (i++ * 55) + 'ms');
+    e.target.classList.add('in');
   });
-}, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 }) : null;
+}, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 }) : null;
+
+function watch(el) {
+  if (REDUCED || !io) { el.classList.add('in'); return; }
+  io.observe(el);
+}
+function revealNow(el) { el.style.setProperty('--d', '0ms'); el.classList.add('in'); }
+
+/* scroll progress bar */
+addEventListener('scroll', () => {
+  const max = document.documentElement.scrollHeight - innerHeight;
+  $('#bar').style.width = (max > 0 ? (scrollY / max) * 100 : 0) + '%';
+}, { passive: true });
 
 function tweenCount(to) {
   cancelAnimationFrame(raf);
@@ -378,7 +434,7 @@ function tweenCount(to) {
   let t0 = null;
   const step = t => {
     if (t0 === null) t0 = t;
-    const p = Math.max(0, Math.min(1, (t - t0) / 340));
+    const p = Math.max(0, Math.min(1, (t - t0) / 380));
     shownCount = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
     paintCount();
     if (p < 1) raf = requestAnimationFrame(step);
@@ -418,20 +474,20 @@ function buildCard(g) {
 
   const card = document.createElement('article');
   card.className = 'card';
+  card.dataset.anim = 'rise';
   card.dataset.gid = String(g.id);
   card.onclick = () => openGame(g.id, true);
 
   const thumb = document.createElement('div');
   thumb.className = 'thumb';
+  thumb.style.background = GRADE_TINT[gradeOf(g.title)] || GRADE_TINT['기타'];
   const glyph = document.createElement('span');
   glyph.className = 'glyph';
   glyph.textContent = g.icon || '🎮';
   thumb.appendChild(glyph);
   if (g.thumb) {
     const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.alt = '';
-    img.style.display = 'none';
+    img.loading = 'lazy'; img.alt = ''; img.style.display = 'none';
     img.onload = () => { img.style.display = 'block'; glyph.remove(); };
     img.onerror = () => img.remove();
     img.src = g.thumb;
@@ -474,13 +530,11 @@ function render() {
   );
 
   results.innerHTML = '';
-  const groupBy = grade === 'all';
-
-  if (!groupBy) {
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    filtered.forEach(g => grid.appendChild(buildCard(g)));
-    results.appendChild(grid);
+  if (grade !== 'all') {
+    const gridEl = document.createElement('div');
+    gridEl.className = 'grid';
+    filtered.forEach(g => gridEl.appendChild(buildCard(g)));
+    results.appendChild(gridEl);
   } else {
     GRADE_ORDER.forEach(gr => {
       const list = filtered.filter(g => gradeOf(g.title) === gr);
@@ -488,13 +542,16 @@ function render() {
       const sec = document.createElement('section');
       const head = document.createElement('div');
       head.className = 'section-head';
+      head.dataset.anim = 'slide';
       const h3 = document.createElement('h3'); h3.textContent = gr;
-      const n = document.createElement('span'); n.textContent = list.length + '개';
-      head.append(h3, n);
-      const grid = document.createElement('div');
-      grid.className = 'grid';
-      list.forEach(g => grid.appendChild(buildCard(g)));
-      sec.append(head, grid);
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = list.length + '개';
+      n.style.background = GRADE_TINT[gr] || GRADE_TINT['기타'];
+      const rule = document.createElement('span'); rule.className = 'rule';
+      head.append(h3, n, rule);
+      const gridEl = document.createElement('div');
+      gridEl.className = 'grid';
+      list.forEach(g => gridEl.appendChild(buildCard(g)));
+      sec.append(head, gridEl);
       results.appendChild(sec);
     });
   }
@@ -502,24 +559,24 @@ function render() {
   $('#empty').style.display = filtered.length ? 'none' : 'flex';
   $('#clear').style.display = q ? 'block' : 'none';
 
+  results.querySelectorAll('.section-head').forEach(watch);
   results.querySelectorAll('.card').forEach(el => {
     const prev = snap.get(el.dataset.gid);
     if (prev && !REDUCED) {
-      el.dataset.revealed = '1';
+      revealNow(el);
       const now = el.getBoundingClientRect();
       const dx = prev.left - now.left, dy = prev.top - now.top;
-      if (dx || dy) el.animate(
+      if ((dx || dy) && typeof el.animate === 'function') el.animate(
         [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
-        { duration: 340, easing: 'cubic-bezier(0.2,0,0,1)' });
-    } else if (io && !REDUCED) {
-      io.observe(el);
+        { duration: 360, easing: 'cubic-bezier(0.2,0,0,1)' });
     } else {
-      el.dataset.revealed = '1';
+      watch(el);
     }
   });
 
   renderChips();
   tweenCount(filtered.length);
+  $('#heroBadge').textContent = games.length;
   $('#heroCount').textContent = '모두 ' + games.length + '개의 게임이 준비되어 있어요';
   $('#footCount').textContent = '게임 ' + games.length + '개';
 }
@@ -528,11 +585,7 @@ function render() {
 function openGame(id, pushHash) {
   const g = games.find(x => String(x.id) === String(id));
   if (!g) return;
-  
-  // 브라우저가 주소를 더 완벽히 파악해 띄어쓰기 404를 방지하도록 절대 주소(Absolute URL)로 조립합니다.
-  const absoluteUrl = new URL(g.url, window.location.href).href;
-  $('#launchFrame').src = absoluteUrl;
-  
+  $('#launchFrame').src = new URL(g.url, location.href).href;
   $('#launch').style.display = 'block';
   document.body.style.overflow = 'hidden';
   document.title = g.title + ' · 에듀테크 게임 저장소';
@@ -617,7 +670,7 @@ $('#resetLocal').onclick = () => {
   location.reload();
 };
 
-/* ── 서버에서 옛날 버전을 가져오더라도 무시하도록 안전장치 추가 ── */
+/* ── boot: newer of games.json / built-in list wins ── */
 async function boot() {
   const local = loadLocal();
   try {
@@ -625,22 +678,19 @@ async function boot() {
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.games) && data.games.length) {
-        remoteVersion = Number(data.version) || 0;
-        if (remoteVersion >= FALLBACK.version) {
-          const stale = !local || Number(local.base || 0) < remoteVersion;
-          games = stale ? data.games : local.games;
-        } else {
-          // 서버 데이터가 낡았으면 무조건 index 파일 내부의 최신 데이터를 사용합니다
-          remoteVersion = FALLBACK.version;
-          games = FALLBACK.games;
+        const rv = Number(data.version) || 0;
+        if (rv >= FALLBACK.version) {
+          remoteVersion = rv;
+          games = (!local || Number(local.base || 0) < rv) ? data.games : local.games;
         }
       }
-    } else if (local) { games = local.games; }
+    } else if (local && Number(local.base || 0) >= FALLBACK.version) { games = local.games; }
   } catch (e) {
-    if (local) games = local.games;
+    if (local && Number(local.base || 0) >= FALLBACK.version) games = local.games;
   }
   render();
   syncHash();
+  document.querySelectorAll('[data-anim]').forEach(watch);
 }
 boot();
 </script>
