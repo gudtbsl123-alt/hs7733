@@ -461,14 +461,16 @@ const CLIMATES = {
 const CLIMATE_KEYS = ['tropical','dry','temperate','continental','polar','highland'];
 
 /* ── 지도 위도 띠 (viewBox 360x180, x=경도+180, y=90-위도) ── */
+/* 띠 경계는 우리나라(북위 34~39도)가 온대 띠 안에 온전히 들어가도록 잡았다.
+   한반도를 빨갛게 표시해 기준점으로 쓰기 때문에, 경계에 걸치면 학생이 헷갈린다. */
 const BANDS = [
   { id:'POLAR_N', climate:'polar',       lat:[ 70,  90], name:'북극 주변(고위도)' },
   { id:'CONT_N',  climate:'continental', lat:[ 55,  70], name:'북반구 고위도' },
-  { id:'TEMP_N',  climate:'temperate',   lat:[ 35,  55], name:'북반구 중위도' },
-  { id:'DRY_N',   climate:'dry',         lat:[ 25,  35], name:'북위 30도 부근' },
-  { id:'TROPIC',  climate:'tropical',    lat:[-25,  25], name:'적도 주변(저위도)' },
-  { id:'DRY_S',   climate:'dry',         lat:[-35, -25], name:'남위 30도 부근' },
-  { id:'TEMP_S',  climate:'temperate',   lat:[-55, -35], name:'남반구 중위도' },
+  { id:'TEMP_N',  climate:'temperate',   lat:[ 33,  55], name:'북반구 중위도' },
+  { id:'DRY_N',   climate:'dry',         lat:[ 23,  33], name:'북위 30도 부근' },
+  { id:'TROPIC',  climate:'tropical',    lat:[-23,  23], name:'적도 주변(저위도)' },
+  { id:'DRY_S',   climate:'dry',         lat:[-33, -23], name:'남위 30도 부근' },
+  { id:'TEMP_S',  climate:'temperate',   lat:[-55, -33], name:'남반구 중위도' },
   { id:'CONT_S',  climate:null, ocean:true, lat:[-70, -55], name:'남반구 고위도(바다)' },
   { id:'POLAR_S', climate:'polar',       lat:[-90, -70], name:'남극 주변(고위도)' }
 ];
@@ -487,9 +489,10 @@ const LANDS = [
   { n:'남아메리카', p:[[-81,10],[-60,12],[-50,0],[-35,-6],[-38,-15],[-48,-25],[-58,-35],[-63,-41],[-68,-55],[-75,-52],[-73,-40],[-71,-25],[-70,-18],[-76,-5],[-79,2]] },
   { n:'아프리카',   p:[[-17,15],[-5,25],[10,33],[25,32],[35,31],[43,12],[51,12],[48,0],[40,-15],[35,-25],[28,-34],[18,-34],[12,-18],[9,-1],[5,5],[-8,4],[-16,12]] },
   { n:'유라시아',   p:[[-10,36],[0,44],[5,52],[8,58],[15,68],[30,71],[60,70],[75,73],[100,77],[130,72],[160,70],[170,66],[160,60],[142,52],[130,43],[122,32],[110,20],[100,10],[97,16],[88,21],[80,15],[72,20],[65,25],[57,25],[48,30],[43,37],[35,36],[28,40],[20,40],[15,38],[8,44],[-2,37]] },
-  { n:'오스트레일리아', p:[[113,-22],[130,-12],[142,-11],[147,-19],[153,-27],[150,-37],[141,-38],[130,-32],[115,-34],[113,-26]] },
-  { n:'남극',       p:[[-180,-72],[-120,-74],[-60,-70],[0,-72],[60,-68],[120,-70],[180,-73],[180,-90],[-180,-90]] }
+  { n:'오스트레일리아', p:[[113,-22],[130,-12],[142,-11],[147,-19],[153,-27],[150,-37],[141,-38],[130,-32],[115,-34],[113,-26]] }
 ];
+/* 남극 — 좌우 끝을 모두 걸쳐 폴리곤으로 그리면 이음매에 계단이 생기므로 전체 폭 띠로 그린다 */
+const ANTARCTICA_LAT = -71;
 
 /* ── 기후 그래프 자료 (기온 ℃ 12개월 / 강수량 mm 12개월) ── */
 const GRAPHS = {
@@ -832,8 +835,48 @@ function el(tag, attrs){
   for(const k in attrs) n.setAttribute(k, attrs[k]);
   return n;
 }
-const X = function(lon){ return lon + 180; };
+/* 태평양을 가운데 두는 배치 — 우리나라 교과서 세계지도와 같은 방식이다.
+   왼쪽에 유럽·아프리카, 가운데에 아시아·태평양, 오른쪽에 아메리카가 온다. */
+const LON0 = 155;
+function rawX(lon){ return lon + (180 - LON0); }
+const X = function(lon){ let v = rawX(lon) % 360; if(v < 0) v += 360; return v; };
 const Y = function(lat){ return 90 - lat; };
+
+/* 지도 좌우 끝을 걸치는 대륙(그린란드·남극)이 가로로 늘어지지 않도록,
+   이어지는 좌표로 펼친 뒤 -360 / 0 / +360 세 벌을 그려 화면 밖은 잘리게 둔다. */
+function unwrapXs(pts){
+  const xs = []; let prev = null;
+  pts.forEach(function(q){
+    let x = rawX(q[0]);
+    if(prev !== null){
+      while(x - prev >  180) x -= 360;
+      while(prev - x >  180) x += 360;
+    }
+    xs.push(x); prev = x;
+  });
+  return xs;
+}
+function polyStrings(pts){
+  const xs = unwrapXs(pts);
+  return [-360, 0, 360].map(function(off){
+    return pts.map(function(q,i){ return (xs[i]+off).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
+  });
+}
+
+/* 한반도 — 학생이 지도에서 기준점을 잡을 수 있도록 빨갛게 표시한다.
+   (지도서에서 온대 기후의 대표 지역으로 '우리나라'를 들고 있다) */
+const KOREA = [[125.0,38.6],[126.6,38.3],[128.4,38.6],[129.4,37.0],[129.5,35.6],
+               [128.8,34.8],[126.4,34.3],[126.2,36.0],[124.7,37.4]];
+/* 실제 크기대로 그리면 지도에서 점만 하게 보인다. 교실 TV에서도 기준점으로 쓸 수 있도록
+   중심을 유지한 채 조금 크게 그린다(위치는 그대로, 크기만 과장). */
+const KOREA_ZOOM = 1.9;
+function koreaPoly(){
+  const cx = KOREA.reduce(function(a,q){ return a+q[0]; },0)/KOREA.length;
+  const cy = KOREA.reduce(function(a,q){ return a+q[1]; },0)/KOREA.length;
+  return KOREA.map(function(q){
+    return [cx + (q[0]-cx)*KOREA_ZOOM, cy + (q[1]-cy)*KOREA_ZOOM];
+  });
+}
 
 /* 색약 학생을 위해 색과 함께 쓰는 무늬 정의 */
 function buildPatterns(defs){
@@ -873,9 +916,12 @@ function buildMap(){
 
   /* 대륙 밑판 — 띠가 없을 때도 육지가 보이도록 */
   const landBase = el('g', {'pointer-events':'none'});
+  landBase.appendChild(el('rect', {x:0, y:Y(ANTARCTICA_LAT), width:360,
+    height:180-Y(ANTARCTICA_LAT), fill:'#2f6b4f'}));
   LANDS.forEach(function(L){
-    const pts = L.p.map(function(q){ return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
-    landBase.appendChild(el('polygon', {points:pts, fill:'#2f6b4f', 'stroke':'none'}));
+    polyStrings(L.p).forEach(function(pts){
+      landBase.appendChild(el('polygon', {points:pts, fill:'#2f6b4f', 'stroke':'none'}));
+    });
   });
   mapSvg.appendChild(landBase);
 
@@ -898,12 +944,35 @@ function buildMap(){
   /* 대륙 윤곽 — 띠 위에 반투명으로 한 번 더 올려, 띠를 칠해도 대륙이 보인다.
      클릭은 아래 띠로 통과해야 하므로 pointer-events 를 끈다. */
   const landTop = el('g', {'pointer-events':'none'});
+  landTop.appendChild(el('rect', {x:0, y:Y(ANTARCTICA_LAT), width:360,
+    height:180-Y(ANTARCTICA_LAT), fill:'#0b3d2a', 'fill-opacity':0.3,
+    stroke:'#d8fbe8', 'stroke-width':0.9}));
   LANDS.forEach(function(L){
-    const pts = L.p.map(function(q){ return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
-    landTop.appendChild(el('polygon', {points:pts, fill:'#0b3d2a', 'fill-opacity':0.3,
-      stroke:'#d8fbe8', 'stroke-width':0.9, 'stroke-linejoin':'round'}));
+    polyStrings(L.p).forEach(function(pts){
+      landTop.appendChild(el('polygon', {points:pts, fill:'#0b3d2a', 'fill-opacity':0.3,
+        stroke:'#d8fbe8', 'stroke-width':0.9, 'stroke-linejoin':'round'}));
+    });
   });
   mapSvg.appendChild(landTop);
+
+  /* 한반도 — 빨갛게 칠해 기준점으로 삼는다 */
+  const kG = el('g', {'pointer-events':'none'});
+  const kPoly = koreaPoly();
+  const kxs = unwrapXs(kPoly);
+  const kcx = kxs.reduce(function(a,b){ return a+b; },0)/kxs.length;
+  const kcy = kPoly.reduce(function(a,q){ return a+Y(q[1]); },0)/kPoly.length;
+  kG.appendChild(el('circle', {cx:kcx, cy:kcy, r:12, fill:'rgba(239,68,68,.18)',
+    stroke:'#ef4444', 'stroke-width':1.1, 'stroke-dasharray':'3 2.2'}));
+  polyStrings(kPoly).forEach(function(pts){
+    kG.appendChild(el('polygon', {points:pts, fill:'#ef4444',
+      stroke:'#ffffff', 'stroke-width':1, 'stroke-linejoin':'round'}));
+  });
+  const kLab = el('text', {x:kcx, y:kcy+18, fill:'#ffe4e6', 'font-size':5.6,
+    'font-weight':'900', 'text-anchor':'middle',
+    stroke:'#7f1d1d', 'stroke-width':1.5, 'paint-order':'stroke'});
+  kLab.textContent = '우리나라';
+  kG.appendChild(kLab);
+  mapSvg.appendChild(kG);
 
   /* 위도선 — 교과서가 쓰는 0°, 30°, 60° 를 굵게 표시 */
   const lineG = el('g', {});
@@ -1369,8 +1438,13 @@ function openZoneClear(z){
 function miniMapSVG(targetId){
   let s = '<svg viewBox="0 0 360 180" width="150" style="display:block;margin-top:6px;border-radius:6px;background:#0d3554" role="img" aria-label="정답 위치">';
   LANDS.forEach(function(L){
-    const pts = L.p.map(function(q){ return X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1); }).join(' ');
-    s += '<polygon points="'+pts+'" fill="#2f6b4f" stroke="#7fd6a6" stroke-width="0.5"/>';
+    polyStrings(L.p).forEach(function(pts){
+      s += '<polygon points="'+pts+'" fill="#2f6b4f" stroke="#7fd6a6" stroke-width="0.5"/>';
+    });
+  });
+  s += '<rect x="0" y="'+Y(ANTARCTICA_LAT)+'" width="360" height="'+(180-Y(ANTARCTICA_LAT))+'" fill="#2f6b4f" stroke="#7fd6a6" stroke-width="0.5"/>';
+  polyStrings(koreaPoly()).forEach(function(pts){
+    s += '<polygon points="'+pts+'" fill="#ef4444" stroke="#fff" stroke-width="0.8"/>';
   });
   if(targetId === 'MOUNTAIN'){
     MOUNTAINS.forEach(function(m){
@@ -1732,7 +1806,9 @@ window.__T = {
   state: function(){ return { idx:S.idx, total:S.order.length, score:S.score, coins:S.coins,
       combo:S.combo, dex:S.dex.slice(), badges:Object.keys(S.badges), stats:S.stats.length,
       placed:Object.assign({}, S.placed), mountain:S.mountainPlaced }; },
-  data: function(){ return { QUIZ_DATA:QUIZ_DATA, BANDS:BANDS, CLIMATES:CLIMATES, MOUNTAINS:MOUNTAINS, LANDS:LANDS, GRAPHS:GRAPHS }; },
+  data: function(){ return { QUIZ_DATA:QUIZ_DATA, BANDS:BANDS, CLIMATES:CLIMATES, MOUNTAINS:MOUNTAINS,
+      LANDS:LANDS, GRAPHS:GRAPHS, KOREA:KOREA, LON0:LON0 }; },
+  proj: function(lon, lat){ return { x:X(lon), y:Y(lat) }; },
   fit: fitLayout,
   buy: function(id){ buyShop(id); },
   pause: togglePause
