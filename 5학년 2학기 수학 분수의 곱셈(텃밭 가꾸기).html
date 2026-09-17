@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>분수 텃밭 — 분수의 곱셈</title>
+<style>
+/* ============================================================
+   분수 텃밭 v3  ·  5학년 2학기 2단원 분수의 곱셈
+   ------------------------------------------------------------
+   팔레트는 텃밭의 재료에서: 흙 · 새싹 · 햇살 · 하늘 · 딸기 · 라벤더
+   가로는 언제나 노랑, 세로는 언제나 초록 — 글과 그림이 같은 색으로 이어진다
+   색만으로 구분하지 않도록 모든 칸에 무늬를 함께 넣었다
+   ============================================================ */
+:root{
+  /* 오버쿡드풍: 채도 높은 원색 + 두꺼운 흰 테두리 + 색이 실린 그림자 */
+  --sky-a:#2FB3E8; --sky-b:#7FDCF2; --sky-c:#C6F0F7; --sky-d:#FFE7A0;
+  --grass-a:#8FE38C; --grass-b:#5FCB74; --grass-c:#38AC5C;
+  --soil:#9C6B3E; --soil-d:#6E4526; --soil-l:#C08B52;
+  --leaf:#2FC46B; --leaf-d:#189B51; --leaf-l:#79EBA6;
+  --sun:#FFC42E; --sun-d:#E09400;
+  --col:#F5B723; --col-d:#8A5A00;      /* 가로 */
+  --row:#9FE3BE; --row-d:#0F6B3C;      /* 세로 */
+  --both:#12A05B;
+  --berry:#FF5E6C; --lav:#9B7BF5; --sea:#22B8E8; --cream:#FFFBEE;
+  --card:#FFFBEE; --ink:#3A2A1C; --ink-soft:#7A6653;
+  --line:#FFFFFF;
+  --r-s:12px; --r-m:20px; --r-l:30px;
+  --sh-s:0 3px 0 rgba(58,42,28,.16);
+  --sh-m:0 8px 0 rgba(58,42,28,.13), 0 16px 30px rgba(20,60,80,.22);
+  --sh-l:0 12px 0 rgba(58,42,28,.15), 0 26px 50px rgba(20,60,80,.32);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --furrow:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:var(--ink);user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;display:flex;align-items:center;justify-content:center;background:#123}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible{outline:3px solid var(--lav);outline-offset:3px}
+
+#stage{position:relative;width:100%;height:100dvh;max-width:1100px;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(58% 34% at 82% 6%, rgba(255,240,170,.95) 0%, rgba(255,236,150,0) 62%),
+    linear-gradient(180deg,var(--sky-a) 0%,var(--sky-b) 30%,var(--sky-c) 52%,var(--sky-d) 100%);
+  transition:background 1.2s ease}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(120% 82% at 50% 46%, transparent 52%, rgba(20,60,80,.16) 100%)}
+#stage.z1{--sky-a:#2FB3E8;--sky-b:#7FDCF2;--sky-c:#C6F0F7;--sky-d:#FFE7A0;--furrow:16px}
+#stage.z2{--sky-a:#1FA0DE;--sky-b:#6FD2EE;--sky-c:#BDEEF9;--sky-d:#FFD98A;--furrow:11px}
+#stage.z3{--sky-a:#F0836B;--sky-b:#FFA97B;--sky-c:#FFD09A;--sky-d:#FFE9B8;--furrow:7px}
+/* 해 */
+#sun{position:absolute;top:18px;right:24px;width:74px;height:74px;border-radius:50%;z-index:0;
+  background:radial-gradient(circle at 36% 34%, #FFF3B0, var(--sun) 62%, var(--sun-d));
+  box-shadow:0 0 0 12px rgba(255,214,64,.28), 0 0 46px 14px rgba(255,206,60,.45);
+  animation:sunPulse 5s ease-in-out infinite}
+@keyframes sunPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.lowfx #sun{animation:none;box-shadow:0 0 0 10px rgba(255,214,64,.25)}
+/* 떠다니는 잎 */
+.leafy{position:absolute;font-size:17px;opacity:.55;z-index:0;pointer-events:none;animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-40px) rotate(0);opacity:0}
+ 12%{opacity:.6}88%{opacity:.6}100%{transform:translateY(105vh) rotate(420deg);opacity:0}}
+.lowfx .leafy{display:none}
+
+.cloud{position:absolute;background:#fff;border-radius:99px;opacity:.75;pointer-events:none;z-index:0}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+#c1{width:110px;height:30px;top:7%;left:-140px;animation:drift 44s linear infinite}
+#c1::before{width:48px;height:48px;top:-20px;left:16px}
+#c1::after{width:34px;height:34px;top:-13px;left:58px}
+#c2{width:84px;height:24px;top:17%;left:-120px;animation:drift 62s linear infinite 8s}
+#c2::before{width:38px;height:38px;top:-16px;left:12px}
+#c2::after{width:26px;height:26px;top:-10px;left:46px}
+@keyframes drift{to{transform:translateX(calc(100vw + 260px))}}
+.lowfx .cloud{display:none}
+#hills{position:absolute;left:0;right:0;bottom:0;height:32%;z-index:0;pointer-events:none}
+#hills svg{width:100%;height:100%;display:block}
+
+.screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:3}
+.screen.on{display:flex}
+.scroller{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 15px 26px}
+
+/* ---------------- 타이틀 ---------------- */
+.hero{text-align:center;padding:20px 6px 4px}
+.hero .badge{display:inline-block;background:#fff;color:var(--leaf-d);font-family:var(--mono);
+  font-size:11px;letter-spacing:.22em;padding:6px 15px;border-radius:99px;box-shadow:var(--sh-s)}
+.hero h1{font-size:clamp(34px,9vw,58px);font-weight:900;letter-spacing:-.04em;margin:12px 0 6px;
+  color:var(--soil-d);text-shadow:0 3px 0 #fff,0 6px 14px rgba(0,0,0,.13)}
+.hero h1 span{color:var(--leaf-d)}
+.hero p{color:var(--ink-soft);font-size:clamp(13.5px,3.6vw,15.5px);line-height:1.65;font-weight:600}
+.hero .sprouts{font-size:30px;letter-spacing:8px;margin-top:10px}
+.panel{background:var(--card);border-radius:var(--r-l);padding:19px;margin:14px auto;max-width:600px;
+  box-shadow:var(--sh-m);border:4px solid #fff}
+.panel h2{font-size:14.5px;letter-spacing:.02em;color:var(--leaf-d);margin-bottom:13px;font-weight:900;
+  display:flex;align-items:center;gap:7px}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:7px;font-weight:800}
+input[type=text]{width:100%;background:#FFF;border:2.5px solid #E8DFCB;border-radius:var(--r-m);
+  padding:13px 15px;color:var(--ink);font-size:16px;font-weight:800;font-family:inherit}
+input[type=text]:focus{outline:none;border-color:var(--leaf)}
+.avatars{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:7px;max-height:176px;overflow-y:auto;padding:3px}
+.av{aspect-ratio:1;border-radius:var(--r-m);background:#FFF8E6;border:2.5px solid transparent;font-size:25px;
+  display:flex;align-items:center;justify-content:center;transition:transform .12s,border-color .12s,background .12s}
+.av.sel{border-color:var(--leaf);background:#DFF6E7;transform:translateY(-3px) scale(1.05)}
+.tips{list-style:none;display:grid;gap:8px}
+.tips li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.55;
+  background:#FFF8E6;border-radius:var(--r-m);padding:11px 13px;border-left:4px solid var(--sun);font-weight:600}
+.tips li b{color:var(--leaf-d)}
+.toggles{display:flex;gap:9px;flex-wrap:wrap}
+.tg{flex:1;min-width:148px;display:flex;align-items:center;justify-content:space-between;gap:9px;
+  background:#FFF8E6;border:2px solid #EFE4CC;border-radius:var(--r-m);padding:11px 13px;font-size:13px;font-weight:800}
+.tg .sw{width:42px;height:24px;border-radius:99px;background:#DDD2BB;position:relative;transition:background .2s;flex:none}
+.tg .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.tg.on .sw{background:var(--leaf)}
+.tg.on .sw::after{transform:translateX(18px)}
+.cta{display:block;width:100%;max-width:600px;margin:8px auto 22px;
+  background:linear-gradient(180deg,var(--leaf-l),var(--leaf));color:#06381F;border:4px solid #fff;
+  font-size:21px;font-weight:900;padding:18px;border-radius:var(--r-l);
+  box-shadow:0 9px 0 var(--leaf-d), 0 18px 28px rgba(20,60,80,.3);transition:transform .08s,box-shadow .08s}
+.cta:active{transform:translateY(6px);box-shadow:0 3px 0 var(--leaf-d)}
+
+/* ---------------- HUD ---------------- */
+#hud{flex:none;display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-bottom:4px solid #fff;
+  box-shadow:0 6px 18px rgba(20,60,80,.16)}
+.chip{display:flex;align-items:center;gap:6px;background:#FFF;border:3px solid #fff;border-radius:99px;
+  padding:5px 13px;font-size:12.5px;font-weight:900;box-shadow:0 3px 0 rgba(58,42,28,.16)}
+.chip .v{font-family:var(--mono);font-size:14px}
+.chip.coin{background:#FFF3CE} .chip.coin .v{color:var(--sun-d)}
+.chip.combo{background:linear-gradient(135deg,#FFE07A,#FFB020)}
+.chip.combo.hot{animation:comboPulse .5s ease}
+@keyframes comboPulse{0%,100%{transform:scale(1)}45%{transform:scale(1.24) rotate(-4deg)}}
+#hudRight{margin-left:auto;display:flex;gap:6px}
+.icon-btn{width:42px;height:42px;border-radius:14px;background:#FFF;border:3px solid #fff;
+  box-shadow:0 4px 0 rgba(58,42,28,.18);font-size:16px;display:flex;align-items:center;justify-content:center;position:relative}
+.icon-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(58,42,28,.18)}
+.icon-btn .dot{position:absolute;top:-3px;right:-3px;background:var(--berry);color:#fff;
+  font-size:9.5px;font-weight:900;border-radius:99px;padding:1px 5px;font-family:var(--mono)}
+
+/* ------------- 농장 전경 (3층 원근) ------------- */
+#farmStrip{flex:none;position:relative;height:136px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 58%)}
+#farmSky{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 100%, rgba(255,236,160,.5), transparent 70%)}
+#farmBack{position:absolute;left:0;right:0;bottom:46px;height:60px;opacity:.62}
+#farmBack svg{width:100%;height:100%;display:block}
+/* 원근이 있는 밭: 위쪽이 좁고 아래쪽이 넓다 */
+#farmField{position:absolute;left:-4%;right:-4%;bottom:0;height:50px;
+  background:linear-gradient(180deg,var(--grass-b) 0 7px,var(--soil-l) 7px, var(--soil) 100%);
+  border-top:4px solid var(--grass-c);
+  clip-path:polygon(6% 0, 94% 0, 100% 100%, 0 100%);
+  box-shadow:inset 0 -10px 18px rgba(0,0,0,.18)}
+#farmField::after{content:"";position:absolute;inset:11px 0 0 0;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 3px, transparent 3px var(--furrow));
+  transition:background .6s}
+#farmField::before{content:"";position:absolute;left:0;right:0;top:7px;height:5px;
+  background:linear-gradient(180deg,rgba(255,255,255,.4),transparent)}
+.deco{position:absolute;line-height:1;filter:drop-shadow(0 4px 4px rgba(0,0,0,.22));
+  animation:decoIn .55s cubic-bezier(.2,1.6,.4,1);transform-origin:bottom center}
+.deco.back {bottom:78px;font-size:22px;opacity:.8}
+.deco.mid  {bottom:44px;font-size:34px}
+.deco.front{bottom:12px;font-size:42px;z-index:2}
+@keyframes decoIn{from{transform:translateY(-26px) scale(.35);opacity:0}to{transform:none;opacity:1}}
+.deco.fly{animation:decoIn .55s cubic-bezier(.2,1.6,.4,1), flit 6.5s ease-in-out infinite}
+@keyframes flit{0%,100%{transform:translate(0,0)}25%{transform:translate(26px,-18px)}55%{transform:translate(-20px,-10px)}}
+.lowfx .deco{animation:none}
+#farmLevel{position:absolute;right:9px;top:7px;font-size:11.5px;font-weight:900;color:var(--soil-d);
+  background:rgba(255,255,255,.9);padding:4px 11px;border-radius:99px;z-index:3;box-shadow:var(--sh-s)}
+#progWrap{flex:none;height:8px;background:rgba(255,255,255,.5)}
+#progBar{height:100%;width:0;background:linear-gradient(90deg,var(--leaf-l),var(--sun));
+  transition:width .5s cubic-bezier(.2,.9,.3,1);border-radius:0 99px 99px 0}
+
+/* ---------------- 문제 ---------------- */
+#play{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+#playScroll{flex:1;overflow-y:auto;padding:12px 12px 4px}
+#playInner{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px}
+.qcard{width:100%;max-width:600px;background:var(--card);border-radius:var(--r-l);
+  box-shadow:var(--sh-m);border:4px solid #fff;overflow:hidden;animation:cardIn .42s cubic-bezier(.2,1.1,.35,1)}
+.lowfx .qcard{animation:none}
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+.qhead{display:flex;align-items:center;gap:7px;padding:10px 15px;
+  background:linear-gradient(90deg,var(--leaf-d),var(--leaf) 60%,#4FD98C);color:#fff;font-size:12px;font-weight:900;flex-wrap:wrap;
+  text-shadow:0 2px 0 rgba(0,0,0,.15)}
+.qhead .pill{background:rgba(255,255,255,.3);padding:3px 10px;border-radius:99px;font-family:var(--mono);font-size:10.5px}
+.qhead .pill.d하{background:#BFF3D2;color:#166534}
+.qhead .pill.d중{background:#FFE9A8;color:#854D0E}
+.qhead .pill.d상{background:#FFC9CE;color:#9F1239}
+.qbody{padding:15px 17px 17px}
+.story{font-size:clamp(15.5px,4.3vw,18.5px);line-height:2.15;font-weight:600;word-break:keep-all}
+.story em{font-style:normal;background:linear-gradient(transparent 56%,#FFE27A 56%);font-weight:900}
+.ask{margin-top:12px;background:#F1F8EC;border-radius:var(--r-m);padding:14px 15px;
+  font-size:clamp(15px,4.1vw,17.5px);font-weight:900;line-height:2.05;word-break:keep-all;border-left:5px solid var(--leaf)}
+
+/* 인라인 분수 */
+.fr{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  vertical-align:middle;margin:0 4px;font-family:var(--mono);font-weight:900;line-height:1;transform:translateY(-.06em)}
+.fr .n{font-size:1.02em;padding:0 4px}
+.fr .b{width:100%;min-width:20px;height:3px;background:currentColor;margin:3px 0;border-radius:2px}
+.fr .d{font-size:1.02em;padding:0 4px}
+.wn{font-family:var(--mono);font-weight:900;font-size:1.12em;margin-right:1px}
+.mx{font-family:var(--mono);font-weight:900}
+/* 가로=노랑 · 세로=초록 : 글과 밭이 같은 색으로 이어진다 */
+.fc-col,.fc-row{padding:2px 8px 3px;border-radius:11px;display:inline-flex;align-items:center;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.1)}
+.fc-col{background:#FBEFC4;color:var(--col-d)}
+.fc-row{background:#DCF3E5;color:var(--row-d)}
+
+/* ---------------- 밭 격자 ---------------- */
+#gridArea{width:100%;max-width:600px;background:var(--card);border-radius:var(--r-l);
+  box-shadow:var(--sh-m);border:4px solid #fff;padding:15px 16px 16px}
+.gridTitle{font-size:clamp(14px,3.9vw,16.5px);font-weight:900;color:var(--soil-d);margin-bottom:13px;
+  text-align:center;line-height:2.2}
+#gridLayout{display:grid;grid-template-columns:24px auto;grid-template-rows:24px auto;gap:5px;justify-content:center}
+#colBar{grid-column:2;grid-row:1;display:grid;gap:3px}
+#rowBar{grid-column:1;grid-row:2;display:grid;gap:3px}
+#gridBox{grid-column:2;grid-row:2;display:grid;gap:4px;border-radius:var(--r-m);overflow:hidden;
+  background:var(--soil-d);padding:5px;border:3px solid #7A4E2C;
+  box-shadow:inset 0 3px 12px rgba(0,0,0,.36), 0 6px 0 rgba(58,42,28,.2)}
+.seg{background:#F0E6D2;border:2px solid #fff;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:#A08A66;transition:background .16s,color .16s,transform .1s;min-height:18px;min-width:18px;
+  box-shadow:0 3px 0 rgba(58,42,28,.14)}
+.seg:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(58,42,28,.14)}
+#colBar .seg.on{background:var(--col);color:var(--col-d);box-shadow:0 2px 0 #B99400}
+#rowBar .seg.on{background:var(--both);color:#fff;box-shadow:0 2px 0 #17663C}
+.cell{background:var(--soil);border-radius:7px;position:relative;overflow:hidden;
+  transition:background .18s,transform .12s;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.16), inset 0 2px 0 rgba(255,255,255,.18)}
+/* 색약 대응: 색 + 무늬를 함께 쓴다 */
+.cell.cs{background:var(--col)}
+.cell.cs::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.17) 0 3px,transparent 3px 9px)}
+.cell.rs{background:var(--row)}
+.cell.rs::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.17) 0 3px,transparent 3px 9px)}
+.cell.both{background:var(--both);box-shadow:0 0 0 3px #fff inset, 0 0 14px rgba(18,160,91,.6);transform:scale(1.04)}
+.cell.both::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.26) 0 3px,transparent 3px 9px),
+             repeating-linear-gradient(0deg,rgba(255,255,255,.26) 0 3px,transparent 3px 9px)}
+.cell.both::after{content:"🌱";position:relative;font-size:15px;animation:sprout .34s cubic-bezier(.2,1.7,.4,1)}
+@keyframes sprout{from{transform:scale(0) rotate(-40deg);opacity:0}to{transform:none;opacity:1}}
+.lowfx .cell.both::after{animation:none}
+#gridInfo{margin-top:11px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:900;color:var(--ink-soft)}
+#gridInfo .tagv{background:#FFF3C4;padding:5px 11px;border-radius:99px}
+#gridInfo .tagv.ok{background:#DFF6E7;color:var(--leaf-d)}
+#gridInfo .tagv.goal{background:#EDE4FF;color:#5B3FA8}
+#grid3 svg{width:100%;height:auto;display:block;max-height:46dvh;margin:0 auto}
+#grid3 .cap{text-align:center;font-size:12.5px;color:var(--ink-soft);font-weight:800;
+  padding:9px 6px 2px;line-height:1.8}
+#grid3 .cap b{color:var(--soil-d)}
+#gridLegend{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;font-weight:800}
+#gridLegend span{display:inline-flex;align-items:center;gap:5px;background:#fff;padding:4px 9px;border-radius:99px;box-shadow:var(--sh-s)}
+#gridLegend i{width:14px;height:14px;border-radius:4px;display:inline-block;flex:none}
+#gridGo{width:100%;margin-top:11px;padding:14px;border-radius:var(--r-m);font-size:16px;font-weight:900;
+  background:linear-gradient(180deg,var(--leaf-l),var(--leaf));color:#0B3D22;box-shadow:0 5px 0 var(--leaf-d)}
+#gridGo:disabled{background:#E3DBC8;color:#A79A83;box-shadow:0 5px 0 #CFC5AE}
+#gridGo:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 var(--leaf-d)}
+
+/* ---------------- 입력부 ---------------- */
+#console{flex:none;padding:8px 12px calc(11px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(255,251,238,0),rgba(255,251,238,.96) 22%);
+  border-top:4px solid rgba(255,255,255,.75)}
+.cin{max-width:600px;margin:0 auto}
+.steplab{font-size:11.5px;font-weight:900;color:var(--soil-d);margin-bottom:6px;display:flex;align-items:center;gap:7px;line-height:1.9}
+.steplab i{width:19px;height:19px;border-radius:6px;background:var(--sun);color:#7A5200;font-style:normal;
+  font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none}
+/* 수확 예측 */
+#stepPredict{display:none}
+.predRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pbtn{background:#fff;border:3px solid #fff;border-radius:var(--r-m);padding:16px 4px;
+  font-size:16px;font-weight:900;box-shadow:0 5px 0 #DFD3B8;transition:transform .08s}
+.pbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #E0D6BE}
+.pbtn.ok{border-color:var(--leaf);background:#EBFAF0}
+.pbtn.no{border-color:var(--berry);background:#FFF0F1}
+#fracInput{display:flex;align-items:center;justify-content:center;gap:14px;background:#FFF;
+  border:4px solid #EFE3C8;border-radius:var(--r-m);padding:10px 16px;margin-bottom:9px;min-height:80px;
+  box-shadow:0 5px 0 rgba(58,42,28,.12)}
+#fracInput.ok{border-color:var(--leaf);background:#F2FBF5}
+#fracInput.no{border-color:var(--berry);background:#FFF3F4;animation:shake .34s}
+@keyframes shake{0%,100%{transform:translateX(0)}22%{transform:translateX(-8px)}44%{transform:translateX(8px)}68%{transform:translateX(-4px)}}
+.slot{min-width:56px;padding:5px 8px;border-radius:11px;background:#F6F1E2;border:2.5px solid transparent;
+  font-family:var(--mono);font-size:27px;font-weight:900;transition:all .14s;line-height:1.15}
+.slot.act{border-color:var(--sun);background:#FFF6D8;box-shadow:0 0 0 4px rgba(255,201,60,.28)}
+.slot.empty{color:#C9BCA4}
+.slot .cap{display:block;font-family:var(--sans);font-size:9.5px;font-weight:800;color:var(--ink-soft)}
+.fstack{display:flex;flex-direction:column;align-items:center;gap:3px}
+.fstack .fbar{width:100%;min-width:62px;height:4px;background:var(--ink);border-radius:2px}
+#fracUnit{font-size:16px;font-weight:900;color:var(--soil-d)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.key{background:#FFF;border:3px solid #fff;border-radius:var(--r-m);padding:13px 0;font-family:var(--mono);
+  font-size:22px;font-weight:900;box-shadow:0 5px 0 #DFD3B8;transition:transform .07s,box-shadow .07s}
+.key:active{transform:translateY(4px);box-shadow:0 1px 0 #DFD3B8}
+.key.fn{font-family:var(--sans);font-size:13.5px;background:#F4EBD8}
+.key.go{background:linear-gradient(180deg,var(--leaf-l),var(--leaf));color:#06381F;
+  font-family:var(--sans);font-size:17px;box-shadow:0 5px 0 var(--leaf-d)}
+.key:disabled{opacity:.4}
+
+#comboPop{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) scale(.4);opacity:0;
+  z-index:30;pointer-events:none;text-align:center}
+#comboPop.on{animation:cpop 1.05s cubic-bezier(.2,1.5,.4,1)}
+@keyframes cpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+ 22%{opacity:1;transform:translate(-50%,-50%) scale(1.14)}
+ 74%{opacity:1;transform:translate(-50%,-58%) scale(1)}
+ 100%{opacity:0;transform:translate(-50%,-78%) scale(.94)}}
+#comboPop .n{font-size:clamp(46px,13vw,78px);font-weight:900;color:#fff;line-height:.9;
+  text-shadow:0 0 16px rgba(255,201,60,.95),0 5px 0 var(--sun-d),0 9px 20px rgba(0,0,0,.3)}
+#comboPop .t{font-size:16px;font-weight:900;color:#fff;text-shadow:0 3px 0 var(--sun-d);margin-top:5px}
+#fx{position:absolute;inset:0;pointer-events:none;z-index:28;overflow:hidden}
+.pt{position:absolute;font-size:20px;opacity:0;will-change:transform,opacity}
+.pt.go{animation:burst .95s ease-out forwards}
+@keyframes burst{0%{opacity:1;transform:translate(0,0) scale(.5) rotate(0)}
+ 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.15) rotate(var(--rot))}}
+
+/* ---------------- 모달 ---------------- */
+.ov{position:absolute;inset:0;background:rgba(44,33,23,.62);z-index:50;display:none;
+  align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.ov.on{display:flex}
+.modal{width:100%;max-width:470px;max-height:88dvh;overflow-y:auto;background:var(--card);
+  border:5px solid #fff;border-radius:var(--r-l);padding:21px;box-shadow:var(--sh-l);
+  animation:mpop .27s cubic-bezier(.2,1.35,.4,1)}
+.lowfx .modal{animation:none}
+@keyframes mpop{from{opacity:0;transform:scale(.9) translateY(16px)}to{opacity:1;transform:none}}
+.modal h3{font-size:19.5px;font-weight:900;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.modal p{font-size:14.5px;line-height:1.75;color:var(--ink-soft);font-weight:600;word-break:keep-all}
+.mrow{display:flex;gap:9px;margin-top:17px}
+.mact{flex:1;padding:15px;border:3px solid #fff;border-radius:var(--r-m);font-weight:900;font-size:15.5px;
+  background:#F2E9D6;box-shadow:0 5px 0 #D8CBB2}
+.mact.primary{background:linear-gradient(180deg,var(--leaf-l),var(--leaf));color:#06381F;box-shadow:0 5px 0 var(--leaf-d)}
+.mact:active{transform:translateY(3px);box-shadow:none}
+.mact:disabled{opacity:.5}
+.hintbox{background:#FFF6D8;border-left:5px solid var(--sun);border-radius:var(--r-m);padding:13px 15px;
+  margin-top:11px;font-size:14.5px;line-height:1.95;font-weight:600;word-break:keep-all}
+.okbox{background:#F1F8EC;border-left:5px solid var(--leaf);border-radius:var(--r-m);padding:13px 15px;
+  margin-top:11px;font-size:14.5px;line-height:1.95;font-weight:600;word-break:keep-all}
+.gain{margin-top:10px;font-family:var(--mono);font-size:15px;font-weight:900;color:var(--sun-d);text-align:center;line-height:1.75}
+.cropwin{margin-top:12px;text-align:center;background:#FFF6D8;border-radius:var(--r-m);padding:12px}
+.cropwin .e{font-size:44px;display:block;animation:hop 1s ease-in-out infinite}
+.lowfx .cropwin .e{animation:none}
+.cropwin .t{font-size:13.5px;font-weight:900;color:var(--soil-d);margin-top:5px}
+.areaviz{margin-top:12px;background:#FFF;border-radius:var(--r-m);padding:11px 10px 9px;border:2px solid #EFE6D2}
+.areaviz svg{width:100%;height:auto;display:block;max-height:50dvh;margin:0 auto}
+.areaviz .cap{text-align:center;font-size:12.5px;color:var(--ink-soft);font-weight:800;padding:8px 4px 2px;line-height:1.6}
+.areaviz .legend{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;font-weight:800}
+.areaviz .legend span{display:inline-flex;align-items:center;gap:5px;background:#F7F3E6;padding:4px 9px;border-radius:99px}
+.areaviz .legend i{width:14px;height:14px;border-radius:4px;display:inline-block;flex:none}
+.areaviz .eq{margin-top:11px;background:#F1F8EC;border-radius:var(--r-m);padding:12px 8px;
+  text-align:center;font-size:clamp(15px,4.2vw,18px);font-weight:900;line-height:2.15;color:var(--soil-d)}
+.shopgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:8px}
+.item{background:#FFF;border:3px solid #F0E6D0;border-radius:var(--r-m);padding:13px 9px;
+  display:flex;flex-direction:column;align-items:center;gap:5px;box-shadow:0 5px 0 rgba(58,42,28,.13);transition:transform .1s}
+.item:not(:disabled):active{transform:translateY(4px);box-shadow:0 1px 0 rgba(58,42,28,.13)}
+.item .e{font-size:30px;line-height:1}
+.item .tt{font-size:12.5px;font-weight:900;line-height:1.35}
+.item .pr{font-family:var(--mono);font-size:12.5px;font-weight:900;color:var(--sun-d)}
+.item:disabled{opacity:.42}
+.item.bought{border-color:var(--leaf);background:#F1F8EC}
+.item.bought .pr{color:var(--leaf-d)}
+/* 도감 */
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:6px}
+.dc{background:#FFF;border:2.5px solid #EFE6D2;border-radius:var(--r-m);padding:9px 4px;text-align:center}
+.dc.locked{background:#F1ECE0;opacity:.5}
+.dc .e{font-size:26px;display:block;filter:none}
+.dc.locked .e{filter:grayscale(1) opacity(.45)}
+.dc .n{font-size:10.5px;font-weight:900;margin-top:3px}
+.dc .q{font-size:9px;color:var(--ink-soft);font-weight:700;margin-top:2px}
+#zoneCard{text-align:center}
+#zoneCard .big{font-size:64px;display:block;margin:4px 0 8px;animation:hop 1s ease-in-out infinite}
+.lowfx #zoneCard .big{animation:none}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+
+/* ---------------- 결과 ---------------- */
+.rhero{text-align:center;padding:20px 10px 4px}
+.rhero .stars{font-size:44px;letter-spacing:6px}
+.rhero .rank{font-size:clamp(25px,6.6vw,35px);font-weight:900;color:var(--soil-d);margin-top:6px;text-shadow:0 3px 0 #fff}
+.rhero small{display:block;font-size:13px;color:var(--ink-soft);font-weight:800;margin-top:5px}
+/* 한 줄 총평 */
+.verdict{margin:14px auto 0;max-width:600px;background:var(--card);border:4px solid #fff;border-radius:var(--r-l);
+  padding:14px 16px;box-shadow:var(--sh-m);font-size:14.5px;font-weight:800;line-height:1.75;
+  color:var(--ink);text-align:left;display:flex;gap:11px;align-items:flex-start}
+.verdict .em{font-size:30px;flex:none;line-height:1.1}
+/* 막대 그래프 */
+.bars{display:grid;gap:11px}
+.bar{display:grid;grid-template-columns:64px 1fr 58px;align-items:center;gap:9px}
+.bar .nm{font-size:12.5px;font-weight:900}
+.bar .track{height:20px;background:#EFE6D2;border-radius:99px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.12)}
+.bar .fill{height:100%;border-radius:99px;transition:width .9s cubic-bezier(.2,.9,.3,1);
+  background:linear-gradient(90deg,var(--leaf-l),var(--leaf))}
+.bar .fill.mid{background:linear-gradient(90deg,#FFE07A,var(--sun))}
+.bar .fill.low{background:linear-gradient(90deg,#FFAFB6,var(--berry))}
+.bar .pc{font-family:var(--mono);font-size:12.5px;font-weight:900;text-align:right}
+/* 문제별 기록 막대 */
+#resChart{display:flex;align-items:flex-end;gap:3px;height:96px;padding:6px 2px 0;
+  background:#FFF;border:3px solid #F0E6D0;border-radius:var(--r-m);overflow-x:auto}
+#resChart .cb{flex:1;min-width:9px;border-radius:5px 5px 0 0;background:var(--leaf);position:relative;
+  animation:grow .7s cubic-bezier(.2,1.1,.35,1) backwards}
+#resChart .cb.retry{background:var(--sun)}
+@keyframes grow{from{height:0!important;opacity:0}to{opacity:1}}
+.lowfx #resChart .cb{animation:none}
+.chartleg{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;font-size:11px;font-weight:800;color:var(--ink-soft)}
+.chartleg span{display:inline-flex;align-items:center;gap:5px;background:#F7F1E2;padding:4px 9px;border-radius:99px}
+.chartleg i{width:12px;height:12px;border-radius:3px;display:inline-block}
+/* 작물·꾸미기 한 줄 진열 */
+.cropline{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;background:#FFF8E4;
+  border:3px solid #fff;border-radius:var(--r-m);padding:12px 10px;font-size:26px;line-height:1.35;
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.06);min-height:60px;align-items:center}
+.cropline .none{font-size:13px;font-weight:800;color:var(--ink-soft)}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;max-width:600px;margin:0 auto}
+.cellr{background:#FFF;border:3px solid #fff;border-radius:var(--r-m);padding:13px;box-shadow:0 5px 0 rgba(58,42,28,.14)}
+.cellr .k{font-size:11px;color:var(--ink-soft);font-weight:800}
+.cellr .v{font-family:var(--mono);font-size:23px;font-weight:900;margin-top:3px}
+.cellr .v.g{color:var(--leaf-d)} .cellr .v.y{color:var(--sun-d)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.bdg{background:#FFF8E6;border:2.5px solid #EFE4CC;border-radius:var(--r-m);padding:11px 6px;text-align:center;opacity:.35}
+.bdg.got{opacity:1;border-color:var(--sun);background:#FFF3C4}
+.bdg .e{font-size:24px;display:block}
+.bdg .n{font-size:10.5px;font-weight:900;margin-top:4px;line-height:1.35;word-break:keep-all}
+.review{display:grid;gap:9px}
+.rv{background:#FFF;border-radius:var(--r-m);padding:13px 14px;border-left:5px solid var(--berry);box-shadow:var(--sh-s)}
+.rv .q{font-size:13.5px;font-weight:800;line-height:1.9;word-break:keep-all}
+.rv .a{display:flex;gap:14px;margin-top:8px;font-size:14px;font-weight:900;flex-wrap:wrap;align-items:center;line-height:2}
+.rv .a .mine{color:var(--berry)} .rv .a .right{color:var(--leaf-d)}
+.rv .why{font-size:12.5px;color:var(--ink-soft);margin-top:7px;line-height:1.95;font-weight:600;word-break:keep-all}
+.empty-note{text-align:center;color:var(--leaf-d);font-weight:900;padding:18px;font-size:15px}
+
+/* ---------- 화면이 낮을 때 자동 축소 (노트북·가로 태블릿) ---------- */
+@media (max-height:820px){
+  #farmStrip{height:104px}
+  #farmBack{bottom:40px;height:46px}
+  .deco.back{bottom:64px;font-size:19px} .deco.mid{bottom:38px;font-size:28px} .deco.front{bottom:10px;font-size:34px}
+  .story{font-size:clamp(14px,3.6vw,16.5px);line-height:1.95}
+  .ask{font-size:clamp(13.5px,3.4vw,15.5px);line-height:1.9;padding:11px 13px;margin-top:9px}
+  .qbody{padding:12px 14px 13px}
+  .qhead{padding:7px 13px}
+  #playInner{gap:8px}
+  #gridArea{padding:11px 12px 12px}
+  .gridTitle{margin-bottom:9px;line-height:2}
+  #fracInput{min-height:66px;padding:7px 12px}
+  .slot{font-size:23px;padding:4px 7px;min-width:48px}
+  .key{padding:10px 0;font-size:19px}
+  #gridGo{padding:11px;margin-top:9px}
+}
+@media (max-height:680px){
+  #farmStrip{height:74px}
+  #farmBack{display:none}
+  .deco.back{bottom:44px;font-size:16px} .deco.mid{bottom:26px;font-size:23px} .deco.front{bottom:6px;font-size:27px}
+  .story{font-size:14px;line-height:1.85}
+  .ask{font-size:13.5px;line-height:1.8}
+  #gridLegend{display:none}
+  .key{padding:8px 0;font-size:18px}
+  #fracInput{min-height:58px}
+  .slot{font-size:20px}
+  #grid3 svg{max-height:34dvh}
+}
+@media(min-width:760px){.grid4{grid-template-columns:repeat(4,1fr)}.shopgrid{grid-template-columns:repeat(4,1fr)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage" class="z1">
+<audio id="bgmEl" loop preload="auto"></audio>
+<div id="sun"></div>
+<div class="cloud" id="c1"></div><div class="cloud" id="c2"></div>
+<span class="leafy" style="left:12%;animation-duration:15s">🍃</span>
+<span class="leafy" style="left:46%;animation-duration:19s;animation-delay:5s">🌸</span>
+<span class="leafy" style="left:78%;animation-duration:17s;animation-delay:9s">🍃</span>
+<div id="hills"><svg viewBox="0 0 800 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 138 Q 90 92 180 122 Q 250 146 320 116 Q 400 82 480 118 Q 560 152 640 120 Q 720 92 800 128 L800 220 L0 220Z" fill="#8FE38C"/>
+  <path d="M0 138 Q 90 92 180 122 Q 250 146 320 116 Q 400 82 480 118 Q 560 152 640 120 Q 720 92 800 128" fill="none" stroke="#B6F0AE" stroke-width="7"/>
+  <path d="M0 168 Q 110 132 220 160 Q 320 186 420 156 Q 520 128 620 160 Q 710 188 800 162 L800 220 L0 220Z" fill="#5FCB74"/>
+  <path d="M0 168 Q 110 132 220 160 Q 320 186 420 156 Q 520 128 620 160 Q 710 188 800 162" fill="none" stroke="#86DE94" stroke-width="6"/>
+  <path d="M0 196 Q 140 172 280 194 Q 420 216 560 192 Q 690 172 800 194 L800 220 L0 220Z" fill="#38AC5C"/>
+  <g fill="#2E9A50"><ellipse cx="96" cy="150" rx="19" ry="15"/><rect x="92" y="150" width="8" height="14" rx="3"/></g>
+  <g fill="#2E9A50"><ellipse cx="368" cy="140" rx="23" ry="18"/><rect x="363" y="140" width="9" height="16" rx="3"/></g>
+  <g fill="#2E9A50"><ellipse cx="690" cy="150" rx="18" ry="14"/><rect x="686" y="150" width="8" height="14" rx="3"/></g>
+</svg></div>
+
+<!-- =========================================================
+     문항 데이터 — 선생님은 여기만 고치시면 됩니다
+     ---------------------------------------------------------
+     type    : 'grid'  가로·세로를 알려주고 밭을 나누게 함
+               'rgrid' 새싹 칸 수만 알려주고 스스로 찾게 함(정답 여러 개)
+               'plain' 계산만
+     grid    : {a,b,c,d}      가로 a/b · 세로 c/d  (열 b개, 행 d개)
+     rgrid   : {b,d,hit}      열 b개, 행 d개, 새싹 hit칸 만들기
+     predict : {q,opts,ans,why}  계산 전 크기 어림 맞히기
+     pre     : {label,ans}    대분수→가분수 같은 준비 단계
+     ans     : {w,n,d}        정수 답이면 {w:14,n:0,d:0}
+     crop    : {e,name}       맞히면 도감에 등록되는 작물
+     ========================================================= -->
+<script>
+/* ===== 배경음악 =====
+   비워 두면 게임이 직접 만든 잔잔한 멜로디가 흐릅니다.
+   직접 준비한 음악을 쓰려면 아래 둘 중 하나를 넣으세요.
+     ① 같은 폴더에 파일을 두고 :  const BGM_URL = "bgm.mp3";
+     ② 파일 하나로 배포하려면   :  const BGM_URL = "data:audio/mpeg;base64,....";
+   반드시 저작권 문제가 없는 음원(직접 제작·구매·CC0)을 사용하세요. */
+const BGM_URL = "";
+
+const QUIZ_DATA = [
+/* ===== 구역 1 · 씨앗밭 (7) ===== */
+{
+  diff:'하', type:'grid', grid:{a:1,b:2,c:1,d:3}, crop:{e:'🥕',name:'당근'},
+  story:'텃밭 한 칸을 가로로 <em>2등분</em>, 세로로 <em>3등분</em> 했어요. 가로로 <b class="mx fc-col">1/2</b>, 세로로 <b class="mx fc-row">1/3</b>만큼 씨앗을 심으려고 합니다.',
+  ask:'씨앗을 심은 부분은 전체의 얼마인가요?',
+  ans:{w:0,n:1,d:6},
+  hint:'가로 2칸, 세로 3칸이면 밭 전체는 2×3=6칸이에요. 그중 겹쳐서 새싹이 난 칸은 몇 칸인가요?',
+  explain:'분모끼리 곱하면 전체 칸 수(2×3=6), 분자끼리 곱하면 심은 칸 수(1×1=1). 그래서 1/2 × 1/3 = 1/6 입니다.'
+},
+{
+  diff:'하', type:'grid', grid:{a:2,b:3,c:2,d:5}, crop:{e:'🥔',name:'감자'},
+  story:'이번 밭은 가로 <em>3등분</em>, 세로 <em>5등분</em>입니다. 가로로 <b class="mx fc-col">2/3</b>, 세로로 <b class="mx fc-row">2/5</b>만큼 심어 보세요.',
+  ask:'심은 부분은 전체의 얼마인가요?',
+  ans:{w:0,n:4,d:15},
+  hint:'전체는 3×5=15칸입니다. 가로 2줄과 세로 2줄이 겹치면 몇 칸이 될까요?',
+  explain:'2/3 × 2/5 = 4/15. 분자는 분자끼리, 분모는 분모끼리 곱합니다.'
+},
+{
+  diff:'하', type:'grid', grid:{a:3,b:4,c:1,d:2}, crop:{e:'🧅',name:'양파'},
+  story:'가로 <em>4등분</em>, 세로 <em>2등분</em>한 밭입니다. 가로로 <b class="mx fc-col">3/4</b>, 세로로 <b class="mx fc-row">1/2</b>만큼 심어 보세요.',
+  ask:'심은 부분은 전체의 얼마인가요?',
+  ans:{w:0,n:3,d:8},
+  hint:'전체 4×2=8칸 중에서 새싹이 난 칸을 세어 보세요.',
+  explain:'3/4 × 1/2 = 3/8 입니다.'
+},
+{
+  diff:'하', type:'plain', crop:{e:'🥬',name:'상추'},
+  story:'화분 한 개에 거름이 <b class="mx">2/7</b> kg씩 필요합니다. 화분 <em>3개</em>에 거름을 주려고 해요.',
+  ask:'거름은 모두 몇 kg 필요한가요?',
+  ans:{w:0,n:6,d:7}, unit:'kg',
+  hint:'2/7을 3번 더하는 것과 같아요. 분모는 그대로 두고 분자에 3을 곱합니다.',
+  explain:'2/7 × 3 = 6/7 kg입니다. 분모는 그대로, 분자에만 자연수를 곱합니다.'
+},
+{
+  diff:'하', type:'plain', crop:{e:'🍅',name:'토마토'},
+  story:'물뿌리개 한 통에 물이 <b class="mx">3/5</b> L 들어갑니다. <em>4통</em>을 부었어요.',
+  ask:'부은 물은 모두 몇 L인가요?',
+  ans:{w:2,n:2,d:5}, unit:'L',
+  hint:'3/5 × 4 = 12/5 입니다. 12/5는 1보다 크니 대분수로 바꿔야 해요. 12 ÷ 5 = 2 … 2',
+  explain:'3/5 × 4 = 12/5 = 2 2/5 L. 답이 가분수가 되면 대분수로 고쳐 씁니다.'
+},
+{
+  diff:'하', type:'plain', crop:{e:'🌽',name:'옥수수'},
+  story:'꽃밭 <em>4곳</em>에 각각 <b class="mx">5/8</b> kg씩 씨앗을 뿌렸습니다.',
+  ask:'뿌린 씨앗은 모두 몇 kg인가요?',
+  ans:{w:2,n:1,d:2}, unit:'kg',
+  hint:'4 × 5/8 = 20/8 이에요. 20과 8을 4로 나누어 약분한 다음 대분수로 바꿔 보세요.',
+  explain:'4 × 5/8 = 20/8 = 5/2 = 2 1/2 kg. 약분을 먼저 하면 계산이 훨씬 쉬워집니다.'
+},
+{
+  diff:'하', type:'plain', crop:{e:'🫑',name:'피망'},
+  predict:{q:'5/8 × 8 의 답은 8보다 클까요, 작을까요?', opts:['8보다 크다','8보다 작다','8과 같다'], ans:1,
+    why:'1보다 작은 진분수를 곱하면 결과는 원래 수보다 <b>작아집니다</b>. 5/6은 1보다 작으니까요.'},
+  story:'모종 한 판을 심는 데 <b class="mx">5/6</b> 시간이 걸립니다. <em>8판</em>을 심었어요.',
+  ask:'모두 몇 시간이 걸렸나요?',
+  ans:{w:6,n:2,d:3}, unit:'시간',
+  hint:'5/6 × 8 = 40/6. 40과 6을 2로 약분하면 20/3이 되고, 20 ÷ 3 = 6 … 2 입니다.',
+  explain:'5/6 × 8 = 40/6 = 20/3 = 6 2/3 시간입니다. 8보다 작아진 것을 확인해 보세요.'
+},
+
+/* ===== 구역 2 · 햇살 농장 (8) ===== */
+{
+  diff:'중', type:'grid', grid:{a:4,b:7,c:3,d:8}, crop:{e:'🍓',name:'딸기'},
+  story:'넓은 밭을 가로 <em>7등분</em>, 세로 <em>8등분</em> 했습니다. 가로로 <b class="mx fc-col">4/7</b>, 세로로 <b class="mx fc-row">3/8</b>만큼 심어 보세요.',
+  ask:'심은 부분은 전체의 얼마인가요? (기약분수로)',
+  ans:{w:0,n:3,d:14},
+  hint:'전체는 7×8=56칸, 심은 칸은 4×3=12칸이에요. 12/56은 4로 약분할 수 있습니다.',
+  explain:'4/7 × 3/8 = 12/56 = 3/14. 답은 항상 기약분수로 정리합니다.'
+},
+{
+  diff:'중', type:'grid', grid:{a:3,b:4,c:4,d:5}, crop:{e:'🍉',name:'수박'},
+  story:'가로 <em>4등분</em>, 세로 <em>5등분</em>한 밭에 가로로 <b class="mx fc-col">3/4</b>, 세로로 <b class="mx fc-row">4/5</b>만큼 심어 보세요.',
+  ask:'심은 부분은 전체의 얼마인가요? (기약분수로)',
+  ans:{w:0,n:3,d:5},
+  hint:'전체 20칸 중 12칸이 겹칩니다. 12/20을 4로 약분해 보세요.',
+  explain:'3/4 × 4/5 = 12/20 = 3/5 입니다.'
+},
+{
+  diff:'중', type:'plain', crop:{e:'🍈',name:'참외'},
+  pre:{label:'먼저 1 3/4 을 가분수로 바꾸면?', ans:{w:0,n:7,d:4,improper:true}},
+  story:'퇴비 한 포대의 무게가 <b class="mx">1 3/4</b> kg입니다. <em>2포대</em>를 옮겼어요.',
+  ask:'옮긴 퇴비는 모두 몇 kg인가요?',
+  ans:{w:3,n:1,d:2}, unit:'kg',
+  hint:'1 3/4 = 7/4 입니다. 7/4 × 2 = 14/4 이고, 2로 약분하면 7/2 = 3 1/2 이에요.',
+  explain:'대분수는 반드시 가분수로 바꾼 뒤 곱합니다. 7/4 × 2 = 14/4 = 7/2 = 3 1/2 kg.'
+},
+{
+  diff:'중', type:'plain', crop:{e:'🥒',name:'오이'},
+  pre:{label:'먼저 2 1/8 을 가분수로 바꾸면?', ans:{w:0,n:17,d:8,improper:true}},
+  story:'화단 한 줄의 길이가 <b class="mx">2 1/8</b> m입니다. 같은 줄을 <em>2줄</em> 만들었어요.',
+  ask:'화단의 전체 길이는 몇 m인가요?',
+  ans:{w:4,n:1,d:4}, unit:'m',
+  hint:'2 1/8 = 17/8. 17/8 × 2 = 34/8 이고, 2로 약분하면 17/4 = 4 1/4 입니다.',
+  explain:'2 1/8 × 2 = 17/8 × 2 = 34/8 = 17/4 = 4 1/4 m입니다.'
+},
+{
+  diff:'중', type:'plain', crop:{e:'🎃',name:'호박'},
+  predict:{q:'3 × 1 2/5 의 답은 3보다 클까요, 작을까요?', opts:['3보다 크다','3보다 작다','3과 같다'], ans:0,
+    why:'1보다 큰 대분수를 곱하면 결과는 원래 수보다 <b>커집니다</b>. 1 2/5는 1보다 크니까요.'},
+  story:'수레 <em>3대</em>에 흙을 각각 <b class="mx">1 2/5</b> kg씩 실었습니다.',
+  ask:'실은 흙은 모두 몇 kg인가요?',
+  ans:{w:4,n:1,d:5}, unit:'kg',
+  hint:'1 2/5 = 7/5 입니다. 3 × 7/5 = 21/5 이고, 21 ÷ 5 = 4 … 1 이에요.',
+  explain:'3 × 1 2/5 = 3 × 7/5 = 21/5 = 4 1/5 kg입니다. 3보다 커진 것을 확인해 보세요.'
+},
+{
+  diff:'중', type:'plain', crop:{e:'🍆',name:'가지'},
+  predict:{q:'10 × 4/5 의 답은 10보다 클까요, 작을까요?', opts:['10보다 크다','10보다 작다','10과 같다'], ans:1,
+    why:'4/5는 1보다 작은 진분수예요. 그래서 곱한 결과도 10보다 <b>작아집니다</b>.'},
+  story:'어제 밭일을 <em>10시간</em> 했고, 오늘은 어제의 <b class="mx">4/5</b>만큼 일했습니다.',
+  ask:'오늘 일한 시간은 몇 시간인가요?',
+  ans:{w:8,n:0,d:0}, unit:'시간',
+  hint:'10 × 4/5 = 40/5 입니다. 40을 5로 나누면 나머지 없이 딱 떨어져요.',
+  explain:'10 × 4/5 = 40/5 = 8시간. 계산 결과가 자연수가 되기도 합니다.'
+},
+{
+  diff:'중', type:'plain', crop:{e:'🥦',name:'브로콜리'},
+  story:'밭 전체의 <b class="mx">2/3</b>가 채소밭이고, 그 채소밭의 <b class="mx">1/4</b>이 상추밭입니다. 상추밭의 <b class="mx">7/10</b>을 오늘 수확했어요.',
+  ask:'오늘 수확한 부분은 밭 전체의 얼마인가요?',
+  ans:{w:0,n:7,d:60},
+  hint:'세 분수를 한꺼번에 곱합니다. 분자는 2×1×7, 분모는 3×4×10 이에요.',
+  explain:'2/3 × 1/4 × 7/10 = 14/120 = 7/60. 세 분수도 분자끼리, 분모끼리 곱한 뒤 약분합니다.'
+},
+{
+  diff:'중', type:'rgrid', rgrid:{b:4,d:6,hit:6}, crop:{e:'🌶️',name:'고추'},
+  story:'이번에는 반대예요! 밭은 가로 <em>4등분</em>, 세로 <em>6등분</em> 되어 있습니다. 새싹이 정확히 <em>6칸</em> 나도록 여러분이 직접 나눠 보세요.',
+  ask:'새싹 6칸을 만든 뒤, 그 부분이 전체의 얼마인지 쓰세요.',
+  ans:{w:0,n:1,d:4},
+  hint:'가로 칸 수 × 세로 칸 수 = 6이 되면 됩니다. 1×6, 2×3, 3×2 … 방법이 여러 가지예요!',
+  explain:'전체 4×6=24칸 중 6칸이므로 6/24 = 1/4. 어떤 방법으로 나누어도 답은 같습니다. 2/4 × 3/6 도, 3/4 × 2/6 도 모두 1/4이에요.'
+},
+
+/* ===== 구역 3 · 무지개 대농장 (7) ===== */
+{
+  diff:'상', type:'plain', crop:{e:'🍎',name:'사과'},
+  predict:{q:'7 × 1 2/5 의 답은 7보다 클까요, 작을까요?', opts:['7보다 크다','7보다 작다','7과 같다'], ans:0,
+    why:'1 2/5는 1보다 크므로 곱한 결과도 7보다 <b>커집니다</b>.'},
+  story:'직사각형 밭의 가로가 <em>7 m</em>입니다. 세로는 가로의 <b class="mx">1 2/5</b>배입니다.',
+  ask:'이 밭의 세로는 몇 m인가요?',
+  ans:{w:9,n:4,d:5}, unit:'m',
+  hint:'1 2/5 = 7/5 입니다. 7 × 7/5 = 49/5 이고, 49 ÷ 5 = 9 … 4 예요.',
+  explain:'7 × 1 2/5 = 7 × 7/5 = 49/5 = 9 4/5 m입니다.'
+},
+{
+  diff:'상', type:'plain', crop:{e:'🍐',name:'배'},
+  pre:{label:'먼저 2 2/5 를 가분수로 바꾸면?', ans:{w:0,n:12,d:5,improper:true}},
+  story:'울타리 한 구간이 <b class="mx">2 2/5</b> m입니다. 새 울타리는 이것의 <b class="mx">1 1/6</b>배로 만들려고 합니다.',
+  ask:'새 울타리 한 구간은 몇 m인가요?',
+  ans:{w:2,n:4,d:5}, unit:'m',
+  hint:'12/5 × 7/6 입니다. 곱하기 전에 12와 6을 6으로 약분하면 2/5 × 7 = 14/5 가 돼요.',
+  explain:'2 2/5 × 1 1/6 = 12/5 × 7/6 = 84/30 = 14/5 = 2 4/5 m. 두 대분수 모두 가분수로 바꿔야 합니다.'
+},
+{
+  diff:'상', type:'plain', crop:{e:'🍇',name:'포도'},
+  story:'두 밭의 수확량을 비교합니다.<br>㉠ 밭: <em>3</em> × <b class="mx">1 1/7</b> 자루<br>㉡ 밭: <em>5</em> × <b class="mx">5/6</b> 자루',
+  ask:'더 많이 수확한 밭의 수확량을 쓰세요.',
+  ans:{w:4,n:1,d:6}, unit:'자루',
+  hint:'㉠은 3 × 8/7 = 24/7, ㉡은 5 × 5/6 = 25/6 입니다. 두 값을 각각 대분수로 바꿔 비교해 보세요.',
+  explain:'㉠ 24/7 = 3 3/7, ㉡ 25/6 = 4 1/6. 더 큰 쪽은 ㉡의 4 1/6 자루입니다.'
+},
+{
+  diff:'상', type:'plain', crop:{e:'🍑',name:'복숭아'},
+  story:'수확한 감자를 <em>8상자</em>에 똑같이 나누어 담았더니 한 상자에 <b class="mx">1 3/4</b> kg씩 들어갔습니다.',
+  ask:'수확한 감자는 모두 몇 kg인가요?',
+  ans:{w:14,n:0,d:0}, unit:'kg',
+  hint:'나누기 전으로 되돌리려면 반대로 곱해야 해요. 1 3/4 = 7/4 이고, 7/4 × 8 을 계산해 보세요.',
+  explain:'(어떤 수) ÷ 8 = 1 3/4 이므로 어떤 수 = 7/4 × 8 = 56/4 = 14 kg입니다.'
+},
+{
+  diff:'상', type:'plain', crop:{e:'🥝',name:'키위'},
+  story:'어떤 밭의 넓이를 <b class="mx">5/8</b>로 나누었더니 <em>12</em>가 되었습니다.',
+  ask:'처음 밭의 넓이는 얼마인가요?',
+  ans:{w:7,n:1,d:2},
+  hint:'□ ÷ 5/8 = 12 이므로 □ = 12 × 5/8 입니다. 60/8을 4로 약분해 보세요.',
+  explain:'□ = 12 × 5/8 = 60/8 = 15/2 = 7 1/2 입니다.'
+},
+{
+  diff:'상', type:'plain', crop:{e:'🍊',name:'감귤'},
+  story:'<b class="mx">1 1/6</b>에 어떤 수를 <em>곱해야</em> 하는데, 잘못해서 <em>더했더니</em> <b class="mx">2 5/6</b>가 되었습니다.',
+  ask:'바르게 계산하면 얼마인가요?',
+  ans:{w:1,n:17,d:18},
+  hint:'먼저 어떤 수를 찾으세요. 2 5/6 − 1 1/6 = 1 4/6 = 5/3 입니다. 그다음 7/6 × 5/3을 계산해요.',
+  explain:'어떤 수 = 2 5/6 − 1 1/6 = 5/3. 바르게 계산하면 7/6 × 5/3 = 35/18 = 1 17/18 입니다.'
+},
+{
+  diff:'상', type:'rgrid', rgrid:{b:7,d:6,hit:15}, crop:{e:'🌻',name:'해바라기'},
+  story:'마지막 밭입니다. 가로 <em>7등분</em>, 세로 <em>6등분</em>된 밭에 새싹이 정확히 <em>15칸</em> 나도록 직접 나눠 보세요.',
+  ask:'새싹 15칸을 만든 뒤, 그 부분이 전체의 얼마인지 쓰세요.',
+  ans:{w:0,n:5,d:14},
+  hint:'가로 칸 수 × 세로 칸 수 = 15가 되어야 해요. 15 = 3×5 = 5×3 입니다. 가로는 7칸, 세로는 6칸까지만 가능해요.',
+  explain:'전체 7×6=42칸 중 15칸이므로 15/42 = 5/14. 3/7 × 5/6 로 나누어도, 5/7 × 3/6 으로 나누어도 답은 같습니다.'
+}
+];
+
+const ZONES = [
+  {name:'씨앗밭',       icon:'🌱', count:7, next:'햇살 농장'},
+  {name:'햇살 농장',    icon:'🌻', count:8, next:'무지개 대농장'},
+  {name:'무지개 대농장', icon:'🌈', count:7, next:''}
+];
+
+/* 상점 — layer: back(멀리) / mid / front(가까이) */
+const SHOP = [
+  {id:'ticket', e:'💧', price:10, title:'물뿌리개', repeat:true},
+  {id:'pine',   e:'🌲', price:10, title:'뒷산 나무', pos:12, layer:'back'},
+  {id:'sun',    e:'🌻', price:12, title:'해바라기', pos:14, layer:'front'},
+  {id:'pump',   e:'🎃', price:16, title:'호박밭',   pos:38, layer:'front'},
+  {id:'bee',    e:'🐝', price:15, title:'꿀벌',     pos:60, layer:'mid', fly:true},
+  {id:'tree',   e:'🌳', price:18, title:'사과나무', pos:30, layer:'mid'},
+  {id:'fount',  e:'⛲', price:22, title:'분수대',   pos:52, layer:'mid'},
+  {id:'house',  e:'🏡', price:26, title:'오두막',   pos:74, layer:'mid'},
+  {id:'rain',   e:'🌈', price:30, title:'무지개',   pos:86, layer:'back'}
+];
+
+const AVATARS = ['🧑‍🌾','👩‍🌾','🐰','🐿️','🦔','🐤','🐮','🐷','🦉','🐢','🦊','🐻','🐨','🐼','🦋','🐝','🌻','🍀','🍎','🥕','🌽','🍓','🌷','🐛'];
+
+const BADGES = [
+  {id:'perfect', e:'🏆', n:'완벽한 수확', desc:'모든 문제를 한 번에 정답'},
+  {id:'nohint',  e:'🧠', n:'힌트 없이',   desc:'힌트를 한 번도 보지 않음'},
+  {id:'combo5',  e:'🔥', n:'콤보 5',      desc:'최고 콤보 5 이상'},
+  {id:'combo10', e:'⚡', n:'콤보 10',     desc:'최고 콤보 10 이상'},
+  {id:'grid',    e:'🌱', n:'밭갈이 명인', desc:'밭 나누기를 모두 한 번에 성공'},
+  {id:'reduce',  e:'✂️', n:'약분 달인',   desc:'약분 실수 0회'},
+  {id:'seer',    e:'🔮', n:'예측왕',      desc:'수확 예측을 모두 적중'},
+  {id:'dex',     e:'📖', n:'도감 완성',   desc:'작물을 모두 모음'}
+];
+</script>
+
+
+<script>
+/* =========================================================
+   문항 랜덤 생성기
+   ---------------------------------------------------------
+   플레이할 때마다 숫자가 새로 뽑힙니다. 문제의 성격과 난이도는
+   그대로 유지하고 수만 바뀌므로, 같은 게임을 여러 차시에 쓸 수 있습니다.
+   랜덤을 끄고 고정 문항으로 쓰려면 아래를 false 로 바꾸세요.
+   ========================================================= */
+const RANDOMIZE = true;
+
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function _g(a,b){return b?_g(b,a%b):Math.abs(a);}
+function red(n,d){const g=_g(n,d)||1;return [n/g,d/g];}
+function mix(n,d){const [a,b]=red(n,d);const w=Math.floor(a/b),r=a%b;return r?{w:w,n:r,d:b}:{w:a/b,n:0,d:0};}
+function fs(o){return o.d?(o.w?o.w+' '+o.n+'/'+o.d:o.n+'/'+o.d):''+o.w;}
+function steps(rawN,rawD,ans){           // 12/56 = 3/14 처럼 중간 과정 표기
+  const s=rawN+'/'+rawD, f=fs(ans);
+  return (s===f)? f : (s+' = '+f);
+}
+function tryGen(fn){ for(let t=0;t<400;t++){ const r=fn(); if(r) return r; } return null; }
+
+/* 진분수×진분수 밭 나누기 */
+function mkGrid(bMin,bMax,dMin,dMax,aMin,cMin,needReduce){
+  return tryGen(function(){
+    const b=R(bMin,bMax), d=R(dMin,dMax);
+    if(b*d>72) return null;
+    const a=R(aMin,b-1), c=R(cMin,d-1);
+    if(a<1||c<1) return null;
+    if(needReduce && _g(a*c,b*d)===1) return null;
+    if(!needReduce && _g(a*c,b*d)>1) return null;
+    const ans=mix(a*c,b*d);
+    if(!ans.d) return null;                       // 밭 문제는 진분수 답만
+    return {a:a,b:b,c:c,d:d,ans:ans};
+  });
+}
+/* 거꾸로 밭갈이: 방법이 2가지 이상 나오는 목표 칸 수 */
+function mkRGrid(bMin,bMax,dMin,dMax){
+  return tryGen(function(){
+    const b=R(bMin,bMax), d=R(dMin,dMax);
+    const cand=[];
+    for(let h=2;h<b*d;h++){
+      let cnt=0;
+      for(let x=1;x<=b;x++) if(h%x===0 && h/x<=d && h/x>=1) cnt++;
+      if(cnt>=2) cand.push(h);
+    }
+    if(!cand.length) return null;
+    const hit=cand[R(0,cand.length-1)];
+    const ans=mix(hit,b*d);
+    if(!ans.d) return null;
+    const ways=[];
+    for(let x=1;x<=b;x++) if(hit%x===0 && hit/x<=d) ways.push(x+'×'+(hit/x));
+    return {b:b,d:d,hit:hit,ans:ans,ways:ways};
+  });
+}
+function predictOf(base,val){                     // 크다/작다/같다 자동 판정
+  return val>base?0:(val<base?1:2);
+}
+
+/* ---- 문항별 생성기 (QUIZ_DATA 순서와 1:1) ---- */
+const MAKERS=[
+/* 1 */ function(){ const g=mkGrid(2,4,3,5,1,1,false); if(!g) return null;
+  return {grid:{a:g.a,b:g.b,c:g.c,d:g.d}, ans:g.ans,
+    story:'텃밭 한 칸을 가로로 <em>'+g.b+'등분</em>, 세로로 <em>'+g.d+'등분</em> 했어요. 가로로 <b class="mx fc-col">'+g.a+'/'+g.b+'</b>, 세로로 <b class="mx fc-row">'+g.c+'/'+g.d+'</b>만큼 씨앗을 심으려고 합니다.',
+    ask:'씨앗을 심은 부분은 전체의 얼마인가요?',
+    hint:'가로 '+g.b+'칸, 세로 '+g.d+'칸이면 밭 전체는 '+g.b+'×'+g.d+'='+(g.b*g.d)+'칸이에요. 그중 겹쳐서 새싹이 난 칸은 몇 칸인가요?',
+    explain:'분모끼리 곱하면 전체 칸 수('+g.b+'×'+g.d+'='+(g.b*g.d)+'), 분자끼리 곱하면 심은 칸 수('+g.a+'×'+g.c+'='+(g.a*g.c)+'). 그래서 '+g.a+'/'+g.b+' × '+g.c+'/'+g.d+' = '+fs(g.ans)+' 입니다.'};},
+/* 2 */ function(){ const g=mkGrid(3,5,4,6,2,2,false); if(!g) return null;
+  return {grid:{a:g.a,b:g.b,c:g.c,d:g.d}, ans:g.ans,
+    story:'이번 밭은 가로 <em>'+g.b+'등분</em>, 세로 <em>'+g.d+'등분</em>입니다. 가로로 <b class="mx fc-col">'+g.a+'/'+g.b+'</b>, 세로로 <b class="mx fc-row">'+g.c+'/'+g.d+'</b>만큼 심어 보세요.',
+    ask:'심은 부분은 전체의 얼마인가요?',
+    hint:'전체는 '+g.b+'×'+g.d+'='+(g.b*g.d)+'칸입니다. 가로 '+g.a+'줄과 세로 '+g.c+'줄이 겹치면 몇 칸이 될까요?',
+    explain:g.a+'/'+g.b+' × '+g.c+'/'+g.d+' = '+fs(g.ans)+'. 분자는 분자끼리, 분모는 분모끼리 곱합니다.'};},
+/* 3 */ function(){ const g=mkGrid(3,5,2,3,2,1,false); if(!g) return null;
+  return {grid:{a:g.a,b:g.b,c:g.c,d:g.d}, ans:g.ans,
+    story:'가로 <em>'+g.b+'등분</em>, 세로 <em>'+g.d+'등분</em>한 밭입니다. 가로로 <b class="mx fc-col">'+g.a+'/'+g.b+'</b>, 세로로 <b class="mx fc-row">'+g.c+'/'+g.d+'</b>만큼 심어 보세요.',
+    ask:'심은 부분은 전체의 얼마인가요?',
+    hint:'전체 '+g.b+'×'+g.d+'='+(g.b*g.d)+'칸 중에서 새싹이 난 칸을 세어 보세요.',
+    explain:g.a+'/'+g.b+' × '+g.c+'/'+g.d+' = '+fs(g.ans)+' 입니다.'};},
+/* 4 진분수×자연수 → 진분수 */
+function(){ return tryGen(function(){
+  const d=R(5,9), k=R(2,4), n=R(1,Math.floor((d-1)/k));
+  if(n<1||_g(n,d)>1) return null; const ans=mix(n*k,d); if(!ans.d) return null;
+  return {ans:ans,
+    story:'화분 한 개에 거름이 <b class="mx">'+n+'/'+d+'</b> kg씩 필요합니다. 화분 <em>'+k+'개</em>에 거름을 주려고 해요.',
+    ask:'거름은 모두 몇 kg 필요한가요?', unit:'kg',
+    hint:n+'/'+d+'을 '+k+'번 더하는 것과 같아요. 분모는 그대로 두고 분자에 '+k+'를 곱합니다.',
+    explain:n+'/'+d+' × '+k+' = '+steps(n*k,d,ans)+' kg입니다. 분모는 그대로, 분자에만 자연수를 곱합니다.'};});},
+/* 5 진분수×자연수 → 대분수 */
+function(){ return tryGen(function(){
+  const d=R(3,8), n=R(1,d-1), k=R(3,6), t=n*k;
+  if(t<=d||_g(n,d)>1) return null; const ans=mix(t,d); if(!ans.d||!ans.w) return null;
+  return {ans:ans,
+    story:'물뿌리개 한 통에 물이 <b class="mx">'+n+'/'+d+'</b> L 들어갑니다. <em>'+k+'통</em>을 부었어요.',
+    ask:'부은 물은 모두 몇 L인가요?', unit:'L',
+    hint:n+'/'+d+' × '+k+' = '+t+'/'+d+'입니다. 1보다 크니 대분수로 바꿔야 해요. '+t+' ÷ '+ans.d+' 를 해 보세요.',
+    explain:n+'/'+d+' × '+k+' = '+steps(t,d,ans)+' L. 답이 가분수가 되면 대분수로 고쳐 씁니다.'};});},
+/* 6 자연수×진분수, 약분 필요 → 대분수 */
+function(){ return tryGen(function(){
+  const d=R(4,10), n=R(1,d-1), k=R(2,8);
+  if(_g(k,d)===1||_g(n,d)>1) return null; const t=n*k; if(t<=d) return null;
+  const ans=mix(t,d); if(!ans.d||!ans.w) return null;
+  return {ans:ans,
+    story:'꽃밭 <em>'+k+'곳</em>에 각각 <b class="mx">'+n+'/'+d+'</b> kg씩 씨앗을 뿌렸습니다.',
+    ask:'뿌린 씨앗은 모두 몇 kg인가요?', unit:'kg',
+    hint:k+' × '+n+'/'+d+' = '+t+'/'+d+'이에요. '+t+'와 '+d+'를 같은 수로 나누어 약분한 다음 대분수로 바꿔 보세요.',
+    explain:k+' × '+n+'/'+d+' = '+steps(t,d,ans)+' kg. 약분을 먼저 하면 계산이 훨씬 쉬워집니다.'};});},
+/* 7 진분수×자연수 + 예측 */
+function(){ return tryGen(function(){
+  const d=R(4,9), n=R(2,d-1), k=R(5,9), t=n*k;
+  if(t<=d||_g(n,d)>1) return null; const ans=mix(t,d); if(!ans.d||!ans.w) return null;
+  const val=t/d;
+  return {ans:ans,
+    predict:{q:n+'/'+d+' × '+k+' 의 답은 '+k+'보다 클까요, 작을까요?',
+      opts:[k+'보다 크다',k+'보다 작다',k+'과 같다'], ans:predictOf(k,val),
+      why:'1보다 작은 진분수를 곱하면 결과는 원래 수보다 <b>작아집니다</b>. '+n+'/'+d+'은 1보다 작으니까요.'},
+    story:'모종 한 판을 심는 데 <b class="mx">'+n+'/'+d+'</b> 시간이 걸립니다. <em>'+k+'판</em>을 심었어요.',
+    ask:'모두 몇 시간이 걸렸나요?', unit:'시간',
+    hint:n+'/'+d+' × '+k+' = '+t+'/'+d+'. 약분한 뒤 대분수로 바꿔 보세요.',
+    explain:n+'/'+d+' × '+k+' = '+steps(t,d,ans)+' 시간입니다. '+k+'보다 작아진 것을 확인해 보세요.'};});},
+/* 8 큰 격자 + 약분 */
+function(){ const g=mkGrid(5,7,6,8,2,2,true); if(!g) return null;
+  return {grid:{a:g.a,b:g.b,c:g.c,d:g.d}, ans:g.ans,
+    story:'넓은 밭을 가로 <em>'+g.b+'등분</em>, 세로 <em>'+g.d+'등분</em> 했습니다. 가로로 <b class="mx fc-col">'+g.a+'/'+g.b+'</b>, 세로로 <b class="mx fc-row">'+g.c+'/'+g.d+'</b>만큼 심어 보세요.',
+    ask:'심은 부분은 전체의 얼마인가요? (기약분수로)',
+    hint:'전체는 '+g.b+'×'+g.d+'='+(g.b*g.d)+'칸, 심은 칸은 '+g.a+'×'+g.c+'='+(g.a*g.c)+'칸이에요. 약분할 수 있습니다.',
+    explain:g.a+'/'+g.b+' × '+g.c+'/'+g.d+' = '+steps(g.a*g.c,g.b*g.d,g.ans)+'. 답은 항상 기약분수로 정리합니다.'};},
+/* 9 격자 + 약분 */
+function(){ const g=mkGrid(4,6,4,6,2,2,true); if(!g) return null;
+  return {grid:{a:g.a,b:g.b,c:g.c,d:g.d}, ans:g.ans,
+    story:'가로 <em>'+g.b+'등분</em>, 세로 <em>'+g.d+'등분</em>한 밭에 가로로 <b class="mx fc-col">'+g.a+'/'+g.b+'</b>, 세로로 <b class="mx fc-row">'+g.c+'/'+g.d+'</b>만큼 심어 보세요.',
+    ask:'심은 부분은 전체의 얼마인가요? (기약분수로)',
+    hint:'전체 '+(g.b*g.d)+'칸 중 '+(g.a*g.c)+'칸이 겹칩니다. 약분해 보세요.',
+    explain:g.a+'/'+g.b+' × '+g.c+'/'+g.d+' = '+steps(g.a*g.c,g.b*g.d,g.ans)+' 입니다.'};},
+/* 10 대분수×자연수 (준비 단계) */
+function(){ return tryGen(function(){
+  const d=R(2,8), n=R(1,d-1), w=R(1,3), k=R(2,4);
+  if(_g(n,d)>1) return null;
+  const imp=w*d+n, t=imp*k, ans=mix(t,d);
+  if(!ans.d||!ans.w) return null;
+  return {pre:{label:'먼저 '+w+' '+n+'/'+d+' 을 가분수로 바꾸면?', ans:{w:0,n:imp,d:d,improper:true}},
+    ans:ans,
+    story:'퇴비 한 포대의 무게가 <b class="mx">'+w+' '+n+'/'+d+'</b> kg입니다. <em>'+k+'포대</em>를 옮겼어요.',
+    ask:'옮긴 퇴비는 모두 몇 kg인가요?', unit:'kg',
+    hint:w+' '+n+'/'+d+' = '+imp+'/'+d+' 입니다. '+imp+'/'+d+' × '+k+' = '+t+'/'+d+' 이에요.',
+    explain:'대분수는 반드시 가분수로 바꾼 뒤 곱합니다. '+imp+'/'+d+' × '+k+' = '+steps(t,d,ans)+' kg.'};});},
+/* 11 대분수×자연수 (준비 단계) */
+function(){ return tryGen(function(){
+  const d=R(3,9), n=R(1,d-1), w=R(2,3), k=R(2,3);
+  if(_g(n,d)>1) return null;
+  const imp=w*d+n, t=imp*k, ans=mix(t,d);
+  if(!ans.d||!ans.w) return null;
+  return {pre:{label:'먼저 '+w+' '+n+'/'+d+' 을 가분수로 바꾸면?', ans:{w:0,n:imp,d:d,improper:true}},
+    ans:ans,
+    story:'화단 한 줄의 길이가 <b class="mx">'+w+' '+n+'/'+d+'</b> m입니다. 같은 줄을 <em>'+k+'줄</em> 만들었어요.',
+    ask:'화단의 전체 길이는 몇 m인가요?', unit:'m',
+    hint:w+' '+n+'/'+d+' = '+imp+'/'+d+'. '+imp+'/'+d+' × '+k+' = '+t+'/'+d+' 이고, 약분한 뒤 대분수로 바꿉니다.',
+    explain:w+' '+n+'/'+d+' × '+k+' = '+imp+'/'+d+' × '+k+' = '+steps(t,d,ans)+' m입니다.'};});},
+/* 12 자연수×대분수 + 예측 */
+function(){ return tryGen(function(){
+  const d=R(3,7), n=R(1,d-1), w=1, k=R(2,5);
+  if(_g(n,d)>1) return null;
+  const imp=w*d+n, t=k*imp, ans=mix(t,d);
+  if(!ans.d||!ans.w) return null;
+  return {ans:ans,
+    predict:{q:k+' × '+w+' '+n+'/'+d+' 의 답은 '+k+'보다 클까요, 작을까요?',
+      opts:[k+'보다 크다',k+'보다 작다',k+'과 같다'], ans:predictOf(k,t/d),
+      why:'1보다 큰 대분수를 곱하면 결과는 원래 수보다 <b>커집니다</b>. '+w+' '+n+'/'+d+'는 1보다 크니까요.'},
+    story:'수레 <em>'+k+'대</em>에 흙을 각각 <b class="mx">'+w+' '+n+'/'+d+'</b> kg씩 실었습니다.',
+    ask:'실은 흙은 모두 몇 kg인가요?', unit:'kg',
+    hint:w+' '+n+'/'+d+' = '+imp+'/'+d+' 입니다. '+k+' × '+imp+'/'+d+' = '+t+'/'+d+' 예요.',
+    explain:k+' × '+w+' '+n+'/'+d+' = '+k+' × '+imp+'/'+d+' = '+steps(t,d,ans)+' kg입니다. '+k+'보다 커진 것을 확인해 보세요.'};});},
+/* 13 자연수×진분수 = 자연수 + 예측 */
+function(){ return tryGen(function(){
+  const d=R(4,8), n=R(2,d-1), m=R(2,3), k=d*m;
+  if(k>24||_g(n,d)>1) return null; const t=k*n, ans=mix(t,d);
+  if(ans.d) return null; if(ans.w<2) return null;
+  return {ans:ans,
+    predict:{q:k+' × '+n+'/'+d+' 의 답은 '+k+'보다 클까요, 작을까요?',
+      opts:[k+'보다 크다',k+'보다 작다',k+'과 같다'], ans:predictOf(k,t/d),
+      why:n+'/'+d+'은 1보다 작은 진분수예요. 그래서 곱한 결과도 '+k+'보다 <b>작아집니다</b>.'},
+    story:'어제 밭일을 <em>'+k+'시간</em> 했고, 오늘은 어제의 <b class="mx">'+n+'/'+d+'</b>만큼 일했습니다.',
+    ask:'오늘 일한 시간은 몇 시간인가요?', unit:'시간',
+    hint:k+' × '+n+'/'+d+' = '+t+'/'+d+' 입니다. '+t+'를 '+d+'로 나누면 나머지 없이 딱 떨어져요.',
+    explain:k+' × '+n+'/'+d+' = '+t+'/'+d+' = '+ans.w+'시간. 계산 결과가 자연수가 되기도 합니다.'};});},
+/* 14 세 분수의 곱 — 3단계 넓이 모델 */
+function(){ return tryGen(function(){
+  const b1=R(2,4), a1=R(1,b1-1), b2=R(2,5), a2=R(1,b2-1), b3=R(2,5), a3=R(1,b3-1);
+  if(_g(a1,b1)>1||_g(a2,b2)>1||_g(a3,b3)>1) return null;
+  const N=a1*a2*a3, D=b1*b2*b3, ans=mix(N,D);
+  if(!ans.d||ans.w) return null;
+  if(D>120) return null;
+  return {type:'grid3', grid3:{a1:a1,b1:b1,a2:a2,b2:b2,a3:a3,b3:b3}, ans:ans,
+    story:'밭 전체의 <b class="mx">'+a1+'/'+b1+'</b>가 채소밭이고, 그 채소밭의 <b class="mx">'+a2+'/'+b2+'</b>가 상추밭입니다. 상추밭의 <b class="mx">'+a3+'/'+b3+'</b>을 오늘 수확했어요.',
+    ask:'오늘 수확한 부분은 밭 전체의 얼마인가요?',
+    hint:'세 분수를 한꺼번에 곱합니다. 분자는 '+a1+'×'+a2+'×'+a3+', 분모는 '+b1+'×'+b2+'×'+b3+' 이에요.',
+    explain:a1+'/'+b1+' × '+a2+'/'+b2+' × '+a3+'/'+b3+' = '+steps(N,D,ans)+'. 세 분수도 분자끼리, 분모끼리 곱한 뒤 약분합니다.'};});},
+/* 15 거꾸로 밭갈이 (중) */
+function(){ const g=mkRGrid(3,5,4,6); if(!g) return null;
+  return {rgrid:{b:g.b,d:g.d,hit:g.hit}, ans:g.ans,
+    story:'이번에는 반대예요! 밭은 가로 <em>'+g.b+'등분</em>, 세로 <em>'+g.d+'등분</em> 되어 있습니다. 새싹이 정확히 <em>'+g.hit+'칸</em> 나도록 여러분이 직접 나눠 보세요.',
+    ask:'새싹 '+g.hit+'칸을 만든 뒤, 그 부분이 전체의 얼마인지 쓰세요.',
+    hint:'가로 칸 수 × 세로 칸 수 = '+g.hit+'이 되면 됩니다. '+g.ways.slice(0,3).join(', ')+' … 방법이 여러 가지예요!',
+    explain:'전체 '+g.b+'×'+g.d+'='+(g.b*g.d)+'칸 중 '+g.hit+'칸이므로 '+steps(g.hit,g.b*g.d,g.ans)+'. 어떤 방법으로 나누어도 답은 같습니다. ('+g.ways.join(' , ')+')'};},
+/* 16 자연수×대분수 + 예측 (상) */
+function(){ return tryGen(function(){
+  const d=R(3,8), n=R(1,d-1), w=1, k=R(4,9);
+  if(_g(n,d)>1) return null;
+  const imp=w*d+n, t=k*imp, ans=mix(t,d);
+  if(!ans.d||!ans.w) return null;
+  return {ans:ans,
+    predict:{q:k+' × '+w+' '+n+'/'+d+' 의 답은 '+k+'보다 클까요, 작을까요?',
+      opts:[k+'보다 크다',k+'보다 작다',k+'과 같다'], ans:predictOf(k,t/d),
+      why:w+' '+n+'/'+d+'는 1보다 크므로 곱한 결과도 '+k+'보다 <b>커집니다</b>.'},
+    story:'직사각형 밭의 가로가 <em>'+k+' m</em>입니다. 세로는 가로의 <b class="mx">'+w+' '+n+'/'+d+'</b>배입니다.',
+    ask:'이 밭의 세로는 몇 m인가요?', unit:'m',
+    hint:w+' '+n+'/'+d+' = '+imp+'/'+d+' 입니다. '+k+' × '+imp+'/'+d+' = '+t+'/'+d+' 예요.',
+    explain:k+' × '+w+' '+n+'/'+d+' = '+k+' × '+imp+'/'+d+' = '+steps(t,d,ans)+' m입니다.'};});},
+/* 17 대분수×대분수 (준비 단계) */
+function(){ return tryGen(function(){
+  const d1=R(3,6), n1=R(1,d1-1), w1=R(1,2);
+  const d2=R(2,6), n2=R(1,d2-1), w2=1;
+  if(_g(n1,d1)>1||_g(n2,d2)>1) return null;
+  const i1=w1*d1+n1, i2=w2*d2+n2, ans=mix(i1*i2,d1*d2);
+  if(!ans.d||!ans.w) return null;
+  return {pre:{label:'먼저 '+w1+' '+n1+'/'+d1+' 을 가분수로 바꾸면?', ans:{w:0,n:i1,d:d1,improper:true}},
+    ans:ans,
+    story:'울타리 한 구간이 <b class="mx">'+w1+' '+n1+'/'+d1+'</b> m입니다. 새 울타리는 이것의 <b class="mx">'+w2+' '+n2+'/'+d2+'</b>배로 만들려고 합니다.',
+    ask:'새 울타리 한 구간은 몇 m인가요?', unit:'m',
+    hint:i1+'/'+d1+' × '+i2+'/'+d2+' 입니다. 곱하기 전에 약분할 수 있는지 살펴보세요.',
+    explain:w1+' '+n1+'/'+d1+' × '+w2+' '+n2+'/'+d2+' = '+i1+'/'+d1+' × '+i2+'/'+d2+' = '+steps(i1*i2,d1*d2,ans)+' m. 두 대분수 모두 가분수로 바꿔야 합니다.'};});},
+/* 18 크기 비교 */
+function(){ return tryGen(function(){
+  const k1=R(2,4), d1=R(3,8), n1=R(1,d1-1), i1=d1+n1;
+  if(_g(n1,d1)>1) return null;      // 1 n1/d1
+  const k2=R(3,7), d2=R(3,8), n2=R(1,d2-1);
+  if(_g(n2,d2)>1) return null;
+  const v1=k1*i1/d1, v2=k2*n2/d2;
+  if(Math.abs(v1-v2)<0.2) return null;
+  const big=v1>v2, ans=big?mix(k1*i1,d1):mix(k2*n2,d2);
+  if(!ans.d||!ans.w) return null;
+  const A=mix(k1*i1,d1), B=mix(k2*n2,d2);
+  return {ans:ans,
+    story:'두 밭의 수확량을 비교합니다.<br>㉠ 밭: <em>'+k1+'</em> × <b class="mx">1 '+n1+'/'+d1+'</b> 자루<br>㉡ 밭: <em>'+k2+'</em> × <b class="mx">'+n2+'/'+d2+'</b> 자루',
+    ask:'더 많이 수확한 밭의 수확량을 쓰세요.', unit:'자루',
+    hint:'㉠은 '+k1+' × '+i1+'/'+d1+' = '+(k1*i1)+'/'+d1+', ㉡은 '+k2+' × '+n2+'/'+d2+' = '+(k2*n2)+'/'+d2+' 입니다. 각각 대분수로 바꿔 비교해 보세요.',
+    explain:'㉠ '+(k1*i1)+'/'+d1+' = '+fs(A)+', ㉡ '+(k2*n2)+'/'+d2+' = '+fs(B)+'. 더 큰 쪽은 '+(big?'㉠':'㉡')+'의 '+fs(ans)+' 자루입니다.'};});},
+/* 19 역연산 ÷자연수 → 자연수 */
+function(){ return tryGen(function(){
+  const d=R(2,8), n=R(1,d-1), w=R(1,3), m=R(1,3), k=d*m;
+  if(k<2||k>24||_g(n,d)>1) return null;
+  const imp=w*d+n, ans=mix(imp*k,d);
+  if(ans.d) return null; if(ans.w<4||ans.w>60) return null;
+  return {ans:ans,
+    story:'수확한 감자를 <em>'+k+'상자</em>에 똑같이 나누어 담았더니 한 상자에 <b class="mx">'+w+' '+n+'/'+d+'</b> kg씩 들어갔습니다.',
+    ask:'수확한 감자는 모두 몇 kg인가요?', unit:'kg',
+    hint:'나누기 전으로 되돌리려면 반대로 곱해야 해요. '+w+' '+n+'/'+d+' = '+imp+'/'+d+' 이고, '+imp+'/'+d+' × '+k+' 를 계산해 보세요.',
+    explain:'(어떤 수) ÷ '+k+' = '+w+' '+n+'/'+d+' 이므로 어떤 수 = '+imp+'/'+d+' × '+k+' = '+(imp*k)+'/'+d+' = '+ans.w+' kg입니다.'};});},
+/* 20 역연산 ÷분수 → 대분수 */
+function(){ return tryGen(function(){
+  const d=R(3,8), n=R(1,d-1), k=R(6,15), t=k*n, ans=mix(t,d);
+  if(_g(n,d)>1) return null;
+  if(!ans.d||!ans.w) return null;
+  return {ans:ans,
+    story:'어떤 밭의 넓이를 <b class="mx">'+n+'/'+d+'</b>로 나누었더니 <em>'+k+'</em>가 되었습니다.',
+    ask:'처음 밭의 넓이는 얼마인가요?',
+    hint:'□ ÷ '+n+'/'+d+' = '+k+' 이므로 □ = '+k+' × '+n+'/'+d+' 입니다.',
+    explain:'□ = '+k+' × '+n+'/'+d+' = '+steps(t,d,ans)+' 입니다.'};});},
+/* 21 잘못 더한 값 바로잡기 */
+function(){ return tryGen(function(){
+  const d=R(3,6), w=R(1,2), n=R(1,d-1), m=R(1,d-1);
+  const base=w*d+n, sum=base+m;                 // 잘못 더한 결과
+  const sm=mix(sum,d), bm=mix(base,d), xm=mix(m,d);
+  if(!sm.d||!bm.d||!xm.d) return null;
+  const ans=mix(base*m,d*d);
+  if(!ans.d) return null;
+  return {ans:ans,
+    story:'<b class="mx">'+fs(bm)+'</b>에 어떤 수를 <em>곱해야</em> 하는데, 잘못해서 <em>더했더니</em> <b class="mx">'+fs(sm)+'</b>가 되었습니다.',
+    ask:'바르게 계산하면 얼마인가요?',
+    hint:'먼저 어떤 수를 찾으세요. '+fs(sm)+' − '+fs(bm)+' = '+fs(xm)+' 입니다. 그다음 '+base+'/'+d+' × '+fs(xm)+' 을 계산해요.',
+    explain:'어떤 수 = '+fs(sm)+' − '+fs(bm)+' = '+fs(xm)+'. 바르게 계산하면 '+base+'/'+d+' × '+m+'/'+d+' = '+steps(base*m,d*d,ans)+' 입니다.'};});},
+/* 22 거꾸로 밭갈이 (상) */
+function(){ const g=mkRGrid(5,7,5,7); if(!g) return null;
+  return {rgrid:{b:g.b,d:g.d,hit:g.hit}, ans:g.ans,
+    story:'마지막 밭입니다. 가로 <em>'+g.b+'등분</em>, 세로 <em>'+g.d+'등분</em>된 밭에 새싹이 정확히 <em>'+g.hit+'칸</em> 나도록 직접 나눠 보세요.',
+    ask:'새싹 '+g.hit+'칸을 만든 뒤, 그 부분이 전체의 얼마인지 쓰세요.',
+    hint:'가로 칸 수 × 세로 칸 수 = '+g.hit+'이 되어야 해요. 가로는 '+g.b+'칸, 세로는 '+g.d+'칸까지만 가능합니다.',
+    explain:'전체 '+g.b+'×'+g.d+'='+(g.b*g.d)+'칸 중 '+g.hit+'칸이므로 '+steps(g.hit,g.b*g.d,g.ans)+'. ('+g.ways.join(' , ')+') 어느 방법이든 답은 같아요.'};}
+];
+
+/* 원본 문항 위에 새 숫자를 덮어써서 이번 판의 문제를 만든다 */
+function buildQuiz(){
+  const key=a=>a.d?(a.w+'_'+a.n+'/'+a.d):('n'+a.w);
+  const one=function(base,i){
+    if(!RANDOMIZE || !MAKERS[i]) return base;
+    let patch=null;
+    try{ patch=MAKERS[i](); }catch(e){ patch=null; }
+    if(!patch) return base;                       // 생성 실패 시 원본 사용
+    const q=Object.assign({},base,patch);
+    if(!patch.pre) delete q.pre;                  // 준비 단계가 없어졌으면 제거
+    return q;
+  };
+  const out=QUIZ_DATA.map(one);
+  // 정답이 겹치면 다시 뽑는다 (같은 답이 반복되면 아이들이 찍기 쉬움)
+  const used=new Set();
+  for(let i=0;i<out.length;i++){
+    let k=key(out[i].ans), tries=0;
+    while(used.has(k) && tries<30){
+      out[i]=one(QUIZ_DATA[i],i); k=key(out[i].ans); tries++;
+    }
+    used.add(k);
+  }
+  return out;
+}
+</script>
+
+<!-- ================= 타이틀 ================= -->
+<section class="screen on" id="screenTitle">
+  <div class="scroller">
+    <div class="hero">
+      <span class="badge">MATH 5-2 · UNIT 02</span>
+      <h1>분수 <span>텃밭</span></h1>
+      <p>밭을 가로로 나누고 세로로 나누면<br>겹치는 곳에 새싹이 돋아요. 그게 바로 분수의 곱셈!</p>
+      <div class="sprouts">🌱 🌻 🥕 🍓 🌈</div>
+    </div>
+    <div class="panel">
+      <h2>🧑‍🌾 농부 등록</h2>
+      <div class="field"><label for="nick">이름</label>
+        <input type="text" id="nick" maxlength="8" placeholder="이름을 입력하세요" autocomplete="off"></div>
+      <div class="field"><label>농부 캐릭터 고르기</label><div class="avatars" id="avatars"></div></div>
+    </div>
+    <div class="panel">
+      <h2>📋 오늘의 농사 안내</h2>
+      <ul class="tips">
+        <li><span>🌾</span><div>문제 <b id="tipTotal">22개</b>를 풉니다. 밭이 <b>씨앗밭 → 햇살 농장 → 무지개 대농장</b>으로 넓어져요.</div></li>
+        <li><span>🌱</span><div><b>밭 나누기</b> 문제는 위(노랑)·왼쪽(초록) 막대를 눌러 직접 심습니다. 글 속 분수도 같은 색이에요.</div></li>
+        <li><span>🔄</span><div><b>거꾸로 밭갈이</b>는 새싹 칸 수만 알려줘요. 나누는 방법이 여러 가지랍니다!</div></li>
+        <li><span>🔮</span><div><b>수확 예측</b>에서는 계산하기 전에 답이 커질지 작아질지 먼저 맞혀 보세요.</div></li>
+        <li><span>🔢</span><div>답은 <b>정수 / 분자 / 분모</b> 칸에 입력합니다. 반드시 <b>기약분수·대분수</b>로!</div></li>
+        <li><span>📖</span><div>문제를 맞힐 때마다 <b>작물</b>을 얻어 도감에 모읍니다. 코인으로는 텃밭을 꾸며요.</div></li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>⚙️ 환경 설정</h2>
+      <div class="toggles">
+        <button class="tg on" id="tgSound"><span>🔊 소리</span><span class="sw"></span></button>
+        <button class="tg on" id="tgBgm"><span>🎵 배경음악</span><span class="sw"></span></button>
+        <button class="tg" id="tgLow"><span>🐢 저사양 모드</span><span class="sw"></span></button>
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:10px;line-height:1.6">
+        소리가 안 들리면 화면을 한 번 눌러 주세요. 기기 음량과 무음 스위치도 확인해 주세요.</p>
+    </div>
+    <button class="cta" id="btnStart">🌻 농사 시작하기</button>
+  </div>
+</section>
+
+<!-- ================= 게임 ================= -->
+<section class="screen" id="screenGame">
+  <div id="hud">
+    <div class="chip"><span id="hudIcon">🌱</span><span id="hudZone">씨앗밭</span></div>
+    <div class="chip">🌾 <span class="v" id="hudProg">1/22</span></div>
+    <div class="chip coin">🪙 <span class="v" id="hudCoin">0</span></div>
+    <div class="chip combo" id="chipCombo">🔥 <span class="v" id="hudCombo">0</span></div>
+    <div class="chip" id="chipTicket" style="display:none">💧 <span class="v" id="hudTicket">0</span></div>
+    <div id="hudRight">
+      <button class="icon-btn" id="btnDex" title="작물 도감">📖<span class="dot" id="dexDot">0</span></button>
+      <button class="icon-btn" id="btnSound" title="소리">🔊</button>
+      <button class="icon-btn" id="btnPause" title="일시정지">⏸</button>
+    </div>
+  </div>
+
+  <div id="farmStrip">
+    <div id="farmSky"></div>
+    <div id="farmBack"><svg viewBox="0 0 800 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 120 L120 34 L240 120 Z" fill="#7FB894"/>
+      <path d="M180 120 L320 20 L460 120 Z" fill="#6FAA86"/>
+      <path d="M420 120 L560 46 L700 120 Z" fill="#7FB894"/>
+    </svg></div>
+    <div id="farmField"></div>
+    <div id="farmLevel">씨앗밭</div>
+  </div>
+  <div id="progWrap"><div id="progBar"></div></div>
+
+  <div id="play">
+    <div id="playScroll"><div id="playInner">
+      <article class="qcard" id="qcard">
+        <div class="qhead" id="qhead"></div>
+        <div class="qbody">
+          <div class="story" id="story"></div>
+          <div class="ask" id="ask"></div>
+        </div>
+      </article>
+      <div id="gridArea" style="display:none">
+        <div class="gridTitle" id="gridTitle"></div>
+        <div id="gridLayout"><div id="colBar"></div><div id="rowBar"></div><div id="gridBox"></div></div>
+        <div id="grid3" style="display:none"></div>
+        <div id="gridInfo"></div>
+        <div id="gridLegend"></div>
+        <button id="gridGo" disabled>🌱 심기 완료</button>
+      </div>
+    </div></div>
+
+    <div id="console">
+      <div class="cin">
+        <div class="steplab"><i id="stepNo">1</i> <span id="stepLabel">답을 입력하세요</span></div>
+        <div id="stepPredict"><div class="predRow" id="predRow"></div></div>
+        <div id="stepAnswer">
+          <div id="fracInput">
+            <button class="slot empty" data-s="w"><span class="val">-</span></button>
+            <div class="fstack">
+              <button class="slot empty" data-s="n"><span class="val">-</span></button>
+              <div class="fbar"></div>
+              <button class="slot empty" data-s="d"><span class="val">-</span></button>
+            </div>
+            <span id="fracUnit"></span>
+          </div>
+          <div class="keypad" id="keypad">
+            <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+            <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+            <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+            <button class="key fn" data-k="next">칸 이동 ▸</button><button class="key" data-k="0">0</button><button class="key fn" data-k="del">⌫ 지우기</button>
+            <button class="key go" data-k="ok" style="grid-column:1/-1">✅ 확인</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="comboPop"><div class="n" id="comboNum">3</div><div class="t" id="comboTxt">콤보!</div></div>
+    <div id="fx"></div>
+  </div>
+</section>
+
+<!-- ================= 결과 ================= -->
+<section class="screen" id="screenResult">
+  <div class="scroller">
+    <div class="rhero">
+      <div class="stars" id="resStars">⭐⭐⭐</div>
+      <div class="rank" id="resRank">수확 완료</div>
+      <small id="resWho"></small>
+      <div class="verdict" id="resVerdict"></div>
+    </div>
+    <div class="panel">
+      <h2>🌾 농사 기록</h2>
+      <div class="grid4">
+        <div class="cellr"><div class="k">푼 문제</div><div class="v g" id="resSolved">0 / 22</div></div>
+        <div class="cellr"><div class="k">한 번에 맞힘</div><div class="v" id="resFirst">0 / 22</div></div>
+        <div class="cellr"><div class="k">첫 시도 정답률</div><div class="v g" id="resRate">0%</div></div>
+        <div class="cellr"><div class="k">최종 점수</div><div class="v y" id="resScore">0</div></div>
+        <div class="cellr"><div class="k">최고 콤보</div><div class="v g" id="resCombo">0</div></div>
+        <div class="cellr"><div class="k">걸린 시간</div><div class="v" id="resTime">00:00</div></div>
+        <div class="cellr"><div class="k">한 문제 평균</div><div class="v" id="resAvg">0초</div></div>
+        <div class="cellr"><div class="k">가장 오래 고민</div><div class="v" id="resSlow">-</div></div>
+        <div class="cellr"><div class="k">모은 코인</div><div class="v y" id="resCoin">0</div></div>
+        <div class="cellr"><div class="k">심은 새싹</div><div class="v g" id="resSprout">0칸</div></div>
+        <div class="cellr"><div class="k">약분 실수</div><div class="v" id="resReduce">0회</div></div>
+        <div class="cellr"><div class="k">수확 예측</div><div class="v g" id="resPredict">0 / 0</div></div>
+      </div>
+    </div>
+    <div class="panel"><h2>📊 난이도별 성적</h2><div class="bars" id="resDiff"></div></div>
+    <div class="panel"><h2>🧩 문제 유형별 성적</h2><div class="bars" id="resType"></div></div>
+    <div class="panel"><h2>⏱️ 문제별 기록</h2><div id="resChart"></div>
+      <div class="chartleg"><span><i style="background:var(--leaf)"></i>한 번에 맞힘</span><span><i style="background:var(--sun)"></i>다시 도전</span><span>막대 높이 = 걸린 시간</span></div>
+    </div>
+    <div class="panel"><h2>📖 작물 도감 <span id="dexCount" style="margin-left:auto;font-family:var(--mono);font-size:14px;color:var(--sun-d)"></span></h2>
+      <div class="cropline" id="resCropLine"></div>
+      <div class="dex" id="resDex"></div></div>
+    <div class="panel"><h2>🏡 내 텃밭 <span id="decoCount" style="margin-left:auto;font-family:var(--mono);font-size:14px;color:var(--leaf-d)"></span></h2>
+      <div class="cropline" id="resDecoLine"></div></div>
+    <div class="panel"><h2>🏅 획득 배지</h2><div class="badges" id="resBadges"></div></div>
+    <div class="panel"><h2>📚 다시 볼 문제</h2><div class="review" id="resReview"></div></div>
+    <button class="cta" id="btnAgain">🌱 다시 농사짓기</button>
+  </div>
+</section>
+
+<!-- ================= 모달 ================= -->
+<div class="ov" id="ovHint"><div class="modal">
+  <h3 id="hintTitle">🔍 다시 살펴볼까요?</h3>
+  <p id="hintLead"></p>
+  <div class="hintbox" id="hintBody"></div>
+  <div id="ticketSlot"></div>
+  <div class="mrow"><button class="mact primary" id="hintClose">다시 도전</button></div>
+</div></div>
+
+<div class="ov" id="ovOk"><div class="modal">
+  <h3 id="okTitle">🌻 수확 성공!</h3>
+  <div class="okbox" id="okBody"></div>
+  <div id="areaSlot"></div>
+  <div id="cropSlot"></div>
+  <div class="gain" id="okGain"></div>
+  <div class="mrow"><button class="mact primary" id="okNext">다음 밭으로 →</button></div>
+</div></div>
+
+<div class="ov" id="ovZone"><div class="modal" id="zoneCard">
+  <span class="big" id="zoneIcon">🌻</span>
+  <h3 id="zoneTitle" style="justify-content:center">구역 통과!</h3>
+  <p id="zoneDesc"></p>
+  <div class="gain" id="zoneGain"></div>
+  <div class="mrow"><button class="mact primary" id="zoneNext">🏪 꾸미기 상점 열기</button></div>
+</div></div>
+
+<div class="ov" id="ovShop"><div class="modal">
+  <h3>🏪 꾸미기 상점 <span style="margin-left:auto;font-family:var(--mono);font-size:16px;color:var(--sun-d)" id="shopCoin">🪙 0</span></h3>
+  <p>코인으로 텃밭을 꾸며 보세요. 산 물건은 위쪽 농장에 바로 놓입니다.</p>
+  <div class="shopgrid" id="shopGrid"></div>
+  <div class="mrow"><button class="mact primary" id="shopClose">다음 밭으로 출발 →</button></div>
+</div></div>
+
+<div class="ov" id="ovDex"><div class="modal">
+  <h3>📖 작물 도감 <span style="margin-left:auto;font-family:var(--mono);font-size:15px;color:var(--sun-d)" id="dexTop"></span></h3>
+  <p>문제를 맞힐 때마다 작물이 하나씩 늘어나요.</p>
+  <div class="dex" id="dexGrid"></div>
+  <div class="mrow"><button class="mact primary" id="dexClose">닫기</button></div>
+</div></div>
+
+<div class="ov" id="ovPause"><div class="modal">
+  <h3>⏸ 잠시 쉬어가기</h3>
+  <p>수업 중에 잠깐 멈췄어요. 준비되면 이어서 하세요.</p>
+  <div class="mrow">
+    <button class="mact" id="pauseQuit">처음으로</button>
+    <button class="mact primary" id="pauseGo">이어서 하기</button>
+  </div>
+</div></div>
+
+</div>
+
+<script>
+/* =========================================================
+   상태
+   ========================================================= */
+const S = {
+  idx:0, score:0, coin:0, combo:0, maxCombo:0,
+  firstTry:0, hintUsed:0, reduceMiss:0, gridPerfect:true,
+  predHit:0, predTotal:0, predMissed:false,
+  tries:0, preTries:0, gridTries:0, ticketUsed:false,
+  startAt:0, elapsed:0, nick:'농부', avatar:'🧑‍🌾',
+  sound:true, bgm:true, lowfx:false, paused:false, locked:false,
+  stage:'main', inp:{w:'',n:'',d:''}, act:'w',
+  wrong:[], badges:new Set(), crops:[], log:[], sprouts:0, zoneIdx:0, qStartAt:0,
+  tickets:0, owned:new Set(), selC:0, selR:0, g3:0
+};
+const $ = id => document.getElementById(id);
+let QUIZ = QUIZ_DATA.slice();          // 이번 판의 문제 (랜덤 생성 결과)
+const TOTAL = QUIZ_DATA.length;
+const gcd = (a,b)=>b?gcd(b,a%b):Math.abs(a);
+const C_SOIL='#8B5E34', C_COL='#E0B93C', C_ROW='#A8DCC0', C_BOTH='#2A9455';
+
+/* ---------- 소리 엔진 ----------
+   브라우저는 사용자가 화면을 처음 누르기 전에는 소리를 막습니다.
+   그래서 첫 터치·클릭·키 입력이 들어오는 순간 오디오를 깨우고,
+   깨어난 뒤에만 소리를 냅니다. */
+let AC=null, MASTER=null, SFXG=null, BGMG=null, AUDIO_READY=false;
+function initAudio(){
+  if(AC) return;
+  try{
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    MASTER=AC.createGain(); MASTER.gain.value=1; MASTER.connect(AC.destination);
+    SFXG=AC.createGain(); SFXG.gain.value=0.9; SFXG.connect(MASTER);
+    BGMG=AC.createGain(); BGMG.gain.value=0.5; BGMG.connect(MASTER);
+  }catch(e){}
+}
+function unlockAudio(){
+  initAudio();
+  if(!AC) return;
+  const go=function(){
+    AUDIO_READY=true;
+    // 무음 버퍼를 한 번 재생해 확실히 깨운다 (특히 iOS)
+    try{
+      const b=AC.createBuffer(1,1,22050), s=AC.createBufferSource();
+      s.buffer=b; s.connect(AC.destination); s.start(0);
+    }catch(e){}
+    if(S.bgm && S.sound) startBGM();
+  };
+  if(AC.state==='suspended') AC.resume().then(go).catch(go);
+  else go();
+}
+['pointerdown','touchstart','keydown','click'].forEach(function(ev){
+  document.addEventListener(ev, unlockAudio, {once:false, passive:true});
+});
+
+function beep(f,dur=0.09,type='sine',vol=0.16,dest){
+  if(!S.sound||!AUDIO_READY||!AC) return;
+  try{
+    if(AC.state==='suspended') AC.resume();
+    const t=AC.currentTime;
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(dest||SFXG);
+    o.start(t); o.stop(t+dur+0.03);
+  }catch(e){}
+}
+const sfx = {
+  tap:()=>beep(760,.06,'sine',.12),
+  plant:()=>{beep(540,.08,'sine',.16);setTimeout(()=>beep(810,.11,'sine',.16),60);},
+  ok:()=>{beep(660,.11,'sine',.2);setTimeout(()=>beep(880,.18,'sine',.2),95);},
+  great:()=>{[660,880,1100,1320].forEach((f,i)=>setTimeout(()=>beep(f,.16,'sine',.2),i*80));},
+  no:()=>beep(190,.24,'triangle',.16),
+  coin:()=>{beep(1180,.07,'sine',.18);setTimeout(()=>beep(1560,.12,'sine',.18),55);},
+  buy:()=>{beep(880,.08,'sine',.18);setTimeout(()=>beep(1320,.14,'sine',.18),70);},
+  crop:()=>{[880,1046,1318].forEach((f,i)=>setTimeout(()=>beep(f,.15,'sine',.19),i*90));},
+  zone:()=>{[523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>beep(f,.2,'sine',.2),i*105));}
+};
+
+/* ---------- 배경음악 ----------
+   BGM_URL 이 비어 있으면 아래 합성 멜로디가 자동으로 흐릅니다.
+   선생님이 직접 만든/구입한 음악을 쓰려면 BGM_URL 에 파일 경로나
+   data:audio/mpeg;base64,... 를 넣으세요. */
+let BGM_TIMER=null, BGM_STEP=0, BGM_EL=null;
+const MEL =[523.25,587.33,659.25,783.99, 659.25,587.33,523.25,587.33,
+            659.25,783.99,880.00,783.99, 659.25,523.25,440.00,0];
+const BASS=[130.81,0,196.00,0, 174.61,0,196.00,0, 130.81,0,196.00,0, 220.00,0,196.00,0];
+function startBGM(){
+  if(!S.bgm||!S.sound||!AUDIO_READY) return;
+  if(typeof BGM_URL==='string' && BGM_URL){
+    if(!BGM_EL){
+      BGM_EL=$('bgmEl'); BGM_EL.src=BGM_URL; BGM_EL.loop=true; BGM_EL.volume=0.35;
+    }
+    BGM_EL.play().catch(function(){ synthBGM(); });
+    return;
+  }
+  synthBGM();
+}
+function synthBGM(){
+  if(BGM_TIMER) return;
+  BGM_TIMER=setInterval(function(){
+    if(!S.bgm||!S.sound||S.paused) return;
+    const m=MEL[BGM_STEP%16], b=BASS[BGM_STEP%16];
+    if(m) beep(m,.34,'triangle',.075,BGMG);
+    if(b) beep(b,.5,'sine',.09,BGMG);
+    if(BGM_STEP%8===0) beep(m?m*2:1046,.22,'sine',.03,BGMG);
+    BGM_STEP++;
+  },430);
+}
+function stopBGM(){
+  if(BGM_TIMER){ clearInterval(BGM_TIMER); BGM_TIMER=null; }
+  if(BGM_EL){ BGM_EL.pause(); }
+}
+function syncBGM(){ if(S.bgm&&S.sound) startBGM(); else stopBGM(); }
+
+/* ---------- 파티클 풀 (init보다 먼저) ---------- */
+const POOL=[];
+function buildFx(){
+  const fx=$('fx');
+  for(let i=0;i<26;i++){ const s=document.createElement('span'); s.className='pt'; fx.appendChild(s); POOL.push(s); }
+}
+function burst(x,y,set){
+  if(S.lowfx) return;
+  const emo=set||['🌱','🌿','🍃','✨','🌼','🪙'];
+  for(let i=0;i<POOL.length;i++){
+    const p=POOL[i];
+    p.textContent=emo[i%emo.length];
+    p.style.left=x+'px'; p.style.top=y+'px';
+    const ang=(Math.PI*2*i)/POOL.length+Math.random()*.5, dist=70+Math.random()*130;
+    p.style.setProperty('--dx',(Math.cos(ang)*dist).toFixed(0)+'px');
+    p.style.setProperty('--dy',(Math.sin(ang)*dist-40).toFixed(0)+'px');
+    p.style.setProperty('--rot',(Math.random()*720-360).toFixed(0)+'deg');
+    p.classList.remove('go'); void p.offsetWidth; p.classList.add('go');
+  }
+}
+
+/* =========================================================
+   분수 표기
+   ========================================================= */
+function fracHTML(w,n,d,cls){
+  const k=cls?' '+cls:'';
+  if(!d) return '<span class="wn'+k+'">'+w+'</span>';
+  const f='<span class="fr'+k+'"><span class="n">'+n+'</span><span class="b"></span><span class="d">'+d+'</span></span>';
+  return (w?'<span class="wn">'+w+'</span>':'')+f;
+}
+function ansHTML(a){ return fracHTML(a.w,a.n,a.d); }
+const FRAC_RE=/(?:(\d+)\s+)?(\d+)\/(\d+)/g;
+function beautify(root){
+  if(!root) return;
+  const walker=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const hits=[]; let node;
+  while((node=walker.nextNode())){
+    if(node.parentElement && node.parentElement.closest('.fr')) continue;
+    FRAC_RE.lastIndex=0;
+    if(FRAC_RE.test(node.nodeValue)) hits.push(node);
+  }
+  hits.forEach(function(n){
+    const wrap=document.createElement('span');
+    wrap.innerHTML=n.nodeValue.replace(FRAC_RE,function(m,w,a,b){ return fracHTML(w?+w:0,+a,+b); });
+    n.parentNode.replaceChild(wrap,n);
+  });
+}
+function svgFrac(x,y,n,d,color,size){
+  const half=Math.max(String(n).length,String(d).length)*size*0.34+3;
+  return '<text x="'+x+'" y="'+(y-5)+'" fill="'+color+'" font-size="'+size+'" font-weight="900" text-anchor="middle" font-family="ui-monospace,monospace">'+n+'</text>'+
+    '<line x1="'+(x-half)+'" y1="'+y+'" x2="'+(x+half)+'" y2="'+y+'" stroke="'+color+'" stroke-width="2.6" stroke-linecap="round"/>'+
+    '<text x="'+x+'" y="'+(y+size+3)+'" fill="'+color+'" font-size="'+size+'" font-weight="900" text-anchor="middle" font-family="ui-monospace,monospace">'+d+'</text>';
+}
+function svgSprout(cx,cy,s){
+  return '<g fill="#FFFFFF">'+
+    '<path d="M '+cx+' '+(cy+s*0.55)+' L '+cx+' '+(cy-s*0.1)+'" stroke="#FFFFFF" stroke-width="'+(s*0.22)+'" stroke-linecap="round" fill="none"/>'+
+    '<ellipse cx="'+(cx-s*0.36)+'" cy="'+(cy-s*0.22)+'" rx="'+(s*0.38)+'" ry="'+(s*0.21)+'" transform="rotate(-28 '+(cx-s*0.36)+' '+(cy-s*0.22)+')"/>'+
+    '<ellipse cx="'+(cx+s*0.36)+'" cy="'+(cy-s*0.22)+'" rx="'+(s*0.38)+'" ry="'+(s*0.21)+'" transform="rotate(28 '+(cx+s*0.36)+' '+(cy-s*0.22)+')"/></g>';
+}
+
+let UID=0;
+/* 넓이 모델: 색 + 무늬로 구분, 라벨은 회전 없이 똑바로 */
+function renderArea(g,note){
+  if(!g) return '';
+  const id='p'+(++UID);
+  const cw=Math.max(20,Math.min(46,Math.round(300/Math.max(g.b,g.d))));
+  const LP=86,TP=86,RP=16,BP=16, W=g.b*cw, H=g.d*cw, VW=LP+W+RP, VH=TP+H+BP;
+  let s='<svg viewBox="0 0 '+VW+' '+VH+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="분수 곱셈 넓이 모델"><defs>'+
+    '<pattern id="'+id+'c" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="'+C_COL+'"/><rect width="3" height="9" fill="rgba(0,0,0,.17)"/></pattern>'+
+    '<pattern id="'+id+'r" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="'+C_ROW+'"/><rect width="9" height="3" fill="rgba(0,0,0,.17)"/></pattern>'+
+    '<pattern id="'+id+'b" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="'+C_BOTH+'"/><rect width="3" height="9" fill="rgba(255,255,255,.26)"/><rect width="9" height="3" fill="rgba(255,255,255,.26)"/></pattern>'+
+    '</defs>';
+  s+='<rect x="'+LP+'" y="'+TP+'" width="'+W+'" height="'+H+'" fill="'+C_SOIL+'" rx="7"/>';
+  for(let r=0;r<g.d;r++) for(let c=0;c<g.b;c++){
+    const x=LP+c*cw, y=TP+r*cw, inC=c<g.a, inR=r<g.c;
+    const fill=(inC&&inR)?'url(#'+id+'b)':(inC?'url(#'+id+'c)':(inR?'url(#'+id+'r)':C_SOIL));
+    s+='<rect x="'+(x+2)+'" y="'+(y+2)+'" width="'+(cw-4)+'" height="'+(cw-4)+'" fill="'+fill+'" rx="5"/>';
+    if(inC&&inR) s+=svgSprout(x+cw/2,y+cw/2,cw*0.42);
+  }
+  s+='<rect x="'+LP+'" y="'+(TP-22)+'" width="'+(g.a*cw)+'" height="11" fill="'+C_COL+'" rx="5.5" stroke="#fff" stroke-width="2"/>';
+  s+=svgFrac(LP+g.a*cw/2,TP-52,g.a,g.b,'#8A6100',20);
+  s+='<rect x="'+(LP-22)+'" y="'+TP+'" width="11" height="'+(g.c*cw)+'" fill="'+C_BOTH+'" rx="5.5" stroke="#fff" stroke-width="2"/>';
+  s+=svgFrac(LP-52,TP+g.c*cw/2,g.c,g.d,'#1E6B3D',20);
+  s+='</svg>';
+
+  const tot=g.b*g.d, hit=g.a*g.c, k=gcd(hit,tot);
+  const eq=fracHTML(0,g.a,g.b,'fc-col')+' <span class="wn">×</span> '+fracHTML(0,g.c,g.d,'fc-row')+
+    ' <span class="wn">=</span> '+fracHTML(0,g.a+'×'+g.c,g.b+'×'+g.d)+
+    ' <span class="wn">=</span> '+fracHTML(0,hit,tot)+
+    (k>1?' <span class="wn">=</span> '+fracHTML(0,hit/k,tot/k):'');
+  return '<div class="areaviz">'+s+
+    '<div class="legend">'+
+      '<span><i style="background:'+C_COL+'"></i>가로로 고른 곳</span>'+
+      '<span><i style="background:'+C_ROW+'"></i>세로로 고른 곳</span>'+
+      '<span><i style="background:'+C_BOTH+'"></i>🌱 겹친 곳 = 정답</span></div>'+
+    '<div class="cap">전체 '+g.b+'×'+g.d+'='+tot+'칸 중, 새싹이 난 칸 '+g.a+'×'+g.c+'='+hit+'칸'+(note?'<br>'+note:'')+'</div>'+
+    '<div class="eq">'+eq+'</div></div>';
+}
+
+
+/* 세 겹 밭 — 밭 안의 밭, 그 안의 밭으로 좁혀 들어가는 그림
+   step 1: 가로로 a1/b1 만큼   2: 그 안에서 세로로 a2/b2   3: 그 안에서 다시 가로로 a3/b3 */
+function renderArea3(g, step){
+  const W=430, H=250, PAD=16, uid='t'+(++UID);
+  const x0=PAD, y0=PAD, w=W-PAD*2, h=H-PAD*2;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="세 분수의 곱 넓이 모델"><defs>'+
+    '<pattern id="'+uid+'a" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="'+C_COL+'"/><rect width="3" height="9" fill="rgba(0,0,0,.16)"/></pattern>'+
+    '<pattern id="'+uid+'b" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="#7FD3A4"/><rect width="9" height="3" fill="rgba(0,0,0,.16)"/></pattern>'+
+    '<pattern id="'+uid+'c" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="'+C_BOTH+'"/><rect width="3" height="9" fill="rgba(255,255,255,.3)"/><rect width="9" height="3" fill="rgba(255,255,255,.3)"/></pattern>'+
+    '</defs>';
+  s+='<rect x="'+x0+'" y="'+y0+'" width="'+w+'" height="'+h+'" fill="'+C_SOIL+'" rx="8"/>';
+
+  // 1단계 : 전체를 세로줄로 b1등분, 왼쪽 a1칸
+  const w1=w*g.a1/g.b1;
+  if(step>=1) s+='<rect x="'+x0+'" y="'+y0+'" width="'+w1.toFixed(1)+'" height="'+h+'" fill="url(#'+uid+'a)" rx="6"/>';
+  for(let i=1;i<g.b1;i++){ const x=x0+w*i/g.b1;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+y0+'" x2="'+x.toFixed(1)+'" y2="'+(y0+h)+'" stroke="#fff" stroke-width="2" opacity=".65"/>'; }
+
+  // 2단계 : 1단계 영역 안에서 가로줄로 b2등분, 위 a2칸
+  const h2=h*g.a2/g.b2;
+  if(step>=2){
+    s+='<rect x="'+x0+'" y="'+y0+'" width="'+w1.toFixed(1)+'" height="'+h2.toFixed(1)+'" fill="url(#'+uid+'b)" rx="5"/>';
+    for(let i=1;i<g.b2;i++){ const y=y0+h*i/g.b2;
+      s+='<line x1="'+x0+'" y1="'+y.toFixed(1)+'" x2="'+(x0+w1).toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#fff" stroke-width="2" opacity=".7"/>'; }
+  }
+  // 3단계 : 2단계 영역 안에서 다시 세로줄로 b3등분, 왼쪽 a3칸
+  const w3=w1*g.a3/g.b3;
+  if(step>=3){
+    s+='<rect x="'+x0+'" y="'+y0+'" width="'+w3.toFixed(1)+'" height="'+h2.toFixed(1)+'" fill="url(#'+uid+'c)" rx="5"/>';
+    for(let i=1;i<g.b3;i++){ const x=x0+w1*i/g.b3;
+      s+='<line x1="'+x.toFixed(1)+'" y1="'+y0+'" x2="'+x.toFixed(1)+'" y2="'+(y0+h2).toFixed(1)+'" stroke="#fff" stroke-width="2" opacity=".8"/>'; }
+    s+=svgSprout(x0+w3/2, y0+h2/2, Math.min(w3,h2)*0.5);
+  }
+  s+='<rect x="'+x0+'" y="'+y0+'" width="'+w+'" height="'+h+'" fill="none" stroke="#7A4E2C" stroke-width="4" rx="8"/>';
+  s+='</svg>';
+  return s;
+}
+function area3Caption(g,step){
+  const p=[[g.a1,g.b1],[g.a2,g.b2],[g.a3,g.b3]].slice(0,Math.max(1,step));
+  const N=p.reduce((a,x)=>a*x[0],1), D=p.reduce((a,x)=>a*x[1],1);
+  const r=mix(N,D), rs=(N+'/'+D===fs(r))?fs(r):(N+'/'+D+' = '+fs(r));
+  const names=['밭 전체의 '+g.a1+'/'+g.b1+' → 채소밭',
+               '채소밭의 '+g.a2+'/'+g.b2+' → 상추밭',
+               '상추밭의 '+g.a3+'/'+g.b3+' → 오늘 수확한 곳'];
+  return '<div class="cap"><b>'+step+'단계</b> · '+names[step-1]+
+    '<br>지금까지 전체의 '+p.map(x=>x[0]+'/'+x[1]).join(' × ')+' = <b>'+rs+'</b></div>';
+}
+function drawArea3(){
+  const q=QUIZ[S.idx];
+  $('grid3').innerHTML=renderArea3(q.grid3,S.g3)+ (S.g3?area3Caption(q.grid3,S.g3):'<div class="cap">아래 버튼을 눌러 밭을 한 단계씩 나눠 보세요</div>');
+}
+
+/* =========================================================
+   초기화
+   ========================================================= */
+(function init(){
+  $('tipTotal').textContent=TOTAL+'개';
+  $('resFirst').textContent='0 / '+TOTAL;
+  $('hudProg').textContent='1/'+TOTAL;
+  const box=$('avatars');
+  AVATARS.forEach(function(a,i){
+    const b=document.createElement('button');
+    b.className='av'+(i===0?' sel':''); b.textContent=a; b.type='button';
+    b.setAttribute('aria-label','캐릭터 '+a);
+    b.onclick=function(){ document.querySelectorAll('.av').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); S.avatar=a; sfx.tap(); };
+    box.appendChild(b);
+  });
+  $('tgSound').onclick=function(){ S.sound=!S.sound; this.classList.toggle('on',S.sound);
+    $('btnSound').textContent=S.sound?'🔊':'🔇'; syncBGM(); if(S.sound) sfx.tap(); };
+  $('tgBgm').onclick=function(){ S.bgm=!S.bgm; this.classList.toggle('on',S.bgm); syncBGM(); sfx.tap(); };
+  $('tgLow').onclick=function(){ S.lowfx=!S.lowfx; this.classList.toggle('on',S.lowfx);
+    document.body.classList.toggle('lowfx',S.lowfx); sfx.tap(); };
+  $('btnStart').onclick=startGame;
+  $('btnAgain').onclick=function(){ show('screenTitle'); };
+  buildFx();
+})();
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $(id).classList.add('on'); }
+
+/* =========================================================
+   시작
+   ========================================================= */
+function startGame(){
+  S.nick=$('nick').value.trim()||'농부';
+  Object.assign(S,{ idx:0, score:0, coin:0, combo:0, maxCombo:0, firstTry:0, hintUsed:0,
+    reduceMiss:0, gridPerfect:true, predHit:0, predMissed:false,
+    startAt:Date.now(), elapsed:0, paused:false, locked:false,
+    wrong:[], crops:[], zoneIdx:0, tickets:0, ticketUsed:false, log:[], sprouts:0 });
+  S.badges=new Set(); S.owned=new Set();
+  QUIZ = buildQuiz();                    // 이번 판 문제 새로 뽑기
+  S.predTotal=QUIZ.filter(q=>q.predict).length;
+  document.querySelectorAll('.deco').forEach(d=>d.remove());
+  sfx.tap(); unlockAudio(); syncBGM(); show('screenGame'); loadQ();
+}
+function zoneOf(i){ let a=0; for(let z=0;z<ZONES.length;z++){ a+=ZONES[z].count; if(i<a) return z; } return ZONES.length-1; }
+function zoneStart(z){ return ZONES.slice(0,z).reduce((a,x)=>a+x.count,0); }
+function isGrid(q){ return q.type==='grid'||q.type==='rgrid'||q.type==='grid3'; }
+
+/* =========================================================
+   문항 로드
+   ========================================================= */
+function loadQ(){
+  const q=QUIZ[S.idx];
+  S.tries=0; S.preTries=0; S.gridTries=0; S.ticketUsed=false; S.locked=false;
+  S.selC=0; S.selR=0; S.qStartAt=Date.now();
+  const nz=zoneOf(S.idx); if(nz!==S.zoneIdx) S.zoneIdx=nz;
+  const z=ZONES[S.zoneIdx];
+  $('stage').className='z'+(S.zoneIdx+1);
+  $('hudZone').textContent=z.name; $('hudIcon').textContent=z.icon;
+  $('farmLevel').textContent=z.name;
+  $('hudProg').textContent=(S.idx+1)+'/'+TOTAL;
+  $('hudCoin').textContent=S.coin; $('hudCombo').textContent=S.combo;
+  $('progBar').style.width=(S.idx/TOTAL*100)+'%';
+  updTicket(); updDexDot();
+
+  const kind = q.type==='rgrid' ? '🔄 거꾸로 밭갈이'
+    : (q.type==='grid3' ? '🧅 세 겹 밭' : (q.type==='grid' ? '🌱 밭 나누기' : '🔢 계산'));
+  $('qhead').innerHTML='<span class="pill d'+q.diff+'">난이도 '+q.diff+'</span>'+
+    '<span class="pill">'+z.name+'</span><span class="pill">'+kind+'</span>'+
+    '<span style="margin-left:auto">'+(S.idx+1)+' / '+TOTAL+'</span>';
+  $('story').innerHTML=q.story; $('ask').textContent=q.ask;
+  beautify($('story')); beautify($('ask'));
+  $('fracUnit').textContent=q.unit||'';
+  const c=$('qcard'); c.style.animation='none'; void c.offsetWidth; c.style.animation='';
+  $('playScroll').scrollTop=0;
+
+  if(q.predict) startPredict(q);
+  else if(isGrid(q)) startGrid(q);
+  else if(q.pre) startPre(q);
+  else startMain(q);
+}
+function updTicket(){ $('chipTicket').style.display=S.tickets>0?'':'none'; $('hudTicket').textContent=S.tickets; }
+function updDexDot(){ $('dexDot').textContent=S.crops.length; }
+function setPanels(o){
+  /* 빈 문자열로 두면 스타일시트의 display:none 이 그대로 적용되어 버린다.
+     그래서 보여줄 때는 반드시 block 을 명시한다. */
+  $('console').style.display = (o.console===false) ? 'none' : 'block';
+  $('stepPredict').style.display = o.predict ? 'block' : 'none';
+  $('stepAnswer').style.display  = o.answer  ? 'block' : 'none';
+  $('gridArea').style.display    = o.grid    ? 'block' : 'none';
+}
+
+/* ---------- 수확 예측 ---------- */
+function startPredict(q){
+  S.stage='predict';
+  setPanels({predict:true,answer:false,grid:false});
+  $('stepNo').textContent='?';
+  $('stepLabel').textContent='계산하기 전에! '+q.predict.q;
+  beautify($('stepLabel'));
+  $('predRow').innerHTML=q.predict.opts.map(function(o,i){
+    return '<button class="pbtn" data-p="'+i+'">'+o+'</button>';
+  }).join('');
+}
+$('predRow').addEventListener('click',function(e){
+  const b=e.target.closest('.pbtn'); if(!b||S.locked||S.paused) return;
+  const q=QUIZ[S.idx], i=+b.dataset.p;
+  S.locked=true;
+  document.querySelectorAll('.pbtn').forEach(x=>x.disabled=true);
+  const right=(i===q.predict.ans);
+  if(right){ b.classList.add('ok'); S.predHit++; S.coin+=3; $('hudCoin').textContent=S.coin; sfx.ok(); }
+  else{ b.classList.add('no'); S.predMissed=true; sfx.no();
+        document.querySelector('.pbtn[data-p="'+q.predict.ans+'"]').classList.add('ok'); }
+  setTimeout(function(){
+    S.locked=false;
+    openHint(right?'🔮 예측 성공!':'🔮 이렇게 생각해 봐요',
+      right?'감이 좋네요. 코인 3개를 받았어요.':'괜찮아요. 예측은 틀려도 점수가 깎이지 않습니다.',
+      q.predict.why,false,
+      function(){ if(isGrid(q)) startGrid(q); else if(q.pre) startPre(q); else startMain(q); });
+  },560);
+});
+
+/* ---------- 준비 단계 / 본 답 ---------- */
+function startPre(q){
+  S.stage='pre';
+  setPanels({predict:false,answer:true,grid:false});
+  $('stepNo').textContent='1';
+  const lab=setShape(q.pre.ans);
+  $('stepLabel').textContent=q.pre.label+' ('+lab.replace('답을 ','').replace('입력하세요','입력')+')';
+  beautify($('stepLabel'));
+  $('fracUnit').textContent='';
+}
+function startMain(q){
+  S.stage='main';
+  setPanels({predict:false,answer:true,grid:false});
+  $('stepNo').textContent=q.pre?'2':'1';
+  $('stepLabel').textContent=setShape(q.ans);
+  $('fracUnit').textContent=q.unit||'';
+}
+
+/* =========================================================
+   밭 격자 (grid / rgrid)
+   ========================================================= */
+
+/* 남은 공간을 재서 밭이 화면 안에 딱 들어가도록 칸 크기를 정한다.
+   스크롤이나 확대 없이 문제와 밭이 한눈에 보이게 하는 핵심 함수. */
+function fitGrid(q){
+  if(!q||!isGrid(q)||q.type==='grid3') return;
+  const g=gridDims(q);
+  const scroll=$('playScroll');
+  const H=scroll.clientHeight||600, W=$('gridArea').clientWidth||360;
+  const used = ($('qcard').offsetHeight||0)
+             + ($('gridTitle').offsetHeight||0)
+             + ($('gridInfo').offsetHeight||0)
+             + ($('gridLegend').offsetHeight||0)
+             + ($('gridGo').offsetHeight||0);
+  const availH = H - used - 96;          // 카드 여백·간격 몫
+  const availW = W - 24 - 34;            // 왼쪽 막대 + 안쪽 여백
+  let cell = Math.floor(Math.min(availW/g.b, availH/g.d));
+  if(!isFinite(cell) || cell<=0) cell = 34;
+  cell = Math.max(15, Math.min(46, cell));
+  const cols='repeat('+g.b+','+cell+'px)', rows='repeat('+g.d+','+cell+'px)';
+  $('gridBox').style.gridTemplateColumns=cols;
+  $('gridBox').style.gridTemplateRows=rows;
+  $('colBar').style.gridTemplateColumns=cols;
+  $('rowBar').style.gridTemplateRows=rows;
+  $('colBar').style.gridTemplateRows='';
+  return cell;
+}
+/* 창 크기·방향이 바뀌면 다시 맞춘다 */
+let fitTimer=null;
+function refit(){
+  clearTimeout(fitTimer);
+  fitTimer=setTimeout(function(){
+    if(S.stage==='grid') fitGrid(QUIZ[S.idx]);
+  },120);
+}
+window.addEventListener('resize', refit);
+window.addEventListener('orientationchange', refit);
+
+function gridDims(q){ return q.type==='rgrid' ? {b:q.rgrid.b,d:q.rgrid.d} : {b:q.grid.b,d:q.grid.d}; }
+function startGrid(q){
+  S.stage='grid';
+  setPanels({console:false,predict:false,answer:false,grid:true});
+  if(q.type==='grid3'){
+    S.g3=0;
+    $('gridLayout').style.display='none'; $('gridInfo').style.display='none';
+    $('grid3').style.display='';
+    $('gridTitle').innerHTML='밭 속의 밭, 그 속의 밭! <b style="color:var(--both)">세 단계</b>로 나누어 봅시다';
+    $('gridLegend').innerHTML='<span><i style="background:'+C_COL+'"></i>1단계</span>'+
+      '<span><i style="background:#7FD3A4"></i>2단계</span>'+
+      '<span><i style="background:'+C_BOTH+'"></i>🌱 3단계 = 정답</span>';
+    $('gridGo').disabled=false; $('gridGo').textContent='① 밭 나누기 ▸';
+    drawArea3();
+    return;
+  }
+  $('gridLayout').style.display=''; $('gridInfo').style.display='';
+  $('grid3').style.display='none'; $('gridGo').textContent='🌱 심기 완료';
+  const g=gridDims(q);
+  if(q.type==='rgrid'){
+    $('gridTitle').innerHTML='새싹이 <b class="mx" style="color:var(--both)">'+q.rgrid.hit+'칸</b> 나도록 가로·세로를 직접 정해 보세요<br>'+
+      '<span style="font-size:.86em;color:var(--ink-soft)">(방법이 여러 가지랍니다!)</span>';
+  }else{
+    $('gridTitle').innerHTML='가로로 '+fracHTML(0,q.grid.a,q.grid.b,'fc-col')+' , 세로로 '+fracHTML(0,q.grid.c,q.grid.d,'fc-row')+' 만큼 밭을 나누어 심으세요';
+  }
+  $('gridLegend').innerHTML='<span><i style="background:'+C_COL+'"></i>가로</span>'+
+    '<span><i style="background:'+C_ROW+'"></i>세로</span>'+
+    '<span><i style="background:'+C_BOTH+'"></i>🌱 겹친 곳</span>'+
+    '<span><i style="background:'+C_SOIL+'"></i>안 심은 흙</span>';
+  const cb=$('colBar'), rb=$('rowBar'), gb=$('gridBox');
+  cb.style.gridTemplateColumns='repeat('+g.b+',1fr)';
+  rb.style.gridTemplateRows='repeat('+g.d+',1fr)';
+  gb.style.gridTemplateColumns='repeat('+g.b+',1fr)';
+  cb.innerHTML=''; rb.innerHTML=''; gb.innerHTML='';
+  for(let i=0;i<g.b;i++){ const s=document.createElement('button'); s.className='seg'; s.dataset.col=i; s.textContent=i+1; cb.appendChild(s); }
+  for(let i=0;i<g.d;i++){ const s=document.createElement('button'); s.className='seg'; s.dataset.row=i; s.textContent=i+1; rb.appendChild(s); }
+  for(let r=0;r<g.d;r++) for(let c=0;c<g.b;c++){
+    const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; gb.appendChild(cell);
+  }
+  paintGrid(q);
+  fitGrid(q);
+  requestAnimationFrame(function(){ fitGrid(q); });   // 레이아웃 확정 후 한 번 더
+}
+$('colBar').addEventListener('click',function(e){
+  const s=e.target.closest('.seg'); if(!s||S.locked) return;
+  const v=+s.dataset.col+1; S.selC=(S.selC===v?0:v); sfx.plant(); paintGrid(QUIZ[S.idx]);
+});
+$('rowBar').addEventListener('click',function(e){
+  const s=e.target.closest('.seg'); if(!s||S.locked) return;
+  const v=+s.dataset.row+1; S.selR=(S.selR===v?0:v); sfx.plant(); paintGrid(QUIZ[S.idx]);
+});
+function paintGrid(q){
+  const g=gridDims(q);
+  $('colBar').querySelectorAll('.seg').forEach(s=>s.classList.toggle('on',+s.dataset.col<S.selC));
+  $('rowBar').querySelectorAll('.seg').forEach(s=>s.classList.toggle('on',+s.dataset.row<S.selR));
+  $('gridBox').querySelectorAll('.cell').forEach(function(cell){
+    const c=+cell.dataset.c, r=+cell.dataset.r, cs=c<S.selC, rs=r<S.selR;
+    cell.className='cell'+(cs&&rs?' both':(cs?' cs':(rs?' rs':'')));
+  });
+  const both=S.selC*S.selR, tot=g.b*g.d;
+  let ok, info;
+  if(q.type==='rgrid'){
+    ok = both===q.rgrid.hit;
+    info='<span class="tagv goal">🎯 목표 새싹 '+q.rgrid.hit+'칸</span>'+
+         '<span class="tagv'+(ok?' ok':'')+'">🌱 지금 '+both+'칸 / 전체 '+tot+'칸</span>';
+  }else{
+    const okC=S.selC===q.grid.a, okR=S.selR===q.grid.c;
+    ok=okC&&okR;
+    info='<span class="tagv'+(okC?' ok':'')+'">가로 '+S.selC+'/'+g.b+'</span>'+
+         '<span class="tagv'+(okR?' ok':'')+'">세로 '+S.selR+'/'+g.d+'</span>'+
+         '<span class="tagv">🌱 새싹 '+both+'칸 / 전체 '+tot+'칸</span>';
+  }
+  $('gridInfo').innerHTML=info;
+  $('gridGo').disabled=!ok;
+}
+$('gridGo').onclick=function(){
+  const q=QUIZ[S.idx];
+  if(S.locked||$('gridGo').disabled) return;
+  if(q.type==='grid3' && S.g3<3){
+    S.g3++; sfx.plant(); drawArea3();
+    $('gridGo').textContent = S.g3<3 ? (['②','③'][S.g3-1]+' 더 나누기 ▸') : '🌱 심기 완료';
+    if(S.g3===3){
+      const box=$('grid3').getBoundingClientRect(), st=$('stage').getBoundingClientRect();
+      burst(box.left-st.left+box.width/2, box.top-st.top+box.height/2, ['🌱','🌿','🍃','🌼']);
+    }
+    return;
+  }
+  sfx.great();
+  const box=$('gridBox').getBoundingClientRect(), st=$('stage').getBoundingClientRect();
+  burst(box.left-st.left+box.width/2, box.top-st.top+box.height/2, ['🌱','🌿','🍃','🌼']);
+  S.locked=true;
+  setTimeout(function(){
+    S.locked=false; $('gridGo').disabled=true;
+    if(q.pre) startPre(q); else startMain(q);
+    $('playScroll').scrollTop=$('playScroll').scrollHeight;
+  },520);
+};
+
+/* =========================================================
+   분수 입력
+   ========================================================= */
+function clearInp(act){ S.inp={w:'',n:'',d:''}; S.act=act||'w'; drawInp(); }
+/* 답의 모양에 맞는 칸만 띄운다 — 필요 없는 칸이 보이면 아이들이 헷갈린다 */
+function setShape(ans){
+  const w=document.querySelector('.slot[data-s="w"]'), st=document.querySelector('.fstack');
+  let label, start;
+  if(!ans.d){                       // 자연수 답
+    w.style.display=''; st.style.display='none'; start='w'; label='답을 수로 입력하세요';
+  }else if(ans.w>0){                // 대분수 답
+    w.style.display=''; st.style.display=''; start='w'; label='답을 대분수로 입력하세요';
+  }else{                            // 분수만
+    w.style.display='none'; st.style.display=''; start='n';
+    label = ans.improper ? '가분수로 입력하세요' : '답을 기약분수로 입력하세요';
+  }
+  clearInp(start);
+  return label;
+}
+function visibleSlots(){
+  const wOn = document.querySelector('.slot[data-s="w"]').style.display !== 'none';
+  const fOn = document.querySelector('.fstack').style.display !== 'none';
+  const out=[]; if(wOn) out.push('w'); if(fOn){ out.push('n'); out.push('d'); }
+  return out.length?out:['w'];
+}
+function drawInp(){
+  ['w','n','d'].forEach(function(k){
+    const el=document.querySelector('.slot[data-s="'+k+'"]'), v=S.inp[k];
+    el.querySelector('.val').textContent=v===''?'-':v;
+    el.classList.toggle('empty',v==='');
+    el.classList.toggle('act',S.act===k);
+  });
+  $('fracInput').classList.remove('ok','no');
+}
+document.querySelectorAll('.slot').forEach(function(el){
+  el.addEventListener('click',function(){ if(S.locked||S.paused) return; S.act=el.dataset.s; sfx.tap(); drawInp(); });
+});
+$('keypad').addEventListener('click',function(e){ const b=e.target.closest('.key'); if(b) key(b.dataset.k); });
+function key(k){
+  if(S.locked||S.paused||S.stage==='grid'||S.stage==='predict') return;
+  if(k==='ok'){ submit(); return; }
+  if(k==='del'){ S.inp[S.act]=S.inp[S.act].slice(0,-1); sfx.tap(); drawInp(); return; }
+  if(k==='next'){
+    const vs=visibleSlots(); const i=vs.indexOf(S.act);
+    S.act=vs[(i+1)%vs.length]; sfx.tap(); drawInp(); return;
+  }
+  if(S.inp[S.act].length>=3) return;
+  if(S.inp[S.act]==='0') S.inp[S.act]='';
+  S.inp[S.act]+=k; sfx.tap(); drawInp();
+}
+function checkAns(inp,ans){
+  const w=inp.w===''?0:+inp.w, hasN=inp.n!=='', hasD=inp.d!=='';
+  if(hasN!==hasD) return {ok:false,why:'half'};
+  const n=hasN?+inp.n:0, d=hasD?+inp.d:0;
+  if(hasD&&d===0) return {ok:false,why:'zero'};
+  if(!hasN&&inp.w==='') return {ok:false,why:'empty'};
+  const myN=hasN?w*d+n:w, myD=hasN?d:1;
+  const tgN=ans.d?ans.w*ans.d+ans.n:ans.w, tgD=ans.d?ans.d:1;
+  if(myN*tgD!==tgN*myD) return {ok:false,why:'value'};
+  if(hasN){
+    if(gcd(n,d)>1) return {ok:false,why:'reduce'};
+    if(!ans.improper&&n>=d) return {ok:false,why:'improper'};
+  }else if(ans.d) return {ok:false,why:'needfrac'};
+  return {ok:true};
+}
+const WHY={
+  half:['✍️ 분수는 두 칸을 다 채워요','분자와 분모 중 한 칸만 입력했어요. 두 칸을 모두 채우거나, 정수 답이면 정수 칸만 쓰세요.'],
+  zero:['✍️ 분모는 0이 될 수 없어요','분모 칸을 다시 확인해 주세요.'],
+  empty:['✍️ 아직 답이 비어 있어요','숫자를 입력한 뒤 확인을 눌러 주세요.'],
+  reduce:['✂️ 거의 다 왔어요!','값은 맞았지만 <b>약분</b>을 더 할 수 있어요. 분자와 분모를 같은 수로 나누어 보세요.'],
+  improper:['🔄 가분수를 대분수로!','값은 맞았지만 분자가 분모보다 커요. 정수 부분을 따로 떼어 대분수로 써 주세요.'],
+  needfrac:['✍️ 분수로 답해 주세요','이 문제의 답은 분수예요. 분자와 분모 칸을 채워 주세요.'],
+  value:['🔍 다시 계산해 볼까요?','']
+};
+function submit(){
+  const q=QUIZ[S.idx], isPre=S.stage==='pre';
+  const target=isPre?q.pre.ans:q.ans;
+  const r=checkAns(S.inp,target);
+  if(r.ok){
+    if(isPre){
+      sfx.ok(); $('fracInput').classList.add('ok'); S.locked=true;
+      setTimeout(function(){ S.locked=false; startMain(q); },480);
+    }else correct();
+    return;
+  }
+  if(isPre) S.preTries++; else S.tries++;
+  if(r.why==='reduce') S.reduceMiss++;
+  $('fracInput').classList.add('no'); sfx.no();
+  S.combo=0; $('hudCombo').textContent=0;
+  if(!isPre&&S.tries===1){
+    const shown=(S.inp.w||'0')+(S.inp.n!==''?' '+S.inp.n+'/'+S.inp.d:'');
+    S.wrong.push({q:q,mine:shown});
+  }
+  let ticket=false;
+  if(S.tickets>0&&!S.ticketUsed&&r.why==='value'){ S.tickets--; S.ticketUsed=true; ticket=true; updTicket(); }
+  const info=WHY[r.why]||WHY.value;
+  const body=(r.why==='value'||r.why==='needfrac')?q.hint:info[1];
+  openHint(info[0], (r.why==='value'?'계산 과정을 한 단계씩 되짚어 볼까요?':info[1]), body, ticket,
+    function(){ S.inp={w:'',n:'',d:''}; drawInp(); });
+}
+
+/* ---------- 정답 ---------- */
+function correct(){
+  const q=QUIZ[S.idx];
+  S.locked=true; $('fracInput').classList.add('ok');
+  const firstShot=(S.tries===0&&S.preTries===0&&S.gridTries===0);
+  let base=100,bonus=0;
+  if(firstShot){ S.firstTry++; bonus+=100; }
+  if(S.tries>0&&!S.ticketUsed) base=Math.max(20,100-S.tries*30);
+  if(q.type==='grid') bonus+=30;
+  if(q.type==='rgrid') bonus+=60;
+  S.combo++; if(S.combo>S.maxCombo) S.maxCombo=S.combo;
+  const mult=1+Math.min(S.combo-1,10)*0.1;
+  const gained=Math.round((base+bonus)*mult);
+  S.score+=gained;
+  let coins=firstShot?4:2, cb=0;
+  if(S.combo===3) cb=5; if(S.combo===5) cb=10; if(S.combo===8) cb=15; if(S.combo===12) cb=25;
+  coins+=cb; S.coin+=coins;
+  $('hudCombo').textContent=S.combo; $('hudCoin').textContent=S.coin;
+  const chip=$('chipCombo'); chip.classList.remove('hot'); void chip.offsetWidth; chip.classList.add('hot');
+
+  // 작물 획득
+  if(q.crop){ S.crops.push({e:q.crop.e,name:q.crop.name,q:(S.idx+1)}); updDexDot(); }
+
+  // 문제별 기록 (결과 화면 통계용)
+  const secs=Math.max(1,Math.round((Date.now()-S.qStartAt)/1000));
+  let sprouts=0;
+  if(q.type==='grid') sprouts=q.grid.a*q.grid.c;
+  else if(q.type==='rgrid') sprouts=S.selC*S.selR;
+  S.log.push({no:S.idx+1, diff:q.diff, first:firstShot, secs:secs, tries:S.tries, type:q.type, sprouts:sprouts, ask:q.ask});
+  S.sprouts+=sprouts;
+
+  const fi=$('fracInput').getBoundingClientRect(), st=$('stage').getBoundingClientRect();
+  burst(fi.left-st.left+fi.width/2, fi.top-st.top+fi.height/2,
+    S.combo>=3?['🌟','✨','🪙','🌼','🎉']:['🌱','🌿','✨','🪙']);
+  if(S.combo>=3){
+    sfx.great();
+    $('comboNum').textContent=S.combo;
+    $('comboTxt').textContent=cb?('콤보 보너스 +'+cb+' 코인!'):'콤보!';
+    const cp=$('comboPop'); cp.classList.remove('on'); void cp.offsetWidth; cp.classList.add('on');
+  }else sfx.ok();
+  setTimeout(sfx.coin,240);
+  if(q.crop) setTimeout(sfx.crop,420);
+
+  $('okTitle').textContent=firstShot?'🌻 한 번에 수확 성공!':'🌱 수확 성공!';
+  $('okBody').innerHTML=q.explain; beautify($('okBody'));
+  if(q.type==='rgrid'){
+    $('areaSlot').innerHTML=renderArea({a:S.selC,b:q.rgrid.b,c:S.selR,d:q.rgrid.d},
+      '내가 고른 방법: 가로 '+S.selC+'/'+q.rgrid.b+' × 세로 '+S.selR+'/'+q.rgrid.d);
+  }else if(q.type==='grid'){
+    $('areaSlot').innerHTML=renderArea(q.grid);
+  }else if(q.type==='grid3'){
+    $('areaSlot').innerHTML='<div class="areaviz">'+renderArea3(q.grid3,3)+area3Caption(q.grid3,3)+'</div>';
+  }else $('areaSlot').innerHTML='';
+  $('cropSlot').innerHTML = q.crop
+    ? '<div class="cropwin"><span class="e">'+q.crop.e+'</span><div class="t">🎉 '+q.crop.name+' 씨앗을 얻었어요! (도감 '+S.crops.length+'/'+TOTAL+')</div></div>' : '';
+  let g='+'+gained+'점 · 🪙'+coins;
+  if(cb) g+=' (콤보 보너스 +'+cb+')';
+  if(S.combo>=2) g+='<br>🔥 '+S.combo+'콤보 · 점수 '+mult.toFixed(1)+'배';
+  if(S.ticketUsed) g+='<br>💧 물뿌리개 사용 · 감점 없음';
+  $('okGain').innerHTML=g;
+  setTimeout(function(){ $('ovOk').classList.add('on'); },700);
+}
+
+$('okNext').onclick=function(){
+  $('ovOk').classList.remove('on');
+  const end=zoneStart(S.zoneIdx)+ZONES[S.zoneIdx].count-1, done=(S.idx===end);
+  S.idx++;
+  if(S.idx>=TOTAL){ finish(); return; }
+  if(done) zoneCard(S.zoneIdx); else loadQ();
+};
+function zoneCard(z){
+  sfx.zone();
+  $('zoneIcon').textContent=ZONES[z+1].icon;
+  $('zoneTitle').textContent=ZONES[z].name+' 완료!';
+  $('zoneDesc').innerHTML='밭이 <b>'+ZONES[z].next+'</b>(으)로 넓어졌어요. 이랑이 더 촘촘해진 걸 보세요!';
+  S.coin+=12;
+  $('zoneGain').innerHTML='🪙 통과 보너스 +12 · 보유 '+S.coin;
+  $('ovZone').classList.add('on');
+}
+$('zoneNext').onclick=function(){ $('ovZone').classList.remove('on'); openShop(); };
+
+/* ---------- 상점 ---------- */
+function openShop(){ drawShop(); $('ovShop').classList.add('on'); }
+function drawShop(){
+  $('shopCoin').textContent='🪙 '+S.coin;
+  $('shopGrid').innerHTML=SHOP.map(function(it){
+    const bought=!it.repeat&&S.owned.has(it.id), can=(S.coin>=it.price)&&!bought;
+    return '<button class="item '+(bought?'bought':'')+'" data-id="'+it.id+'" '+(can?'':'disabled')+'>'+
+      '<span class="e">'+it.e+'</span><span class="tt">'+it.title+'</span>'+
+      '<span class="pr">'+(bought?'보유중':'🪙'+it.price)+'</span></button>';
+  }).join('');
+}
+$('shopGrid').addEventListener('click',function(e){
+  const b=e.target.closest('.item'); if(!b||b.disabled) return;
+  const it=SHOP.filter(x=>x.id===b.dataset.id)[0];
+  if(!it||S.coin<it.price) return;
+  S.coin-=it.price; sfx.buy();
+  if(it.repeat){ S.tickets++; updTicket(); }
+  else{ S.owned.add(it.id); placeDeco(it); }
+  $('hudCoin').textContent=S.coin; drawShop();
+});
+function placeDeco(it){
+  const d=document.createElement('span');
+  d.className='deco '+(it.layer||'mid')+(it.fly?' fly':'');
+  d.textContent=it.e; d.style.left=it.pos+'%';
+  $('farmStrip').appendChild(d);
+}
+$('shopClose').onclick=function(){ $('ovShop').classList.remove('on'); loadQ(); };
+
+/* ---------- 도감 ---------- */
+function dexHTML(){
+  return QUIZ.map(function(q,i){
+    const got=S.crops.filter(c=>c.q===i+1)[0];
+    return '<div class="dc'+(got?'':' locked')+'">'+
+      '<span class="e">'+(q.crop?q.crop.e:'❔')+'</span>'+
+      '<div class="n">'+(got?q.crop.name:'???')+'</div>'+
+      '<div class="q">'+(i+1)+'번 문제</div></div>';
+  }).join('');
+}
+$('btnDex').onclick=function(){
+  $('dexTop').textContent=S.crops.length+' / '+TOTAL;
+  $('dexGrid').innerHTML=dexHTML();
+  $('ovDex').classList.add('on'); sfx.tap();
+};
+$('dexClose').onclick=function(){ $('ovDex').classList.remove('on'); };
+
+/* ---------- 힌트 ---------- */
+let hintCb=null;
+function openHint(title,lead,body,ticket,after){
+  if(title.indexOf('예측')<0) S.hintUsed++;
+  S.locked=true; hintCb=after;
+  $('hintTitle').textContent=title;
+  $('hintLead').innerHTML=lead;
+  $('hintBody').innerHTML=body;
+  beautify($('hintLead')); beautify($('hintBody'));
+  $('ticketSlot').innerHTML=ticket
+    ? '<div class="hintbox" style="border-left-color:var(--sea);background:#E8F6FF">💧 물뿌리개를 썼어요. 이 문제는 <b>감점 없이</b> 다시 도전할 수 있습니다. (남은 개수 '+S.tickets+')</div>':'';
+  const btn=$('hintClose'); btn.disabled=true;
+  let w=3; btn.textContent='읽는 중... '+w;
+  $('ovHint').classList.add('on');
+  const t=setInterval(function(){
+    w--;
+    if(w<=0){ clearInterval(t); btn.disabled=false; btn.textContent='다시 도전'; }
+    else btn.textContent='읽는 중... '+w;
+  },1000);
+}
+$('hintClose').onclick=function(){
+  $('ovHint').classList.remove('on'); S.locked=false;
+  if(hintCb){ const f=hintCb; hintCb=null; f(); }
+};
+
+/* ---------- 일시정지 / 소리 ---------- */
+$('btnPause').onclick=pause;
+function pause(){ if(S.paused) return; S.paused=true; if(BGM_EL) BGM_EL.pause(); $('ovPause').classList.add('on'); }
+$('pauseGo').onclick=function(){ S.paused=false; $('ovPause').classList.remove('on'); syncBGM(); };
+$('pauseQuit').onclick=function(){ S.paused=false; $('ovPause').classList.remove('on'); show('screenTitle'); };
+$('btnSound').onclick=function(){ S.sound=!S.sound; this.textContent=S.sound?'🔊':'🔇';
+  $('tgSound').classList.toggle('on',S.sound); syncBGM(); if(S.sound) sfx.tap(); };
+
+/* ---------- 키보드 ---------- */
+document.addEventListener('keydown',function(e){
+  if(!$('screenGame').classList.contains('on')) return;
+  if(e.key==='Escape'){
+    e.preventDefault();
+    if($('ovDex').classList.contains('on')){ $('dexClose').click(); return; }
+    if(S.paused) $('pauseGo').click(); else pause();
+    return;
+  }
+  if(S.paused) return;
+  if($('ovHint').classList.contains('on')){ if(e.key==='Enter'&&!$('hintClose').disabled){e.preventDefault();$('hintClose').click();} return; }
+  if($('ovOk').classList.contains('on')){ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('okNext').click();} return; }
+  if($('ovZone').classList.contains('on')){ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('zoneNext').click();} return; }
+  if($('ovShop').classList.contains('on')){ if(e.key==='Enter'){e.preventDefault();$('shopClose').click();} return; }
+  if($('ovDex').classList.contains('on')){ if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();$('dexClose').click();} return; }
+  if(S.stage==='predict'){
+    if(/^[1-3]$/.test(e.key)){ const b=document.querySelector('.pbtn[data-p="'+(+e.key-1)+'"]'); if(b&&!b.disabled){e.preventDefault();b.click();} }
+    return;
+  }
+  if(S.stage==='grid'){ if(e.key==='Enter'&&!$('gridGo').disabled){e.preventDefault();$('gridGo').click();} return; }
+  if(/^[0-9]$/.test(e.key)){ e.preventDefault(); key(e.key); }
+  else if(e.key==='Backspace'){ e.preventDefault(); key('del'); }
+  else if(e.key==='Tab'||e.key===' '||e.key==='/'){ e.preventDefault(); key('next'); }
+  else if(e.key==='Enter'){ e.preventDefault(); key('ok'); }
+});
+
+/* ---------- 브라우저 간섭 차단 ---------- */
+document.addEventListener('gesturestart',function(e){e.preventDefault();});
+document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+document.addEventListener('contextmenu',function(e){e.preventDefault();});
+let lt=0;
+document.addEventListener('touchend',function(e){ const n=Date.now(); if(n-lt<320) e.preventDefault(); lt=n; },{passive:false});
+document.addEventListener('touchmove',function(e){
+  if(!e.target.closest('.scroller, #playScroll, .avatars, .modal')) e.preventDefault();
+},{passive:false});
+
+/* =========================================================
+   결과
+   ========================================================= */
+function finish(){
+  S.elapsed=Math.floor((Date.now()-S.startAt)/1000);
+  $('progBar').style.width='100%';
+  const rate=Math.round(S.firstTry/TOTAL*100);
+  if(S.firstTry===TOTAL) S.badges.add('perfect');
+  if(S.hintUsed===0) S.badges.add('nohint');
+  if(S.maxCombo>=5) S.badges.add('combo5');
+  if(S.maxCombo>=10) S.badges.add('combo10');
+  if(S.gridPerfect) S.badges.add('grid');
+  if(S.reduceMiss===0) S.badges.add('reduce');
+  if(!S.predMissed) S.badges.add('seer');
+  if(S.crops.length===TOTAL) S.badges.add('dex');
+
+  let stars=1, rank='새싹 농부';
+  if(rate>=90){stars=3;rank='전설의 대농장주';}
+  else if(rate>=70){stars=3;rank='솜씨 좋은 농부';}
+  else if(rate>=50){stars=2;rank='부지런한 농부';}
+
+  $('resStars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  $('resRank').textContent=rank;
+  $('resWho').textContent=S.avatar+' '+S.nick+' 농부의 농사 기록';
+  $('resScore').textContent=S.score.toLocaleString();
+  $('resSolved').textContent=TOTAL+' / '+TOTAL;
+  $('resSprout').textContent=S.sprouts+'칸';
+
+  /* 시간 통계 */
+  const times=S.log.map(l=>l.secs);
+  const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):0;
+  $('resAvg').textContent=avg+'초';
+  const slow=S.log.slice().sort((a,b)=>b.secs-a.secs)[0];
+  $('resSlow').textContent=slow?(slow.no+'번 · '+slow.secs+'초'):'-';
+
+  /* 난이도별 성적 */
+  function barRow(name,hit,tot){
+    const pc=tot?Math.round(hit/tot*100):0;
+    const cls=pc>=80?'':(pc>=50?'mid':'low');
+    return '<div class="bar"><span class="nm">'+name+'</span>'+
+      '<span class="track"><span class="fill '+cls+'" style="width:'+pc+'%"></span></span>'+
+      '<span class="pc">'+hit+'/'+tot+'</span></div>';
+  }
+  $('resDiff').innerHTML=['하','중','상'].map(function(d){
+    const g=S.log.filter(l=>l.diff===d);
+    return barRow('난이도 '+d, g.filter(l=>l.first).length, g.length);
+  }).join('');
+
+  /* 유형별 성적 */
+  const types=[['🌱 밭 나누기','grid'],['🔄 거꾸로 밭갈이','rgrid'],['🔢 계산','plain']];
+  $('resType').innerHTML=types.map(function(t){
+    const g=S.log.filter(l=>l.type===t[1]);
+    return g.length?barRow(t[0], g.filter(l=>l.first).length, g.length):'';
+  }).join('');
+
+  /* 문제별 기록 막대 */
+  const maxT=Math.max(10,...times);
+  $('resChart').innerHTML=S.log.map(function(l,i){
+    const h=Math.max(8,Math.round(l.secs/maxT*88));
+    return '<div class="cb'+(l.first?'':' retry')+'" style="height:'+h+'px;animation-delay:'+(i*28)+'ms" title="'+l.no+'번 · '+l.secs+'초'+(l.first?' · 한 번에':' · '+(l.tries+1)+'번 시도')+'"></div>';
+  }).join('');
+
+  /* 모은 작물 · 꾸민 텃밭 */
+  $('resCropLine').innerHTML=S.crops.length
+    ? S.crops.map(c=>'<span title="'+c.name+'">'+c.e+'</span>').join('')
+    : '<span class="none">아직 모은 작물이 없어요</span>';
+  const decos=SHOP.filter(it=>S.owned.has(it.id));
+  $('decoCount').textContent=decos.length+' / '+SHOP.filter(i=>!i.repeat).length;
+  $('resDecoLine').innerHTML=decos.length
+    ? decos.map(d=>'<span title="'+d.title+'">'+d.e+'</span>').join('')
+    : '<span class="none">코인을 모아 텃밭을 꾸며 보세요</span>';
+
+  /* 한 줄 총평 — 가장 눈에 띄는 점을 골라 말해 준다 */
+  let vEm='🌱', vTx='';
+  if(S.firstTry===TOTAL){ vEm='🏆'; vTx='한 문제도 놓치지 않았어요! 분수의 곱셈을 완전히 익혔네요.'; }
+  else if(S.reduceMiss>=3){ vEm='✂️'; vTx='계산은 잘하는데 <b>약분</b>에서 '+S.reduceMiss+'번 아쉬웠어요. 답을 쓰기 전에 분자와 분모를 한 번 더 보는 습관을 들여 봐요.'; }
+  else if(S.predTotal&&S.predHit===S.predTotal){ vEm='🔮'; vTx='수확 예측을 모두 맞혔어요. <b>곱하면 커질지 작아질지</b> 감이 아주 좋습니다!'; }
+  else if(rate>=80){ vEm='🌻'; vTx='대부분을 한 번에 맞혔어요. 어려운 문제도 침착하게 풀어냈네요.'; }
+  else if(S.maxCombo>=6){ vEm='🔥'; vTx='한번 집중하면 '+S.maxCombo+'문제를 연속으로 맞히는 힘이 있어요. 그 흐름을 끝까지 이어가 봐요.'; }
+  else if(rate>=50){ vEm='🌿'; vTx='절반 넘게 한 번에 맞혔어요. 틀린 문제만 다시 보면 금방 늘 거예요.'; }
+  else { vEm='🌱'; vTx='끝까지 포기하지 않고 '+TOTAL+'문제를 모두 해냈어요. 아래 <b>다시 볼 문제</b>부터 천천히 확인해 봐요.'; }
+  $('resVerdict').innerHTML='<span class="em">'+vEm+'</span><span>'+vTx+'</span>';
+  $('resRate').textContent=rate+'%';
+  $('resFirst').textContent=S.firstTry+' / '+TOTAL;
+  $('resCombo').textContent=S.maxCombo;
+  $('resTime').textContent=String(Math.floor(S.elapsed/60)).padStart(2,'0')+':'+String(S.elapsed%60).padStart(2,'0');
+  $('resCoin').textContent=S.coin;
+  $('resReduce').textContent=S.reduceMiss+'회';
+  $('resPredict').textContent=S.predHit+' / '+S.predTotal;
+  $('dexCount').textContent=S.crops.length+' / '+TOTAL;
+  $('resDex').innerHTML=dexHTML();
+  $('resBadges').innerHTML=BADGES.map(function(b){
+    return '<div class="bdg '+(S.badges.has(b.id)?'got':'')+'" title="'+b.desc+'">'+
+      '<span class="e">'+b.e+'</span><span class="n">'+b.n+'</span></div>';
+  }).join('');
+  $('resReview').innerHTML=S.wrong.length
+    ? S.wrong.map(function(w){
+        return '<div class="rv"><div class="q">'+w.q.ask+'</div>'+
+          '<div class="a"><span class="mine">내 답 '+w.mine+'</span>'+
+          '<span class="right">정답 '+ansHTML(w.q.ans)+(w.q.unit||'')+'</span></div>'+
+          '<div class="why">'+w.q.explain+'</div>'+
+          (w.q.type==='grid'?renderArea(w.q.grid):'')+'</div>';
+      }).join('')
+    : '<div class="empty-note">모든 문제를 한 번에 맞혔어요. 대단한 농부입니다 🏆</div>';
+  $('resReview').querySelectorAll('.q, .why').forEach(beautify);
+  sfx.zone(); show('screenResult');
+}
+</script>
+</body>
+</html>

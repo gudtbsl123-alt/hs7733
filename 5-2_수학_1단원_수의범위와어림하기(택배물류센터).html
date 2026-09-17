@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>한밤의 택배 물류센터 — 수의 범위와 어림하기</title>
+<style>
+/* ============================================================
+   한밤의 택배 물류센터
+   5학년 2학기 1단원 · 수의 범위와 어림하기
+   ------------------------------------------------------------
+   [디자인 토큰]
+   야간 물류센터의 재료에서 가져온 팔레트.
+   강철 슬레이트 바닥 · 골판지 상자 · 안전 옐로우 · 스캐너 시안 · 경고 레드
+   숫자는 전부 모노스페이스 = 송장/저울/바코드의 세계
+   ============================================================ */
+:root{
+  --steel-900:#0E1219;   /* 창고 바닥 */
+  --steel-800:#151B26;
+  --steel-700:#1E2634;   /* 패널 */
+  --steel-600:#2B3547;
+  --steel-500:#3D4A60;
+  --kraft:#D2A06A;       /* 골판지 */
+  --kraft-dark:#A9743F;
+  --label:#F4EFE3;       /* 송장 종이 */
+  --safety:#FFC300;      /* 안전 옐로우 */
+  --scan:#2EE6C5;        /* 스캐너 시안 */
+  --alert:#FF5F4D;       /* 경고 */
+  --ink:#111722;
+  --muted:#8494AC;
+
+  --r-sm:8px; --r-md:14px; --r-lg:22px;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"D2Coding","Nanum Gothic Coding",monospace;
+  --sans:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  font-family:var(--sans);
+  background:var(--steel-900);
+  color:var(--label);
+  user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;
+  display:flex;align-items:center;justify-content:center;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible{outline:3px solid var(--scan);outline-offset:2px}
+
+/* 창고 무대 ------------------------------------------------ */
+#stage{
+  position:relative;width:100%;height:100dvh;max-width:1100px;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(46,230,197,.10), transparent 60%),
+    linear-gradient(180deg,var(--steel-800) 0%, var(--steel-900) 70%);
+}
+/* 창고 선반 실루엣 */
+#stage::before{
+  content:"";position:absolute;inset:auto 0 0 0;height:46%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 3px, transparent 3px 96px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 3px, transparent 3px 74px);
+  mask-image:linear-gradient(180deg,transparent,#000 60%);
+  pointer-events:none;
+}
+
+/* ============ 공통 화면 ============ */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:2}
+.screen.on{display:flex}
+.scroller{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px 28px}
+
+/* ============ 타이틀 ============ */
+.hero{text-align:center;padding:26px 4px 10px}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:var(--safety);
+  border:1px solid rgba(255,195,0,.35);border-radius:999px;padding:5px 14px;display:inline-block;
+}
+.hero h1{
+  font-size:clamp(28px,7.4vw,50px);font-weight:900;letter-spacing:-.03em;line-height:1.08;
+  margin:14px 0 8px;
+}
+.hero h1 span{color:var(--safety)}
+.hero p{color:var(--muted);font-size:clamp(13px,3.4vw,15px);line-height:1.6}
+
+/* 안전 스트라이프 구분선 */
+.stripe{
+  height:9px;border-radius:99px;margin:18px auto;max-width:620px;
+  background:repeating-linear-gradient(-45deg,var(--safety) 0 12px,var(--ink) 12px 24px);
+  opacity:.85;
+}
+
+.panel{
+  background:linear-gradient(180deg,var(--steel-700),var(--steel-800));
+  border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);
+  padding:18px;margin:14px auto;max-width:620px;box-shadow:var(--shadow);
+}
+.panel h2{
+  font-size:13px;letter-spacing:.16em;color:var(--scan);font-family:var(--mono);
+  margin-bottom:14px;text-transform:uppercase;
+}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:700}
+input[type=text]{
+  width:100%;background:var(--steel-900);border:1px solid var(--steel-600);
+  border-radius:var(--r-md);padding:14px 16px;color:var(--label);font-size:16px;font-weight:700;
+}
+input[type=text]:focus{outline:none;border-color:var(--scan)}
+
+.avatars{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;max-height:184px;overflow-y:auto;padding:4px}
+.av{
+  aspect-ratio:1;border-radius:var(--r-md);background:var(--steel-900);
+  border:2px solid transparent;font-size:26px;display:flex;align-items:center;justify-content:center;
+  transition:transform .12s, border-color .12s, background .12s;
+}
+.av:hover{transform:translateY(-2px)}
+.av.sel{border-color:var(--safety);background:rgba(255,195,0,.14);transform:translateY(-2px)}
+
+.tips{list-style:none;display:grid;gap:9px}
+.tips li{
+  display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:#CFD8E6;
+  background:var(--steel-900);border-radius:var(--r-md);padding:11px 13px;
+  border-left:3px solid var(--safety);
+}
+.tips li b{color:var(--safety)}
+
+.toggles{display:flex;gap:10px;flex-wrap:wrap}
+.tg{
+  flex:1;min-width:150px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--steel-900);border:1px solid var(--steel-600);border-radius:var(--r-md);
+  padding:12px 14px;font-size:13px;font-weight:700;
+}
+.tg .sw{width:42px;height:24px;border-radius:99px;background:var(--steel-600);position:relative;transition:background .2s;flex:none}
+.tg .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--label);transition:transform .2s}
+.tg.on .sw{background:var(--scan)}
+.tg.on .sw::after{transform:translateX(18px)}
+
+.cta{
+  display:block;width:100%;max-width:620px;margin:6px auto 20px;
+  background:linear-gradient(180deg,var(--safety),#E0A800);color:var(--ink);
+  font-size:19px;font-weight:900;padding:18px;border-radius:var(--r-lg);
+  box-shadow:0 8px 0 #9A7500, var(--shadow);transition:transform .08s, box-shadow .08s;
+}
+.cta:active{transform:translateY(5px);box-shadow:0 3px 0 #9A7500}
+
+/* ============ HUD ============ */
+#hud{
+  display:flex;align-items:center;gap:8px;padding:9px 11px;
+  background:rgba(14,18,25,.9);border-bottom:1px solid rgba(255,255,255,.07);
+  backdrop-filter:blur(8px);flex:none;flex-wrap:wrap;
+}
+.zone-tag{
+  display:flex;align-items:center;gap:7px;background:var(--steel-700);
+  border-radius:99px;padding:5px 12px;font-size:12px;font-weight:800;
+  border:1px solid rgba(255,255,255,.08);
+}
+.zone-tag .veh{font-size:16px}
+.stat{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:5px;align-items:center}
+.stat b{color:var(--label);font-size:14px}
+.stat.coin b{color:var(--safety)}
+.stat.combo b{color:var(--scan)}
+#hudRight{margin-left:auto;display:flex;gap:6px}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;background:var(--steel-700);
+  border:1px solid rgba(255,255,255,.08);font-size:15px;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:active{background:var(--steel-600)}
+
+#progressWrap{height:5px;background:var(--steel-800);flex:none}
+#progressBar{height:100%;width:0;background:linear-gradient(90deg,var(--scan),var(--safety));transition:width .45s cubic-bezier(.2,.9,.3,1)}
+
+/* ============ 게임 본체 ============ */
+#play{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+#playScroll{flex:1;overflow-y:auto;padding:14px 13px 6px;display:flex;flex-direction:column;align-items:center}
+
+/* --- 시그니처: 운송장 라벨 --- */
+.waybill{
+  width:100%;max-width:540px;background:var(--label);color:var(--ink);
+  border-radius:6px;position:relative;box-shadow:var(--shadow);
+  animation:slideIn .42s cubic-bezier(.2,1.1,.35,1);
+}
+.lowfx .waybill{animation:none}
+@keyframes slideIn{from{opacity:0;transform:translateX(70px) rotate(2deg)}to{opacity:1;transform:none}}
+
+.wb-top{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 14px;background:var(--ink);color:var(--label);
+  border-radius:6px 6px 0 0;font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+}
+.wb-top .no{color:var(--safety)}
+.barcode{
+  height:26px;margin:0 14px;border-radius:2px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 7px,transparent 7px 9px,var(--ink) 9px 10px,transparent 10px 13px);
+  opacity:.85;
+}
+.wb-body{padding:13px 16px 16px}
+.wb-tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.tag{
+  font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  padding:4px 9px;border-radius:99px;border:1.5px solid var(--ink);
+}
+.tag.d하{background:#D8F5DE;border-color:#1E7A3C;color:#1E7A3C}
+.tag.d중{background:#FFF0CC;border-color:#8A6100;color:#8A6100}
+.tag.d상{background:#FFDDD8;border-color:#B4291A;color:#B4291A}
+
+.story{font-size:clamp(14.5px,3.9vw,16.5px);line-height:1.68;font-weight:600;word-break:keep-all}
+.story em{font-style:normal;background:linear-gradient(transparent 58%,rgba(255,195,0,.72) 58%);font-weight:800}
+.story .num{font-family:var(--mono);font-weight:800;letter-spacing:-.02em}
+
+.perf{border-top:2px dashed rgba(17,23,34,.28);margin:13px 0}
+
+.ask{
+  display:flex;gap:9px;align-items:flex-start;
+  background:rgba(17,23,34,.06);border-radius:var(--r-md);padding:11px 13px;
+  font-size:clamp(14px,3.7vw,16px);font-weight:800;line-height:1.55;word-break:keep-all;
+}
+.ask::before{content:"▶";color:var(--kraft-dark);font-size:11px;margin-top:5px;flex:none}
+
+/* 요금표 */
+.rate{width:100%;border-collapse:collapse;margin-top:11px;font-size:12.5px;font-family:var(--mono)}
+.rate th,.rate td{border:1px solid rgba(17,23,34,.22);padding:6px 8px;text-align:center}
+.rate th{background:var(--ink);color:var(--label);font-weight:700;letter-spacing:.04em}
+.rate tr:nth-child(even) td{background:rgba(17,23,34,.045)}
+
+/* 승인 도장 */
+#stamp{
+  position:absolute;top:44%;left:50%;
+  transform:translate(-50%,-50%) rotate(-17deg) scale(2.4);opacity:0;
+  border:5px solid var(--scan);color:var(--scan);border-radius:12px;
+  padding:8px 20px;font-size:clamp(22px,6vw,34px);font-weight:900;letter-spacing:.14em;
+  pointer-events:none;z-index:30;background:rgba(14,18,25,.35);
+}
+#stamp.hit{animation:stampIn .62s cubic-bezier(.2,1.6,.4,1) forwards}
+#stamp.miss{border-color:var(--alert);color:var(--alert)}
+@keyframes stampIn{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(-17deg) scale(2.4)}
+  42%{opacity:1;transform:translate(-50%,-50%) rotate(-17deg) scale(.92)}
+  56%{transform:translate(-50%,-50%) rotate(-17deg) scale(1.04)}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(-17deg) scale(1)}
+}
+
+/* ============ 조작부 ============ */
+#console{
+  flex:none;padding:10px 13px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(14,18,25,0),rgba(14,18,25,.96) 22%);
+}
+.console-inner{max-width:540px;margin:0 auto}
+.step-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--muted);
+  margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.step-label i{width:20px;height:20px;border-radius:6px;background:var(--safety);color:var(--ink);
+  font-style:normal;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+
+/* 1단계 · 어림 방법 */
+.methods{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.mbtn{
+  background:var(--steel-700);border:2px solid var(--steel-600);border-radius:var(--r-md);
+  padding:13px 5px 11px;text-align:center;transition:transform .1s,border-color .12s,background .12s;
+}
+.mbtn:active{transform:scale(.95)}
+.mbtn .ico{font-size:23px;display:block;line-height:1}
+.mbtn .nm{font-size:15px;font-weight:900;margin-top:5px;display:block}
+.mbtn .kb{font-family:var(--mono);font-size:9.5px;color:var(--muted);display:block;margin-top:2px}
+.mbtn.ok{border-color:var(--scan);background:rgba(46,230,197,.16)}
+.mbtn.no{border-color:var(--alert);background:rgba(255,95,77,.16);animation:shake .34s}
+.mbtn:disabled{opacity:.42}
+@keyframes shake{0%,100%{transform:translateX(0)}22%{transform:translateX(-7px)}44%{transform:translateX(7px)}68%{transform:translateX(-4px)}}
+
+/* 2단계 · 숫자 입력 */
+.readout{
+  display:flex;align-items:center;justify-content:flex-end;gap:9px;
+  background:var(--steel-900);border:2px solid var(--steel-600);border-radius:var(--r-md);
+  padding:12px 16px;margin-bottom:9px;min-height:58px;
+}
+.readout.ok{border-color:var(--scan)}
+.readout.no{border-color:var(--alert);animation:shake .34s}
+#answerText{font-family:var(--mono);font-size:clamp(26px,7vw,34px);font-weight:800;letter-spacing:.02em}
+#answerText.empty{color:var(--steel-500)}
+#unitText{font-size:16px;font-weight:800;color:var(--safety);flex:none}
+
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.key{
+  background:var(--steel-700);border:1px solid var(--steel-600);border-radius:var(--r-md);
+  padding:14px 0;font-family:var(--mono);font-size:21px;font-weight:800;transition:transform .07s,background .1s;
+}
+.key:active{transform:scale(.93);background:var(--steel-600)}
+.key.fn{font-family:var(--sans);font-size:14px;font-weight:900;background:var(--steel-600)}
+.key.go{background:linear-gradient(180deg,var(--scan),#1FBFA4);color:var(--ink);font-family:var(--sans);font-size:16px;font-weight:900}
+.key:disabled{opacity:.4}
+
+/* 쿨다운 */
+#cool{
+  display:none;text-align:center;background:var(--steel-700);border:2px solid var(--safety);
+  border-radius:var(--r-md);padding:16px;font-weight:800;font-size:14.5px;line-height:1.6;
+}
+#cool.on{display:block}
+#cool .t{font-family:var(--mono);font-size:30px;color:var(--safety);display:block;margin-top:6px}
+
+/* ============ 모달 ============ */
+.overlay{
+  position:absolute;inset:0;background:rgba(6,9,14,.82);z-index:50;
+  display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);
+}
+.overlay.on{display:flex}
+.modal{
+  width:100%;max-width:440px;background:var(--steel-700);
+  border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);
+  padding:22px;box-shadow:var(--shadow);animation:pop .26s cubic-bezier(.2,1.3,.4,1);
+}
+.lowfx .modal{animation:none}
+@keyframes pop{from{opacity:0;transform:scale(.9) translateY(14px)}to{opacity:1;transform:none}}
+.modal h3{font-size:19px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.modal p{font-size:14.5px;line-height:1.72;color:#D3DCE9;word-break:keep-all}
+.modal .mbtnrow{display:flex;gap:9px;margin-top:18px}
+.mact{
+  flex:1;padding:14px;border-radius:var(--r-md);font-weight:900;font-size:15px;
+  background:var(--steel-600);
+}
+.mact.primary{background:linear-gradient(180deg,var(--safety),#E0A800);color:var(--ink)}
+.mact:disabled{opacity:.45}
+.hintbox{
+  background:var(--steel-900);border-left:3px solid var(--safety);
+  border-radius:var(--r-md);padding:13px 15px;margin-top:12px;font-size:14px;line-height:1.7;color:#E6ECF5;
+}
+
+/* 레벨업 */
+#zoneCard{text-align:center}
+#zoneCard .veh{font-size:66px;display:block;margin:6px 0 10px;animation:hop .9s ease-in-out infinite}
+.lowfx #zoneCard .veh{animation:none}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+#zoneCard h3{justify-content:center;font-size:23px}
+.rewardline{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--mono);font-size:15px;color:var(--safety);font-weight:800;margin-top:10px;
+}
+
+/* ============ 결과 ============ */
+.result-hero{text-align:center;padding:22px 10px 6px}
+.stars{font-size:44px;letter-spacing:6px;margin-bottom:10px}
+.rank{font-size:clamp(24px,6.4vw,34px);font-weight:900;letter-spacing:-.02em}
+.rank small{display:block;font-size:13px;color:var(--muted);font-weight:700;margin-top:6px;letter-spacing:0}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;max-width:620px;margin:0 auto}
+.cell{background:var(--steel-700);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-md);padding:14px}
+.cell .k{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.05em}
+.cell .v{font-family:var(--mono);font-size:23px;font-weight:800;margin-top:4px}
+.cell .v.sc{color:var(--scan)}
+.cell .v.sf{color:var(--safety)}
+
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.bdg{
+  background:var(--steel-900);border:1px solid var(--steel-600);border-radius:var(--r-md);
+  padding:11px 7px;text-align:center;opacity:.32;
+}
+.bdg.got{opacity:1;border-color:var(--safety);background:rgba(255,195,0,.1)}
+.bdg .e{font-size:24px;display:block}
+.bdg .n{font-size:10.5px;font-weight:800;margin-top:5px;line-height:1.35;word-break:keep-all}
+
+.review{display:grid;gap:9px}
+.rv{background:var(--steel-900);border-radius:var(--r-md);padding:13px 14px;border-left:3px solid var(--alert)}
+.rv .q{font-size:13.5px;line-height:1.6;font-weight:700;word-break:keep-all}
+.rv .a{display:flex;gap:14px;margin-top:9px;font-family:var(--mono);font-size:13px;flex-wrap:wrap}
+.rv .a .mine{color:var(--alert)}
+.rv .a .right{color:var(--scan)}
+.rv .why{font-size:12.5px;color:#B9C5D6;margin-top:8px;line-height:1.65;word-break:keep-all}
+.empty-note{text-align:center;color:var(--scan);font-weight:800;padding:18px;font-size:14.5px}
+
+/* 컨베이어 벨트 */
+#belt{
+  flex:none;height:26px;position:relative;overflow:hidden;
+  background:var(--steel-600);border-top:2px solid var(--steel-500);
+}
+#belt::after{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.34) 0 12px,transparent 12px 26px);
+  animation:roll 1.1s linear infinite;
+}
+.lowfx #belt::after{animation:none}
+@keyframes roll{to{transform:translateX(26px)}}
+
+@media(min-width:760px){
+  .grid4{grid-template-columns:repeat(4,1fr)}
+  .keypad{gap:9px}
+  .key{padding:16px 0;font-size:23px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- =========================================================
+     문항 데이터 — 선생님은 여기만 고치시면 됩니다
+     ---------------------------------------------------------
+     diff      : '하' | '중' | '상'
+     story     : 상황 설명 (<em>강조</em>, <span class="num">숫자</span> 사용 가능)
+     needMethod: true면 올림/버림/반올림을 먼저 고르는 단계가 생깁니다
+     method    : 'up'(올림) | 'down'(버림) | 'round'(반올림)
+     answer    : 정답 (숫자)
+     unit      : 답 뒤에 붙는 단위
+     hint      : 틀렸을 때 보여줄 힌트 — 정답을 직접 알려주지 않습니다
+     explain   : 정답 후 개념 정리
+     table     : 요금표 등 표가 필요할 때만 HTML로 작성
+     ========================================================= -->
+<script>
+const QUIZ_DATA = [
+  /* ===== 구역 1 · 동네 배송소 (하 7문항) ===== */
+  {
+    diff:'하', needMethod:true, method:'up',
+    story:'택배 상자 <span class="num">243개</span>를 트럭으로 옮깁니다. 트럭은 한 번에 <span class="num">10개</span>씩 실을 수 있어요. <em>남는 상자도 반드시 배송</em>해야 합니다.',
+    ask:'트럭은 최소 몇 번 운행해야 할까요?',
+    answer:25, unit:'번',
+    methodHint:'남는 3개를 버릴 수 없어요. 모자라면 안 되는 상황에서는 어떤 어림을 쓸까요?',
+    hint:'243개를 10개씩 실으면 24번을 싣고도 3개가 남아요. 남은 3개를 위해 트럭이 한 번 더 가야 합니다.',
+    explain:'243을 올림하여 십의 자리까지 나타내면 250. 250÷10=25번입니다. 모자라면 안 되는 상황은 올림입니다.'
+  },
+  {
+    diff:'하', needMethod:true, method:'down',
+    story:'포장 끈이 <span class="num">328 cm</span> 있습니다. 끈은 <span class="num">10 cm</span> 단위로만 잘라서 쓸 수 있고, <em>남는 조각은 버립니다</em>.',
+    ask:'끈은 최대 몇 cm까지 사용할 수 있나요?',
+    answer:320, unit:'cm',
+    methodHint:'남는 8cm는 쓸 수 없어요. 가진 것보다 많이 쓸 수 없는 상황에는 어떤 어림을 쓸까요?',
+    hint:'10cm씩 32번을 자르면 320cm이고 8cm가 남아요. 남은 8cm로는 10cm를 만들 수 없습니다.',
+    explain:'328을 버림하여 십의 자리까지 나타내면 320. 가진 것을 넘길 수 없는 상황은 버림입니다.'
+  },
+  {
+    diff:'하', needMethod:true, method:'round',
+    story:'오늘 접수된 택배는 <span class="num">3482건</span>입니다. 안내 게시판에는 <em>가장 가까운 백의 자리 수</em>로 대략 표시합니다.',
+    ask:'게시판에 표시할 건수는?',
+    answer:3500, unit:'건',
+    methodHint:'많지도 적지도 않게, 실제 값과 가장 가까운 수로 나타내려면?',
+    hint:'3482는 3400과 3500 중 어느 쪽에 더 가까울까요? 십의 자리 숫자를 보세요.',
+    explain:'3482를 반올림하여 백의 자리까지 나타내면, 십의 자리 숫자가 8이므로 올려서 3500입니다.'
+  },
+  {
+    diff:'하', needMethod:true, method:'up',
+    story:'택배 요금이 <span class="num">1872원</span> 나왔습니다. 이 매장은 <span class="num">100원</span> 단위로만 계산하고, <em>요금보다 적게 낼 수는 없습니다</em>.',
+    ask:'손님이 내야 할 금액은?',
+    answer:1900, unit:'원',
+    methodHint:'1800원을 내면 요금이 모자랍니다. 부족하면 안 되는 상황의 어림은?',
+    hint:'100원 단위로 낼 수 있는 금액은 1800원 아니면 1900원이에요. 1872원을 낼 수 있는 쪽은 어느 쪽일까요?',
+    explain:'1872를 올림하여 백의 자리까지 나타내면 1900원입니다.'
+  },
+  {
+    diff:'하', needMethod:true, method:'down',
+    story:'포장용 테이프를 사려고 <span class="num">23140원</span>을 가져왔습니다. 테이프는 <span class="num">1000원</span>짜리만 판매합니다.',
+    ask:'테이프를 사는 데 쓸 수 있는 돈은 최대 얼마인가요?',
+    answer:23000, unit:'원',
+    methodHint:'가진 돈보다 많이 쓸 수는 없어요. 넘길 수 없는 상황의 어림은?',
+    hint:'1000원짜리를 23개 사면 23000원, 24개를 사면 24000원이 필요해요. 23140원으로 살 수 있는 쪽은?',
+    explain:'23140을 버림하여 천의 자리까지 나타내면 23000원입니다.'
+  },
+  {
+    diff:'하', needMethod:true, method:'round',
+    story:'저울에 올린 상자의 무게가 <span class="num">35.7 kg</span>입니다. 운송장에는 <em>가장 가까운 자연수</em>로 무게를 적습니다.',
+    ask:'운송장에 적을 무게는?',
+    answer:36, unit:'kg',
+    methodHint:'실제 무게와 가장 가까운 수를 적어야 합니다.',
+    hint:'35.7은 35와 36 중 어느 쪽에 더 가까운가요? 소수 첫째 자리 숫자를 보세요.',
+    explain:'35.7을 반올림하여 일의 자리까지 나타내면, 소수 첫째 자리가 7이므로 올려서 36kg입니다.'
+  },
+  {
+    diff:'하', needMethod:false,
+    story:'무게에 따라 택배 요금이 정해집니다. 지금 접수된 상자의 무게는 <span class="num">5 kg</span>입니다.',
+    ask:'이 상자의 택배 요금은 얼마인가요?',
+    table:`<table class="rate"><tr><th>무게</th><th>요금</th></tr>
+      <tr><td>2 kg 이하</td><td>6000원</td></tr>
+      <tr><td>2 kg 초과 10 kg 이하</td><td>7000원</td></tr>
+      <tr><td>10 kg 초과 20 kg 이하</td><td>8000원</td></tr>
+      <tr><td>20 kg 초과 30 kg 이하</td><td>9000원</td></tr></table>`,
+    answer:7000, unit:'원',
+    hint:'5는 2보다 크고 10보다 작거나 같습니다. 어느 칸의 범위에 들어가나요?',
+    explain:'5kg은 "2kg 초과 10kg 이하"에 속하므로 7000원입니다. 초과는 그 수를 포함하지 않고, 이하는 그 수를 포함합니다.'
+  },
+
+  /* ===== 구역 2 · 광역 물류센터 (중 7문항) ===== */
+  {
+    diff:'중', needMethod:false,
+    story:'정밀 저울이 <span class="num">2.378 kg</span>을 가리킵니다. 국제 배송 서류에는 이 무게를 <em>올림하여 소수 첫째 자리까지</em> 적어야 합니다.',
+    ask:'서류에 적을 무게는?',
+    answer:2.4, unit:'kg', decimals:true,
+    hint:'소수 첫째 자리 아래에 있는 0.078을 0.1로 생각하여 올립니다.',
+    explain:'2.378을 올림하여 소수 첫째 자리까지 나타내면 2.4kg입니다.'
+  },
+  {
+    diff:'중', needMethod:false,
+    story:'견본품의 무게가 <span class="num">214.357 g</span>입니다. 검수 기록지에는 <em>버림하여 소수 둘째 자리까지</em> 적습니다.',
+    ask:'기록지에 적을 무게는?',
+    answer:214.35, unit:'g', decimals:true,
+    hint:'소수 둘째 자리 아래의 수 0.007을 0으로 생각하여 버립니다.',
+    explain:'214.357을 버림하여 소수 둘째 자리까지 나타내면 214.35g입니다.'
+  },
+  {
+    diff:'중', needMethod:false,
+    story:'냉장 화물의 무게가 <span class="num">6.253 kg</span>입니다. 송장에는 <em>반올림하여 소수 둘째 자리까지</em> 적습니다.',
+    ask:'송장에 적을 무게는?',
+    answer:6.25, unit:'kg', decimals:true,
+    hint:'구하려는 자리 바로 아래 자리의 숫자를 보세요. 소수 셋째 자리 숫자가 3입니다.',
+    explain:'6.253을 반올림하여 소수 둘째 자리까지 나타내면, 소수 셋째 자리가 3이므로 버려서 6.25kg입니다.'
+  },
+  {
+    diff:'중', needMethod:true, method:'down',
+    story:'창고에 사과파이 <span class="num">485개</span>가 있습니다. <em>한 상자에 정확히 10개씩</em> 채워야만 판매할 수 있습니다.',
+    ask:'최대 몇 상자까지 판매할 수 있나요?',
+    answer:48, unit:'상자',
+    methodHint:'10개가 안 되는 나머지는 상자를 채울 수 없어 팔지 못합니다.',
+    hint:'10개씩 48상자를 채우면 480개를 쓰고 5개가 남아요. 남은 5개로 한 상자를 채울 수 있나요?',
+    explain:'485를 버림하여 십의 자리까지 나타내면 480. 480÷10=48상자입니다. 남는 5개는 팔 수 없습니다.'
+  },
+  {
+    diff:'중', needMethod:false,
+    story:'어제 하루 매출은 <span class="num">4836200원</span>이었습니다. 월간 보고서에는 <em>반올림하여 십만의 자리까지</em> 적습니다.',
+    ask:'보고서에 적을 금액은?',
+    answer:4800000, unit:'원',
+    hint:'십만의 자리 바로 아래인 만의 자리 숫자를 보세요. 4836200에서 만의 자리는 3입니다.',
+    explain:'4836200을 반올림하여 십만의 자리까지 나타내면, 만의 자리가 3이므로 버려서 4800000원입니다.'
+  },
+  {
+    diff:'중', needMethod:false,
+    story:'상자의 <em>무게</em>는 <span class="num">12 kg</span>, <em>크기</em>는 가로 <span class="num">30</span> + 세로 <span class="num">32</span> + 높이 <span class="num">28 cm</span>입니다. 무게 요금과 크기 요금이 다르면 <em>더 높은 요금</em>으로 정해집니다.',
+    ask:'이 상자의 택배 요금은?',
+    table:`<table class="rate"><tr><th>무게</th><th>크기(세 변의 합)</th><th>요금</th></tr>
+      <tr><td>2 kg 이하</td><td>60 cm 이하</td><td>6000원</td></tr>
+      <tr><td>2 초과 10 이하</td><td>60 초과 120 이하</td><td>7000원</td></tr>
+      <tr><td>10 초과 20 이하</td><td>120 초과 140 이하</td><td>8000원</td></tr>
+      <tr><td>20 초과 30 이하</td><td>140 초과 160 이하</td><td>9000원</td></tr></table>`,
+    answer:8000, unit:'원',
+    hint:'먼저 크기를 구하세요(30+32+28). 그다음 무게 요금과 크기 요금을 각각 찾아 비교합니다.',
+    explain:'크기는 90cm로 7000원, 무게 12kg은 "10 초과 20 이하"라 8000원. 더 높은 요금인 8000원입니다.'
+  },
+  {
+    diff:'중', needMethod:true, method:'up',
+    story:'물류센터 직원 <span class="num">124명</span>이 셔틀버스로 이동합니다. 버스는 한 번에 <span class="num">10명</span>씩 탈 수 있고, <em>한 명도 빠짐없이</em> 이동해야 합니다.',
+    ask:'버스는 최소 몇 번 운행해야 하나요?',
+    answer:13, unit:'번',
+    methodHint:'남은 4명을 두고 갈 수는 없습니다.',
+    hint:'12번을 운행하면 120명이 이동하고 4명이 남아요. 남은 4명은 어떻게 해야 할까요?',
+    explain:'124를 올림하여 십의 자리까지 나타내면 130. 130÷10=13번입니다.'
+  },
+
+  /* ===== 구역 3 · 국제 허브 (상 6문항) ===== */
+  {
+    diff:'상', needMethod:false,
+    story:'화물 번호는 <em>세 자리 수</em>이고, <em>반올림하여 십의 자리까지 나타내면 100</em>이 된다는 단서만 남아 있습니다.',
+    ask:'조건에 맞는 화물 번호는 모두 몇 개인가요?',
+    answer:5, unit:'개',
+    hint:'반올림하여 십의 자리가 100이 되는 수의 범위는 95 이상 105 미만입니다. 이 중 세 자리 수만 세어 보세요.',
+    explain:'95 이상 105 미만 중 세 자리 수는 100, 101, 102, 103, 104로 모두 5개입니다.'
+  },
+  {
+    diff:'상', needMethod:false,
+    story:'분실된 화물의 무게(g)에 대한 단서입니다.<br>㉠ <span class="num">1000</span> 초과 <span class="num">2000</span> 미만<br>㉡ 반올림하여 백의 자리까지 나타내면 <span class="num">1700</span><br>㉢ 백의 자리 숫자가 <span class="num">7</span>',
+    ask:'조건을 모두 만족하는 가장 큰 수는?',
+    answer:1749, unit:'g',
+    hint:'반올림해서 1700이 되려면 1650 이상 1750 미만이어야 해요. 그중 백의 자리가 7인 수는 어디부터 어디까지일까요?',
+    explain:'반올림하여 1700이 되는 범위는 1650 이상 1750 미만. 백의 자리가 7인 수는 1700~1749이므로 가장 큰 수는 1749입니다.'
+  },
+  {
+    diff:'상', needMethod:false,
+    story:'보관함 비밀번호는 수 카드 <span class="num">6</span>, <span class="num">1</span>, <span class="num">3</span>을 <em>한 번씩만</em> 사용해 만든 세 자리 수입니다. <em>올림하여 백의 자리까지 나타내면 200</em>이 됩니다.',
+    ask:'가능한 비밀번호는 모두 몇 개인가요?',
+    answer:2, unit:'개',
+    hint:'올림해서 200이 되는 수의 범위는 100 초과 200 이하입니다. 세 자리 수 중 이 범위에 드는 것은 백의 자리가 몇일 때일까요?',
+    explain:'올림하여 200이 되려면 100 초과 200 이하. 백의 자리가 1인 수는 136, 163으로 2개입니다.'
+  },
+  {
+    diff:'상', needMethod:false,
+    story:'배송 거리를 <em>반올림하여 십의 자리까지 나타냈더니 470 km</em>가 되었습니다.',
+    ask:'실제 거리가 자연수일 때, 가능한 가장 큰 수는?',
+    answer:474, unit:'km',
+    hint:'반올림하여 470이 되는 수의 범위를 먼저 구하세요. 465 이상 475 미만입니다.',
+    explain:'465 이상 475 미만인 자연수 중 가장 큰 수는 474입니다. 475는 반올림하면 480이 되어 조건에 맞지 않습니다.'
+  },
+  {
+    diff:'상', needMethod:false,
+    story:'세 창고의 재고를 서로 다른 방법으로 어림했습니다.<br>㉠ <span class="num">2456</span>을 올림하여 천의 자리까지<br>㉡ <span class="num">2870</span>을 버림하여 백의 자리까지<br>㉢ <span class="num">2705</span>를 올림하여 십의 자리까지',
+    ask:'세 값 중 가장 작은 수는?',
+    answer:2710, unit:'개',
+    hint:'㉠, ㉡, ㉢을 각각 어림한 값부터 구한 뒤 크기를 비교하세요.',
+    explain:'㉠ 3000, ㉡ 2800, ㉢ 2710. 가장 작은 수는 ㉢의 2710입니다.'
+  },
+  {
+    diff:'상', needMethod:false,
+    story:'컨테이너에 실린 화물 수를 <em>버림하여 백의 자리까지 나타냈더니 3400개</em>였습니다.',
+    ask:'실제 화물 수가 자연수일 때, 가능한 가장 큰 수는?',
+    answer:3499, unit:'개',
+    hint:'버림하여 3400이 되는 수의 범위는 3400 이상 3500 미만입니다.',
+    explain:'3400 이상 3500 미만인 자연수 중 가장 큰 수는 3499입니다. 3500은 버림해도 3500이 됩니다.'
+  }
+];
+
+/* 구역(레벨) 설정 — 문항 수를 바꾸면 count도 함께 조정하세요 */
+const ZONES = [
+  {name:'동네 배송소',   veh:'🛵', count:7, color:'#2EE6C5'},
+  {name:'광역 물류센터', veh:'🚚', count:7, color:'#FFC300'},
+  {name:'국제 허브',     veh:'✈️', count:6, color:'#FF5F4D'}
+];
+
+const AVATARS = ['📦','🧑‍🔧','👷','🤖','🦊','🐧','🐻','🐨','🦉','🐢','🦁','🐼','🦄','🐙','🦖','🐝','🌟','⚡','🔧','📮','🛰️','🧭','🎯','🪄'];
+
+const BADGES = [
+  {id:'perfect', e:'🏆', n:'무결점 배송',  desc:'20문항 모두 첫 시도 정답'},
+  {id:'nohint',  e:'🧠', n:'힌트 없이',    desc:'힌트를 한 번도 보지 않음'},
+  {id:'judge',   e:'⚖️', n:'정확한 판단',  desc:'어림 방법을 모두 한 번에 선택'},
+  {id:'combo5',  e:'🔥', n:'콤보 마스터',  desc:'최고 콤보 5 이상'},
+  {id:'careful', e:'🔍', n:'신중한 검수관', desc:'성급한 오답 0회'},
+  {id:'zone1',   e:'🛵', n:'동네 배송소',  desc:'구역 1 통과'},
+  {id:'zone2',   e:'🚚', n:'광역 센터',    desc:'구역 2 통과'},
+  {id:'zone3',   e:'✈️', n:'국제 허브',    desc:'구역 3 통과'}
+];
+</script>
+
+<!-- ================= 타이틀 ================= -->
+<section class="screen on" id="screenTitle">
+  <div class="scroller">
+    <div class="hero">
+      <span class="eyebrow">MATH 5-2 · UNIT 01</span>
+      <h1>한밤의<br><span>택배 물류센터</span></h1>
+      <p>오늘 밤 화물을 책임질 검수관은 당신입니다.<br>수의 범위와 어림하기로 배송을 성공시키세요.</p>
+    </div>
+    <div class="stripe"></div>
+
+    <div class="panel">
+      <h2>검수관 등록</h2>
+      <div class="field">
+        <label for="nick">이름</label>
+        <input type="text" id="nick" maxlength="8" placeholder="이름을 입력하세요" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>담당 배지 고르기</label>
+        <div class="avatars" id="avatars"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>근무 안내</h2>
+      <ul class="tips">
+        <li><span>📋</span><div>화물 <b>20건</b>을 처리합니다. 구역 3곳을 차례로 통과하며 난이도가 올라갑니다.</div></li>
+        <li><span>🎚️</span><div>먼저 <b>올림·버림·반올림</b> 중 알맞은 방법을 고르고, 그다음 <b>답을 직접 입력</b>합니다.</div></li>
+        <li><span>🚫</span><div>객관식이 아니라 <b>직접 입력</b>이라 찍을 수 없어요. 틀리면 힌트를 보고 다시 도전합니다.</div></li>
+        <li><span>🪙</span><div>한 번에 맞히면 <b>보너스와 코인</b>을 더 받고, 연속 정답은 <b>콤보 배수</b>가 붙습니다.</div></li>
+        <li><span>⌨️</span><div>키보드: <b>1 2 3</b> 방법 선택 · <b>숫자키</b> 입력 · <b>Enter</b> 확인 · <b>Esc</b> 일시정지</div></li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h2>환경 설정</h2>
+      <div class="toggles">
+        <button class="tg on" id="tgSound"><span>🔊 소리</span><span class="sw"></span></button>
+        <button class="tg" id="tgLow"><span>🐢 저사양 모드</span><span class="sw"></span></button>
+      </div>
+    </div>
+
+    <button class="cta" id="btnStart">근무 시작하기</button>
+  </div>
+</section>
+
+<!-- ================= 게임 ================= -->
+<section class="screen" id="screenGame">
+  <div id="hud">
+    <div class="zone-tag"><span class="veh" id="hudVeh">🛵</span><span id="hudZone">동네 배송소</span></div>
+    <div class="stat">화물 <b id="hudProg">1/20</b></div>
+    <div class="stat coin">🪙 <b id="hudCoin">0</b></div>
+    <div class="stat combo">🔥 <b id="hudCombo">0</b></div>
+    <div id="hudRight">
+      <button class="icon-btn" id="btnSound" title="소리">🔊</button>
+      <button class="icon-btn" id="btnPause" title="일시정지">⏸</button>
+    </div>
+  </div>
+  <div id="progressWrap"><div id="progressBar"></div></div>
+
+  <div id="play">
+    <div id="playScroll">
+      <article class="waybill" id="waybill">
+        <div class="wb-top"><span>WAYBILL</span><span class="no" id="wbNo">KR-0000-0001</span></div>
+        <div class="barcode"></div>
+        <div class="wb-body">
+          <div class="wb-tagrow" id="wbTags"></div>
+          <div class="story" id="story"></div>
+          <div id="tableSlot"></div>
+          <div class="perf"></div>
+          <div class="ask" id="ask"></div>
+        </div>
+      </article>
+    </div>
+
+    <div id="console">
+      <div class="console-inner">
+        <!-- 1단계 -->
+        <div id="stepMethod">
+          <div class="step-label"><i>1</i> 어떤 방법으로 어림할까요?</div>
+          <div class="methods">
+            <button class="mbtn" data-m="up"><span class="ico">⬆️</span><span class="nm">올림</span><span class="kb">KEY 1</span></button>
+            <button class="mbtn" data-m="down"><span class="ico">⬇️</span><span class="nm">버림</span><span class="kb">KEY 2</span></button>
+            <button class="mbtn" data-m="round"><span class="ico">↔️</span><span class="nm">반올림</span><span class="kb">KEY 3</span></button>
+          </div>
+        </div>
+
+        <!-- 2단계 -->
+        <div id="stepInput" style="display:none">
+          <div class="step-label"><i>2</i> 답을 입력하세요</div>
+          <div class="readout" id="readout">
+            <span id="answerText" class="empty">0</span>
+            <span id="unitText"></span>
+          </div>
+          <div class="keypad" id="keypad">
+            <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+            <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+            <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+            <button class="key fn" data-k="dot">·</button><button class="key" data-k="0">0</button><button class="key fn" data-k="del">⌫</button>
+            <button class="key go" data-k="ok" style="grid-column:1/-1">확인</button>
+          </div>
+        </div>
+
+        <!-- 쿨다운 -->
+        <div id="cool">
+          잠시 멈추고 다시 생각해 볼까요?
+          <span class="t" id="coolNum">3</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="stamp"></div>
+  </div>
+  <div id="belt"></div>
+</section>
+
+<!-- ================= 결과 ================= -->
+<section class="screen" id="screenResult">
+  <div class="scroller">
+    <div class="result-hero">
+      <div class="stars" id="resStars">⭐⭐⭐</div>
+      <div class="rank" id="resRank">배송 완료</div>
+      <small id="resWho"></small>
+    </div>
+    <div class="stripe"></div>
+
+    <div class="panel">
+      <h2>근무 기록</h2>
+      <div class="grid4">
+        <div class="cell"><div class="k">최종 점수</div><div class="v sf" id="resScore">0</div></div>
+        <div class="cell"><div class="k">정답률</div><div class="v sc" id="resRate">0%</div></div>
+        <div class="cell"><div class="k">한 번에 맞힘</div><div class="v" id="resFirst">0 / 20</div></div>
+        <div class="cell"><div class="k">최고 콤보</div><div class="v sc" id="resCombo">0</div></div>
+        <div class="cell"><div class="k">걸린 시간</div><div class="v" id="resTime">00:00</div></div>
+        <div class="cell"><div class="k">모은 코인</div><div class="v sf" id="resCoin">0</div></div>
+        <div class="cell"><div class="k">힌트 사용</div><div class="v" id="resHint">0회</div></div>
+        <div class="cell"><div class="k">성급한 오답</div><div class="v" id="resRush">0회</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>획득 배지</h2>
+      <div class="badges" id="resBadges"></div>
+    </div>
+
+    <div class="panel">
+      <h2>다시 볼 화물</h2>
+      <div class="review" id="resReview"></div>
+    </div>
+
+    <button class="cta" id="btnAgain">다시 근무하기</button>
+  </div>
+</section>
+
+<!-- ================= 모달 ================= -->
+<div class="overlay" id="ovHint">
+  <div class="modal">
+    <h3 id="hintTitle">🔍 다시 확인해 볼까요?</h3>
+    <p id="hintLead"></p>
+    <div class="hintbox" id="hintBody"></div>
+    <div class="mbtnrow"><button class="mact primary" id="hintClose">다시 도전하기</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ovOk">
+  <div class="modal">
+    <h3>✅ 배송 승인</h3>
+    <div class="hintbox" id="okBody"></div>
+    <div class="mbtnrow"><button class="mact primary" id="okNext">다음 화물 →</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ovZone">
+  <div class="modal" id="zoneCard">
+    <span class="veh" id="zoneVeh">🚚</span>
+    <h3 id="zoneTitle">구역 통과!</h3>
+    <p id="zoneDesc"></p>
+    <div class="rewardline" id="zoneReward"></div>
+    <div class="mbtnrow"><button class="mact primary" id="zoneNext">다음 구역으로 →</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ovPause">
+  <div class="modal">
+    <h3>⏸ 일시정지</h3>
+    <p>수업 중에 잠깐 멈췄어요. 준비되면 이어서 진행하세요.</p>
+    <div class="mbtnrow">
+      <button class="mact" id="pauseQuit">처음으로</button>
+      <button class="mact primary" id="pauseGo">이어서 하기</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* =========================================================
+   상태
+   ========================================================= */
+const S = {
+  idx:0, score:0, coin:0, combo:0, maxCombo:0,
+  firstTry:0, hintUsed:0, rushCount:0,
+  methodPerfect:true, tries:0, methodTries:0,
+  startAt:0, elapsed:0,
+  nick:'검수관', avatar:'📦',
+  sound:true, lowfx:false,
+  paused:false, locked:false,
+  qStartAt:0, phase:'method',
+  input:'', wrong:[], badges:new Set(),
+  zoneIdx:0
+};
+
+const $ = id => document.getElementById(id);
+const METHOD_NAME = {up:'올림', down:'버림', round:'반올림'};
+
+/* ---------- 사운드 (합성, 외부 파일 없음) ---------- */
+let AC = null;
+function beep(freq, dur=0.09, type='square', vol=0.05){
+  if(!S.sound) return;
+  try{
+    if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + dur);
+  }catch(e){}
+}
+const sfx = {
+  tap:  ()=>beep(620,.05,'square',.035),
+  ok:   ()=>{beep(660,.1);setTimeout(()=>beep(880,.14),90);},
+  great:()=>{beep(660,.09);setTimeout(()=>beep(880,.09),80);setTimeout(()=>beep(1180,.2),170);},
+  no:   ()=>beep(150,.22,'sawtooth',.045),
+  coin: ()=>{beep(1050,.06);setTimeout(()=>beep(1400,.09),60);},
+  zone: ()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.16,'triangle',.05),i*110));}
+};
+
+/* =========================================================
+   타이틀 화면 준비
+   ========================================================= */
+(function initTitle(){
+  const box = $('avatars');
+  AVATARS.forEach((a,i)=>{
+    const b = document.createElement('button');
+    b.className = 'av' + (i===0?' sel':'');
+    b.textContent = a; b.type = 'button';
+    b.setAttribute('aria-label','아바타 '+a);
+    b.onclick = ()=>{
+      document.querySelectorAll('.av').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); S.avatar = a; sfx.tap();
+    };
+    box.appendChild(b);
+  });
+
+  $('tgSound').onclick = function(){
+    S.sound = !S.sound; this.classList.toggle('on', S.sound);
+    $('btnSound').textContent = S.sound?'🔊':'🔇'; if(S.sound) sfx.tap();
+  };
+  $('tgLow').onclick = function(){
+    S.lowfx = !S.lowfx; this.classList.toggle('on', S.lowfx);
+    document.body.classList.toggle('lowfx', S.lowfx); sfx.tap();
+  };
+  $('btnStart').onclick = startGame;
+  $('btnAgain').onclick = ()=>{ show('screenTitle'); };
+})();
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+}
+
+/* =========================================================
+   게임 시작 / 진행
+   ========================================================= */
+function startGame(){
+  const n = $('nick').value.trim();
+  S.nick = n || '검수관';
+  Object.assign(S, {
+    idx:0, score:0, coin:0, combo:0, maxCombo:0,
+    firstTry:0, hintUsed:0, rushCount:0, methodPerfect:true,
+    startAt:Date.now(), elapsed:0, paused:false, locked:false,
+    input:'', wrong:[], zoneIdx:0
+  });
+  S.badges = new Set();
+  sfx.tap();
+  show('screenGame');
+  loadQuestion();
+}
+
+function zoneOf(index){
+  let acc = 0;
+  for(let i=0;i<ZONES.length;i++){
+    acc += ZONES[i].count;
+    if(index < acc) return i;
+  }
+  return ZONES.length-1;
+}
+
+function loadQuestion(){
+  const q = QUIZ_DATA[S.idx];
+  S.tries = 0; S.methodTries = 0; S.input = '';
+  S.qStartAt = Date.now(); S.locked = false;
+  S.zoneIdx = zoneOf(S.idx);
+
+  const z = ZONES[S.zoneIdx];
+  $('hudZone').textContent = z.name;
+  $('hudVeh').textContent  = z.veh;
+  $('hudProg').textContent = (S.idx+1) + '/' + QUIZ_DATA.length;
+  $('hudCoin').textContent = S.coin;
+  $('hudCombo').textContent = S.combo;
+  $('progressBar').style.width = (S.idx / QUIZ_DATA.length * 100) + '%';
+
+  $('wbNo').textContent = 'KR-' + String(2400 + S.idx*37).padStart(4,'0') + '-' + String(S.idx+1).padStart(4,'0');
+  $('wbTags').innerHTML =
+    `<span class="tag d${q.diff}">난이도 ${q.diff}</span>` +
+    `<span class="tag">${z.name}</span>` +
+    `<span class="tag">화물 ${S.idx+1}</span>`;
+  $('story').innerHTML = q.story;
+  $('tableSlot').innerHTML = q.table || '';
+  $('ask').textContent = q.ask;
+  $('unitText').textContent = q.unit || '';
+
+  // 운송장 재진입 애니메이션
+  const wb = $('waybill');
+  wb.style.animation = 'none'; void wb.offsetWidth; wb.style.animation = '';
+  $('playScroll').scrollTop = 0;
+
+  // 단계 초기화
+  document.querySelectorAll('.mbtn').forEach(b=>{
+    b.disabled = false; b.classList.remove('ok','no');
+  });
+  $('cool').classList.remove('on');
+
+  if(q.needMethod){
+    S.phase = 'method';
+    $('stepMethod').style.display = '';
+    $('stepInput').style.display  = 'none';
+  }else{
+    S.phase = 'input';
+    $('stepMethod').style.display = 'none';
+    $('stepInput').style.display  = '';
+  }
+  renderInput();
+  $('keypad').querySelector('[data-k="dot"]').disabled = !q.decimals;
+}
+
+/* ---------- 1단계: 어림 방법 ---------- */
+document.querySelectorAll('.mbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>chooseMethod(btn.dataset.m, btn));
+});
+
+function chooseMethod(m, btn){
+  if(S.locked || S.phase !== 'method' || S.paused) return;
+  const q = QUIZ_DATA[S.idx];
+  S.methodTries++;
+
+  if(m === q.method){
+    btn.classList.add('ok'); sfx.ok();
+    S.locked = true;
+    document.querySelectorAll('.mbtn').forEach(b=>b.disabled = true);
+    setTimeout(()=>{
+      S.phase = 'input'; S.locked = false;
+      $('stepMethod').style.display = 'none';
+      $('stepInput').style.display  = '';
+      renderInput();
+    }, 480);
+  }else{
+    btn.classList.add('no'); sfx.no();
+    if(S.methodTries >= 2) S.methodPerfect = false;
+    else S.methodPerfect = false;
+    S.combo = 0; $('hudCombo').textContent = 0;
+    openHint(
+      '🎚️ 방법을 다시 골라 볼까요?',
+      `<b>${METHOD_NAME[m]}</b>으로는 이 상황을 해결할 수 없어요.`,
+      q.methodHint || q.hint,
+      ()=>{
+        btn.classList.remove('no');
+        startCooldown(3, ()=>{ S.phase='method'; });
+      }
+    );
+  }
+}
+
+/* ---------- 2단계: 숫자 입력 ---------- */
+function renderInput(){
+  const t = $('answerText');
+  if(S.input === ''){ t.textContent = '0'; t.classList.add('empty'); }
+  else { t.textContent = S.input; t.classList.remove('empty'); }
+  $('readout').classList.remove('ok','no');
+}
+
+$('keypad').addEventListener('click', e=>{
+  const b = e.target.closest('.key');
+  if(b) pressKey(b.dataset.k);
+});
+
+function pressKey(k){
+  if(S.locked || S.phase !== 'input' || S.paused) return;
+  const q = QUIZ_DATA[S.idx];
+  if(k === 'ok'){ submit(); return; }
+  if(k === 'del'){ S.input = S.input.slice(0,-1); sfx.tap(); renderInput(); return; }
+  if(k === 'dot'){
+    if(!q.decimals || S.input.includes('.') || S.input === '') return;
+    S.input += '.'; sfx.tap(); renderInput(); return;
+  }
+  if(S.input.length >= 9) return;
+  if(S.input === '0') S.input = '';
+  S.input += k; sfx.tap(); renderInput();
+}
+
+function submit(){
+  if(S.input === '' || S.input.endsWith('.')) { sfx.no(); return; }
+  const q = QUIZ_DATA[S.idx];
+  const val = parseFloat(S.input);
+  S.tries++;
+  const spent = (Date.now() - S.qStartAt) / 1000;
+
+  if(Math.abs(val - q.answer) < 1e-9){
+    correct(spent);
+  }else{
+    $('readout').classList.add('no'); sfx.no();
+    stampShow('보류', true);
+    S.combo = 0; $('hudCombo').textContent = 0;
+
+    // 찍기 방지: 너무 빠른 오답은 경고로 기록
+    const rushed = spent < 3;
+    if(rushed) S.rushCount++;
+
+    if(S.tries === 1){
+      S.wrong.push({ q, mine:S.input });
+    }
+    openHint(
+      rushed ? '⏳ 조금 더 생각해 볼까요?' : '🔍 다시 확인해 볼까요?',
+      rushed
+        ? '답을 너무 빨리 입력했어요. 상황을 한 번 더 읽어 봅시다.'
+        : `입력한 답 <b>${S.input}${q.unit||''}</b>은(는) 정답이 아니에요.`,
+      q.hint,
+      ()=>{
+        S.input = ''; renderInput();
+        startCooldown(rushed ? 4 : 2, ()=>{ S.phase = 'input'; });
+      }
+    );
+  }
+}
+
+function correct(spent){
+  const q = QUIZ_DATA[S.idx];
+  S.locked = true;
+  $('readout').classList.add('ok');
+
+  // 점수 계산
+  let base = 100;
+  let bonus = 0;
+  const firstShot = (S.tries === 1) && (S.methodTries <= 1);
+  if(firstShot){ S.firstTry++; bonus += 100; }
+  if(q.needMethod && S.methodTries === 1) bonus += 50;
+  if(S.tries > 1) base = Math.max(20, 100 - (S.tries-1)*30);
+  // 속도 보너스는 3초 이상 고민한 첫 시도 정답에만 (찍기 방지)
+  if(firstShot && spent >= 3 && spent < 18) bonus += 40;
+
+  S.combo++;
+  if(S.combo > S.maxCombo) S.maxCombo = S.combo;
+  const mult = 1 + Math.min(S.combo-1, 9) * 0.1;
+  const gained = Math.round((base + bonus) * mult);
+  S.score += gained;
+
+  const coins = firstShot ? 3 : 1;
+  S.coin += coins;
+
+  $('hudCombo').textContent = S.combo;
+  $('hudCoin').textContent  = S.coin;
+
+  if(S.combo >= 3){ sfx.great(); stampShow('완벽', false); }
+  else { sfx.ok(); stampShow('승인', false); }
+  setTimeout(()=>sfx.coin(), 260);
+
+  const comboLine = S.combo >= 2 ? `<br>🔥 ${S.combo}콤보 · 점수 ${mult.toFixed(1)}배` : '';
+  $('okBody').innerHTML = q.explain + `<div style="margin-top:10px;font-family:var(--mono);color:var(--safety)">+${gained}점 · 🪙${coins}${comboLine}</div>`;
+
+  setTimeout(()=>{ $('ovOk').classList.add('on'); }, 620);
+}
+
+$('okNext').onclick = ()=>{
+  $('ovOk').classList.remove('on');
+  const finishedZone = (S.idx + 1) === ZONES.slice(0, S.zoneIdx+1).reduce((a,z)=>a+z.count,0);
+  S.idx++;
+  if(finishedZone && S.idx < QUIZ_DATA.length){
+    S.badges.add('zone' + (S.zoneIdx+1));
+    showZoneCard(S.zoneIdx);
+  }else if(S.idx >= QUIZ_DATA.length){
+    S.badges.add('zone3');
+    finish();
+  }else{
+    loadQuestion();
+  }
+};
+
+/* ---------- 구역 통과 ---------- */
+function showZoneCard(done){
+  const next = ZONES[done+1];
+  sfx.zone();
+  $('zoneVeh').textContent   = next.veh;
+  $('zoneTitle').textContent = ZONES[done].name + ' 통과!';
+  $('zoneDesc').innerHTML    = `배송 수단이 <b>${next.veh} ${next.name}</b>급으로 업그레이드되었어요.<br>여기서부터는 난이도가 올라갑니다.`;
+  $('zoneReward').innerHTML  = `🪙 보너스 +10 · 누적 ${S.coin + 10}`;
+  S.coin += 10;
+  $('ovZone').classList.add('on');
+}
+$('zoneNext').onclick = ()=>{ $('ovZone').classList.remove('on'); loadQuestion(); };
+
+/* ---------- 도장 연출 ---------- */
+function stampShow(text, miss){
+  if(S.lowfx) return;
+  const s = $('stamp');
+  s.textContent = text;
+  s.classList.toggle('miss', !!miss);
+  s.classList.remove('hit'); void s.offsetWidth; s.classList.add('hit');
+}
+
+/* ---------- 힌트 모달 (강제 열람 시간 포함) ---------- */
+let hintCallback = null;
+function openHint(title, lead, body, after){
+  S.hintUsed++;
+  S.locked = true;
+  hintCallback = after;
+  $('hintTitle').textContent = title;
+  $('hintLead').innerHTML = lead;
+  $('hintBody').innerHTML = body;
+  const btn = $('hintClose');
+  btn.disabled = true;
+  let wait = 3;
+  btn.textContent = `읽는 중... ${wait}`;
+  $('ovHint').classList.add('on');
+  const t = setInterval(()=>{
+    wait--;
+    if(wait <= 0){
+      clearInterval(t);
+      btn.disabled = false;
+      btn.textContent = '다시 도전하기';
+    }else{
+      btn.textContent = `읽는 중... ${wait}`;
+    }
+  }, 1000);
+}
+$('hintClose').onclick = ()=>{
+  $('ovHint').classList.remove('on');
+  S.locked = false;
+  if(hintCallback){ const f = hintCallback; hintCallback = null; f(); }
+};
+
+/* ---------- 쿨다운 (연타·찍기 방지) ---------- */
+let coolTimer = null;
+function startCooldown(sec, after){
+  S.locked = true;
+  const box = $('cool'), num = $('coolNum');
+  $('stepMethod').style.opacity = '.35';
+  $('stepInput').style.opacity  = '.35';
+  box.classList.add('on');
+  let left = sec; num.textContent = left;
+  clearInterval(coolTimer);
+  coolTimer = setInterval(()=>{
+    if(S.paused) return;
+    left--;
+    num.textContent = left;
+    if(left <= 0){
+      clearInterval(coolTimer);
+      box.classList.remove('on');
+      $('stepMethod').style.opacity = '1';
+      $('stepInput').style.opacity  = '1';
+      document.querySelectorAll('.mbtn').forEach(b=>b.disabled = false);
+      S.locked = false;
+      S.qStartAt = Date.now();
+      if(after) after();
+    }
+  }, 1000);
+}
+
+/* ---------- 일시정지 / 소리 ---------- */
+$('btnPause').onclick = pauseGame;
+function pauseGame(){
+  if(S.paused) return;
+  S.paused = true;
+  $('ovPause').classList.add('on');
+}
+$('pauseGo').onclick = ()=>{ S.paused = false; $('ovPause').classList.remove('on'); };
+$('pauseQuit').onclick = ()=>{
+  S.paused = false; clearInterval(coolTimer);
+  $('ovPause').classList.remove('on');
+  show('screenTitle');
+};
+$('btnSound').onclick = function(){
+  S.sound = !S.sound;
+  this.textContent = S.sound ? '🔊' : '🔇';
+  $('tgSound').classList.toggle('on', S.sound);
+  if(S.sound) sfx.tap();
+};
+
+/* ---------- 키보드 ---------- */
+document.addEventListener('keydown', e=>{
+  if(!$('screenGame').classList.contains('on')) return;
+
+  if(e.key === 'Escape'){ e.preventDefault(); S.paused ? $('pauseGo').click() : pauseGame(); return; }
+  if(S.paused) return;
+
+  if($('ovHint').classList.contains('on')){
+    if(e.key === 'Enter' && !$('hintClose').disabled){ e.preventDefault(); $('hintClose').click(); }
+    return;
+  }
+  if($('ovOk').classList.contains('on')){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('okNext').click(); }
+    return;
+  }
+  if($('ovZone').classList.contains('on')){
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('zoneNext').click(); }
+    return;
+  }
+
+  if(S.phase === 'method'){
+    const map = {'1':'up','2':'down','3':'round'};
+    if(map[e.key]){
+      e.preventDefault();
+      const b = document.querySelector(`.mbtn[data-m="${map[e.key]}"]`);
+      if(b && !b.disabled) chooseMethod(map[e.key], b);
+    }
+    return;
+  }
+  if(S.phase === 'input'){
+    if(/^[0-9]$/.test(e.key)){ e.preventDefault(); pressKey(e.key); }
+    else if(e.key === '.'){ e.preventDefault(); pressKey('dot'); }
+    else if(e.key === 'Backspace'){ e.preventDefault(); pressKey('del'); }
+    else if(e.key === 'Enter'){ e.preventDefault(); pressKey('ok'); }
+  }
+});
+
+/* ---------- 브라우저 간섭 차단 ---------- */
+document.addEventListener('gesturestart', e=>e.preventDefault());
+document.addEventListener('dblclick', e=>e.preventDefault(), {passive:false});
+document.addEventListener('contextmenu', e=>e.preventDefault());
+let lastTouch = 0;
+document.addEventListener('touchend', e=>{
+  const now = Date.now();
+  if(now - lastTouch < 320) e.preventDefault();
+  lastTouch = now;
+}, {passive:false});
+document.addEventListener('touchmove', e=>{
+  if(!e.target.closest('.scroller, #playScroll, .avatars')) e.preventDefault();
+}, {passive:false});
+
+/* =========================================================
+   결과
+   ========================================================= */
+function finish(){
+  S.elapsed = Math.floor((Date.now() - S.startAt) / 1000);
+  $('progressBar').style.width = '100%';
+
+  const total = QUIZ_DATA.length;
+  const rate  = Math.round(S.firstTry / total * 100);
+
+  if(S.firstTry === total) S.badges.add('perfect');
+  if(S.hintUsed === 0)     S.badges.add('nohint');
+  if(S.methodPerfect)      S.badges.add('judge');
+  if(S.maxCombo >= 5)      S.badges.add('combo5');
+  if(S.rushCount === 0)    S.badges.add('careful');
+  S.badges.add('zone1'); S.badges.add('zone2'); S.badges.add('zone3');
+
+  let stars = 1, rank = '수습 검수관';
+  if(rate >= 90){ stars = 3; rank = '전설의 물류 마스터'; }
+  else if(rate >= 70){ stars = 3; rank = '베테랑 검수관'; }
+  else if(rate >= 50){ stars = 2; rank = '믿음직한 검수관'; }
+  else { stars = 1; rank = '성장하는 검수관'; }
+
+  $('resStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+  $('resRank').textContent  = rank;
+  $('resWho').textContent   = `${S.avatar} ${S.nick} 검수관의 근무 기록`;
+  $('resScore').textContent = S.score.toLocaleString();
+  $('resRate').textContent  = rate + '%';
+  $('resFirst').textContent = S.firstTry + ' / ' + total;
+  $('resCombo').textContent = S.maxCombo;
+  $('resTime').textContent  = String(Math.floor(S.elapsed/60)).padStart(2,'0') + ':' + String(S.elapsed%60).padStart(2,'0');
+  $('resCoin').textContent  = S.coin;
+  $('resHint').textContent  = S.hintUsed + '회';
+  $('resRush').textContent  = S.rushCount + '회';
+
+  $('resBadges').innerHTML = BADGES.map(b=>
+    `<div class="bdg ${S.badges.has(b.id)?'got':''}" title="${b.desc}">
+       <span class="e">${b.e}</span><span class="n">${b.n}</span>
+     </div>`).join('');
+
+  $('resReview').innerHTML = S.wrong.length
+    ? S.wrong.map(w=>`
+        <div class="rv">
+          <div class="q">${w.q.ask}</div>
+          <div class="a"><span class="mine">내 답 ${w.mine}${w.q.unit||''}</span><span class="right">정답 ${w.q.answer}${w.q.unit||''}</span></div>
+          <div class="why">${w.q.explain}</div>
+        </div>`).join('')
+    : '<div class="empty-note">모든 화물을 한 번에 승인했어요. 완벽한 근무였습니다 🏆</div>';
+
+  sfx.zone();
+  show('screenResult');
+}
+</script>
+</body>
+</html>
