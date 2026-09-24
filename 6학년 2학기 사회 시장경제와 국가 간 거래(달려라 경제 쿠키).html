@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>짤랑이 런</title>
+<title>달려라! 경제 쿠키</title>
 <meta name="description" content="6학년 2학기 사회 2. 시장경제와 국가 간 거래 (1) 우리나라 시장경제의 특징 — 달리면서 정답 문으로 뛰어드는 달리기 문제풀이 게임">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='26' fill='%23ffd23f' stroke='%238a5208' stroke-width='5'/%3E%3Ctext x='32' y='44' font-size='28' font-weight='900' text-anchor='middle' fill='%238a5208'%3E%E2%82%A9%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='27' fill='%23c97b3d' stroke='%233b1d0b' stroke-width='5'/%3E%3Ccircle cx='24' cy='28' r='4' fill='%23fff'/%3E%3Ccircle cx='40' cy='28' r='4' fill='%23fff'/%3E%3Cpath d='M22 40 Q32 48 42 40' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <!--
-  짤랑이 런 — 6학년 2학기 사회 2. 시장경제와 국가 간 거래 (1) 우리나라 시장경제의 특징 (교과서 60~77쪽)
+  달려라! 경제 쿠키 — 6학년 2학기 사회 2. 시장경제와 국가 간 거래 (1) 우리나라 시장경제의 특징 (교과서 60~77쪽)
   · 외부 파일 없이 이 파일 하나로 동작한다. 그림은 모두 코드로 그린다.
   · 학습지 20문제 + 변형 10문제 = 30문제. 스테이지마다 10문제, 마지막 세 문제는 보스와 싸우며 푼다.
 -->
@@ -68,6 +68,8 @@ button{ font-family:inherit; cursor:pointer; }
   text-shadow: 4px 0 0 #5a2e00, -4px 0 0 #5a2e00, 0 4px 0 #5a2e00, 0 -4px 0 #5a2e00, 3px 3px 0 #5a2e00, -3px 3px 0 #5a2e00, 3px -3px 0 #5a2e00, -3px -3px 0 #5a2e00,
     0 9px 0 #5a2e00, 4px 9px 0 #5a2e00, -4px 9px 0 #5a2e00, 0 20px 26px rgba(0,0,0,.35); }
 .logo em{ margin-left:18px; color:#ff5a4f; }
+.logo small{ display:block; margin-bottom:-6px; font:900 54px/1 var(--font); color:#fff; letter-spacing:0;
+  text-shadow: 3px 0 0 #5a2e00, -3px 0 0 #5a2e00, 0 3px 0 #5a2e00, 0 -3px 0 #5a2e00, 2px 2px 0 #5a2e00, -2px 2px 0 #5a2e00, 2px -2px 0 #5a2e00, -2px -2px 0 #5a2e00, 0 7px 0 #5a2e00; transform:rotate(-4deg); }
 .tagline{ margin:18px 0 20px; font:800 22px var(--font); color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.5), 0 0 12px rgba(0,0,0,.35); }
 .tagline b{ color:#ffe27a; }
 .namebox{ display:inline-flex; align-items:center; gap:10px; padding:8px 10px 8px 18px; border-radius:18px; background:var(--cream); border:3px solid var(--line); box-shadow:0 4px 0 var(--line); }
@@ -195,6 +197,29 @@ kbd{ display:inline-block; min-width:36px; padding:4px 10px; border-radius:9px; 
 #bJump{ left:16px; background:linear-gradient(180deg,#72b6ff,#2f6fe0); }
 #bSlide{ right:16px; background:linear-gradient(180deg,#ffb46b,#ea580c); }
 #ctrl button.on{ transform:translateY(4px); box-shadow: inset 0 3px 0 rgba(255,255,255,.35), 0 2px 0 var(--line); filter:brightness(1.1); }
+
+/* ── 조작 안내판 ── */
+.keyhelp{ position:absolute; left:50%; bottom:22px; transform:translateX(-50%); z-index:23; display:flex; align-items:center; gap:14px; padding:10px 20px;
+  background:linear-gradient(180deg,#fffaf0,#fde7b8); border:4px solid var(--line); border-radius:24px; box-shadow:inset 0 3px 0 #fff, 0 6px 0 var(--line), 0 14px 26px rgba(0,0,0,.28);
+  pointer-events:none; transition:opacity .4s; animation:khIn .45s cubic-bezier(.2,1.5,.4,1); white-space:nowrap; }
+@keyframes khIn{ from{ transform:translate(-50%,40px); opacity:0 } }
+.kh{ display:flex; align-items:center; gap:7px; }
+.kc{ display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:40px; padding:0 10px; border-radius:10px;
+  background:linear-gradient(180deg,#ffffff,#e5e7eb); border:2.5px solid var(--line); box-shadow:0 4px 0 var(--line); font:900 20px var(--font); color:var(--ink); animation:keyTap 1.4s infinite; }
+.kc.wide{ font-size:16px; min-width:92px; }
+.kh:nth-of-type(3) .kc{ animation-delay:.7s; }
+@keyframes keyTap{ 0%,70%,100%{ transform:translateY(0); box-shadow:0 4px 0 var(--line) } 80%{ transform:translateY(3px); box-shadow:0 1px 0 var(--line); background:linear-gradient(180deg,#fff3c4,#ffd23f) } }
+.kt{ display:flex; flex-direction:column; line-height:1.15; margin-left:3px; }
+.kt b{ font:900 21px var(--font); color:var(--ink); }
+.kt small{ font:800 13px var(--font); color:var(--ink-soft); }
+.kt em{ font-style:normal; color:#e2483d; }
+.ksep{ width:3px; height:40px; border-radius:2px; background:rgba(58,39,21,.2); }
+.tb{ display:inline-flex; align-items:center; justify-content:center; height:40px; padding:0 14px; border-radius:14px; border:2.5px solid var(--line); box-shadow:0 4px 0 var(--line); color:#fff; font:900 17px var(--font); text-shadow:0 1px 0 rgba(0,0,0,.3); }
+.tb.jump{ background:linear-gradient(180deg,#72b6ff,#2f6fe0); } .tb.slide{ background:linear-gradient(180deg,#ffb46b,#ea580c); }
+.star{ font-size:34px; animation:starBob 1s ease-in-out infinite; display:inline-block; }
+@keyframes starBob{ 50%{ transform:translateY(-4px) rotate(12deg) scale(1.1) } }
+body.touch .kb-only, body:not(.touch) .touch-only{ display:none !important; }
+#keyHelp.fade{ opacity:0; }
 
 #toast{ position:absolute; left:50%; bottom:130px; transform:translateX(-50%); z-index:60; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; }
 .toast{ padding:10px 20px; border-radius:16px; background:rgba(30,15,20,.9); color:#fff; font:800 18px var(--font); border:2px solid #ffe27a; animation:drop .3s; }
@@ -373,13 +398,22 @@ table.crit td:first-child{ color:var(--ink); background:#fff8e6; }
     <button id="bJump"><b>점프</b><small>스페이스 · ↑</small></button>
     <button id="bSlide"><b>슬라이드</b><small>↓ 누르고 있기</small></button>
   </div>
+  <!-- 조작 안내판: 출발할 때 잠깐, 보너스 타임 동안 -->
+  <div id="keyHelp" class="keyhelp hidden">
+    <div class="kh kb-only"><span class="kc wide">스페이스</span><span class="kc">↑</span><div class="kt"><b>점프</b><small>두 번 누르면 <em>2단 점프!</em></small></div></div>
+    <div class="kh touch-only"><span class="tb jump">점프</span><div class="kt"><b>왼쪽 단추 · 화면 왼쪽</b><small>두 번 누르면 <em>2단 점프!</em></small></div></div>
+    <i class="ksep"></i>
+    <div class="kh kb-only"><span class="kc">↓</span><div class="kt"><b>슬라이드</b><small>누르고 있으면 <em>쭉~</em> · 발판에서 내려가기</small></div></div>
+    <div class="kh touch-only"><span class="tb slide">슬라이드</span><div class="kt"><b>오른쪽 단추 · 화면 오른쪽</b><small>누르고 있으면 <em>쭉~</em></small></div></div>
+  </div>
+  <div id="bonusHelp" class="keyhelp hidden"><div class="kh"><span class="star">⭐</span><div class="kt"><b>보너스 타임!</b><small><span class="kb-only">스페이스를</span><span class="touch-only">점프 단추를</span> <em>누르고 있으면</em> 위로, 떼면 아래로</small></div></div></div>
   <div id="toast"></div>
 
   <!-- ─── 첫 화면 ─── -->
   <div id="scrTitle" class="screen">
     <div class="title-wrap">
       <div class="subject">6학년 2학기 사회 · 2. 시장경제와 국가 간 거래</div>
-      <h1 class="logo"><span>짤랑이</span><em>런</em></h1>
+      <h1 class="logo"><small>달려라!</small><span>경제</span><em>쿠키</em></h1>
       <div class="tagline">달리면서 정답 문으로 뛰어들어! <b>우리나라 시장경제의 특징</b> 30문제</div>
       <div class="namebox"><label for="nick">내 이름</label><input id="nick" maxlength="12" placeholder="이름을 적어 주세요" autocomplete="off"></div>
       <div class="tbtns"><button class="btn gold big" id="bStart">▶ 달리기 시작</button><button class="btn blue" id="bHow">🎮 하는 법</button><button class="btn red" id="bShop">🛍️ 상점</button></div>
@@ -397,7 +431,7 @@ table.crit td:first-child{ color:var(--ink); background:#fff8e6; }
   <!-- ─── 하는 법 ─── -->
   <div id="scrHow" class="screen dim hidden">
     <div class="panel how">
-      <h2>🎮 짤랑이 런 하는 법</h2>
+      <h2>🎮 달려라! 경제 쿠키 하는 법</h2>
       <div class="how-grid">
         <div class="hw"><div class="hk"><kbd>스페이스</kbd><kbd>↑</kbd></div><b>점프</b><p>한 번 더 누르면 <b>2단 점프</b>! 높은 장애물과 구덩이를 넘어요.</p></div>
         <div class="hw"><div class="hk"><kbd>↓</kbd></div><b>슬라이드</b><p>누르고 있으면 미끄러져요. 매달린 간판 밑을 지나요. 발판 위에서 누르면 <b>아래로 내려가요</b>.</p></div>
@@ -420,7 +454,7 @@ table.crit td:first-child{ color:var(--ink); background:#fff8e6; }
   <!-- ─── 상점 ─── -->
   <div id="scrShop" class="screen dim hidden">
     <div class="panel shop">
-      <div class="shop-head"><h2>🛍️ 짤랑이 상점</h2><div class="wallet"><span class="coin-ic">₩</span><b id="shopWallet">0</b>원</div><button class="btn gray sm" id="bShopClose">돌아가기 ✕</button></div>
+      <div class="shop-head"><h2>🛍️ 쿠키 상점</h2><div class="wallet"><span class="coin-ic">₩</span><b id="shopWallet">0</b>원</div><button class="btn gray sm" id="bShopClose">돌아가기 ✕</button></div>
       <div class="shop-body">
         <div class="shop-left"><canvas id="shopCv" width="600" height="640"></canvas><div class="try" id="shopTry"></div>
           <p class="shop-tip">💡 스테이지를 <b>끝까지 달리면</b> 그 판에 모은 돈이 지갑에 들어와요. 한 스테이지에 보통 6만~9만 원을 모아요. 게임 중에도 🛍️ 단추로 언제든 쿠키를 바꿀 수 있어요.</p></div>
@@ -1636,7 +1670,7 @@ function newWorld(si, demo){
         genX: demo ? 0 : START_RUN, segN:0, pendingRun:demo?900:2300, queue: QUESTIONS.filter(q=>q.stage===si+1), open:0, done:0, total:10,
         asked:0, first:0, log:[], combo:0, score:0, stats:emptyStats(),
         letters:[false,false,false,false], letterOut:[false,false,false,false], bonus:null,
-        boss:null, bossPlaced:false, shake:0, activeGate:null, station:null, revives:0, clearT:0, startT:performance.now(), keyHelp:!demo && si===0 ? 9 : 0 };
+        boss:null, bossPlaced:false, shake:0, activeGate:null, station:null, revives:0, clearT:0, startT:performance.now(), keyHelp: demo ? 0 : (si===0 ? 9 : 6) };
   W.total = W.queue.length;
   /* 출발 활주로: 처음 1400px 은 장애물 없이 동전만 */
   if(!demo){ addCoins(520, 8, 40, ()=>GY-30); addCoins(900, 5, 36, arc(0,0,90,5)); addCoins(1140, 6, 40, ()=>GY-30); }
@@ -2076,8 +2110,7 @@ function render(){
   drawTexts(c);
   c.restore();
   /* 조작 안내 */
-  if(W.keyHelp>0 && W.phase==='run'){ c.globalAlpha=Math.min(1,W.keyHelp); c.fillStyle='rgba(20,12,4,.72)'; rr(c,420,650,440,44,22); c.fill();
-    c.fillStyle='#fff'; c.font='800 18px '+FONT; c.textAlign='center'; c.textBaseline='middle'; c.fillText('⬆ 스페이스 = 점프 (두 번 = 2단 점프)   ⬇ = 슬라이드', 640, 673); c.globalAlpha=1; }
+  /* 조작 안내와 보너스 안내는 화면 위 안내판(HTML)으로 보여 준다 */
 }
 function drawHeroNow(c, t){
   const h=W.hero, x=HERO_X;
@@ -2139,11 +2172,10 @@ function renderBonus(c){
   const h=W.hero; c.fillStyle='#fff6c2'; ell(c,HERO_X-6,B.y+6,52,18); c.fill(); ell(c,HERO_X-30,B.y,24,16); c.fill(); ell(c,HERO_X+22,B.y,26,16); c.fill();
   glow(c,HERO_X,B.y-40,'#ffe066',100,.5);
   drawHero(c, HERO_X, B.y, {t, pose:'fly', phase:h.phase, scale:1});
-  c.fillStyle='rgba(20,12,4,.7)'; rr(c,440,640,400,46,23); c.fill(); c.fillStyle='#fff'; c.font='900 19px '+FONT; c.textAlign='center'; c.textBaseline='middle'; c.fillText('⭐ 보너스 타임! 누르고 있으면 올라가요', 640, 663);
   for(const f of W.fx) if(f.k==='sparkle') drawFx(c, f, t);
 }
 
-/* ════════════════ 짤랑이 상점 ════════════════
+/* ════════════════ 쿠키 상점 ════════════════
    스테이지를 끝까지 달리면 그 판에 모은 돈이 지갑에 들어온다.
    한 스테이지에 보통 6만~9만 원을 모으므로, 한 판을 달리면 싼 물건 하나, 여러 판을 달리면 큰 물건을 살 수 있게 값을 매겼다.
    능력은 달리기를 조금 편하게 해 줄 뿐, 문제를 풀지 않고 이길 수는 없다 */
@@ -2232,6 +2264,11 @@ function openHow(after){ $('scrHow').classList.remove('hidden'); $('bHowOk').onc
 /* ════════════════ HUD ════════════════ */
 function buildLetters(){ $('letters').innerHTML = LETTERS.map((ch,i)=>`<span data-i="${i}">${ch}</span>`).join(''); }
 let hudCache = {};
+function updateKeyHelp(){
+  const on = W && !W.demo && SCREEN==='play' && W.keyHelp>0 && W.phase==='run';
+  const el=$('keyHelp'); el.classList.toggle('hidden', !on); el.classList.toggle('fade', on && W.keyHelp<.6);
+  $('bonusHelp').classList.toggle('hidden', !(W && !W.demo && SCREEN==='play' && W.phase==='bonus'));
+}
 function updateHud(){
   if(!W || W.demo) return;
   const hp = Math.max(0, W.hp);
@@ -2554,7 +2591,9 @@ window.addEventListener('keyup', e=>{
   if(k==='ArrowDown'||k==='KeyS'){ slideDown(false); press('bSlide',false); }
 });
 function press(id,on){ $(id).classList.toggle('on',on); }
-window.addEventListener('pointerdown', ()=>Sound.ensure(), true);
+window.addEventListener('pointerdown', e=>{ Sound.ensure(); if(e.pointerType==='touch') document.body.classList.add('touch'); }, true);
+if(window.matchMedia && window.matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
+window.addEventListener('keydown', ()=>document.body.classList.remove('touch'), true);
 $('bJump').addEventListener('pointerdown', e=>{ e.preventDefault(); keyJump=true; jump(); press('bJump',true); });
 for(const ev of ['pointerup','pointerleave','pointercancel']) $('bJump').addEventListener(ev, ()=>{ keyJump=false; press('bJump',false); });
 $('bSlide').addEventListener('pointerdown', e=>{ e.preventDefault(); slideDown(true); press('bSlide',true); });
@@ -2603,7 +2642,7 @@ function frame(now){
     if(W.demo){ demoAI(); stepWorld(dt); }
     else if(SCREEN==='play') stepWorld(dt);
     render();
-    hudT -= dt; if(hudT<=0 && !W.demo){ hudT=.1; updateHud(); }
+    hudT -= dt; if(hudT<=0 && !W.demo){ hudT=.1; updateHud(); } updateKeyHelp();
     if(!W.demo) watchPerf(dt);
   }
 }
