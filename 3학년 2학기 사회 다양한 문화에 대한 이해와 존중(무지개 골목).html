@@ -454,7 +454,7 @@ body.touch .kb-only, body:not(.touch) .touch-only{ display:none !important; }
         <div class="step"><div class="se">🏘️</div><b>① 이웃 이야기 듣기</b><p>이웃이 고민을 말해요. 글이 어려우면 <b>🔈 읽어 줘요</b>를 눌러요.</p></div>
         <div class="step"><div class="se">🃏</div><b>② 알맞은 카드 고르기</b><p>카드를 <b>톡</b> 눌러요. 두 개 고르기, 글자 조각, 짝 잇기, 나누어 담기도 있어요.</p></div>
         <div class="step"><div class="se">🎨</div><b>③ 골목에 색칠!</b><p>맞히면 집에 <b>무지개색</b>이 칠해지고 🌈 방울을 받아요. 연속으로 맞히면 더 많이!</p></div>
-        <div class="step"><div class="se">💡</div><b>④ 틀려도 괜찮아요</b><p><b>힌트</b>를 읽고 다시 골라요. 두 번 넘게 틀린 문제는 끝에 한 번 더 나와요.</p></div>
+        <div class="step"><div class="se">💡</div><b>④ 틀려도 괜찮아요</b><p><b>힌트</b>를 읽고 다시 골라요. 두 번 이상 틀린 문제는 끝에 한 번 더 나와요.</p></div>
       </div>
       <div class="keys kb-only"><span class="kc">1</span>~<span class="kc">5</span> 카드 고르기 · <span class="kc">Enter</span> 확인·다음 · <span class="kc">R</span> 읽어 주기 · <span class="kc">Esc</span> 멈춤</div>
       <div class="keys touch-only">화면의 카드를 손가락으로 톡! 눌러요</div>
@@ -1622,7 +1622,7 @@ function nextQuestion(){
     if(G.idx < G.list.length) return ask(G.list[G.idx], false);
     const rv = G.stats.log.filter(l=>l.wrongs>=2).slice(0,3).map(l=>l.q);
     if(rv.length){ G.inReview=true; G.review=rv; G.ridx=-1; hidePlay(); setCam('overview'); G.phase='banner';
-      showBanner('🔁 헷갈렸던 이야기, 한 번 더!', '두 번 넘게 틀렸던 문제를 다시 풀어 봐요', 2000); setTimeout(()=>{ if(G && G.phase==='banner') { G.phase='ask'; nextQuestion(); } }, 2100); return; }
+      showBanner('🔁 헷갈렸던 이야기, 한 번 더!', '두 번 이상 틀렸던 문제를 다시 풀어 봐요', 2000); setTimeout(()=>{ if(G && G.phase==='banner') { G.phase='ask'; nextQuestion(); } }, 2100); return; }
     return chapterDone();
   }
   G.ridx++;
