@@ -203,6 +203,11 @@
 
     <!-- 게임 화면 -->
     <div id="game-screen" class="screen flex-col items-center w-full max-w-3xl">
+        <!-- ⏸ 일시정지 · 🔊 소리 -->
+        <div class="w-full flex justify-end gap-2 mb-2 px-1.5">
+            <button id="btn-sound" type="button" onclick="toggleSound()" title="소리 켜기·끄기" class="bg-white/90 hover:bg-white text-gray-700 text-base sm:text-lg font-bold px-3 sm:px-4 py-1.5 rounded-full shadow-md border-2 border-gray-200 active:translate-y-0.5 transition-all">🔊 소리</button>
+            <button id="btn-pause" type="button" onclick="togglePause()" title="일시정지 (Esc)" class="bg-white/90 hover:bg-white text-gray-700 text-base sm:text-lg font-bold px-3 sm:px-4 py-1.5 rounded-full shadow-md border-2 border-gray-200 active:translate-y-0.5 transition-all">⏸ 멈춤</button>
+        </div>
         
         <div class="w-full flex justify-between items-center mb-4 sm:mb-6 px-1.5 gap-1.5 sm:gap-3">
             <div id="top-badge-container" class="bg-yellow-400 text-blue-900 text-lg sm:text-2xl md:text-4xl px-3 sm:px-6 py-2 rounded-t-2xl rounded-br-2xl shadow-md border-2 border-yellow-500 flex flex-col sm:flex-row items-center justify-center flex-1 sm:flex-none transition-colors duration-300">
@@ -262,6 +267,17 @@
         
         <div class="w-full max-w-3xl mt-5 sm:mt-8 bg-white/50 rounded-full h-3 sm:h-5 shadow-inner overflow-hidden border border-white/60">
             <div id="progress-bar" class="bg-green-400 h-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- 일시정지 화면 -->
+    <div id="pause-overlay" class="hidden flex items-center justify-center p-5" style="position:fixed; inset:0; z-index:9999; background:rgba(17,24,39,0.96);">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 text-center border-[5px] border-blue-400 w-full max-w-md">
+            <div class="text-6xl sm:text-7xl mb-3">⏸</div>
+            <h2 class="text-3xl sm:text-4xl text-blue-600 font-bold mb-2">잠깐 멈춤</h2>
+            <p class="text-gray-500 text-base sm:text-lg mb-6">시간이 멈췄어요. 준비되면 계속해요!</p>
+            <button type="button" id="btn-resume" onclick="togglePause()" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-2xl sm:text-3xl py-4 rounded-2xl shadow-[0_6px_0_#2563eb] hover:translate-y-1 transition-all font-bold mb-3">▶ 계속하기</button>
+            <button type="button" onclick="toggleSound()" id="btn-sound-pause" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-lg sm:text-xl py-3 rounded-2xl border-2 border-gray-200 font-bold">🔊 소리 켜짐</button>
         </div>
     </div>
 
@@ -377,6 +393,11 @@
         let goldenCorrectCount = 0;
         let speedKillCount = 0;
 
+        let isPaused = false;
+        let pauseStartedAt = 0;
+        let isMuted = false;
+        try { isMuted = localStorage.getItem('catchmindMute10') === '1'; } catch(e) {}
+
         let bestScore = localStorage.getItem('catchmindBestScore10') || 0;
         document.getElementById('best-score-display').innerText = bestScore;
 
@@ -404,18 +425,22 @@
                 }
             },
             playCorrect: function() {
+                if(isMuted || !this.correct) return;
                 if(Tone.context.state !== 'running') Tone.context.resume();
                 this.correct.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n");
             },
             playWrong: function() {
+                if(isMuted || !this.correct) return;
                 if(Tone.context.state !== 'running') Tone.context.resume();
                 this.wrong.triggerAttackRelease("C3", "16n");
             },
             playTick: function() {
+                if(isMuted || !this.correct) return;
                 if(Tone.context.state !== 'running') Tone.context.resume();
                 this.tick.triggerAttackRelease("C2", "32n");
             },
             playBoss: function() {
+                if(isMuted || !this.correct) return;
                 if(Tone.context.state !== 'running') Tone.context.resume();
                 this.boss.triggerAttackRelease("C2", "1n");
             }
@@ -552,6 +577,9 @@
             document.getElementById('btn-item-hint').classList.remove('opacity-50', 'cursor-not-allowed');
 
             elements.achievementsContainer.innerHTML = ''; 
+            isPaused = false;
+            document.getElementById('pause-overlay').classList.add('hidden');
+            document.getElementById('btn-pause').innerText = '⏸ 멈춤';
 
             loadQuestion();
             showScreen('game');
@@ -634,6 +662,7 @@
         }
 
         function useTimeItem() {
+            if(isPaused) return;
             if(timeItemCount > 0) {
                 timeItemCount--;
                 timeLeft += 10;
@@ -651,6 +680,7 @@
         }
 
         function useHintItem() {
+            if(isPaused) return;
             if(hintItemCount > 0) {
                 const q = quizData[currentQuestionIndex];
                 let unrevealed = [];
@@ -677,7 +707,11 @@
             elements.timer.innerText = timeLeft;
             elements.timer.classList.remove('timer-warning');
             elements.gameContainer.classList.remove('tension-pulse'); 
+            startTicking();
+        }
 
+        function startTicking() {
+            clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeLeft--;
                 elements.timer.innerText = timeLeft;
@@ -700,6 +734,7 @@
 
         function submitAnswer(event) {
             event.preventDefault();
+            if(isPaused) return;
             if(elements.answerInput.value.trim() === '') return;
             
             const userAnswer = elements.answerInput.value.trim().replace(/\s/g, "");
@@ -851,6 +886,51 @@
             
             showScreen('result');
         }
+
+        /* ⏸ 일시정지: 문제를 푸는 화면에서만. 멈춘 시간은 문제 시간·소요시간에 넣지 않는다 */
+        function togglePause() {
+            if (!isPaused) {
+                if (!screens.game.classList.contains('active')) return;
+                isPaused = true;
+                pauseStartedAt = Date.now();
+                clearInterval(timerInterval);
+                elements.answerInput.blur();
+                document.getElementById('pause-overlay').classList.remove('hidden');
+                document.getElementById('btn-pause').innerText = '▶ 계속';
+                document.getElementById('btn-resume').focus();   // Enter를 누르면 바로 계속
+            } else {
+                isPaused = false;
+                const pausedMs = Date.now() - pauseStartedAt;
+                gameStartTime += pausedMs;
+                questionStartTime += pausedMs;
+                document.getElementById('pause-overlay').classList.add('hidden');
+                document.getElementById('btn-pause').innerText = '⏸ 멈춤';
+                if (screens.game.classList.contains('active') && timeLeft > 0) startTicking();
+                elements.answerInput.focus();
+            }
+        }
+
+        /* 🔊 소리 켜기·끄기 (다음에 열어도 기억한다) */
+        function syncSoundButtons() {
+            document.getElementById('btn-sound').innerText = isMuted ? '🔇 소리' : '🔊 소리';
+            document.getElementById('btn-sound').classList.toggle('opacity-60', isMuted);
+            document.getElementById('btn-sound-pause').innerText = isMuted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐';
+        }
+        function toggleSound() {
+            isMuted = !isMuted;
+            try { localStorage.setItem('catchmindMute10', isMuted ? '1' : '0'); } catch(e) {}
+            syncSoundButtons();
+            if (!isPaused) elements.answerInput.focus();
+        }
+        syncSoundButtons();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { e.preventDefault(); togglePause(); }
+        });
+        /* 다른 창이나 탭으로 가면 저절로 멈춘다 */
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && !isPaused && screens.game.classList.contains('active')) togglePause();
+        });
 
         function initGame() {
             document.body.className = 'min-h-[100dvh] w-full flex items-center justify-center p-3 sm:p-5 transition-all duration-500';
