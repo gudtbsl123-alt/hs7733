@@ -1002,7 +1002,7 @@ function drawCover(){
   g.strokeStyle='rgba(232,220,192,.6)'; g.beginPath(); g.moveTo(14,0); g.lineTo(14,H); g.stroke();
   if(id==='cloud'||id==='crane'||id==='gold'){ g.strokeStyle='rgba(232,220,192,.35)'; g.lineWidth=2; for(const [cx,cy] of [[90,380],[250,420],[270,90],[80,120]]){ for(let r=8;r<=20;r+=6){ g.beginPath(); g.arc(cx,cy,r,Math.PI,TAU); g.stroke(); g.beginPath(); g.arc(cx+30,cy,r,Math.PI,TAU); g.stroke(); } } }
   if(id==='lotus'||id==='gold'){ g.fillStyle='rgba(240,200,210,.45)'; for(let k=0;k<6;k++){ const a=k/6*Math.PI-Math.PI; g.beginPath(); g.ellipse(180+Math.cos(a)*26,400+Math.sin(a)*22,10,24,a+Math.PI/2,0,TAU); g.fill(); } }
-  if(id==='crane'||id==='gold'){ g.strokeStyle='rgba(245,240,230,.8)'; g.lineWidth=3; g.beginPath(); g.moveTo(200,330); g.quadraticCurveTo(240,300,290,320); g.moveTo(240,312); g.quadraticCurveTo(220,280,190,286); g.moveTo(240,312); g.quadraticCurveTo(260,280,300,288); g.stroke(); g.fillStyle='#b5302a'; g.beginPath(); g.arc(292,319,4,0,TAU); g.fill(); }
+  if(id==='crane'||id==='gold'){ g.save(); g.translate(-130,-70); /* 도장과 겹치지 않게 왼쪽 빈 곳으로 */ g.strokeStyle='rgba(245,240,230,.8)'; g.lineWidth=3; g.beginPath(); g.moveTo(200,330); g.quadraticCurveTo(240,300,290,320); g.moveTo(240,312); g.quadraticCurveTo(220,280,190,286); g.moveTo(240,312); g.quadraticCurveTo(260,280,300,288); g.stroke(); g.fillStyle='#b5302a'; g.beginPath(); g.arc(292,319,4,0,TAU); g.fill(); g.restore(); }
   /* 제목 딱지 */
   g.fillStyle='#f5ecd8'; g.fillRect(W-110,30,76,250); g.strokeStyle='#b99a6a'; g.lineWidth=2; g.strokeRect(W-106,34,68,242);
   g.fillStyle= id==='gold' ? '#b8871f' : '#1d140d'; g.font=`900 30px ${SERIF}`; g.textAlign='center'; g.textBaseline='middle';
