@@ -880,12 +880,12 @@ const Studio={
   S:null, set:null, setKey:'',
   reset(){ this.set=null; this.scrCv=null; this.lightCv=null; },
   scrCv:null, scrT:-1, scrSig:'', lightCv:null,
-  fresh(){ return { mode:'idle', q:null, key:'idle', answered:false, air:0, oops:0, line:'', lineT:0, bub:'', bubT:0, comments:[], viewers:0, shown:0, blink:0, confetti:[], sparks:[], wave:0, pick:0, chColor:'#ff8fa3' }; },
+  fresh(){ return { mode:'idle', q:null, key:'idle', answered:false, air:0, oops:0, line:'', lineT:0, bub:'', bubT:0, comments:[], viewers:0, shown:0, blink:0, confetti:[], sparks:[], wave:0, pick:0, chColor:'#ff8fa3', who:0, popT:0, idleT:0 }; },
   st(){ if(!this.S) this.S=this.fresh(); return this.S; },
-  idle(){ const s=this.st(); s.mode='idle'; s.key='idle'; s.q=null; s.answered=false; s.bub='안녕하세요! 어린이 뉴스예요 👋'; s.bubT=99; s.viewers=Math.max(s.viewers,0); },
-  newEpisode(ch){ const s=this.st(); s.mode='show'; s.viewers=0; s.shown=0; s.comments=[]; s.chColor=CHAPTERS[ch].color; s.bub=''; s.bubT=0; },
-  endEpisode(){ const s=this.st(); s.bub='오늘 방송은 여기까지! 고맙습니다 🙇'; s.bubT=99; s.air=0; },
-  setScreen(q){ const s=this.st(); s.q=q; s.key=q.screen; s.answered=false; s.air=0; s.oops=0; s.bub=''; s.bubT=0; s.line=''; },
+  idle(){ const s=this.st(); s.mode='idle'; s.key='idle'; s.q=null; s.answered=false; s.idleT=0; s.oops=0; s.air=0; s.comments=[]; s.confetti=[]; s.bub=ANCHORS[s.who].hi; s.bubT=99; s.viewers=Math.max(s.viewers,0); },
+  newEpisode(ch){ const s=this.st(); s.mode='show'; s.viewers=0; s.shown=0; s.comments=[]; s.chColor=CHAPTERS[ch].color; s.who=ch; s.popT=1; s.bub=ANCHORS[ch].hi; s.bubT=2.2; },
+  endEpisode(){ const s=this.st(); s.bub=ANCHORS[s.who].bye; s.bubT=99; s.air=0; },
+  setScreen(q){ const s=this.st(); s.q=q; s.key=q.screen; s.answered=false; s.air=0; s.oops=0; s.line=''; if(!(s.bubT>0 && s.bub===ANCHORS[s.who].hi)){ s.bub=''; s.bubT=0; } },
   pickFx(){ const s=this.st(); s.pick=.25; },
   oops(){ const s=this.st(); s.oops=1.3; s.bub='어… 어라? 방송 사고예요!'; s.bubT=1.6; for(let i=0;i<(save.lite?1:2);i++) this.comment(COMMENTS_BAD[Math.floor(Math.random()*COMMENTS_BAD.length)],'#ffe0e4'); },
   onAir(q,first,pts){ const s=this.st(); s.answered=true; s.air=2.6; s.line=q.line; s.lineT=0; s.bub=''; s.viewers+=pts;
@@ -894,6 +894,8 @@ const Studio={
   comment(t,bg){ const s=this.st(); s.side=(s.side||0)^1; s.comments.push({ t, bg, x:s.side?588:618, y:566, a:0, life:3.2 }); if(s.comments.length>6) s.comments.shift(); },
   sparkle(id){ const s=this.st(); this.reset(); for(let i=0;i<30;i++) s.sparks.push({ x:rand(80,620), y:rand(60,560), t:rand(.6,1.4), r:rand(2,5) }); },
   update(dt){ const s=this.st();
+    s.popT=Math.max(0,s.popT-dt*2.5);
+    if(s.mode==='idle'){ s.idleT+=dt; if(s.idleT>4.5){ s.idleT=0; s.who=(s.who+1)%4; s.popT=1; s.bub=ANCHORS[s.who].hi; s.bubT=99; } }
     s.air=Math.max(0,s.air-dt); s.oops=Math.max(0,s.oops-dt); s.pick=Math.max(0,s.pick-dt); s.bubT=Math.max(0,s.bubT-dt); s.wave+=dt;
     if(s.air>0) s.lineT+=dt;
     s.blink-=dt; if(s.blink< -.12) s.blink=rand(2,4.5);
@@ -942,38 +944,17 @@ const Studio={
   },
 
   /* ── 앵커 (오리지널 찰흙 인형 '도담 앵커') ── */
-  anchor(c,t){
-    const s=this.st(), x=350, bob=Math.sin(t*2)*1.5, y=358+bob, talking=s.air>0 && s.lineT<2.2, oops=s.oops>0;
-    /* 몸 */
-    clayRR(c,x-62,y+34,124,86,34,'#6fb7ff',{ d:4 });
-    c.fillStyle='#ffffff'; c.beginPath(); c.moveTo(x-18,y+36); c.lineTo(x,y+66); c.lineTo(x+18,y+36); c.closePath(); c.fill();
-    clayCircle(c,x-9,y+44,8,'#ff6b7a',{ shadow:false }); clayCircle(c,x+9,y+44,8,'#ff6b7a',{ shadow:false }); clayCircle(c,x,y+44,5,'#e0485c',{ shadow:false });
-    /* 머리카락 뒤 */
-    clayCircle(c,x,y-6,50,'#6b4a3a',{ shadow:false });
-    /* 얼굴 */
-    clayCircle(c,x,y,44,'#ffd9bf',{ shadow:false });
-    /* 앞머리 */
-    c.fillStyle='#6b4a3a'; c.beginPath(); c.moveTo(x-46,y-4); c.quadraticCurveTo(x-44,y-52,x,y-50); c.quadraticCurveTo(x+44,y-52,x+46,y-4); c.quadraticCurveTo(x+30,y-30,x+8,y-26); c.quadraticCurveTo(x-8,y-36,x-20,y-24); c.quadraticCurveTo(x-34,y-20,x-46,y-4); c.fill();
-    c.fillStyle='rgba(255,255,255,.28)'; c.beginPath(); c.ellipse(x-18,y-40,14,5,-.3,0,TAU); c.fill();
-    /* 헤드셋 마이크 */
-    c.strokeStyle='#3d2f55'; c.lineWidth=3; c.beginPath(); c.moveTo(x+42,y+2); c.quadraticCurveTo(x+40,y+26,x+18,y+26); c.stroke(); clayCircle(c,x+16,y+26,4,'#3d2f55',{ shadow:false });
-    /* 눈 */
-    const closed=s.blink<0;
-    if(oops){ c.strokeStyle='#3d2f55'; c.lineWidth=2.5; for(const ex of [x-15,x+15]){ c.beginPath(); for(let a=0;a<TAU*1.6;a+=.3){ const rr2=a*1.2; c.lineTo(ex+Math.cos(a+t*8)*rr2,y-2+Math.sin(a+t*8)*rr2); } c.stroke(); } }
-    else if(closed){ c.strokeStyle='#3d2f55'; c.lineWidth=3; c.lineCap='round'; for(const ex of [x-15,x+15]){ c.beginPath(); c.arc(ex,y-2,6,.15*Math.PI,.85*Math.PI); c.stroke(); } }
-    else { for(const ex of [x-15,x+15]){ c.fillStyle='#3d2f55'; c.beginPath(); c.ellipse(ex,y-2,5.5,7,0,0,TAU); c.fill(); c.fillStyle='#fff'; c.beginPath(); c.arc(ex-1.8,y-5,2.2,0,TAU); c.fill(); } }
-    c.fillStyle='rgba(255,120,140,.45)'; c.beginPath(); c.ellipse(x-27,y+12,8,5,0,0,TAU); c.ellipse(x+27,y+12,8,5,0,0,TAU); c.fill();
-    /* 입 */
-    c.fillStyle='#b8455a';
-    if(talking){ const o=4+Math.abs(Math.sin(t*16))*6; c.beginPath(); c.ellipse(x,y+18,7,o,0,0,TAU); c.fill(); }
-    else if(oops){ c.strokeStyle='#b8455a'; c.lineWidth=3; c.beginPath(); for(let i=0;i<5;i++) c.lineTo(x-10+i*5,y+19+(i%2?-3:3)); c.stroke(); }
-    else { c.strokeStyle='#b8455a'; c.lineWidth=3; c.lineCap='round'; c.beginPath(); c.arc(x,y+12,8,.15*Math.PI,.85*Math.PI); c.stroke(); }
-    if(oops){ c.fillStyle='rgba(120,190,255,.9)'; c.beginPath(); c.moveTo(x+40,y-30); c.quadraticCurveTo(x+50,y-14,x+40,y-10); c.quadraticCurveTo(x+30,y-14,x+40,y-30); c.fill(); }
-    /* 손 (처음 화면에서는 손을 흔든다) */
-    if(s.mode==='idle'){ const a=Math.sin(t*5)*.4; c.save(); c.translate(x+50,y+46); c.rotate(.55+a*.6); clayRR(c,-9,-54,18,56,9,'#6fb7ff',{ d:2, shadow:false, gloss:false }); clayCircle(c,0,-58,12,'#ffd9bf',{ shadow:false }); c.restore(); }
-    else { clayCircle(c,x-40,y+72,12,'#ffd9bf',{ shadow:false }); clayCircle(c,x+40,y+72,12,'#ffd9bf',{ shadow:false }); }
-  },
-
+  /* 앵커는 1초에 20번(효과 줄이기 10번)만 새로 그려 두고 그 사이에는 그림을 재사용한다 (구형 PC 배려) */
+  anchor(c,t){ const s=this.st(), X0=180, Y0=220, W=340, H=220, key=Math.floor(t*(save.lite?10:20))+'|'+PR;
+    if(!this._ac) this._ac=document.createElement('canvas');
+    const A=this._ac;
+    if(this._ak!==key){ this._ak=key; const w=Math.round(W*PR), h=Math.round(H*PR); if(A.width!==w || A.height!==h){ A.width=w; A.height=h; }
+      const g=A.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,w,h); g.setTransform(PR,0,0,PR,-X0*PR,-Y0*PR); Anchor.draw(g,t,s.who||0,s); }
+    c.drawImage(A,X0,Y0,W,H); },
+  /* 앵커 이름표 (책상 앞) */
+  nameTag(c){ const s=this.st(), A=ANCHORS[s.who||0], label=`${A.name} · ${A.role}`; c.font=`900 13px ${FONT}`; const w=c.measureText(label).width+32;
+    c.fillStyle='rgba(61,47,85,.2)'; rr(c,350-w/2,530,w,26,13); c.fill(); c.fillStyle=A.col; rr(c,350-w/2,527,w,26,13); c.fill();
+    txt(c,label,350,540,{ s:13, col:'#fff' }); },
   /* ── 방송 화면 속 자료 ── */
   screen(c,t){
     const s=this.st(), k=s.key, W=SCR.w, H=SCR.h, A=s.answered;
@@ -1101,15 +1082,20 @@ const Studio={
     /* 앵커 · 책상 앞 */
     this.anchor(c,t);
     c.drawImage(this.setCanvas(),0,430*PR,SW*PR,(SH-430)*PR,0,430,SW,SH-430);
+    this.nameTag(c);
     /* 카메라 빨간불 */
     c.fillStyle= on ? (Math.sin(t*10)>0?'#ff4d63':'#ff9aa8') : '#8a7aa3'; c.beginPath(); c.arc(44,462,6,0,TAU); c.fill();
     /* 앵커 말풍선: 방송 원고를 한 글자씩 */
     let bub='', a=1;
     if(s.air>0 && s.line){ const n=Math.floor(s.lineT*26); bub=s.line.slice(0,n); a=Math.min(1,s.air*2); }
     else if(s.bub && s.bubT>0){ bub=s.bub; a=Math.min(1,s.bubT*2); }
-    if(bub){ c.globalAlpha=a; c.font=`900 15px ${FONT}`; const lines=[]; let cur=''; for(const w of bub.split(' ')){ const tt=cur?cur+' '+w:w; if(c.measureText(tt).width>560 && cur){ lines.push(cur); cur=w; } else cur=tt; } lines.push(cur);
-      const bh=16+lines.length*20, by=306-bh; c.fillStyle='rgba(61,47,85,.16)'; rr(c,52,by+6,600,bh,18); c.fill(); c.fillStyle='#e6dcf0'; rr(c,50,by+3,600,bh,18); c.fill(); c.fillStyle='#ffffff'; rr(c,50,by,600,bh,18); c.fill(); c.fillStyle='#ffffff'; c.beginPath(); c.moveTo(336,by+bh-2); c.lineTo(350,by+bh+12); c.lineTo(364,by+bh-2); c.fill();
-      lines.forEach((l,i)=>txt(c,l,350,by+18+i*20,{ s:15, col:s.oops>0?'#e0485c':'#3d2f55' })); c.globalAlpha=1; }
+    if(bub){ c.globalAlpha=a; c.font=`900 15px ${FONT}`; const lines=[]; let cur=''; for(const w of bub.split(' ')){ const tt=cur?cur+' '+w:w; if(c.measureText(tt).width>206 && cur){ lines.push(cur); cur=w; } else cur=tt; } lines.push(cur);
+      /* 말풍선은 앵커 왼쪽에 두어 얼굴을 가리지 않는다 */
+      const bw=236, bx=34, bh=18+lines.length*21, by=Math.max(284,352-bh/2), ty=Math.min(by+bh-18,352);
+      c.fillStyle='rgba(61,47,85,.16)'; rr(c,bx+2,by+6,bw,bh,18); c.fill(); c.fillStyle='#e6dcf0'; rr(c,bx,by+3,bw,bh,18); c.fill(); c.fillStyle='#ffffff'; rr(c,bx,by,bw,bh,18); c.fill();
+      c.beginPath(); c.moveTo(bx+bw-2,ty-12); c.lineTo(bx+bw+16,ty); c.lineTo(bx+bw-2,ty+8); c.fill();
+      c.fillStyle=ANCHORS[s.who||0].col; rr(c,bx+12,by+8,4,bh-16,2); c.fill();
+      lines.forEach((l,i)=>txt(c,l,bx+bw/2+4,by+19+i*21,{ s:15, col:s.oops>0?'#e0485c':'#3d2f55' })); c.globalAlpha=1; }
     /* 시청자 댓글 */
     c.font=`900 12.5px ${FONT}`; c.textAlign='center'; c.textBaseline='middle';
     for(const m of s.comments){ if(!m.w) m.w=c.measureText(m.t).width+20; c.globalAlpha=m.a*Math.min(1,m.life);
@@ -1170,6 +1156,155 @@ function drawAward(cv, acc, r){
   g.fillStyle='#fff'; g.font=`64px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(r.icon,cx,cy-14);
   g.font=`900 28px ${FONT}`; g.fillText(`${acc}%`,cx,cy+46); g.font=`800 12px ${FONT}`; g.fillStyle='rgba(255,255,255,.85)'; g.fillText('정확도 (한 번에 성공)',cx,cy+72);
 }
+
+/* ════════════════ 방송별 앵커 4명 (오리지널 찰흙 인형) ════════════════
+   0 하트말랑(건강 뉴스) · 1 삐뽀(안전·나눔 뉴스) · 2 두리(이야기 극장) · 3 식빵 편집장(우리 반 신문 소식)
+   모두 같은 자리(x 350, 얼굴 중심 y≈358)에 서고, 말할 때·방송 사고·눈 깜빡임을 함께 쓴다. */
+const ANCHORS = [
+  { name:'하트말랑', role:'건강 뉴스 앵커', hi:'말랑말랑~ 건강 뉴스 시작할게요! 💗', bye:'오늘도 손 깨끗이! 건강 뉴스였어요 💗', col:'#ff8fb8' },
+  { name:'삐뽀', role:'안전·나눔 뉴스 앵커', hi:'삐뽀삐뽀! 안전 뉴스 출동합니다 🚨', bye:'안전 수칙 꼭 지켜요! 삐뽀 출동 끝 🚨', col:'#4f8fe6' },
+  { name:'두리', role:'이야기 극장 앵커', hi:'헤헤~ 오늘의 이야기 극장, 시작해 볼까? ✌️', bye:'이야기 극장은 여기까지! 또 봐~ ✌️', col:'#9b7be6' },
+  { name:'식빵 편집장', role:'우리 반 신문 소식 앵커', hi:'흠흠, 갓 구운 신문 소식입니다 📰', bye:'정확한 기사, 오늘도 잘 구웠습니다 📰', col:'#e08a3c' }
+];
+
+const Anchor={
+  /* 공통 얼굴 부품 */
+  eyes(c,x,y,o){ const s=o.s, t=o.t, dx=o.dx||15, r=o.r||6;
+    if(s.oops>0){ c.strokeStyle=o.ink||'#3d2f55'; c.lineWidth=2.5; for(const ex of [x-dx,x+dx]){ c.beginPath(); for(let a=0;a<TAU*1.6;a+=.3){ const q=a*r*.2; c.lineTo(ex+Math.cos(a+t*8)*q,y+Math.sin(a+t*8)*q); } c.stroke(); } return; }
+    if(s.blink<0){ c.strokeStyle=o.ink||'#3d2f55'; c.lineWidth=3; c.lineCap='round'; for(const ex of [x-dx,x+dx]){ c.beginPath(); c.arc(ex,y,r,.15*Math.PI,.85*Math.PI); c.stroke(); } return; }
+    for(const ex of [x-dx,x+dx]){
+      if(o.white){ c.fillStyle='#ffffff'; c.beginPath(); c.ellipse(ex,y,r*1.35,r*1.55,0,0,TAU); c.fill(); c.strokeStyle='rgba(61,47,85,.25)'; c.lineWidth=1.5; c.stroke(); }
+      if(o.iris){ const g=c.createRadialGradient(ex-r*.3,y-r*.4,1,ex,y,r*1.2); g.addColorStop(0,shade(o.iris,.35)); g.addColorStop(1,o.iris); c.fillStyle=g; c.beginPath(); c.ellipse(ex,y+(o.white?r*.2:0),r,r*1.15,0,0,TAU); c.fill(); }
+      c.fillStyle=o.ink||'#3d2f55'; c.beginPath(); c.ellipse(ex,y+(o.white?r*.25:0),r*(o.iris?.55:1),r*(o.iris?.65:1.2),0,0,TAU); c.fill();
+      c.fillStyle='#fff'; c.beginPath(); c.arc(ex-r*.35,y-r*.35,r*(o.big?.42:.32),0,TAU); c.fill(); if(o.big){ c.beginPath(); c.arc(ex+r*.35,y+r*.4,r*.16,0,TAU); c.fill(); }
+      if(o.lash){ c.strokeStyle=o.ink||'#3d2f55'; c.lineWidth=2; c.lineCap='round'; const sd=ex<x?-1:1; for(let k=0;k<3;k++){ c.beginPath(); c.moveTo(ex+sd*r*.9,y-r*.5+k*r*.35); c.lineTo(ex+sd*(r*1.55),y-r*.8+k*r*.4); c.stroke(); } }
+    } },
+  mouth(c,x,y,o){ const s=o.s, t=o.t, talking=s.air>0 && s.lineT<2.2;
+    c.fillStyle=o.col||'#b8455a'; c.strokeStyle=o.col||'#b8455a'; c.lineCap='round';
+    if(talking){ const h=4+Math.abs(Math.sin(t*16))*(o.big?8:6); c.beginPath(); c.ellipse(x,y+4,o.big?9:7,h,0,0,TAU); c.fill(); if(o.tongue){ c.fillStyle='#ff8c9c'; c.beginPath(); c.ellipse(x,y+4+h*.45,5,h*.4,0,0,TAU); c.fill(); } }
+    else if(s.oops>0){ c.lineWidth=3; c.beginPath(); for(let i=0;i<5;i++) c.lineTo(x-10+i*5,y+2+(i%2?-3:3)); c.stroke(); }
+    else if(o.grin){ c.beginPath(); c.moveTo(x-9,y-2); c.quadraticCurveTo(x,y+14,x+9,y-2); c.closePath(); c.fill(); if(o.tongue){ c.fillStyle='#ff8c9c'; c.beginPath(); c.ellipse(x,y+5,4,3,0,0,TAU); c.fill(); } }
+    else { c.lineWidth=3; c.beginPath(); c.arc(x,y-4,8,.15*Math.PI,.85*Math.PI); c.stroke(); } },
+  blush(c,x,y,dx,col){ c.fillStyle=col||'rgba(255,120,140,.45)'; c.beginPath(); c.ellipse(x-dx,y,8,5,0,0,TAU); c.ellipse(x+dx,y,8,5,0,0,TAU); c.fill(); },
+  sweat(c,x,y){ c.fillStyle='rgba(120,190,255,.9)'; c.beginPath(); c.moveTo(x,y); c.quadraticCurveTo(x+10,y+16,x,y+20); c.quadraticCurveTo(x-10,y+16,x,y); c.fill(); },
+  mic(c,x,y){ c.strokeStyle='#3d2f55'; c.lineWidth=3; c.beginPath(); c.moveTo(x,y); c.quadraticCurveTo(x-2,y+22,x-24,y+24); c.stroke(); clayCircle(c,x-26,y+24,4,'#3d2f55',{ shadow:false }); },
+
+  /* 0. 하트말랑: 분홍 솜사탕 요정 — 하트 귀, 돌돌 말린 앞머리, 곱슬 귀 꼬리, 반짝이는 큰 눈 */
+  heart(c,x,y,sz,col){ c.fillStyle=shade(col,-.2); this.heartPath(c,x,y+2,sz); c.fill(); const g=c.createLinearGradient(0,y-sz,0,y+sz); g.addColorStop(0,shade(col,.35)); g.addColorStop(1,col); c.fillStyle=g; this.heartPath(c,x,y,sz); c.fill(); c.fillStyle='rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(x-sz*.35,y-sz*.35,sz*.2,sz*.12,-.6,0,TAU); c.fill(); },
+  heartPath(c,x,y,s){ c.beginPath(); c.moveTo(x,y+s*.75); c.bezierCurveTo(x-s*1.2,y-s*.1,x-s*.6,y-s*1,x,y-s*.35); c.bezierCurveTo(x+s*.6,y-s*1,x+s*1.2,y-s*.1,x,y+s*.75); c.closePath(); },
+  curl(c,x,y,r,col,dir){ c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); c.strokeStyle=shade(col,-.22); c.lineWidth=r*.28; c.lineCap='round'; c.beginPath(); for(let a=0;a<TAU*1.3;a+=.2){ const q=r*.75*(1-a/(TAU*1.5)); c.lineTo(x+Math.cos(a*dir)*q,y+Math.sin(a*dir)*q); } c.stroke(); c.fillStyle='rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(x-r*.35,y-r*.45,r*.3,r*.16,-.4,0,TAU); c.fill(); },
+  malang(c,x,y,s,t){
+    const P='#ffc4dc', P2='#ff8fb8', P3='#ff6aa3', sw=Math.sin(t*2.2)*.08;
+    /* 곱슬 귀 꼬리 (양옆으로 늘어진다) */
+    for(const sd of [-1,1]){ c.save(); c.translate(x+sd*40,y-8); c.rotate(sd*(.25+sw)); clayRR(c,-13,0,26,70,13,P2,{ d:3, shadow:false }); c.restore(); this.curl(c,x+sd*(58+Math.sin(t*2.2)*4),y+64,17,P3,sd); }
+    /* 몸 */
+    clayRR(c,x-40,y+36,80,80,32,P,{ d:4 }); clayRR(c,x-22,y+48,44,52,20,'#fff0f7',{ d:2, shadow:false, gloss:false });
+    this.heart(c,x,y+64,10,'#ff5c96');
+    c.fillStyle='#ffd6e8'; c.beginPath(); c.ellipse(x,y+40,26,8,0,0,TAU); c.fill();
+    /* 머리 */
+    clayCircle(c,x,y,46,P,{ shadow:false });
+    /* 하트 귀 방울 */
+    for(const sd of [-1,1]){ clayCircle(c,x+sd*38,y-32,18,P2,{ shadow:false }); this.heart(c,x+sd*38,y-36,12,'#ff5c96'); }
+    /* 돌돌 말린 앞머리 */
+    c.fillStyle=P2; c.beginPath(); c.moveTo(x-34,y-26); c.quadraticCurveTo(x-20,y-58,x+6,y-54); c.quadraticCurveTo(x+34,y-50,x+30,y-24); c.quadraticCurveTo(x+10,y-40,x-6,y-30); c.quadraticCurveTo(x-20,y-24,x-34,y-26); c.fill();
+    this.curl(c,x+4,y-44,15,P2,1);
+    this.eyes(c,x,y+6,{ s, t, dx:17, r:8, iris:'#d4467f', ink:'#5a1f3d', big:true, lash:true });
+    this.blush(c,x,y+20,28,'rgba(255,110,150,.4)');
+    c.fillStyle='#b23a6b'; c.beginPath(); c.arc(x,y+17,1.8,0,TAU); c.fill();
+    this.mouth(c,x,y+26,{ s, t, col:'#b23a6b', grin:true, tongue:true });
+    if(s.oops>0) this.sweat(c,x+42,y-18);
+    this.mic(c,x+44,y+6);
+  },
+
+  /* 1. 삐뽀: 파란 순찰차 로봇 — 앞유리 눈, 경광등, 바퀴 어깨 */
+  wheel(c,x,y,r){ clayCircle(c,x,y,r,'#2f3a52',{ shadow:false }); clayCircle(c,x,y,r*.55,'#dfe7f2',{ shadow:false }); c.fillStyle='#ffc93c'; c.beginPath(); for(let i=0;i<5;i++){ const a=i/5*TAU-Math.PI/2; c.lineTo(x+Math.cos(a)*r*.4,y+Math.sin(a)*r*.4); c.lineTo(x+Math.cos(a+TAU/10)*r*.18,y+Math.sin(a+TAU/10)*r*.18); } c.fill(); },
+  bbeepo(c,x,y,s,t){
+    const B='#3f7fe0', B2='#2a5cb8', W='#f4f8ff';
+    /* 몸: 파란 차체 + 흰 가슴판 + 방패 */
+    clayRR(c,x-58,y+34,116,86,24,B,{ d:4 }); clayRR(c,x-34,y+44,68,50,14,W,{ d:2, shadow:false });
+    c.fillStyle='#ffc93c'; c.beginPath(); c.moveTo(x,y+52); c.lineTo(x+14,y+57); c.lineTo(x+12,y+74); c.lineTo(x,y+84); c.lineTo(x-12,y+74); c.lineTo(x-14,y+57); c.closePath(); c.fill(); txt(c,'안전',x,y+68,{ s:10, col:'#8a5a00' });
+    /* 바퀴 어깨 */
+    this.wheel(c,x-62,y+46,18); this.wheel(c,x+62,y+46,18);
+    /* 머리: 둥근 자동차 앞모습 */
+    clayRR(c,x-50,y-44,100,92,26,W,{ d:5, shadow:false });
+    clayRR(c,x-50,y+14,100,34,16,B,{ d:3, shadow:false, gloss:false });
+    /* 앞유리 (눈이 비친다) */
+    const wg=c.createLinearGradient(0,y-38,0,y+10); wg.addColorStop(0,'#bfe6ff'); wg.addColorStop(1,'#7cc4ff'); c.fillStyle=wg; rr(c,x-40,y-36,80,44,14); c.fill();
+    c.fillStyle='rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(x-34,y-32); c.lineTo(x-16,y-32); c.lineTo(x-30,y+2); c.lineTo(x-38,y+2); c.closePath(); c.fill();
+    if(s.oops>0){ c.strokeStyle='#1f2a44'; c.lineWidth=4; c.lineCap='round'; for(const ex of [x-15,x+15]){ c.beginPath(); c.moveTo(ex-6,y-20); c.lineTo(ex+6,y-8); c.moveTo(ex+6,y-20); c.lineTo(ex-6,y-8); c.stroke(); } }
+    else this.eyes(c,x,y-14,{ s, t, dx:15, r:6, ink:'#1f2a44', white:true });
+    /* 눈썹 (씩씩하게) */
+    c.strokeStyle='#1f2a44'; c.lineWidth=3.5; c.lineCap='round'; c.beginPath(); c.moveTo(x-24,y-28); c.lineTo(x-8,y-24); c.moveTo(x+24,y-28); c.lineTo(x+8,y-24); c.stroke();
+    /* 전조등 · 입(그릴) */
+    clayCircle(c,x-36,y+30,6,'#ffe27a',{ shadow:false }); clayCircle(c,x+36,y+30,6,'#ffe27a',{ shadow:false });
+    const talking=s.air>0 && s.lineT<2.2; c.fillStyle='#1f2a44'; const mh=talking?4+Math.abs(Math.sin(t*16))*6:3; rr(c,x-12,y+26-mh/2,24,mh,2); c.fill();
+    /* 경광등 */
+    const on=Math.floor(t*6)%2===0; clayRR(c,x-26,y-58,52,16,8,'#dfe7f2',{ d:2, shadow:false, gloss:false });
+    clayRR(c,x-24,y-66,22,14,7,on?'#ff4d63':'#b8455a',{ d:2, shadow:false }); clayRR(c,x+2,y-66,22,14,7,on?'#3f7fe0':'#7cc4ff',{ d:2, shadow:false });
+    if(on && !save.lite){ c.fillStyle='rgba(255,77,99,.25)'; c.beginPath(); c.arc(x-13,y-60,22,0,TAU); c.fill(); }
+    if(s.oops>0) this.sweat(c,x+48,y-40);
+  },
+
+  /* 2. 두리: 장난꾸러기 꼬마 — 굵은 눈썹, 통통한 볼, 바가지 머리, 보라 줄무늬 티셔츠 */
+  duri(c,x,y,s,t){
+    const skin='#ffdcc0';
+    /* 몸: 보라 줄무늬 티 + 별 */
+    clayRR(c,x-52,y+34,104,86,32,'#9b7be6',{ d:4 }); c.fillStyle='rgba(255,255,255,.35)'; for(let i=0;i<3;i++) c.fillRect(x-50,y+56+i*16,100,6);
+    c.fillStyle='#ffd166'; c.beginPath(); for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, r2=i%2?5:11; c.lineTo(x+Math.cos(a)*r2,y+64+Math.sin(a)*r2); } c.fill();
+    /* 머리: 볼이 불룩한 찐빵 얼굴 */
+    clayCircle(c,x,y+2,46,skin,{ shadow:false }); clayCircle(c,x-30,y+18,20,skin,{ shadow:false }); clayCircle(c,x+30,y+18,20,skin,{ shadow:false });
+    c.fillStyle=skin; c.beginPath(); c.ellipse(x,y+12,40,28,0,0,TAU); c.fill();
+    /* 바가지 머리 */
+    c.fillStyle='#4a3326'; c.beginPath(); c.moveTo(x-48,y-2); c.quadraticCurveTo(x-48,y-50,x,y-50); c.quadraticCurveTo(x+48,y-50,x+48,y-2); c.lineTo(x+40,y-12); c.lineTo(x+30,y-6); c.lineTo(x+18,y-14); c.lineTo(x+6,y-8); c.lineTo(x-6,y-14); c.lineTo(x-18,y-8); c.lineTo(x-30,y-14); c.lineTo(x-40,y-6); c.closePath(); c.fill();
+    c.fillStyle='rgba(255,255,255,.2)'; c.beginPath(); c.ellipse(x-16,y-40,16,5,-.2,0,TAU); c.fill();
+    /* 굵은 눈썹 (장난스럽게 들썩) */
+    const br=Math.sin(t*3)>.7?-3:0; c.fillStyle='#2b1d14';
+    for(const sd of [-1,1]){ c.save(); c.translate(x+sd*16,y+2+br); c.rotate(sd*-.12); rr(c,-11,-4,22,8,4); c.fill(); c.restore(); }
+    this.eyes(c,x,y+14,{ s, t, dx:16, r:5.5, iris:'#6b4a3a', ink:'#2b1d14' });
+    this.blush(c,x,y+28,32,'rgba(255,120,120,.4)');
+    this.mouth(c,x+4,y+34,{ s, t, col:'#b8455a', grin:true, tongue:true });
+    if(s.oops>0) this.sweat(c,x+44,y-12);
+    this.mic(c,x+46,y+10);
+  },
+
+  /* 3. 식빵 편집장: 네모난 식빵 머리 — 콧수염, 둥근 안경, 나비넥타이, 기자 모자 */
+  loafPath(c,x,y,w,h){ c.beginPath(); c.moveTo(x-w/2,y+h/2); c.lineTo(x-w/2,y-h*.1); c.bezierCurveTo(x-w/2-10,y-h*.55,x-w*.2,y-h/2-8,x,y-h/2-6); c.bezierCurveTo(x+w*.2,y-h/2-8,x+w/2+10,y-h*.55,x+w/2,y-h*.1); c.lineTo(x+w/2,y+h/2); c.closePath(); },
+  toast(c,x,y,s,t){
+    /* 몸: 흰 셔츠 + 조끼 + 나비넥타이 */
+    clayRR(c,x-50,y+40,100,80,18,'#f6f1e6',{ d:4 }); clayRR(c,x-50,y+54,28,66,10,'#3fb58e',{ d:2, shadow:false, gloss:false }); clayRR(c,x+22,y+54,28,66,10,'#3fb58e',{ d:2, shadow:false, gloss:false });
+    c.fillStyle='#ffffff'; c.beginPath(); c.moveTo(x-20,y+42); c.lineTo(x,y+58); c.lineTo(x+20,y+42); c.closePath(); c.fill();
+    c.fillStyle='#e0485c'; c.beginPath(); c.moveTo(x,y+54); c.lineTo(x-16,y+46); c.lineTo(x-16,y+64); c.closePath(); c.moveTo(x,y+54); c.lineTo(x+16,y+46); c.lineTo(x+16,y+64); c.closePath(); c.fill(); clayCircle(c,x,y+54,5,'#c0304a',{ shadow:false });
+    /* 식빵 머리: 갈색 테두리 + 속살 */
+    c.fillStyle='#b8642a'; this.loafPath(c,x,y+4,100,96); c.fill();
+    const g=c.createLinearGradient(0,y-44,0,y+50); g.addColorStop(0,'#e89b4f'); g.addColorStop(1,'#c9772f'); c.fillStyle=g; this.loafPath(c,x,y,100,96); c.fill();
+    const g2=c.createRadialGradient(x-10,y-10,6,x,y,56); g2.addColorStop(0,'#fff3dc'); g2.addColorStop(1,'#f6d9ac'); c.fillStyle=g2; this.loafPath(c,x,y+4,84,82); c.fill();
+    c.fillStyle='rgba(200,150,90,.25)'; for(const [dx,dy] of [[-24,24],[20,30],[-8,-16],[28,-4],[-30,-2]]){ c.beginPath(); c.arc(x+dx,y+dy,1.6,0,TAU); c.fill(); }
+    /* 기자 모자 (챙 + PRESS 카드) */
+    clayRR(c,x-34,y-66,68,24,10,'#3d4a5c',{ d:3, shadow:false }); clayRR(c,x-46,y-46,92,10,5,'#2f3a4a',{ d:2, shadow:false, gloss:false });
+    clayRR(c,x+6,y-68,24,14,3,'#ffffff',{ d:1, shadow:false, gloss:false }); txt(c,'PRESS',x+18,y-61,{ s:6.5, col:'#e0485c' });
+    /* 둥근 안경 */
+    this.eyes(c,x,y-4,{ s, t, dx:17, r:5.5, iris:'#3f8fd0', ink:'#1f2a44', white:true });
+    if(s.oops<=0){ c.strokeStyle='#3d2f55'; c.lineWidth=2.5; for(const ex of [x-17,x+17]){ c.beginPath(); c.arc(ex,y-3,12,0,TAU); c.stroke(); } c.beginPath(); c.moveTo(x-5,y-4); c.lineTo(x+5,y-4); c.stroke(); }
+    /* 코 · 콧수염 */
+    clayCircle(c,x,y+12,7,'#ff9f8a',{ shadow:false });
+    c.fillStyle='#6b3f22'; c.beginPath(); c.moveTo(x,y+18); c.bezierCurveTo(x-8,y+14,x-22,y+16,x-26,y+24); c.bezierCurveTo(x-18,y+22,x-10,y+26,x,y+23); c.bezierCurveTo(x+10,y+26,x+18,y+22,x+26,y+24); c.bezierCurveTo(x+22,y+16,x+8,y+14,x,y+18); c.fill();
+    this.mouth(c,x,y+32,{ s, t, col:'#a33b3b' });
+    if(s.oops>0) this.sweat(c,x+44,y-30);
+  },
+
+  draw(c,t,who,s){
+    const x=350, bob=Math.sin(t*2)*1.5, y=358+bob+(who===3?14:0);
+    const pop=s.popT>0 ? 1+Math.sin(s.popT*Math.PI)*.08 : 1;
+    const k=1.2*pop; c.save(); c.translate(x,430); c.scale(k,k); c.translate(-x,-430);
+    [this.malang,this.bbeepo,this.duri,this.toast][who].call(this,c,x,y,s,t);
+    /* 손: 처음 화면에서는 손을 흔든다 */
+    const hand = who===1 ? '#dfe7f2' : who===3 ? '#8a5a33' : who===0 ? '#ffc4dc' : '#ffdcc0', arm = who===1 ? '#3f7fe0' : who===3 ? '#f6f1e6' : who===0 ? '#ff8fb8' : '#9b7be6';
+    if(s.mode==='idle'){ const a=Math.sin(t*5)*.4; c.save(); c.translate(x+50,y+46); c.rotate(.55+a*.6); clayRR(c,-9,-54,18,56,9,arm,{ d:2, shadow:false, gloss:false }); clayCircle(c,0,-58,12,hand,{ shadow:false });
+      if(who===2){ c.fillStyle=hand; rr(c,-7,-82,6,18,3); c.fill(); rr(c,1,-82,6,18,3); c.fill(); } c.restore(); }
+    else { clayCircle(c,x-40,y+74,12,hand,{ shadow:false }); clayCircle(c,x+40,y+74,12,hand,{ shadow:false }); }
+    c.restore();
+  }
+};
 
 /* ════════════════ 그리기 · 갱신 루프 ════════════════ */
 let lastT=0;
