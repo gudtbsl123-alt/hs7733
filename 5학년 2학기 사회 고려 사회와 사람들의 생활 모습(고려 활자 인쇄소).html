@@ -41,7 +41,7 @@ button{ font-family:var(--font); cursor:pointer; }
 #qCtx p+p{ margin-top:4px; }
 #qCtx p.src{ text-align:right; color:#8a6440; font-size:15px; }
 #qCtx .say b{ color:var(--red); margin-right:6px; }
-#hint{ position:absolute; left:14px; right:14px; bottom:12px; display:flex; gap:12px; align-items:center; padding:10px 14px; border-radius:10px; background:#fff3cf; border:3px solid #e2b04a; box-shadow:0 6px 14px rgba(0,0,0,.18); animation:pop .3s cubic-bezier(.2,1.4,.4,1); }
+#hint{ position:relative; flex:none; margin:auto -8px 0; display:flex; gap:12px; align-items:center; padding:10px 14px; border-radius:10px; background:#fff3cf; border:3px solid #e2b04a; box-shadow:0 6px 14px rgba(0,0,0,.18); animation:pop .3s cubic-bezier(.2,1.4,.4,1); }
 #hint canvas{ flex:none; width:60px; height:60px; }
 #hint p{ margin:0; font:700 17px/1.45 var(--font); color:#5a3a12; }
 #hint .lock{ display:block; margin-top:3px; font:800 14px var(--font); color:var(--red); }
@@ -315,7 +315,7 @@ const QUESTIONS = [
   { no:2, ch:0, type:'one', diff:'중',
     q:'고려의 건국과 후삼국 통일 과정에서 있었던 일이 아닌 것은 무엇일까요?',
     plates:['왕건은 수도를 철원에 두었다.','왕건은 궁예를 몰아내고 고려를 세웠다.','왕건은 멸망한 발해 유민을 받아들였다.','왕건은 고구려를 계승한다는 뜻에서 나라 이름을 고려라 했다.','고려는 신라의 항복을 받고, 후백제를 물리쳐 후삼국을 통일했다.'], ans:0,
-    hint:'철원은 궁예가 수도로 삼았던 곳이에요. 왕건은 고려를 세운 뒤 수도를 어디로 옮겼을까요?',
+    hint:'문장마다 주인공이 정말 왕건(고려)이 맞는지 하나씩 따져 봐요. 궁예와 왕건은 각각 어디를 수도로 삼았을까요?',
     exp:'철원은 궁예의 수도였어요. 왕건은 고려를 세운 뒤 자신의 근거지인 송악(개경)으로 수도를 옮겼어요.',
     topic:'고려의 건국과 후삼국 통일', book:'수도를 철원에 둔 것은 궁예예요' },
   { no:3, ch:0, type:'spell', diff:'하',
@@ -342,7 +342,7 @@ const QUESTIONS = [
   { no:6, ch:1, type:'multi', diff:'상',
     q:'신분에 따른 고려 사회의 모습으로 알맞은 것을 모두 골라 짜 넣어요. (칸을 다 채우지 않아도 돼요)',
     plates:['신분은 크게 양인과 천인으로 구분됐다.','어떠한 상황에도 신분은 올라갈 수 없었다.','천인은 대부분 노비로, 지배층을 위해 일했다.','양인에는 왕족과 높은 관리, 중간 계층 그리고 대부분 농사를 짓는 일반 백성이 있었다.'], ans:[0,2,3],
-    hint:'고려에서는 공을 세우거나 능력이 있으면 신분이 올라가는 경우도 있었어요. 나머지 문장을 하나씩 따져 봐요.',
+    hint:'양인과 천인은 각각 어떤 사람들이었는지 떠올려 봐요. 고려에서 신분은 절대 바뀌지 않았을까요, 공을 세우면 바뀔 수도 있었을까요?',
     exp:'고려의 신분은 양인과 천인으로 나뉘었고, 천인은 대부분 노비였어요. 신분이 올라가는 경우도 있었어요.',
     topic:'신분에 따른 고려 사회', book:'양인과 천인 · 천인은 대부분 노비' },
   { no:7, ch:1, type:'ox', diff:'중',
@@ -356,7 +356,7 @@ const QUESTIONS = [
     q:'다음에서 설명하는 행사의 이름을 활자로 짜요.',
     ctx:['⦁ 한 해가 끝나 가는 11월에 열린 나라의 최고 행사였습니다.','⦁ 아라비아 상인들을 비롯해 주변 여러 나라의 사신과 상인들까지 참여한 큰 불교 행사였습니다.'],
     plates:['팔','관','회'], decoys:['연','등','만','경'], word:'팔관회',
-    hint:'연등회와 헷갈리지 말아요. 연등회는 봄에 열렸어요. 11월의 행사는 무엇이었을까요?',
+    hint:'연등회와 헷갈리지 말아요. 연등회는 한 해가 시작될 무렵에 열렸어요. 11월에 열린 행사는 무엇이었을까요?',
     exp:'팔관회는 11월에 열린 나라의 큰 불교 행사로, 외국 사신과 상인도 찾아왔어요.',
     topic:'고려의 큰 불교 행사', book:'팔관회' },
 
@@ -370,14 +370,14 @@ const QUESTIONS = [
   { no:10, ch:2, type:'two', diff:'중',
     q:'거란의 1차 침입과 고려의 대응으로 알맞은 것을 두 가지 골라요.',
     plates:['한때 개경을 빼앗기기도 했다.','서희가 전쟁 없이 거란을 물리쳤다.','거란에 패해 강동 6주 지역을 잃었다.','외교 담판으로 강동 6주 지역을 얻었다.','천리장성을 쌓은 덕분에 더 이상 거란의 침입을 받지 않았다.'], ans:[1,3],
-    hint:'1차 침입은 큰 싸움 없이 끝났고, 고려는 오히려 땅을 얻었어요. 누가 어떻게 해냈을까요?',
+    hint:'1차 침입 때 고려는 칼보다 ‘말’로 거란을 상대했어요. 그 결과 고려의 땅은 넓어졌을까요, 줄었을까요?',
     exp:'1차 침입 때 서희가 거란 장수와 외교 담판을 벌여 전쟁 없이 물러가게 하고 강동 6주를 얻었어요.',
     topic:'서희의 외교 담판', book:'서희의 담판 · 강동 6주를 얻다' },
   { no:11, ch:2, type:'one', diff:'하',
     q:'빈칸에 들어갈 알맞은 인물은 누구일까요?',
     ctx:['거란군이 귀주를 지나가자 [    ] 등이 나가서 맞서 싸웠다. …… 살아서 돌아간 사람이 겨우 수천 명이었으니, 거란군이 이토록 심하게 패배한 적이 없었다.','- 『고려사』 -'],
     plates:['주몽','이순신','강감찬','김윤후','대조영'], ans:2,
-    hint:'귀주 대첩은 거란이 세 번째로 쳐들어왔을 때의 일이에요. 이순신은 조선, 주몽과 대조영은 고려보다 훨씬 앞선 시대 사람이에요.',
+    hint:'귀주 대첩은 거란이 세 번째로 쳐들어왔을 때의 일이에요. 다섯 사람이 각각 어느 나라, 어느 때 사람인지 떠올려 봐요.',
     exp:'강감찬은 거란의 3차 침입 때 귀주에서 거란군을 크게 물리쳤어요(귀주 대첩).',
     topic:'귀주 대첩', book:'강감찬' },
   { no:12, ch:2, type:'one', diff:'상', src:'서술형 → 고르기',
@@ -410,13 +410,13 @@ const QUESTIONS = [
     q:'빈칸에 들어갈 알맞은 말을 활자로 짜요.',
     ctx:['고려 사람들은 위태로운 상황에서 불교의 힘에 의지해 마음을 모으면 나라를 구할 수 있다고 믿었습니다. 이에 거란의 침입 때 초조대장경을 만들었습니다. 그러나 몽골의 침입으로 초조대장경판이 불에 타 없어지자 다시 [    ]을/를 만들었습니다.'],
     plates:['팔','만','대','장','경'], decoys:['초','조','직','지'], word:'팔만대장경',
-    hint:'경판이 팔만여 장이나 되어 붙은 이름이에요.',
+    hint:'초조대장경은 불에 타 없어졌어요. 다시 새긴 대장경은 경판이 아주 많아서, 그 수가 이름에 들어가요.',
     exp:'몽골의 침입으로 초조대장경판이 불타자, 고려 사람들은 다시 팔만대장경을 만들었어요.',
     topic:'다시 만든 대장경', book:'팔만대장경' },
   { no:17, ch:3, type:'one', diff:'중',
     q:'팔만대장경의 우수성으로 알맞은 것은 무엇일까요?',
     plates:['내용이 정확하고 풍부하다.','글자마다 모양이 달라 개성이 넘친다.','한 장의 경판으로 이루어져 내용이 간결하다.','한 사람이 짧은 시간 동안 효율적으로 만들었다.','틀린 글자는 많지만 당시 사람들의 생각을 잘 보여 준다.'], ans:0,
-    hint:'팔만대장경은 많은 사람이 오랫동안 정성껏 새겨서, 틀린 글자가 거의 없고 글씨가 고르다고 해요.',
+    hint:'팔만대장경은 한 사람이 빨리 만들었을까요, 많은 사람이 오랫동안 정성껏 새겼을까요? 그렇게 만든 경판의 글자는 어떨지 생각해 봐요.',
     exp:'팔만대장경은 내용이 정확하고 풍부하며, 글자 모양이 고르고 틀린 글자가 거의 없어요.',
     topic:'팔만대장경의 우수성', book:'내용이 정확하고 풍부하다' },
   { no:18, ch:3, type:'one', diff:'하',
@@ -476,6 +476,8 @@ try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)); if(s && typeof s==='obj
 if(!Array.isArray(save.best)) save.best=[null,null,null,null];
 if(!Array.isArray(save.done)) save.done=[false,false,false,false];
 if(!save.pages || typeof save.pages!=='object') save.pages={};
+if(typeof save.nick!=='string') save.nick='';
+if(!COVERS.some(c=>c.id===save.cover)) save.cover='plain';
 function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
 const goldPages = () => Object.values(save.pages).filter(v=>v==='gold').length;
 
@@ -585,7 +587,7 @@ function renderPage(){
   else ctx.classList.add('hidden');
   /* 긴 원고는 글자를 조금 줄인다 */
   const long=(q.q.length+(q.ctx?q.ctx.join('').length:0))>150;
-  $('qText').style.fontSize=long?'20px':''; ctx.style.fontSize=long?'16px':'';
+  $('qText').style.fontSize=long?'20px':''; ctx.style.fontSize=long?'16px':''; $('hintText').style.fontSize='';
   $('mirrorTip').classList.toggle('hidden', q.type!=='spell');
   $('frame').classList.toggle('spell', q.type==='spell');
   $('trayTip').textContent = q.type==='two' ? '알맞은 것 두 개를 골라요' : q.type==='multi' ? '알맞은 것을 모두 골라요' : q.type==='spell' ? '낱글자 활자를 차례대로 골라요' : q.type==='ox' ? '맞으면 ○, 틀리면 × 활자' : q.type==='order' ? '㉠부터 차례대로 짜요' : '정답 활자 하나를 골라요';
@@ -679,6 +681,13 @@ function showHint(){
   const c=S.cur; drawFace(false);
   $('hintText').innerHTML=`${escapeHtml(c.q.hint)}<span class="lock" id="lockT">${Math.ceil(c.locked)}초 뒤에 다시 짜요</span>`;
   const h=$('hint'); h.classList.remove('hidden'); h.style.animation='none'; void h.offsetWidth; h.style.animation='';
+  fitMs();
+}
+/* 힌트가 원고 글을 가리지 않도록, 넘치면 글자를 조금씩 줄인다 */
+function fitMs(){
+  const ms=$('ms'), qt=$('qText'), cx=$('qCtx'), hp=$('hintText');
+  let t=parseFloat(getComputedStyle(qt).fontSize), c=parseFloat(getComputedStyle(cx).fontSize), h=parseFloat(getComputedStyle(hp).fontSize);
+  for(let k=0; k<10 && ms.scrollHeight>ms.clientHeight+1; k++){ t=Math.max(15,t-1.5); c=Math.max(13,c-1.2); h=Math.max(14,h-.5); qt.style.fontSize=t+'px'; cx.style.fontSize=c+'px'; hp.style.fontSize=h+'px'; }
 }
 function success(){
   const c=S.cur, q=c.q, st=S.st, first=c.wrongs===0;
