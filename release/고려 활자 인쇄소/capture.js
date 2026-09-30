@@ -1,4 +1,4 @@
-// 「고려 활자 인쇄소」 스크린샷 8장 자동 캡처 (보스전 없음)
+// 「고려 활자 인쇄소」 스크린샷 10장 자동 캡처 (보스전 없음, 결과창 3장)
 // 사용법: node capture.js <게임 HTML 경로> <저장 폴더>
 
 const { chromium } = require('playwright');
@@ -91,6 +91,14 @@ const NICKNAME = '장도초 사회천재';
   await page.waitForTimeout(1200);
   await page.click('#covers button:has-text("구름과 학")');
   await shot('결과창_완성한책', 800);
+
+  // 9. 결과창: 나의 기록 (점수·정답률·별·최고 연속·걸린 시간 등 12칸)
+  await page.click('.tabs [data-t=tRec]');
+  await shot('결과창_나의기록', 500);
+
+  // 10. 결과창: 오답 노트 (문제·내가 짠 활자·정답·풀이)
+  await page.click('.tabs [data-t=tNote]');
+  await shot('결과창_오답노트', 500);
 
   await browser.close();
   if (errors.length) console.log('게임 오류 발견:\n- ' + errors.join('\n- '));
