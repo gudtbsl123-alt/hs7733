@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>날씨 상자 실험실</title>
+<style>
+:root{ --font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕","Noto Sans KR","Noto Sans CJK KR",sans-serif;
+  --ink:#1f3347; --ink2:#4d6478; --mint:#e3f4ef; --glass:#f7fbff; --line:#c9dde6; --coral:#ff7a59; --coral2:#e85c3c; --sky:#3e9ad8; --sun:#ffc94d; --leaf:#3fae7f; --paper:#fffdf7; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; height:100%; background:#10212f; overflow:hidden; font-family:var(--font); color:var(--ink); user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+#game{ position:absolute; left:0; top:0; width:1280px; height:720px; transform-origin:0 0; overflow:hidden; background:#dff1ec; }
+#cv{ position:absolute; left:0; top:0; width:1280px; height:720px; }
+button{ font-family:var(--font); cursor:pointer; }
+button:disabled{ cursor:default; }
+.hidden{ display:none !important; }
+input{ font-family:var(--font); }
+
+/* ── 위 막대 ── */
+#top{ position:absolute; left:0; top:0; width:1280px; height:52px; display:flex; align-items:center; gap:10px; padding:0 16px; z-index:20; }
+.chip{ height:36px; display:flex; align-items:center; gap:6px; padding:0 14px; border-radius:18px; background:#fff; box-shadow:0 2px 0 rgba(31,51,71,.12); font:800 15px var(--font); color:var(--ink); white-space:nowrap; }
+#dots{ display:flex; gap:6px; margin:0 auto; }
+#dots i{ width:18px; height:18px; border-radius:50%; background:#fff; border:2px solid #b9d3dd; display:flex; align-items:center; justify-content:center; font:900 10px var(--font); font-style:normal; color:#fff; }
+#dots i.now{ border-color:var(--coral); box-shadow:0 0 0 3px rgba(255,122,89,.25); }
+#dots i.holo{ background:linear-gradient(135deg,#7fd3ff,#b99cff,#ffd36e); border-color:#fff; }
+#dots i.done{ background:#8fb8c9; border-color:#fff; }
+.tb{ height:36px; min-width:40px; padding:0 12px; border:0; border-radius:12px; background:#fff; color:var(--ink); font:800 14px var(--font); box-shadow:0 2px 0 rgba(31,51,71,.14); white-space:nowrap; }
+.tb.off{ opacity:.5; }
+.tb:active{ transform:translateY(2px); box-shadow:none; }
+#score{ background:#1f3347; color:#fff; }
+
+/* ── 도구 받침(상자 아래) ── */
+#tray{ position:absolute; left:24px; top:530px; width:700px; height:176px; z-index:6; border-radius:18px; background:linear-gradient(#f4f9fb,#e4eef3); box-shadow:inset 0 2px 0 #fff, 0 6px 16px rgba(31,51,71,.18); padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
+#trayHead{ display:flex; align-items:center; gap:8px; font:800 14px var(--font); color:var(--ink2); }
+#trayHead b{ color:var(--ink); }
+#trayMsg{ margin-left:auto; font:700 13px var(--font); color:#5f7a8c; }
+#tools{ flex:1; display:flex; gap:9px; align-items:stretch; flex-wrap:wrap; align-content:flex-start; }
+.tool{ position:relative; min-width:110px; height:58px; padding:6px 12px; border:0; border-radius:14px; background:#fff; box-shadow:0 3px 0 #b9ccd6, 0 6px 10px rgba(31,51,71,.1); display:flex; align-items:center; gap:8px; font:800 15px/1.2 var(--font); color:var(--ink); text-align:left; transition:transform .08s; }
+.tool .ic{ font-size:26px; line-height:1; }
+.tool:hover:not(:disabled){ transform:translateY(-2px); }
+.tool:active:not(:disabled){ transform:translateY(2px); box-shadow:0 1px 0 #b9ccd6; }
+.tool.on{ background:#fff3c9; box-shadow:0 3px 0 #e6b93c, 0 0 0 3px rgba(255,201,77,.45); }
+.tool.used{ opacity:.55; }
+.tool:disabled{ opacity:.4; }
+.tool.glow{ animation:glow 1.2s infinite; }
+@keyframes glow{ 50%{ box-shadow:0 3px 0 #b9ccd6, 0 0 0 5px rgba(255,122,89,.45); } }
+.sld{ width:94px; height:122px; border-radius:14px; background:#fff; box-shadow:0 3px 0 #b9ccd6; padding:8px 10px 6px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.sld.glow{ animation:glow 1.2s infinite; }
+.sld .t{ font:800 13.5px var(--font); white-space:nowrap; display:flex; gap:4px; align-items:center; }
+.sld .v{ font:900 17px var(--font); color:var(--sky); }
+.sld input{ width:82px; accent-color:var(--coral); height:26px; }
+.sld .ends{ width:82px; display:flex; justify-content:space-between; font:700 11px var(--font); color:#8aa0b0; }
+
+/* ── 연구 노트(오른쪽) ── */
+#note{ position:absolute; left:744px; top:62px; width:514px; height:644px; z-index:6; border-radius:18px; background:var(--paper); box-shadow:0 8px 22px rgba(31,51,71,.2); padding:16px 20px 16px 30px; display:flex; flex-direction:column; overflow:hidden; }
+#note::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:14px; background:repeating-linear-gradient(#2d4a60 0 10px, #fff 10px 22px); opacity:.9; }
+#note::after{ content:''; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(transparent 0 31px, rgba(62,154,216,.08) 31px 32px); }
+.nh{ display:flex; align-items:center; gap:8px; font:800 14px var(--font); color:var(--ink2); position:relative; z-index:1; }
+.nh .no{ padding:3px 12px; border-radius:12px; background:var(--ink); color:#fff; }
+.nh .df{ padding:2px 10px; border-radius:12px; border:2px solid #b9d3dd; }
+#qText{ position:relative; z-index:1; margin-top:10px; font:800 21px/1.45 var(--font); color:var(--ink); }
+#qCtx{ position:relative; z-index:1; margin-top:8px; padding:8px 12px; border-radius:10px; background:#eef6fa; border:2px solid #cfe2ec; font:600 16px/1.55 var(--font); color:#2d4a60; }
+#qCtx p{ margin:0; } #qCtx p+p{ margin-top:3px; }
+#qCtx table{ border-collapse:collapse; width:100%; font:700 15px var(--font); text-align:center; }
+#qCtx td,#qCtx th{ border:1px solid #bcd3de; padding:3px 6px; }
+#qCtx th{ background:#dcebf2; }
+#mission{ position:relative; z-index:1; margin-top:12px; padding:12px 14px; border-radius:14px; background:#fff3c9; border:2px dashed #e6b93c; font:800 17px/1.5 var(--font); color:#6b4b00; }
+#mission small{ display:block; margin-top:4px; font:700 14px var(--font); color:#8a6a1a; }
+#mission.ok{ background:#dff5e7; border-color:#5dbb85; color:#1d6b42; }
+#answers{ position:relative; z-index:1; margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.opt{ position:relative; width:100%; min-height:50px; padding:8px 14px 8px 50px; border:0; border-radius:14px; background:#fff; box-shadow:0 0 0 2px #cfe2ec, 0 3px 0 #cfe2ec; text-align:left; font:700 16.5px/1.4 var(--font); color:var(--ink); transition:transform .08s; }
+.opt .n{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:50%; background:#e3eef4; color:var(--ink2); font:900 15px/28px var(--font); text-align:center; }
+.opt:hover:not(:disabled){ transform:translateX(3px); box-shadow:0 0 0 2px var(--sky), 0 3px 0 var(--sky); }
+.opt.sel{ background:#e8f4fd; box-shadow:0 0 0 3px var(--sky), 0 3px 0 var(--sky); }
+.opt.sel .n{ background:var(--sky); color:#fff; }
+.opt.bad{ background:#f3eeee; color:#a9a0a0; box-shadow:0 0 0 2px #e6dada; text-decoration:line-through; }
+.opt.bad .n{ background:#e6dada; color:#fff; }
+.opt.right{ background:#dff5e7; box-shadow:0 0 0 3px #5dbb85, 0 3px 0 #5dbb85; }
+.opt.shake,.oxrow.shake,.blank.shake{ animation:shake .4s; }
+@keyframes shake{ 20%{ transform:translateX(-7px); } 40%{ transform:translateX(7px); } 60%{ transform:translateX(-5px); } 80%{ transform:translateX(4px); } }
+.oxrow{ display:flex; align-items:center; gap:10px; padding:8px 10px 8px 14px; border-radius:14px; background:#fff; box-shadow:0 0 0 2px #cfe2ec; font:700 16px/1.4 var(--font); }
+.oxrow .s{ flex:1; }
+.oxrow button{ width:48px; height:42px; border:0; border-radius:12px; background:#e9f2f6; font:900 24px var(--font); color:#8aa0b0; }
+.oxrow button.on.o{ background:var(--sky); color:#fff; }
+.oxrow button.on.x{ background:var(--coral); color:#fff; }
+.blanks{ display:flex; flex-direction:column; gap:8px; }
+.blank{ display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:14px; background:#fff; box-shadow:0 0 0 2px #cfe2ec; font:700 16px var(--font); }
+.blank .lab{ font:900 17px var(--font); color:var(--ink); white-space:nowrap; }
+.blank .slot{ min-width:118px; height:40px; padding:0 12px; border-radius:10px; border:2px dashed #9dbccb; display:flex; align-items:center; justify-content:center; font:900 18px var(--font); color:#9dbccb; cursor:pointer; }
+.blank .slot.fill{ border:0; background:var(--ink); color:#fff; }
+.blank .slot.focus{ border-color:var(--coral); box-shadow:0 0 0 3px rgba(255,122,89,.3); }
+.blank .rest{ color:var(--ink2); font-weight:600; }
+.bank{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.bank button{ height:44px; padding:0 18px; border:0; border-radius:22px; background:#fff; box-shadow:0 0 0 2px var(--sky), 0 3px 0 var(--sky); font:900 17px var(--font); color:var(--sky); }
+.bank button.used{ opacity:.35; }
+#submitRow{ position:relative; z-index:1; margin-top:auto; padding-top:10px; display:flex; gap:10px; align-items:center; }
+#bSubmit{ flex:1; height:54px; border:0; border-radius:16px; background:var(--coral); color:#fff; font:900 20px var(--font); box-shadow:0 4px 0 var(--coral2); }
+#bSubmit:disabled{ background:#c9d6dd; box-shadow:0 4px 0 #b4c3cb; }
+#bSubmit:active:not(:disabled){ transform:translateY(3px); box-shadow:0 1px 0 var(--coral2); }
+#bSubmit small{ font-size:13px; opacity:.85; margin-left:6px; }
+#hint{ position:relative; z-index:2; margin-top:10px; display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:14px; background:#eaf4ff; border:2px solid #9cc9ee; animation:pop .3s cubic-bezier(.2,1.4,.4,1); }
+#hint canvas{ flex:none; width:58px; height:58px; }
+#hint p{ margin:0; font:700 15.5px/1.45 var(--font); color:#1d4a73; }
+#hint .lock{ display:block; margin-top:2px; font:800 13px var(--font); color:var(--coral2); }
+@keyframes pop{ from{ transform:scale(.85); opacity:0; } }
+#fb{ position:absolute; inset:0; z-index:10; padding:18px 22px 18px 32px; background:var(--paper); display:flex; flex-direction:column; animation:pop .3s cubic-bezier(.2,1.3,.4,1); }
+#fb h3{ margin:0; font:900 26px var(--font); color:#1d8a52; }
+#fb h3.again{ color:#3e7fb8; }
+#fb .gain{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+#fb .gain span{ padding:4px 12px; border-radius:14px; background:#eef6fa; font:800 14px var(--font); color:var(--ink2); }
+#fb .card{ margin-top:12px; display:flex; gap:14px; align-items:center; padding:12px; border-radius:16px; background:linear-gradient(135deg,#e6f6ff,#f3ecff); border:2px solid #c9dcf5; }
+#fb .card.holo{ background:linear-gradient(120deg,#d8f3ff,#efe2ff 40%,#fff3cf 70%,#dcfff0); border-color:#fff; box-shadow:0 0 0 3px #b99cff55, 0 6px 16px rgba(120,90,200,.25); }
+#fb .card .ci{ width:64px; height:64px; border-radius:14px; background:#fff; display:flex; align-items:center; justify-content:center; font-size:38px; flex:none; }
+#fb .card b{ display:block; font:900 19px var(--font); }
+#fb .card span{ font:700 13px var(--font); color:var(--ink2); }
+#fb .ans{ margin-top:12px; font:800 17px/1.5 var(--font); }
+#fb .ans b{ color:#1d8a52; }
+#fb .exp{ margin-top:8px; padding:10px 12px; border-radius:12px; background:#f2f7f9; font:600 16px/1.6 var(--font); color:#2d4a60; }
+#fb .go{ margin-top:auto; display:flex; justify-content:flex-end; }
+
+/* ── 버튼 ── */
+.btn{ height:54px; padding:0 26px; border:0; border-radius:16px; background:var(--coral); color:#fff; font:900 19px var(--font); box-shadow:0 4px 0 var(--coral2); white-space:nowrap; }
+.btn:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--coral2); }
+.btn.light{ background:#fff; color:var(--ink); box-shadow:0 4px 0 #b9ccd6; }
+.btn.navy{ background:var(--ink); box-shadow:0 4px 0 #0e1d2a; }
+.btn small{ font-size:13px; opacity:.8; margin-left:4px; }
+
+/* ── 화면들 ── */
+.screen{ position:absolute; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; }
+.screen.dim{ background:rgba(16,33,47,.55); }
+.panel{ background:#fff; border-radius:24px; padding:26px 32px; box-shadow:0 20px 50px rgba(16,33,47,.35); }
+#scrTitle{ justify-content:flex-end; padding-right:40px; }
+.tcard{ width:500px; text-align:center; }
+.logo{ font:900 54px/1.1 var(--font); letter-spacing:-1px; color:var(--ink); }
+.logo span{ display:block; font:900 20px var(--font); letter-spacing:2px; color:var(--sky); margin-bottom:6px; }
+.tcard .unit{ margin-top:12px; font:700 14px/1.5 var(--font); color:var(--ink2); }
+.tcard .lead{ margin-top:10px; font:800 17px/1.55 var(--font); color:var(--ink); }
+.nickrow{ margin-top:16px; display:flex; gap:10px; align-items:center; justify-content:center; font:800 16px var(--font); }
+#nick{ width:250px; height:48px; border-radius:14px; border:2px solid #b9d3dd; padding:0 14px; font:800 18px var(--font); color:var(--ink); outline:none; }
+#nick:focus{ border-color:var(--sky); }
+.rowb{ margin-top:18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.opts{ margin-top:14px; display:flex; gap:18px; justify-content:center; font:700 14px var(--font); color:var(--ink2); }
+.opts label{ display:flex; gap:6px; align-items:center; cursor:pointer; }
+.opts input{ width:18px; height:18px; accent-color:var(--coral); }
+.how{ width:1060px; }
+.how h2{ margin:0 0 14px; text-align:center; font:900 30px var(--font); }
+.steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.step{ border-radius:18px; background:#f2f8fb; padding:16px 14px; text-align:center; }
+.step .e{ font-size:42px; }
+.step > b{ display:block; margin:6px 0 6px; font:900 19px var(--font); }
+.step p{ margin:0; font:600 15px/1.5 var(--font); color:var(--ink2); }
+.step p b{ color:var(--coral2); }
+.keys{ margin-top:14px; text-align:center; font:700 14px/2 var(--font); color:var(--ink2); }
+.k{ display:inline-block; min-width:26px; padding:0 8px; border-radius:7px; background:var(--ink); color:#fff; font:800 13px/24px var(--font); margin:0 2px; }
+#scrMap .panel{ width:1100px; }
+#scrMap h2{ margin:0 0 4px; text-align:center; font:900 30px var(--font); }
+#scrMap .sub{ text-align:center; font:700 15px var(--font); color:var(--ink2); margin-bottom:16px; }
+#rooms{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.room{ position:relative; height:300px; border:0; border-radius:20px; padding:18px 16px; text-align:left; color:#fff; display:flex; flex-direction:column; box-shadow:0 6px 0 rgba(0,0,0,.18); transition:transform .1s; overflow:hidden; }
+.room:hover:not(.locked){ transform:translateY(-4px); }
+.room .no{ font:800 14px var(--font); opacity:.85; }
+.room .ic{ font-size:54px; margin:8px 0 4px; }
+.room h3{ margin:0; font:900 22px/1.25 var(--font); }
+.room p{ margin:6px 0 0; font:700 13.5px/1.45 var(--font); opacity:.92; }
+.room .st{ margin-top:auto; font:900 26px var(--font); letter-spacing:2px; color:#ffe27a; }
+.room .st .off{ color:rgba(255,255,255,.3); }
+.room.locked{ filter:grayscale(.85) brightness(.8); cursor:not-allowed; }
+.room.locked::after{ content:'🔒'; position:absolute; right:14px; top:12px; font-size:26px; }
+.room .free{ position:absolute; right:12px; bottom:14px; height:34px; padding:0 12px; border-radius:17px; border:0; background:rgba(255,255,255,.95); color:var(--ink); font:900 13px var(--font); }
+#mapInfo{ margin-top:14px; display:flex; align-items:center; gap:12px; font:800 15px var(--font); color:var(--ink2); }
+#mapInfo .sp{ margin-left:auto; }
+.chEnd{ width:720px; text-align:center; }
+.chEnd h2{ margin:0; font:900 28px var(--font); }
+.chEnd .stars{ margin-top:8px; font:900 58px var(--font); letter-spacing:10px; color:#ffc94d; }
+.chEnd .stars .off{ color:#dde7ec; }
+.grid3{ margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.cell{ border-radius:14px; background:#f2f8fb; padding:10px; }
+.cell b{ display:block; font:900 24px var(--font); color:var(--sky); }
+.cell span{ font:700 13px var(--font); color:var(--ink2); }
+.pausep{ width:420px; text-align:center; display:flex; flex-direction:column; gap:12px; }
+.pausep h2{ margin:0 0 4px; font:900 30px var(--font); }
+/* 연구 보고서 */
+#scrFinal{ background:linear-gradient(135deg,#dff1ec,#e5eefb); }
+.final{ width:1220px; height:690px; display:flex; flex-direction:column; }
+.fh{ display:flex; align-items:center; gap:12px; }
+.fh h2{ margin:0; font:900 28px var(--font); }
+.tabs{ margin-left:auto; display:flex; gap:8px; }
+.tabs button{ height:42px; padding:0 18px; border:0; border-radius:14px; background:#eef4f7; color:var(--ink2); font:900 15px var(--font); }
+.tabs button.on{ background:var(--ink); color:#fff; }
+.fbody{ flex:1; margin-top:14px; overflow:auto; }
+.rep{ display:grid; grid-template-columns:330px 1fr; gap:18px; height:100%; }
+.badge{ border-radius:22px; background:linear-gradient(160deg,#1f3347,#35597a); color:#fff; padding:20px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+.badge canvas{ width:220px; height:220px; }
+.ladder{ margin-top:14px; width:100%; display:flex; flex-direction:column; gap:6px; }
+.ladder div{ display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:12px; background:rgba(255,255,255,.08); font:800 14px var(--font); color:rgba(255,255,255,.6); }
+.ladder div.on{ background:rgba(255,255,255,.2); color:#fff; }
+.ladder div.now{ background:linear-gradient(90deg,#7fd3ff55,#b99cff55,#ffd36e55); color:#fff; box-shadow:0 0 0 2px #ffffff88; }
+.ladder span{ margin-left:auto; font-weight:700; font-size:12px; }
+.badge b{ font:900 26px var(--font); margin-top:6px; }
+.badge span{ font:700 14px/1.5 var(--font); opacity:.85; margin-top:4px; }
+.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-content:start; }
+.tile{ border-radius:16px; background:#f4f9fb; padding:12px 14px; }
+.tile .tl{ font:800 13px var(--font); color:var(--ink2); }
+.tile .tv{ font:900 28px var(--font); color:var(--ink); margin-top:2px; }
+.tile .ts{ font:700 12.5px var(--font); color:#7b93a3; margin-top:2px; }
+.tile.hot{ background:#fff4d6; }
+.dex{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+.dc{ border-radius:16px; padding:10px; background:#f2f6f8; text-align:center; border:2px solid #e2ebef; min-height:128px; }
+.dc .i{ font-size:40px; }
+.dc b{ display:block; font:900 15px var(--font); margin-top:4px; }
+.dc span{ display:block; font:700 12px/1.35 var(--font); color:var(--ink2); margin-top:3px; }
+.dc.holo{ background:linear-gradient(120deg,#d8f3ff,#efe2ff 40%,#fff3cf 70%,#dcfff0); border-color:#fff; box-shadow:0 0 0 2px #b99cff66; }
+.dc.norm{ background:#eef6fa; }
+.dc.lock{ opacity:.5; }
+.dc.lock .i{ filter:grayscale(1) brightness(1.4); }
+.note ol{ margin:0; padding-left:24px; font:700 16px/1.6 var(--font); }
+.note li{ margin-bottom:12px; }
+.note .ex{ color:var(--ink2); font-weight:600; }
+.note .none{ padding:60px; text-align:center; font:800 20px var(--font); color:var(--ink2); }
+.frow{ margin-top:12px; display:flex; gap:12px; justify-content:center; }
+#toast{ position:absolute; left:374px; top:84px; transform:translateX(-50%); z-index:50; display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none; }
+.toast{ padding:10px 20px; border-radius:22px; background:rgba(31,51,71,.92); color:#fff; font:800 16px var(--font); animation:pop .25s; }
+</style>
+</head>
+<body>
+<div id="game">
+  <canvas id="cv" width="1280" height="720"></canvas>
+
+  <div id="top" class="hidden">
+    <div class="chip" id="chipCh">🌤️ 1실험실</div>
+    <div id="dots"></div>
+    <div class="chip" id="score">⭐ 0</div>
+    <button class="tb" id="bRead" title="문제 읽어 주기 (R)">🔈 읽기</button>
+    <button class="tb" id="bSound" title="효과음 켜기·끄기">🔊</button>
+    <button class="tb" id="bPause" title="멈춤 (Esc)">⏸ 멈춤</button>
+  </div>
+
+  <div id="tray" class="hidden">
+    <div id="trayHead">🧰 <b>실험 도구</b><span id="trayMsg"></span></div>
+    <div id="tools"></div>
+  </div>
+
+  <div id="note" class="hidden">
+    <div class="nh"><span class="no" id="qNo">실험 1</span><span class="df" id="qDiff">난이도 하</span><span id="qSrc"></span></div>
+    <div id="qText"></div>
+    <div id="qCtx" class="hidden"></div>
+    <div id="mission" class="hidden"></div>
+    <div id="answers"></div>
+    <div id="hint" class="hidden"><canvas id="face" width="116" height="116"></canvas><p id="hintText"></p></div>
+    <div id="submitRow"><button id="bSubmit" disabled>✔ 확인하기<small>Enter</small></button></div>
+    <div id="fb" class="hidden"></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- 첫 화면 -->
+  <div id="scrTitle" class="screen">
+    <div class="panel tcard">
+      <div class="logo"><span>WEATHER BOX LAB</span>날씨 상자 실험실</div>
+      <div class="unit">5학년 2학기 과학 · 2. 날씨와 우리 생활</div>
+      <div class="lead">유리 상자 속 작은 세상에서 날씨를 직접 만들어요.<br>이슬·안개·구름을 만들고, 바람의 길을 찾아 날씨 박사가 되어요!</div>
+      <div class="nickrow">연구원 이름 <input id="nick" maxlength="14" placeholder="이름을 적어 주세요"></div>
+      <div class="rowb"><button class="btn" id="bStart">🔬 실험실 들어가기</button><button class="btn light" id="bHow">📘 하는 법</button></div>
+      <div class="opts"><label><input type="checkbox" id="optSfx"> 🔊 효과음</label><label><input type="checkbox" id="optLite"> 🐢 효과 줄이기</label></div>
+    </div>
+  </div>
+
+  <!-- 하는 법 -->
+  <div id="scrHow" class="screen dim hidden">
+    <div class="panel how">
+      <h2>🔬 뭉게 박사의 실험 안내</h2>
+      <div class="steps">
+        <div class="step"><div class="e">🧰</div><b>① 먼저 실험하기</b><p>노란 <b>실험 과제</b>를 읽고, 아래 <b>실험 도구</b>를 눌러 상자 속 날씨를 바꿔요.</p></div>
+        <div class="step"><div class="e">👀</div><b>② 잘 살펴보기</b><p>상자 안의 <b>수증기·물방울·연기</b>가 어떻게 움직이는지, 계기판 숫자가 어떻게 바뀌는지 봐요.</p></div>
+        <div class="step"><div class="e">📝</div><b>③ 답 고르기</b><p>연구 노트에서 답을 고르고 <b>✔ 확인하기</b>. 틀리면 박사님의 <b>힌트</b>를 읽고 다시 골라요.</p></div>
+        <div class="step"><div class="e">🗂️</div><b>④ 도감 모으기</b><p>한 번에 맞히면 <b>반짝 카드</b>! 20장을 모아 <b>날씨 박사</b>가 되어요.</p></div>
+      </div>
+      <div class="keys"><span class="k">1</span>~<span class="k">5</span> 답 고르기 · <span class="k">Enter</span> 확인·다음 · <span class="k">R</span> 읽어 주기 · <span class="k">Esc</span> 멈춤</div>
+      <div class="rowb"><button class="btn" id="bHowOk">알겠어요!</button></div>
+    </div>
+  </div>
+
+  <!-- 연구소 안내도 -->
+  <div id="scrMap" class="screen dim hidden">
+    <div class="panel">
+      <h2>🏫 날씨 연구소 안내도</h2>
+      <div class="sub">실험실을 차례대로 열어요. 다 마친 실험실에서는 <b>자유 실험</b>을 할 수 있어요.</div>
+      <div id="rooms"></div>
+      <div id="mapInfo"><button class="btn light" id="bMapBack">◀ 처음으로</button><span id="mapStat"></span><button class="btn navy sp hidden" id="bMapReport">📋 연구 보고서</button></div>
+    </div>
+  </div>
+
+  <div id="scrCh" class="screen dim hidden"><div class="panel chEnd" id="chBox"></div></div>
+
+  <div id="scrPause" class="screen dim hidden">
+    <div class="panel pausep">
+      <h2>⏸ 잠깐 쉬어요</h2>
+      <button class="btn" id="bResume">▶ 계속하기</button>
+      <button class="btn light" id="bPauseSound">🔊 효과음 켜짐</button>
+      <button class="btn light" id="bPauseHow">📘 하는 법</button>
+      <button class="btn navy" id="bQuit">🏫 연구소 안내도로</button>
+      <div class="opts"><label><input type="checkbox" id="optLite2"> 🐢 효과 줄이기</label></div>
+    </div>
+  </div>
+
+  <div id="scrFinal" class="screen hidden">
+    <div class="final">
+      <div class="fh"><h2 id="fTitle">📋 연구 보고서</h2>
+        <div class="tabs"><button data-t="tRep" class="on">📋 보고서</button><button data-t="tDex">🗂️ 날씨 도감</button><button data-t="tNote">📒 오답 노트</button></div></div>
+      <div class="fbody">
+        <div id="tRep" class="rep"><div class="badge"><canvas id="badgeCv" width="440" height="440"></canvas><b id="rankName">견습 연구원</b><span id="rankSub"></span><div class="ladder" id="ladder"></div></div><div class="tiles" id="tiles"></div></div>
+        <div id="tDex" class="dex hidden"></div>
+        <div id="tNote" class="note hidden"></div>
+      </div>
+      <div class="frow"><button class="btn" id="bAgain">🔄 1실험실부터 다시</button><button class="btn navy" id="bFinalMap">🏫 연구소 안내도</button><button class="btn light" id="bFinalTitle">🏠 처음으로</button></div>
+    </div>
+  </div>
+</div>
+<script>
+/* ════════════════ 문항 (5학년 2학기 과학 2. 날씨와 우리 생활 · 단원평가 2회 20문항) ════════════════
+   type: one(하나 고르기) · ox(○× 여러 줄) · assign(빈칸에 낱말 넣기)
+   scene: 상자 안 장면 · act: 문제 앞(before)이나 정답 뒤(after)에 직접 해 보는 실험 */
+const QUESTIONS = [
+  /* ── 1실험실: 기상 관측실 ── */
+  { no:1, ch:0, diff:'하', type:'one', scene:'town',
+    q:'다음은 어떤 기상 요소에 대한 설명일까요?',
+    ctx:['공기의 따뜻하고 차가운 정도를 나타낸다.'],
+    opts:['기온','바람','습도','강수량','구름의 양'], ans:0,
+    act:{ when:'before', goal:'temp', text:'🌡️ <b>기온 조절기</b>를 끝까지 올리거나 내려서 마을 사람들을 살펴봐요.' },
+    hint:'조절기를 움직였을 때 마을 사람들의 옷차림을 바꾼 것은 어떤 조절기였나요? 그 조절기의 이름을 떠올려 봐요.',
+    exp:'기온은 공기의 따뜻하고 차가운 정도예요. 기온이 바뀌면 사람들의 옷차림도 달라져요.',
+    card:{ i:'🌡️', name:'기온', d:'공기의 따뜻하고 차가운 정도' } },
+
+  { no:2, ch:0, diff:'중', type:'one', scene:'town',
+    q:'날씨 애플리케이션을 통해 알 수 있는 점이 아닌 것은 무엇일까요?',
+    opts:['비나 눈이 내린 정도','바람이 불어오는 방향','바람이 불어오는 빠르기','공기의 따뜻하고 차가운 정도','공기 중에 수증기가 포함된 정도'], ans:0,
+    act:{ when:'before', goal:'phone', text:'📱 <b>날씨 앱 켜기</b>를 눌러 상자 속 휴대폰 화면을 살펴봐요.' },
+    hint:'앱 왼쪽 줄의 이름(시간·날씨·기온·풍속·풍향·습도)과 보기를 하나씩 짝 지어 봐요. 짝이 없는 보기는 무엇일까요?',
+    exp:'이 앱에는 기온·풍속·풍향·습도가 있지만, 비나 눈이 내린 양(강수량)은 나오지 않아요.',
+    card:{ i:'📱', name:'날씨 앱 읽기', d:'기온·풍속·풍향·습도를 한눈에' } },
+
+  { no:3, ch:0, diff:'하', type:'one', scene:'town',
+    q:'날씨를 기상 요소로 표현했을 때의 좋은 점으로 옳은 것은 무엇일까요?',
+    opts:['㉠ 날씨 변화를 막을 수 있다.','㉡ 구체적인 날씨 정보를 알 수 있다.','㉢ 사람마다 날씨를 다르게 느낄 수 있다.'], ans:1,
+    act:{ when:'before', goal:'thermo', text:'🔍 <b>온도계 확대</b>를 눌러 두 사람의 말과 온도계의 숫자를 비교해 봐요.' },
+    hint:'두 사람은 같은 날씨를 다르게 느꼈어요. 온도계의 숫자도 사람마다 달라질까요?',
+    exp:'“덥다·춥다”는 사람마다 다르게 느끼지만, 기온 23 ℃처럼 기상 요소로 나타내면 누구나 같은 날씨 정보를 알 수 있어요.',
+    card:{ i:'🔍', name:'기상 요소로 표현하기', d:'구체적인 날씨 정보를 알 수 있어요' } },
+
+  { no:4, ch:0, diff:'하', type:'ox', scene:'town',
+    q:'날씨가 우리 생활에 주는 영향을 설명한 것이에요. 옳으면 ○, 옳지 않으면 ×를 골라요.',
+    items:['(1) 날씨는 사람들의 옷차림과는 관련이 없다.','(2) 날씨에 따라 우리 생활의 모습이 달라진다.','(3) 날씨는 사람들의 안전한 생활에 영향을 주기도 한다.'],
+    ans:['X','O','O'],
+    act:{ when:'before', goal:'rain', text:'🌧️ <b>비 조절기</b>를 높이 올려서 마을 사람들이 어떻게 달라지는지 봐요.' },
+    hint:'비가 오자 마을 사람들의 옷차림과 행동이 어떻게 바뀌었나요? 길이 미끄러워지면 무엇을 조심해야 할까요?',
+    exp:'날씨에 따라 옷차림과 생활 모습이 달라지고, 비·눈·강한 바람은 안전에도 영향을 줘요.',
+    card:{ i:'☂️', name:'날씨와 생활', d:'옷차림·생활·안전이 달라져요' } },
+
+  { no:5, ch:0, diff:'중', type:'one', scene:'town',
+    q:'바람이 강하게 부는 날, 사람들의 활동으로 알맞은 모습은 무엇일까요?',
+    opts:['㉠ ⚽ 야외 활동 — 운동장에서 공놀이를 한다.','㉡ 🔧 시설물 점검 — 비닐하우스 같은 시설물을 단단히 점검한다.'], ans:1,
+    act:{ when:'before', goal:'wind', text:'🌬️ <b>바람 조절기</b>를 끝까지 올려서 마을이 어떻게 되는지 봐요.' },
+    hint:'바람이 아주 세게 불었을 때 상자 속 마을에서 무엇이 흔들리고 날아갔나요? 위험을 줄이는 활동은 무엇일까요?',
+    exp:'바람이 강한 날에는 비닐하우스·간판 같은 시설물이 부서지지 않도록 미리 점검해요.',
+    card:{ i:'🌬️', name:'강한 바람 대비', d:'시설물을 미리 점검해요' } },
+
+  { no:6, ch:0, diff:'상', type:'one', scene:'town', src:'서술형 → 고르기',
+    q:'일기 예보를 보고 날씨에 대처할 방법으로 알맞은 것은 무엇일까요?',
+    ctx:['내일은 전국적으로 80 %를 웃도는 높은 습도를 기록할 것으로 예상됩니다.'],
+    opts:['제습기를 켜거나 창문을 열어 환기를 한다.','가습기를 켜서 방 안의 습도를 더 높인다.','빨래가 잘 마르니 빨래를 밖에 넌다.','공기가 건조해 불이 나기 쉬우니 불조심을 한다.','피부가 건조해지니 보습제를 듬뿍 바른다.'], ans:0,
+    act:{ when:'before', goal:'humid', text:'💧 <b>습도 조절기</b>를 80 % 넘게 올려서 마을을 살펴봐요.' },
+    hint:'습도가 높으면 공기 중에 수증기가 많아요. 수증기를 줄이려면 어떻게 해야 할까요? 건조할 때 하는 일과 헷갈리지 말아요.',
+    exp:'습도가 높으면 빨래가 잘 마르지 않고 음식이 상하기 쉬워요. 제습기를 켜거나 환기를 해서 습도를 낮춰요.',
+    card:{ i:'💧', name:'높은 습도 대처', d:'제습기·환기로 습도를 낮춰요' } },
+
+  /* ── 2실험실: 응결 실험실 ── */
+  { no:7, ch:1, diff:'중', type:'one', scene:'can',
+    q:'차가운 음료수 캔의 표면에 물방울이 맺히는 까닭으로 옳은 것은 무엇일까요?',
+    opts:['㉠ 음료수 캔이 얼었기 때문이다.','㉡ 캔 안에 들어 있던 음료수가 흘러나왔기 때문이다.','㉢ 공기 중의 수증기가 캔 표면에 응결했기 때문이다.','㉣ 공기 중의 수증기가 끓어 기포가 생겼기 때문이다.'], ans:2,
+    act:{ when:'before', goal:'canDew', text:'🥫 캔 표면에 <b>물방울이 맺히게</b> 해 보세요. 어떤 도구가 필요할까요?' },
+    hint:'따뜻한 물에 담갔을 때와 얼음물에 담갔을 때를 비교해 봐요. 물방울은 캔 안에서 나왔을까요, 캔 밖의 공기에서 왔을까요?',
+    exp:'공기 중의 수증기가 차가운 캔 표면에 닿아 식으면서 물방울로 변해요. 이것을 응결이라고 해요.',
+    card:{ i:'🥫', name:'응결', d:'수증기가 식어 물방울로 변해요' } },
+
+  { no:8, ch:1, diff:'하', type:'one', scene:'apple',
+    q:'과일에 물방울이 맺힌 모습에 대한 설명으로 옳은 것은 무엇일까요?',
+    opts:['㉠ 공기 중의 수증기가 증발해 만들어진다.','㉡ 이와 같은 자연 현상을 이슬이라고 한다.','㉢ 햇빛이 잘 비치는 낮에 주로 볼 수 있다.'], ans:1,
+    act:{ when:'before', goal:'dawn', text:'🕐 <b>시간 조절기</b>를 새벽까지 돌려서 사과를 살펴봐요.' },
+    hint:'물방울은 낮과 새벽 중 언제 생겼나요? 수증기가 물방울로 변하는 것은 증발일까요, 응결일까요?',
+    exp:'밤사이 차가워진 사과와 풀잎 표면에 공기 중의 수증기가 응결해 맺힌 것을 이슬이라고 해요.',
+    card:{ i:'🍎', name:'이슬', d:'차가워진 물체 표면에 맺힌 물방울' } },
+
+  { no:9, ch:1, diff:'중', type:'one', scene:'jar',
+    q:'집기병 실험에 대한 설명으로 옳지 않은 것은 무엇일까요?',
+    ctx:['미지근한 물을 조금 넣은 집기병에 향 연기를 넣은 뒤, 집기병 위에 얼음을 넣은 지퍼 백을 올려놓았어요.'],
+    opts:['집기병 안이 뿌옇게 흐려진다.','집기병 안 공기 중의 수증기가 응결한다.','향 연기는 응결이 잘 일어나도록 도와준다.','얼음을 넣은 지퍼 백은 집기병의 온도를 높여 준다.','집기병 안 공기 중의 수증기가 응결해 집기병 안에 떠 있다.'], ans:3,
+    act:{ when:'before', goal:'jarFog', text:'🧪 문제 속 실험을 그대로 해 봐요. <b>향 연기</b>와 <b>지퍼 백</b>을 알맞게 써서 집기병 안을 뿌옇게 만들어요.' },
+    hint:'문장을 실험에서 본 모습과 하나씩 맞춰 봐요. 지퍼 백을 올린 뒤 집기병 윗부분의 온도계는 올라갔나요, 내려갔나요?',
+    exp:'얼음 지퍼 백은 집기병 안 공기를 차갑게 해요. 차가워진 수증기가 향 연기 알갱이에 붙어 응결해 뿌옇게 떠 있어요.',
+    card:{ i:'🧪', name:'집기병 안개 실험', d:'차가워진 공기 속 수증기가 응결' } },
+
+  { no:10, ch:1, diff:'하', type:'one', scene:'jar', setup:{ jarDone:true },
+    q:'집기병 실험에서 나타난 변화와 비슷한 자연 현상은 무엇일까요?',
+    opts:['㉠ 황사','㉡ 바람','㉢ 안개','㉣ 무지개'], ans:2,
+    hint:'집기병 안에 뿌옇게 떠 있던 작은 물방울들을 떠올려 봐요. 자연에서 땅 가까이에 뿌옇게 떠 있는 것은 무엇일까요?',
+    exp:'집기병 안에서 수증기가 응결해 떠 있는 모습은, 지표면 가까이에서 수증기가 응결해 떠 있는 안개와 비슷해요.',
+    card:{ i:'🌫️', name:'안개', d:'땅 가까이 떠 있는 작은 물방울' } },
+
+  { no:11, ch:1, diff:'하', type:'assign', scene:'dewfog',
+    q:'㉠, ㉡에 들어갈 알맞은 말을 골라 넣어요.',
+    blanks:[{ lab:'㉠', pre:'차가워진 물체 표면에 닿아 응결해 물방울로 맺힌 것:' },{ lab:'㉡', pre:'지표면 가까이에서 응결해 물방울로 떠 있는 것:' }],
+    bank:['이슬','안개','구름','수증기'], ans:['이슬','안개'],
+    hint:'상자 속에서 풀잎에 ‘맺힌’ 것과 들판 위에 ‘떠 있는’ 것을 구분해 봐요.',
+    exp:'물체 표면에 맺힌 물방울은 이슬, 지표면 가까이에 떠 있는 물방울은 안개예요.',
+    card:{ i:'🌿', name:'이슬과 안개', d:'맺히면 이슬, 떠 있으면 안개' } },
+
+  { no:12, ch:1, diff:'상', type:'one', scene:'parcel', src:'서술형 → 고르기',
+    q:'안개와 구름이 만들어지는 과정의 차이점으로 알맞은 것은 무엇일까요?',
+    opts:['안개는 지표면 가까이에서, 구름은 하늘 높은 곳에서 공기가 차가워져 수증기가 응결해 만들어진다.','안개는 수증기가 증발해서, 구름은 수증기가 응결해서 만들어진다.','안개는 물방울이고, 구름은 눈에 보이지 않는 수증기 그대로이다.','안개는 공기가 따뜻해질 때, 구름은 공기가 차가워질 때 만들어진다.','안개는 낮에만, 구름은 밤에만 만들어진다.'], ans:0,
+    act:{ when:'before', goal:'parcel', text:'⛰️ <b>밤이 되게 하기</b>와 <b>공기 덩어리 올려 보내기</b>를 모두 해서 안개와 구름이 어디에서 생기는지 봐요.' },
+    hint:'실험에서 안개는 어디에서, 구름은 어디에서 생겼나요? 두 곳의 높이를 비교하고, 둘 다 공기가 어떻게 되었는지 떠올려 봐요.',
+    exp:'안개와 구름은 모두 수증기가 응결한 것이에요. 안개는 지표면 가까이에서, 구름은 공기가 하늘 높이 올라가 차가워지면서 만들어져요.',
+    card:{ i:'☁️', name:'안개와 구름', d:'생기는 높이가 달라요' } },
+
+  /* ── 3실험실: 기압 연구실 ── */
+  { no:13, ch:2, diff:'하', type:'assign', scene:'columns',
+    q:'㉠, ㉡에 들어갈 알맞은 말을 골라 넣어요.',
+    blanks:[{ lab:'㉠', pre:'주변보다 상대적으로 기압이 높은 곳:' },{ lab:'㉡', pre:'주변보다 상대적으로 기압이 낮은 곳:' }],
+    bank:['고기압','저기압','기온','습도'], ans:['고기압','저기압'],
+    act:{ when:'before', goal:'columns', text:'⚖️ 두 공기 기둥 중 하나는 <b>차갑게</b>, 하나는 <b>따뜻하게</b> 해서 저울과 기압계를 봐요.' },
+    hint:'기압계 바늘이 더 높은 쪽과 낮은 쪽을 봐요. 이름에 ‘높을 고(高)’와 ‘낮을 저(低)’가 들어가요.',
+    exp:'같은 부피일 때 차가운 공기가 더 무거워 기압이 높아요. 주변보다 기압이 높은 곳은 고기압, 낮은 곳은 저기압이에요.',
+    card:{ i:'⚖️', name:'고기압·저기압', d:'기압이 높은 곳과 낮은 곳' } },
+
+  { no:14, ch:2, diff:'하', type:'one', scene:'sat',
+    q:'기상 위성 사진에서 흰색으로 보이는 부분은 무엇을 나타낼까요?',
+    opts:['이슬','안개','구름','바다','육지'], ans:2,
+    act:{ when:'before', goal:'sat', text:'🛰️ <b>위성 사진 찍기</b>를 눌러 하늘 높은 곳에서 내려다본 모습을 봐요.' },
+    hint:'위성은 하늘보다 훨씬 높은 곳에서 내려다봐요. 땅과 바다를 가리며 하얗게 떠 있는 것은 무엇일까요?',
+    exp:'기상 위성 사진에서 흰색으로 보이는 부분은 구름이에요. 구름의 움직임으로 날씨 변화를 예상해요.',
+    card:{ i:'🛰️', name:'위성 사진 속 구름', d:'흰 부분은 구름' } },
+
+  { no:15, ch:2, diff:'중', type:'one', scene:'hl',
+    q:'날씨와 기압의 관계를 옳게 설명한 것은 무엇일까요?',
+    opts:['날씨는 기압의 영향을 받지 않는다.','고기압이 위치한 지역은 대체로 흐리다.','고기압이 위치한 지역은 대체로 비가 온다.','저기압이 위치한 지역은 대체로 구름이 없다.','고기압과 저기압이 위치할 때 날씨가 다르게 나타난다.'], ans:4,
+    act:{ when:'before', goal:'hl', text:'🗺️ <b>고기압 H</b>와 <b>저기압 L</b> 도장을 지도에 찍고, 두 곳의 하늘을 비교해 봐요.' },
+    hint:'도장을 찍은 뒤 H 아래와 L 아래의 하늘이 어떻게 달랐나요? 두 곳의 날씨가 같았나요?',
+    exp:'고기압이 있는 곳은 대체로 맑고, 저기압이 있는 곳은 대체로 흐리거나 비가 와요. 기압에 따라 날씨가 달라요.',
+    card:{ i:'🗺️', name:'기압과 날씨', d:'고기압은 맑고, 저기압은 흐려요' } },
+
+  { no:16, ch:2, diff:'중', type:'assign', scene:'table',
+    q:'㉠과 ㉡ 지역은 고기압과 저기압 중 어떤 기압의 영향을 받을까요?',
+    table:[['지역','㉠','㉡'],['평균 기온(℃)','18.3','15.5'],['습도(%)','60.6','90.8'],['구름의 양','0','10'],['강수량(mm)','0','20.6']],
+    blanks:[{ lab:'㉠', pre:'㉠ 지역:' },{ lab:'㉡', pre:'㉡ 지역:' }],
+    bank:['고기압','저기압'], ans:['고기압','저기압'],
+    act:{ when:'after', goal:'table', text:'📡 <b>관측 결과 보기</b>를 눌러 두 지역의 하늘을 확인해요.' },
+    hint:'구름의 양과 강수량을 봐요. 맑은 날씨와 흐리고 비 오는 날씨는 각각 어떤 기압과 관련이 있었나요?',
+    exp:'구름이 없고 비가 오지 않은 ㉠은 고기압, 구름이 가득하고 비가 온 ㉡은 저기압의 영향을 받아요.',
+    card:{ i:'📊', name:'관측 자료로 기압 읽기', d:'맑음은 고기압, 비는 저기압' } },
+
+  /* ── 4실험실: 바람 실험실 ── */
+  { no:17, ch:3, diff:'상', type:'one', scene:'box',
+    q:'모래와 따뜻한 물 사이의 향 연기 실험에 대한 설명으로 옳지 않은 것은 무엇일까요?',
+    opts:['따뜻한 물의 온도가 모래의 온도보다 높다.','향 연기를 통해 공기가 움직이는 방향을 알 수 있다.','모래 위쪽은 고기압, 따뜻한 물 위쪽은 저기압에 해당한다.','모래와 따뜻한 물의 온도가 다르므로 기압 차이가 생긴다.','공기가 저기압에서 고기압으로 이동한다는 것을 알 수 있다.'], ans:4,
+    act:{ when:'before', goal:'box', text:'📦 <b>모래 그릇</b>과 <b>따뜻한 물 그릇</b>을 놓고, 가운데에 <b>향 연기</b>를 넣은 뒤 <b>뚜껑</b>을 열어요.' },
+    hint:'향 연기가 어느 쪽으로 움직였는지 다시 봐요. 모래 위와 따뜻한 물 위 중 어디가 고기압이었나요? 연기는 어디에서 어디로 갔나요?',
+    exp:'차가운 모래 위는 고기압, 따뜻한 물 위는 저기압이 되어, 공기가 고기압(모래 쪽)에서 저기압(물 쪽)으로 이동해요.',
+    card:{ i:'💨', name:'공기의 이동', d:'고기압에서 저기압으로' } },
+
+  { no:18, ch:3, diff:'중', type:'one', scene:'box', setup:{ boxReady:true },
+    q:'모래의 온도를 따뜻한 물의 온도보다 더 높게 하면 향 연기는 어떻게 움직일까요? 먼저 예상해서 골라요.',
+    opts:['㉠ 향 연기가 이동하지 않는다.','㉡ 향 연기가 모래 쪽에서 따뜻한 물 쪽으로 이동한다.','㉢ 향 연기가 따뜻한 물 쪽에서 모래 쪽으로 이동한다.'], ans:2,
+    act:{ when:'after', goal:'lamp', text:'💡 예상이 맞는지 <b>전등으로 모래 데우기</b>를 눌러 직접 확인해요.' },
+    hint:'공기는 고기압에서 저기압으로 움직여요. 모래가 물보다 뜨거워지면 어느 쪽 위가 저기압이 될까요?',
+    exp:'모래가 더 뜨거워지면 모래 위가 저기압, 물 위가 고기압이 되어 향 연기가 물 쪽에서 모래 쪽으로 움직여요.',
+    card:{ i:'🔁', name:'바뀌는 바람 방향', d:'온도가 바뀌면 방향도 바뀌어요' } },
+
+  { no:19, ch:3, diff:'중', type:'assign', scene:'coast', setup:{ hideInd:true },
+    q:'( ) 안에 알맞은 말을 골라 넣어요.',
+    blanks:[{ lab:'낮', pre:'맑은 날 낮, 육지가 바다보다 빨리 가열되어 온도가 더 낮은', post:'위가 고기압이 된다.' },
+            { lab:'밤', pre:'밤에는 육지가 바다보다 빨리 식어 온도가 더 낮은', post:'위가 고기압이 된다.' }],
+    bank:['육지','바다'], ans:['바다','육지'],
+    act:{ when:'after', goal:'daynight', text:'☀️🌙 <b>낮·밤 바꾸기</b>를 눌러 바람의 방향이 어떻게 바뀌는지 확인해요.' },
+    hint:'온도가 더 낮은 쪽 공기가 고기압이 돼요. 낮과 밤에 각각 더 차가운 곳은 육지와 바다 중 어디일까요?',
+    exp:'낮에는 바다가 더 차가워 바다 위가 고기압(해풍), 밤에는 육지가 더 차가워 육지 위가 고기압(육풍)이 돼요.',
+    card:{ i:'🏖️', name:'해풍', d:'낮에 바다에서 육지로' } },
+
+  { no:20, ch:3, diff:'중', type:'one', scene:'coast',
+    q:'육풍에 대한 설명으로 옳은 것은 무엇일까요?',
+    opts:['바닷가에서 낮에 부는 바람이다.','바다에서 육지 쪽으로 부는 바람이다.','바다와 육지의 온도가 같을 때 부는 바람이다.','바다가 육지보다 온도가 높을 때 부는 바람이다.','바다 위가 고기압이고 육지 위가 저기압일 때 부는 바람이다.'], ans:3,
+    act:{ when:'after', goal:'night', text:'🌙 <b>낮·밤 바꾸기</b>로 밤을 만들어 육풍을 직접 확인해요.' },
+    hint:'육풍은 ‘육지에서 부는’ 바람이고 밤에 불어요. 밤에는 바다와 육지 중 어디가 더 따뜻한지 떠올려 봐요.',
+    exp:'밤에는 육지가 빨리 식어 바다가 더 따뜻해요. 육지 위가 고기압, 바다 위가 저기압이 되어 육지에서 바다로 육풍이 불어요.',
+    card:{ i:'🌙', name:'육풍', d:'밤에 육지에서 바다로' } }
+];
+
+const CHAPTERS = [
+  { name:'기상 관측실', sub:'기상 요소 · 날씨와 생활', icon:'🌤️', color:'#3e9ad8', color2:'#2a6fa8' },
+  { name:'응결 실험실', sub:'이슬 · 안개 · 구름', icon:'💧', color:'#3fae9a', color2:'#277d6c' },
+  { name:'기압 연구실', sub:'고기압 · 저기압 · 위성 사진', icon:'⚖️', color:'#8d6fd8', color2:'#6a4fb0' },
+  { name:'바람 실험실', sub:'공기의 이동 · 해풍 · 육풍', icon:'🌬️', color:'#ff8a5b', color2:'#d9623a' }
+];
+
+/* 반짝 카드 수에 따른 연구원 등급 */
+const RANKS = [
+  { need:0, name:'견습 연구원', icon:'🔰' },
+  { need:5, name:'연구원', icon:'🧪' },
+  { need:10, name:'선임 연구원', icon:'🔬' },
+  { need:15, name:'수석 연구원', icon:'🏅' },
+  { need:20, name:'날씨 박사', icon:'🎓' }
+];
+
+/* ════════════════ 기본 도구 ════════════════ */
+const $ = id => document.getElementById(id);
+const TAU = Math.PI*2, VW = 1280, VH = 720;
+const clamp = (v,a,b) => v<a?a:(v>b?b:v);
+const lerp = (a,b,t) => a+(b-a)*t;
+const rand = (a,b) => a+Math.random()*(b-a);
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const esc = s => String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+const FONT = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic","맑은 고딕","Noto Sans KR","Noto Sans CJK KR",sans-serif';
+const easeOut = x => 1-Math.pow(1-x,3);
+const easeInOut = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+const mmss = s => `${Math.floor(s/60)}분 ${String(Math.round(s%60)).padStart(2,'0')}초`;
+
+/* ════════════════ 저장 ════════════════ */
+const SAVE_KEY = 'weather_box_lab_v1';
+let save = { nick:'', sfx:true, lite:false, seenHow:false, best:[null,null,null,null], done:[false,false,false,false], cards:{} };
+try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY)); if(s && typeof s==='object') save=Object.assign(save, s); }catch(e){}
+if(!Array.isArray(save.best) || save.best.length!==4) save.best=[null,null,null,null];
+if(!Array.isArray(save.done) || save.done.length!==4) save.done=[false,false,false,false];
+if(!save.cards || typeof save.cards!=='object' || Array.isArray(save.cards)) save.cards={};
+if(typeof save.nick!=='string') save.nick='';
+function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+const holoCount = () => Object.values(save.cards).filter(v=>v==='holo').length;
+const cardCount = () => Object.keys(save.cards).length;
+const rankOf = n => { let r=RANKS[0]; for(const k of RANKS) if(n>=k.need) r=k; return r; };
+
+/* ════════════════ 화면 맞추기 ════════════════ */
+const GAME=$('game'), CV=$('cv'), CX=CV.getContext('2d');
+let SCALE=1, PR=0, BG=null;
+function fit(){
+  const w=window.innerWidth, h=window.innerHeight; SCALE=Math.min(w/VW, h/VH);
+  GAME.style.transform=`translate(${Math.round((w-VW*SCALE)/2)}px, ${Math.round((h-VH*SCALE)/2)}px) scale(${SCALE})`;
+  const want=clamp(SCALE*(window.devicePixelRatio||1), 1, save.lite?1.25:2);
+  if(Math.abs(want-PR)>.01){ PR=want; CV.width=Math.round(VW*PR); CV.height=Math.round(VH*PR); BG=null; }
+}
+window.addEventListener('resize', fit);
+
+/* ════════════════ 소리 (모두 합성) ════════════════ */
+const Sound=(()=>{
+  let AC=null, bus=null, nb=null; const last={};
+  function ensure(){
+    if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); bus=AC.createGain(); bus.gain.value=.7; const comp=AC.createDynamicsCompressor(); bus.connect(comp); comp.connect(AC.destination);
+      nb=AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; }catch(e){ AC=null; } }
+    if(AC && AC.state==='suspended') AC.resume().catch(()=>{});
+  }
+  const ok=(n,g)=>{ if(!AC||!save.sfx) return false; const t=AC.currentTime; if(g && last[n] && t-last[n]<g) return false; last[n]=t; return true; };
+  function tone(f,dur,o={}){ const t0=AC.currentTime+(o.at||0), os=AC.createOscillator(), g=AC.createGain(); os.type=o.type||'sine'; os.frequency.setValueAtTime(f,t0); if(o.f2) os.frequency.exponentialRampToValueAtTime(Math.max(20,o.f2),t0+dur);
+    g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(o.vol||.2,t0+(o.a||.004)); g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+    let n=os; if(o.lp){ const f1=AC.createBiquadFilter(); f1.type='lowpass'; f1.frequency.value=o.lp; n.connect(f1); n=f1; } n.connect(g); g.connect(bus); os.start(t0); os.stop(t0+dur+.05); }
+  function noise(dur,o={}){ const t0=AC.currentTime+(o.at||0), s=AC.createBufferSource(); s.buffer=nb; const f=AC.createBiquadFilter(); f.type=o.ft||'lowpass'; f.frequency.setValueAtTime(o.f||1000,t0); if(o.f2) f.frequency.exponentialRampToValueAtTime(o.f2,t0+dur); if(o.q) f.Q.value=o.q;
+    const g=AC.createGain(); g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(o.vol||.2,t0+(o.a||.003)); g.gain.exponentialRampToValueAtTime(.0001,t0+dur); s.connect(f); f.connect(g); g.connect(bus); s.start(t0,Math.random()*.5); s.stop(t0+dur+.05); }
+  const fx={
+    click(){ if(!ok('click',.03)) return; tone(1150,.05,{type:'triangle',vol:.07}); },
+    select(){ if(!ok('select',.03)) return; tone(880,.06,{type:'triangle',vol:.08}); tone(1320,.05,{vol:.04,at:.03}); },
+    tool(){ if(!ok('tool',.05)) return; tone(520,.12,{type:'triangle',vol:.1,f2:780}); noise(.08,{ft:'bandpass',f:2400,q:3,vol:.06}); },
+    tick(){ if(!ok('tick',.06)) return; tone(1900,.025,{type:'square',vol:.025,lp:3000}); },
+    drip(){ if(!ok('drip',.12)) return; tone(1400,.12,{vol:.07,f2:600}); tone(2100,.06,{vol:.03,at:.05}); },
+    whoosh(){ if(!ok('whoosh',.4)) return; noise(.7,{ft:'bandpass',f:500,f2:1500,q:.8,vol:.1,a:.15}); },
+    fizz(){ if(!ok('fizz',.3)) return; noise(.5,{ft:'highpass',f:4000,vol:.05,a:.05}); },
+    stamp(){ if(!ok('stamp',.1)) return; tone(110,.2,{f2:60,vol:.25}); noise(.1,{f:900,vol:.15}); },
+    shutter(){ if(!ok('shutter',.2)) return; noise(.05,{ft:'highpass',f:3000,vol:.15}); noise(.06,{ft:'highpass',f:2500,vol:.12,at:.08}); tone(2600,.08,{vol:.04,at:.02}); },
+    success(){ if(!ok('success',.3)) return; [660,880,1320].forEach((f,i)=>tone(f,.25,{type:'triangle',vol:.08,at:i*.07})); },
+    good(){ if(!ok('good',.2)) return; [523,659,784,1046].forEach((f,i)=>tone(f,.35,{type:'triangle',vol:.1,at:.03+i*.07})); },
+    holo(){ if(!ok('holo',.2)) return; [1568,2093,2637,3136].forEach((f,i)=>tone(f,.4,{vol:.035,at:.3+i*.06})); noise(.5,{ft:'highpass',f:6000,vol:.035,at:.3}); },
+    bad(){ if(!ok('bad',.2)) return; tone(220,.22,{type:'sawtooth',vol:.06,lp:700,f2:150}); tone(160,.25,{type:'triangle',vol:.06,at:.08}); },
+    flip(){ if(!ok('flip',.06)) return; noise(.14,{ft:'bandpass',f:2400,f2:1200,q:1,vol:.07}); },
+    bind(){ if(!ok('bind')) return; [392,523,659,784,1046].forEach((f,i)=>tone(f,.4,{type:'triangle',vol:.1,at:i*.09})); },
+    win(){ if(!ok('win')) return; [523,659,784,1046,784,1046,1318].forEach((f,i)=>tone(f,.28,{type:'triangle',vol:.1,at:i*.1})); [523,659,784].forEach(f=>tone(f,1.4,{vol:.05,at:.75,a:.05})); },
+    star(i){ if(!AC||!save.sfx) return; const f=[659,784,1046][i]||1046; tone(f,.5,{vol:.12}); tone(f*2,.3,{type:'triangle',vol:.03}); }
+  };
+  return { ensure, fx };
+})();
+const sfx=Sound.fx;
+const Speech={ ok:'speechSynthesis' in window, say(t){ if(!this.ok) return false; try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='ko-KR'; u.rate=.95; speechSynthesis.speak(u); return true; }catch(e){ return false; } }, stop(){ try{ if(this.ok) speechSynthesis.cancel(); }catch(e){} } };
+
+/* ════════════════ 정답 자리 고르게 나누기 ════════════════
+   하나 고르기(one) 문항은 정답이 1~5번 자리에 고르게 나뉘도록 판마다 다시 정한다.
+   보기가 적은 문항부터 배치해야 5개짜리 문항이 남은 자리를 채워 고르게 된다. */
+let LAYOUT={}, BANK={};
+function makeLayouts(){
+  LAYOUT={}; BANK={}; const used={};
+  const ones=shuffle(QUESTIONS.filter(q=>q.type==='one')).sort((a,b)=>a.opts.length-b.opts.length);
+  for(const q of ones){
+    const n=q.opts.length; let best=[], min=1e9;
+    for(let p=0;p<n;p++){ const u=used[p]||0; if(u<min){ min=u; best=[p]; } else if(u===min) best.push(p); }
+    const pos=best[Math.floor(Math.random()*best.length)]; used[pos]=(used[pos]||0)+1;
+    const others=shuffle([...Array(n).keys()].filter(i=>i!==q.ans)); others.splice(pos,0,q.ans); LAYOUT[q.no]=others;
+  }
+  for(const q of QUESTIONS) if(q.type==='assign') BANK[q.no]=shuffle(q.bank);
+}
+function answerPositions(){ const c={}; for(const q of QUESTIONS) if(q.type==='one'){ const p=LAYOUT[q.no].indexOf(q.ans)+1; c[p]=(c[p]||0)+1; } return c; }
+function answerText(q){
+  if(q.type==='one') return q.opts[q.ans];
+  if(q.type==='ox') return q.items.map((s,i)=>`(${i+1}) ${q.ans[i]==='O'?'○':'×'}`).join('  ');
+  return q.blanks.map((b,i)=>`${b.lab} ${q.ans[i]}`).join(' · ');
+}
+
+/* ════════════════ 판 상태 ════════════════ */
+let SCREEN='title', PAUSED=false, MODE='quiz', G=null, RUN=[null,null,null,null], FREE=null;
+function newStats(){ return { first:0, wrongs:0, combo:0, maxCombo:0, score:0, secs:0, reads:0, log:[] }; }
+
+function startChapter(ch){
+  if(ch===0 || !Object.keys(LAYOUT).length) makeLayouts();
+  MODE='quiz'; FREE=null;
+  G={ ch, list:QUESTIONS.filter(q=>q.ch===ch), i:-1, cur:null, phase:'ask', st:newStats() };
+  showScreen('play'); nextQ();
+}
+function nextQ(){
+  G.i++;
+  if(G.i>=G.list.length){ chapterDone(); return; }
+  const q=G.list[G.i];
+  G.cur={ q, sel: q.type==='one' ? null : q.type==='ox' ? q.items.map(()=>null) : q.blanks.map(()=>null), focus:0, wrongs:0, picks:[], secs:0, locked:0, bad:new Set(), goalT:0, actDone:false };
+  setScene(q.scene, q.setup||{});
+  G.phase = q.act && q.act.when==='before' ? 'act' : 'ask';
+  renderNote(true); renderTools(); renderDots(); updateTop();
+}
+
+/* ════════════════ 연구 노트 그리기 ════════════════ */
+function renderNote(fresh){
+  const c=G.cur, q=c.q;
+  $('fb').classList.add('hidden'); $('hint').classList.add('hidden');
+  $('qNo').textContent=`실험 ${G.i+1} / ${G.list.length}`;
+  $('qDiff').textContent=`난이도 ${q.diff}`;
+  $('qSrc').textContent=`단원평가 ${q.no}번${q.src?' · '+q.src:''}`;
+  $('qText').textContent=q.q;
+  const ctx=$('qCtx');
+  if(q.table){ ctx.classList.remove('hidden'); ctx.innerHTML=`<table>${q.table.map((r,i)=>`<tr>${r.map(v=>i===0?`<th>${esc(v)}</th>`:`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table>`; }
+  else if(q.ctx){ ctx.classList.remove('hidden'); ctx.innerHTML=q.ctx.map(l=>`<p>${esc(l)}</p>`).join(''); }
+  else ctx.classList.add('hidden');
+  renderMission(); renderAnswers(fresh); syncSubmit(); fitNote();
+}
+function renderMission(){
+  const c=G.cur, q=c.q, m=$('mission');
+  if(G.phase==='act'){ m.className=''; m.innerHTML=`🔬 실험 과제 · ${q.act.text}<small>실험에 성공하면 답을 고를 수 있어요.</small>`; }
+  else if(G.phase==='after'){ m.className=''; m.innerHTML=`✅ 정답이에요! 이제 직접 확인해 봐요.<br>${q.act.text}`; }
+  else if(q.act && q.act.when==='before' && c.actDone){ m.className='ok'; m.innerHTML='✔ 실험 성공! 상자 속 모습을 보면서 답을 골라요.'; }
+  else { m.className='hidden'; m.innerHTML=''; }
+}
+function renderAnswers(fresh){
+  const c=G.cur, q=c.q, box=$('answers'); box.innerHTML='';
+  const off = G.phase!=='ask' || c.locked>0;
+  box.style.opacity = G.phase==='act' ? '.35' : ''; box.style.pointerEvents = G.phase==='act' ? 'none' : '';
+  if(q.type==='one'){
+    LAYOUT[q.no].forEach((oi,k)=>{
+      const b=document.createElement('button'); b.className='opt'+(c.sel===oi?' sel':'')+(c.bad.has(oi)?' bad':'');
+      b.innerHTML=`<span class="n">${k+1}</span>${esc(q.opts[oi])}`; b.disabled=off || c.bad.has(oi);
+      if(fresh){ b.style.animation=`pop .3s ${k*.04}s both`; }
+      b.onclick=()=>pickOpt(oi); box.appendChild(b);
+    });
+  } else if(q.type==='ox'){
+    q.items.forEach((s,i)=>{
+      const r=document.createElement('div'); r.className='oxrow';
+      r.innerHTML=`<span class="s">${esc(s)}</span>`;
+      for(const v of ['O','X']){ const b=document.createElement('button'); b.className=(v==='O'?'o':'x')+(c.sel[i]===v?' on':''); b.textContent=v==='O'?'○':'×'; b.disabled=off; b.onclick=()=>pickOX(i,v); r.appendChild(b); }
+      box.appendChild(r);
+    });
+  } else {
+    const wrap=document.createElement('div'); wrap.className='blanks';
+    q.blanks.forEach((bl,i)=>{
+      const r=document.createElement('div'); r.className='blank';
+      const v=c.sel[i];
+      r.innerHTML=`<span class="lab">${esc(bl.lab)}</span><span class="rest">${esc(bl.pre)}</span>`;
+      const s=document.createElement('span'); s.className='slot'+(v?' fill':'')+(c.focus===i && !v && !off?' focus':''); s.textContent=v||'?';
+      s.onclick=()=>{ if(!canAnswer()) return; if(c.sel[i]){ c.sel[i]=null; sfx.click(); } c.focus=i; renderAnswers(); syncSubmit(); };
+      r.appendChild(s);
+      if(bl.post){ const p=document.createElement('span'); p.className='rest'; p.textContent=bl.post; r.appendChild(p); }
+      wrap.appendChild(r);
+    });
+    box.appendChild(wrap);
+    const bank=document.createElement('div'); bank.className='bank';
+    BANK[q.no].forEach((w,k)=>{ const b=document.createElement('button'); b.textContent=`${k+1}. ${w}`; b.className=c.sel.includes(w)?'used':''; b.disabled=off; b.onclick=()=>pickWord(w); bank.appendChild(b); });
+    box.appendChild(bank);
+  }
+}
+const canAnswer = () => SCREEN==='play' && MODE==='quiz' && !PAUSED && G && G.phase==='ask' && G.cur && G.cur.locked<=0;
+function pickOpt(oi){ if(!canAnswer()) return; const c=G.cur; if(c.bad.has(oi)) return; c.sel=oi; sfx.select(); renderAnswers(); syncSubmit(); }
+function pickOX(i,v){ if(!canAnswer()) return; G.cur.sel[i]=v; sfx.select(); renderAnswers(); syncSubmit(); }
+function pickWord(w){
+  if(!canAnswer()) return; const c=G.cur;
+  if(c.sel.includes(w)){ c.sel[c.sel.indexOf(w)]=null; sfx.click(); }
+  else { let i=c.sel[c.focus]==null ? c.focus : c.sel.indexOf(null); if(i<0) i=c.focus; c.sel[i]=w; sfx.select(); const n=c.sel.indexOf(null); c.focus = n<0 ? i : n; }
+  renderAnswers(); syncSubmit();
+}
+function ready(){ const c=G.cur, q=c.q; if(q.type==='one') return c.sel!==null; return c.sel.every(v=>v!==null); }
+function syncSubmit(){
+  const b=$('bSubmit'), row=$('submitRow');
+  row.classList.toggle('hidden', G.phase==='after' || G.phase==='fb');
+  b.disabled = !(canAnswer() && ready());
+  b.innerHTML = G.phase==='act' ? '🔬 먼저 실험을 해요' : '✔ 확인하기<small>Enter</small>';
+}
+function isRight(){
+  const c=G.cur, q=c.q;
+  if(q.type==='one') return c.sel===q.ans;
+  return c.sel.every((v,i)=>v===q.ans[i]);
+}
+function pickText(){ const c=G.cur, q=c.q;
+  if(q.type==='one') return q.opts[c.sel];
+  if(q.type==='ox') return c.sel.map((v,i)=>`(${i+1}) ${v==='O'?'○':'×'}`).join(' ');
+  return q.blanks.map((b,i)=>`${b.lab} ${c.sel[i]}`).join(' · '); }
+
+/* ════════════════ 답 확인 ════════════════ */
+function submit(){
+  if(!canAnswer() || !ready()) return;
+  const c=G.cur, q=c.q;
+  if(isRight()){ success(); return; }
+  sfx.bad(); c.wrongs++; G.st.wrongs++; G.st.combo=0; c.picks.push(pickText());
+  if(q.type==='one'){ c.bad.add(c.sel); c.sel=null; }
+  else if(q.type==='ox'){ c.sel=q.items.map(()=>null); }
+  else { c.sel=q.blanks.map(()=>null); c.focus=0; }
+  c.locked = c.wrongs>=2 ? 2.2 : 1.2;
+  renderAnswers(); syncSubmit(); showHint();
+  $('answers').querySelectorAll('.opt,.oxrow,.blank').forEach(e=>e.classList.add('shake'));
+  Box.shake=.3;
+}
+function showHint(){
+  const c=G.cur; drawFace(false);
+  $('hintText').innerHTML=`${esc(c.q.hint)}<span class="lock" id="lockT">${Math.ceil(c.locked)}초 뒤에 다시 골라요</span>`;
+  const h=$('hint'); h.classList.remove('hidden'); h.style.animation='none'; void h.offsetWidth; h.style.animation='';
+  fitNote();
+}
+/* 힌트까지 뜨면 노트가 넘칠 수 있으니 글자를 조금씩 줄인다 */
+function fitNote(){
+  const n=$('note'), a=$('answers');
+  a.style.fontSize=''; $('qText').style.fontSize=''; a.querySelectorAll('.opt,.oxrow,.blank').forEach(e=>e.style.fontSize='');
+  for(let k=0;k<6 && n.scrollHeight>n.clientHeight+1;k++){
+    const f=21-k*1.2; $('qText').style.fontSize=f+'px';
+    a.querySelectorAll('.opt,.oxrow,.blank').forEach(e=>{ e.style.fontSize=(16.5-k*.6)+'px'; e.style.minHeight=(46-k*3)+'px'; });
+  }
+}
+function success(){
+  const c=G.cur, q=c.q, st=G.st, first=c.wrongs===0;
+  let pts;
+  if(first){ st.first++; st.combo++; st.maxCombo=Math.max(st.maxCombo,st.combo); pts=100+Math.min(50,10*(st.combo-1)); }
+  else { st.combo=0; pts=40; }
+  st.score+=pts;
+  st.log.push({ q, first, wrongs:c.wrongs, picks:c.picks.slice(), secs:c.secs });
+  const prev=save.cards[q.no]; if(prev!=='holo') save.cards[q.no]= first?'holo':'normal'; writeSave();
+  c.gain={ pts, first, combo:st.combo, isNew:!prev, upgraded: prev==='normal' && first };
+  sfx.good(); if(first) sfx.holo();
+  $('hint').classList.add('hidden');
+  if(q.type==='one'){ $('answers').querySelectorAll('.opt').forEach((b,k)=>{ if(LAYOUT[q.no][k]===q.ans) b.classList.add('right'); b.disabled=true; }); }
+  Box.burst(first); Scenes.onSolved();
+  renderDots(); updateTop();
+  if(q.act && q.act.when==='after'){ G.phase='after'; c.goalT=0; renderMission(); syncSubmit(); renderTools(); if(q.act.goal==='table') {/* 버튼 하나로 확인 */} }
+  else { G.phase='fbwait'; syncSubmit(); setTimeout(()=>{ if(G && G.cur===c && G.phase==='fbwait') showFeedback(); }, 700); }
+}
+function showFeedback(){
+  const c=G.cur, q=c.q, g=c.gain; G.phase='fb';
+  const last=G.i>=G.list.length-1;
+  const F=$('fb');
+  F.innerHTML=`<h3 class="${g.first?'':'again'}">${g.first?'🎉 한 번에 성공! 반짝 카드 획득':'👍 다시 생각해서 성공! 도감 카드 획득'}</h3>
+    <div class="gain"><span>⭐ +${g.pts}</span>${g.combo>=2?`<span>🔥 ${g.combo}연속 한 번에</span>`:''}${!g.first?`<span>💡 힌트 ${c.wrongs}번</span>`:''}<span>⏱ ${Math.max(1,Math.round(c.secs))}초</span>${g.upgraded?'<span>✨ 반짝 카드로 업그레이드!</span>':''}</div>
+    <div class="card ${save.cards[q.no]==='holo'?'holo':''}"><div class="ci">${q.card.i}</div><div><b>${esc(q.card.name)}</b><span>${esc(q.card.d)}</span></div></div>
+    <div class="ans">정답: <b>${esc(answerText(q))}</b></div>
+    <div class="exp">📘 ${esc(q.exp)}</div>
+    <div class="go"><button class="btn" id="bNext">${last?'🏁 실험실 마치기':'다음 실험 ▶'}<small>Enter</small></button></div>`;
+  F.classList.remove('hidden');
+  $('bNext').onclick=()=>goNext();
+  syncSubmit(); renderTools();
+}
+function goNext(){ if(!G || G.phase!=='fb') return; sfx.flip(); G.phase='next'; setTimeout(()=>{ if(G) nextQ(); }, 80); }
+
+/* 실험 과제 달성 확인 (매 프레임) */
+function checkGoal(dt){
+  if(SCREEN!=='play' || MODE!=='quiz' || PAUSED || !G || !G.cur) return;
+  const c=G.cur, q=c.q; if(!q.act) return;
+  const want = (G.phase==='act' && q.act.when==='before') || (G.phase==='after' && q.act.when==='after');
+  if(!want) return;
+  if(Scenes.goal(q.act.goal)){ c.goalT+=dt; } else c.goalT=0;
+  if(c.goalT>=.9){
+    c.goalT=0; sfx.success();
+    if(G.phase==='act'){ c.actDone=true; G.phase='ask'; renderMission(); renderAnswers(true); syncSubmit(); fitNote(); toast('✔ 실험 성공! 이제 답을 골라요'); }
+    else { showFeedback(); }
+  }
+}
+
+/* ════════════════ 장 끝 ════════════════ */
+function starsFor(first, n){ const r=first/n; return r>=1?3 : r>=.6?2 : 1; }
+function chapterDone(){
+  const st=G.st, ch=G.ch, n=G.list.length, stars=starsFor(st.first,n);
+  G.phase='done'; RUN[ch]={ st, stars, n };
+  const b=save.best[ch]; if(!b || stars>b.stars || (stars===b.stars && st.score>b.score)) save.best[ch]={ stars, score:st.score, first:st.first };
+  save.done[ch]=true; writeSave(); sfx.bind();
+  setTimeout(()=>{
+    const next=ch<3, C=CHAPTERS[ch];
+    $('chBox').innerHTML=`<h2>${C.icon} ${ch+1}실험실 「${C.name}」 실험 완료!</h2>
+      <div class="stars">${[0,1,2].map(i=>`<span class="${i<stars?'':'off'}">★</span>`).join('')}</div>
+      <div class="grid3"><div class="cell"><b>${st.first} / ${n}</b><span>한 번에 성공한 실험</span></div><div class="cell"><b>${st.score}점</b><span>연구 점수</span></div><div class="cell"><b>${mmss(st.secs)}</b><span>걸린 시간</span></div></div>
+      <div style="margin-top:12px;font-size:34px;letter-spacing:6px">${G.list.map(q=>`<span title="${esc(q.card.name)}" style="${save.cards[q.no]==='holo'?'':'filter:grayscale(.6);opacity:.6'}">${q.card.i}</span>`).join('')}</div>
+      <p style="font:700 16px/1.5 var(--font);color:#4d6478;margin:8px 0 0">${stars===3?'🌟 모든 실험을 한 번에 성공! 뭉게 박사님이 감탄해요.':stars===2?'👍 잘했어요! 모두 한 번에 성공하면 별 3개예요.':'💪 힌트를 잘 읽었어요. 다시 하면 별이 늘어나요.'} · 이제 이 실험실에서 <b>자유 실험</b>을 할 수 있어요.</p>
+      <div class="rowb">${next?`<button class="btn" id="bChNext">${ch+2}실험실로 ▶</button>`:`<button class="btn" id="bChReport">📋 연구 보고서 보기</button>`}<button class="btn light" id="bChAgain">🔄 다시 하기</button><button class="btn navy" id="bChMap">🏫 안내도</button></div>`;
+    $('scrCh').classList.remove('hidden');
+    $('chBox').querySelectorAll('.stars span').forEach((s,i)=>{ if(i<stars) setTimeout(()=>sfx.star(i), 250+i*250); });
+    const hide=()=>$('scrCh').classList.add('hidden');
+    if(next) $('bChNext').onclick=()=>{ sfx.click(); hide(); startChapter(ch+1); };
+    else $('bChReport').onclick=()=>{ sfx.click(); hide(); showFinal(); };
+    $('bChAgain').onclick=()=>{ sfx.click(); hide(); startChapter(ch); };
+    $('bChMap').onclick=()=>{ sfx.click(); hide(); showScreen('map'); };
+  }, 700);
+}
+
+/* ════════════════ 위 막대 ════════════════ */
+function renderDots(){
+  const box=$('dots'); box.innerHTML='';
+  if(MODE!=='quiz' || !G) return;
+  G.list.forEach((q,i)=>{ const l=G.st.log.find(x=>x.q===q); const d=document.createElement('i'); d.className = l ? (l.first?'holo':'done') : (i===G.i ? 'now' : ''); d.title=`실험 ${i+1}`; box.appendChild(d); });
+}
+function updateTop(){
+  const ch = MODE==='free' ? FREE.ch : G ? G.ch : 0, C=CHAPTERS[ch];
+  $('chipCh').textContent = `${C.icon} ${ch+1}실험실 · ${C.name}${MODE==='free'?' (자유 실험)':''}`;
+  $('score').textContent = MODE==='free' ? `🗂️ ${cardCount()}/20` : `⭐ ${G.st.score}`;
+  $('bSound').textContent=save.sfx?'🔊':'🔇'; $('bSound').classList.toggle('off',!save.sfx);
+}
+function toast(m){ const d=document.createElement('div'); d.className='toast'; d.textContent=m; $('toast').appendChild(d); setTimeout(()=>d.remove(),2200); while($('toast').children.length>2) $('toast').firstChild.remove(); }
+
+/* ════════════════ 화면 전환 ════════════════ */
+const SCREENS=['scrTitle','scrHow','scrMap','scrCh','scrPause','scrFinal'];
+function showScreen(name){
+  SCREEN=name; PAUSED=false; Speech.stop();
+  for(const s of SCREENS) $(s).classList.add('hidden');
+  const play=name==='play';
+  for(const id of ['top','tray','note']) $(id).classList.toggle('hidden', !play);
+  if(name==='title'){ $('scrTitle').classList.remove('hidden'); setScene('town',{ demo:true }); }
+  if(name==='map'){ renderMap(); $('scrMap').classList.remove('hidden'); setScene('town',{ demo:true }); }
+  if(name==='final') $('scrFinal').classList.remove('hidden');
+}
+function renderMap(){
+  const box=$('rooms'); box.innerHTML='';
+  CHAPTERS.forEach((C,i)=>{
+    const locked = i>0 && !save.done[i-1], b=save.best[i], list=QUESTIONS.filter(q=>q.ch===i);
+    const d=document.createElement('div'); d.className='room'+(locked?' locked':''); d.setAttribute('role','button');
+    d.style.background=`linear-gradient(160deg, ${C.color}, ${C.color2})`;
+    d.innerHTML=`<span class="no">${i+1}실험실 · 실험 ${list.length}개</span><span class="ic">${C.icon}</span><h3>${C.name}</h3><p>${C.sub}</p><p>단원평가 ${list[0].no}~${list[list.length-1].no}번</p><span class="st">${[0,1,2].map(k=>`<span class="${b&&k<b.stars?'':'off'}">★</span>`).join('')}</span>`;
+    d.onclick=()=>{ if(locked){ sfx.bad(); toast('🔒 앞 실험실을 먼저 마쳐요!'); return; } Sound.ensure(); sfx.click(); startChapter(i); };
+    if(save.done[i]){ const f=document.createElement('button'); f.className='free'; f.textContent='🧪 자유 실험'; f.onclick=e=>{ e.stopPropagation(); sfx.click(); startFree(i); }; d.appendChild(f); }
+    box.appendChild(d);
+  });
+  const h=holoCount(), r=rankOf(h);
+  $('mapStat').textContent=`${r.icon} ${r.name} · 반짝 카드 ${h}/20 · 도감 ${cardCount()}/20`;
+  $('bMapReport').classList.toggle('hidden', !save.done.every(Boolean));
+}
+
+/* ════════════════ 자유 실험 ════════════════ */
+const FREE_SCENES=[ ['town'], ['can','apple','jar','parcel'], ['columns','sat','hl'], ['box','coast'] ];
+function startFree(ch){
+  MODE='free'; G=null; FREE={ ch, scenes:FREE_SCENES[ch], k:0 };
+  showScreen('play'); setScene(FREE.scenes[0], { free:true }); renderFree(); renderTools(); renderDots(); updateTop();
+}
+function renderFree(){
+  $('fb').classList.add('hidden'); $('hint').classList.add('hidden'); $('qCtx').classList.add('hidden'); $('submitRow').classList.add('hidden');
+  $('qNo').textContent='자유 실험'; $('qDiff').textContent='정답 없음'; $('qSrc').textContent='마음껏 실험해요';
+  $('qText').textContent=`${CHAPTERS[FREE.ch].icon} ${CHAPTERS[FREE.ch].name}에서 도구를 마음대로 써 봐요.`;
+  const m=$('mission'); m.className='ok'; m.innerHTML=Scenes.freeTip(FREE.scenes[FREE.k]);
+  const a=$('answers'); a.style.opacity=''; a.style.pointerEvents=''; a.innerHTML='';
+  FREE.scenes.forEach((id,k)=>{ const b=document.createElement('button'); b.className='opt'+(k===FREE.k?' sel':''); b.innerHTML=`<span class="n">${k+1}</span>${esc(Scenes.title(id))}`; b.onclick=()=>{ sfx.click(); FREE.k=k; setScene(id,{ free:true }); renderFree(); renderTools(); }; a.appendChild(b); });
+  const back=document.createElement('button'); back.className='btn navy'; back.style.marginTop='8px'; back.textContent='🏫 연구소 안내도로'; back.onclick=()=>{ sfx.click(); showScreen('map'); }; a.appendChild(back);
+}
+
+/* ════════════════ 연구 보고서 ════════════════ */
+function showFinal(){
+  showScreen('final'); setTab('tRep'); renderReport(); sfx.win();
+  const nick=(save.nick||'').trim(); $('fTitle').textContent=`📋 ${nick?nick+' 연구원의 ':''}날씨 연구 보고서`;
+}
+function setTab(id){ for(const x of ['tRep','tDex','tNote']) $(x).classList.toggle('hidden', x!==id); document.querySelectorAll('.tabs [data-t]').forEach(b=>b.classList.toggle('on', b.dataset.t===id)); }
+function renderReport(){
+  const runs=RUN.filter(Boolean); const A={ first:0, n:0, score:0, secs:0, wrongs:0, maxCombo:0, reads:0, log:[] };
+  for(const r of runs){ const s=r.st; A.first+=s.first; A.n+=r.n; A.score+=s.score; A.secs+=s.secs; A.wrongs+=s.wrongs; A.maxCombo=Math.max(A.maxCombo,s.maxCombo); A.reads+=s.reads; A.log.push(...s.log); }
+  const acc=A.n?Math.round(A.first/A.n*100):0, stars=runs.reduce((a,r)=>a+r.stars,0);
+  const slow=A.log.slice().sort((a,b)=>b.secs-a.secs)[0];
+  const h=holoCount(), r=rankOf(h), nx=RANKS.find(k=>k.need>h);
+  $('rankName').textContent=`${r.icon} ${r.name}`;
+  $('rankSub').textContent = nx ? `반짝 카드 ${nx.need-h}장을 더 모으면 「${nx.name}」` : '모든 반짝 카드를 모았어요!';
+  drawBadge(acc, r);
+  $('ladder').innerHTML=RANKS.map(k=>`<div class="${k===r?'now':h>=k.need?'on':''}">${k.icon} ${k.name}<span>반짝 카드 ${k.need}장</span></div>`).join('');
+  const T=[
+    ['연구 점수', `${A.score}점`, `${runs.length}개 실험실`, false],
+    ['한 번에 성공한 실험', `${A.first} / ${A.n}`, '반짝 카드를 받은 실험', A.n && A.first===A.n],
+    ['정답률', `${acc}%`, '한 번에 맞힌 비율', acc>=90],
+    ['받은 별', `${stars} / ${runs.length*3}`, '실험실마다 별 3개', false],
+    ['최고 연속', `${A.maxCombo}번`, '틀리지 않고 쭉!', A.maxCombo>=5],
+    ['힌트 본 횟수', `${A.wrongs}번`, '틀려도 힌트로 다시', false],
+    ['걸린 시간', mmss(A.secs), `실험 하나에 평균 ${A.log.length?Math.round(A.secs/A.log.length):0}초`, false],
+    ['가장 오래 고민한 실험', slow?`${Math.round(slow.secs)}초`:'-', slow?slow.q.card.name:'', false],
+    ['날씨 도감', `${cardCount()} / 20`, `반짝 카드 ${h}장`, cardCount()===20]
+  ];
+  $('tiles').innerHTML=T.map(([l,v,s,hh])=>`<div class="tile ${hh?'hot':''}"><div class="tl">${l}</div><div class="tv">${v}</div><div class="ts">${esc(s)}</div></div>`).join('');
+  $('tDex').innerHTML=QUESTIONS.map(q=>{ const v=save.cards[q.no]; return `<div class="dc ${v==='holo'?'holo':v?'norm':'lock'}"><div class="i">${q.card.i}</div><b>${v?esc(q.card.name):'???'}</b><span>${v?esc(q.card.d):`실험 ${q.no}에서 얻어요`}</span></div>`; }).join('');
+  const wrong=A.log.filter(l=>!l.first);
+  $('tNote').innerHTML = wrong.length ? `<h3 style="margin:0 0 10px;font:900 20px var(--font)">📒 처음에 틀렸던 실험 ${wrong.length}개 — 정답과 풀이를 다시 읽어 봐요</h3><ol>${wrong.map(l=>`<li>${esc(l.q.q)} <span style="color:#7b93a3">(단원평가 ${l.q.no}번)</span><br>${l.picks.length?`내가 고른 답: <s>${l.picks.map(esc).join(' → ')}</s><br>`:''}→ 정답: <b style="color:#1d8a52">${esc(answerText(l.q))}</b><br><span class="ex">📘 ${esc(l.q.exp)}</span></li>`).join('')}</ol>`
+    : `<div class="none">📒 ${A.n?'모든 실험을 한 번에 성공했어요! 정말 대단해요 🎉':'아직 한 실험이 없어요.'}</div>`;
+}
+
+/* ════════════════ 날씨 상자: 장면 · 도구 · 실험 목표 ════════════════
+   상자 안쪽 좌표는 680×436. 장면마다 init(초기 상태) · tools(도구) · use(도구 사용) · update · draw · goals 를 가진다. */
+const BX=24, BY=62, BW=700, BH=456, IX=BX+10, IY=BY+10, IW=680, IH=436;
+let SC=null;           /* 지금 상자 안 장면 상태 */
+const Box={ shake:0, parts:[], burst(first){ const n=save.lite?14:40; for(let i=0;i<n;i++){ const a=rand(0,TAU), v=rand(80,300); this.parts.push({ x:IW/2+rand(-80,80), y:IH/2+rand(-40,40), vx:Math.cos(a)*v, vy:Math.sin(a)*v-80, t:rand(.6,1.2), c: first?['#7fd3ff','#b99cff','#ffd36e','#8ff0c4'][i%4]:'#9fd0ff', s:rand(3,6) }); } } };
+
+/* ── 그리기 도우미 ── */
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function puff(c,x,y,s,col,a){ c.globalAlpha=a==null?1:a; c.fillStyle=col||'#fff'; c.beginPath(); c.arc(x,y,26*s,0,TAU); c.arc(x+30*s,y-12*s,30*s,0,TAU); c.arc(x+62*s,y,24*s,0,TAU); c.arc(x+30*s,y+8*s,26*s,0,TAU); c.fill(); c.globalAlpha=1; }
+function sunD(c,x,y,r,t,a){ c.globalAlpha=a; const g=c.createRadialGradient(x,y,r*.3,x,y,r*2.4); g.addColorStop(0,'rgba(255,230,140,.9)'); g.addColorStop(1,'rgba(255,230,140,0)'); c.fillStyle=g; c.beginPath(); c.arc(x,y,r*2.4,0,TAU); c.fill();
+  c.strokeStyle='#ffc94d'; c.lineWidth=4; c.lineCap='round'; for(let i=0;i<10;i++){ const q=i/10*TAU+t*.3; c.beginPath(); c.moveTo(x+Math.cos(q)*r*1.25,y+Math.sin(q)*r*1.25); c.lineTo(x+Math.cos(q)*r*1.6,y+Math.sin(q)*r*1.6); c.stroke(); }
+  c.fillStyle='#ffd35a'; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); c.globalAlpha=1; }
+function moonD(c,x,y,r,a){ c.globalAlpha=a; c.fillStyle='#fff6cf'; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); c.globalCompositeOperation='destination-out'; c.beginPath(); c.arc(x+r*.45,y-r*.25,r*.9,0,TAU); c.fill(); c.globalCompositeOperation='source-over'; c.globalAlpha=1; }
+function stars(c,a,t){ if(a<=0) return; c.fillStyle='#fff'; for(let i=0;i<40;i++){ const x=(i*97)%IW, y=(i*53)%180, tw=.5+.5*Math.sin(t*2+i); c.globalAlpha=a*tw; c.fillRect(x,y,2,2); } c.globalAlpha=1; }
+function tag(c,x,y,txt,col){ c.fillStyle=col||'#ff7a59'; c.beginPath(); c.arc(x,y,17,0,TAU); c.fill(); c.strokeStyle='#fff'; c.lineWidth=3; c.stroke(); c.fillStyle='#fff'; c.font=`900 18px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText(txt,x,y+1); }
+function label(c,x,y,txt,o={}){ c.font=`${o.w||800} ${o.s||15}px ${FONT}`; const w=c.measureText(txt).width+18, h=(o.s||15)+12; c.globalAlpha=o.a==null?1:o.a; c.fillStyle=o.bg||'rgba(255,255,255,.92)'; rr(c,x-w/2,y-h/2,w,h,h/2); c.fill(); if(o.stroke){ c.strokeStyle=o.stroke; c.lineWidth=2; c.stroke(); } c.fillStyle=o.col||'#1f3347'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(txt,x,y+1); c.globalAlpha=1; }
+function arrow(c,x1,y1,x2,y2,col,w,a){ c.globalAlpha=a==null?1:a; c.strokeStyle=col; c.fillStyle=col; c.lineWidth=w||4; c.lineCap='round'; c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); const ang=Math.atan2(y2-y1,x2-x1), s=(w||4)*2.6; c.beginPath(); c.moveTo(x2+Math.cos(ang)*s*.6,y2+Math.sin(ang)*s*.6); c.lineTo(x2+Math.cos(ang+2.5)*s,y2+Math.sin(ang+2.5)*s); c.lineTo(x2+Math.cos(ang-2.5)*s,y2+Math.sin(ang-2.5)*s); c.closePath(); c.fill(); c.globalAlpha=1; }
+function thermo(c,x,y,h,val,min,max,txt){ c.fillStyle='rgba(255,255,255,.95)'; rr(c,x-9,y,18,h,9); c.fill(); c.strokeStyle='#9fb6c4'; c.lineWidth=2; c.stroke();
+  const f=clamp((val-min)/(max-min),0,1), col= val<12?'#3e9ad8': val>28?'#ff5a3c':'#ff8a5b';
+  c.fillStyle=col; rr(c,x-4,y+h-10-(h-20)*f,8,(h-20)*f+4,4); c.fill(); c.beginPath(); c.arc(x,y+h-4,11,0,TAU); c.fill();
+  if(txt!==false){ label(c,x,y-14,`${Math.round(val)} ℃`,{ s:14, col:col==='#3e9ad8'?'#1d5e96':'#c2401f' }); } }
+function speech(c,x,y,txt,a){ if(a<=0) return; c.font=`800 15px ${FONT}`; const w=c.measureText(txt).width+22; c.globalAlpha=a; c.fillStyle='#fff'; rr(c,x-w/2,y-36,w,30,15); c.fill(); c.beginPath(); c.moveTo(x-6,y-7); c.lineTo(x+2,y); c.lineTo(x+6,y-7); c.fill(); c.strokeStyle='#cfe2ec'; c.lineWidth=2; rr(c,x-w/2,y-36,w,30,15); c.stroke(); c.fillStyle='#1f3347'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(txt,x,y-20); c.globalAlpha=1; }
+function drop(c,x,y,r,a){ c.globalAlpha=a==null?1:a; c.fillStyle='rgba(120,190,245,.85)'; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); c.fillStyle='rgba(255,255,255,.9)'; c.beginPath(); c.arc(x-r*.35,y-r*.35,r*.35,0,TAU); c.fill(); c.globalAlpha=1; }
+function skyG(c,top,bot,h){ const g=c.createLinearGradient(0,0,0,h||IH); g.addColorStop(0,top); g.addColorStop(1,bot); c.fillStyle=g; c.fillRect(0,0,IW,h||IH); }
+function mixC(a,b,t){ const p=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)); const A=p(a), B=p(b); return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`; }
+function benchD(c,y){ const g=c.createLinearGradient(0,y,0,IH); g.addColorStop(0,'#e9eef1'); g.addColorStop(1,'#c7d3da'); c.fillStyle=g; c.fillRect(0,y,IW,IH-y); c.fillStyle='rgba(31,51,71,.12)'; c.fillRect(0,y,IW,3); }
+function labWall(c){ skyG(c,'#f3faf8','#dcebe8'); c.strokeStyle='rgba(31,51,71,.05)'; c.lineWidth=1; for(let x=0;x<IW;x+=40){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,IH); c.stroke(); } for(let y=0;y<IH;y+=40){ c.beginPath(); c.moveTo(0,y); c.lineTo(IW,y); c.stroke(); } }
+function vapD(c,p,a){ c.globalAlpha=a==null?.75:a; c.fillStyle='#7cc3f5'; c.beginPath(); c.arc(p.x,p.y,2.4,0,TAU); c.fill(); c.globalAlpha=1; }
+function newVap(n,x0,y0,x1,y1){ const a=[]; for(let i=0;i<n;i++) a.push({ x:rand(x0,x1), y:rand(y0,y1), vx:rand(-20,20), vy:rand(-20,20) }); return a; }
+function wander(p,dt,x0,y0,x1,y1,sp){ p.vx+=rand(-1,1)*sp*dt*6; p.vy+=rand(-1,1)*sp*dt*6; p.vx=clamp(p.vx,-sp,sp); p.vy=clamp(p.vy,-sp,sp); p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.x<x0){p.x=x0;p.vx=Math.abs(p.vx);} if(p.x>x1){p.x=x1;p.vx=-Math.abs(p.vx);} if(p.y<y0){p.y=y0;p.vy=Math.abs(p.vy);} if(p.y>y1){p.y=y1;p.vy=-Math.abs(p.vy);} }
+const LITE = () => save.lite;
+
+/* ── 사람(오리지널 꼬마 연구원 마을 사람) ── */
+function kid(c,x,y,o){
+  const T=o.T, lean=o.lean||0, hue=o.hue;
+  c.save(); c.translate(x,y); c.rotate(lean);
+  const coat = T<12, tee = T>25;
+  /* 다리 */
+  c.fillStyle= tee ? '#f2c9a0' : '#35506b'; c.fillRect(-9,-26,7,26); c.fillRect(2,-26,7,26);
+  c.fillStyle='#2a2a2a'; c.fillRect(-11,-4,10,5); c.fillRect(1,-4,10,5);
+  if(tee){ c.fillStyle=hue; c.fillRect(-11,-34,22,10); }
+  /* 몸 */
+  c.fillStyle= coat ? '#2f5d8a' : hue; rr(c, coat?-17:-13, -62, coat?34:26, coat?40:32, 8); c.fill();
+  if(coat){ c.fillStyle='rgba(255,255,255,.25)'; c.fillRect(-17,-50,34,3); c.fillRect(-17,-38,34,3); }
+  /* 팔 */
+  c.fillStyle= tee ? '#f2c9a0' : (coat?'#2f5d8a':hue); c.fillRect(coat?-23:-19,-58,7,24); c.fillRect(coat?16:12,-58,7,24);
+  /* 머리 */
+  c.fillStyle='#f5d2ac'; c.beginPath(); c.arc(0,-76,15,0,TAU); c.fill();
+  c.fillStyle='#3b2a20'; c.beginPath(); c.arc(0,-80,15,Math.PI,TAU); c.fill();
+  c.fillStyle='#1f3347'; c.fillRect(-6,-77,3,3); c.fillRect(3,-77,3,3);
+  c.strokeStyle='#b0563c'; c.lineWidth=1.5; c.beginPath(); c.arc(0,-71,4,.1*Math.PI,.9*Math.PI); c.stroke();
+  if(coat){ c.fillStyle='#e8484a'; c.fillRect(-14,-64,28,6); c.fillStyle='#e8484a'; c.beginPath(); c.arc(0,-86,14,Math.PI,TAU); c.fill(); c.beginPath(); c.arc(0,-101,4,0,TAU); c.fill(); }
+  if(o.sweat){ drop(c,15,-86,3,.9); drop(c,-16,-80,2.5,.8); }
+  if(o.ice){ c.fillStyle='#f2c9a0'; c.fillRect(16,-40,6,6); c.fillStyle='#d9a066'; c.beginPath(); c.moveTo(16,-44); c.lineTo(24,-44); c.lineTo(20,-32); c.fill(); c.fillStyle='#ff9ec4'; c.beginPath(); c.arc(20,-47,5,0,TAU); c.fill(); }
+  c.restore();
+  if(o.umb){ const flip=o.umbFlip; c.save(); c.translate(x+4,y-104); c.rotate(lean*1.5); c.strokeStyle='#44576a'; c.lineWidth=2.5; c.beginPath(); c.moveTo(0,0); c.lineTo(0,34); c.stroke();
+    c.fillStyle=o.umb; c.beginPath(); if(flip){ c.moveTo(-26,-14); c.quadraticCurveTo(0,6,26,-14); c.lineTo(0,0); } else { c.arc(0,0,28,Math.PI,TAU); } c.fill(); c.restore(); }
+}
+function house(c,x,y,w,h,wall,roof,shake){ c.fillStyle=wall; c.fillRect(x,y,w,h); c.fillStyle=roof; c.beginPath(); c.moveTo(x-10,y); c.lineTo(x+w/2,y-h*.55); c.lineTo(x+w+10,y); c.fill();
+  c.fillStyle='#fff6d8'; c.fillRect(x+w*.15,y+h*.25,w*.22,h*.25); c.fillRect(x+w*.6,y+h*.25,w*.22,h*.25); c.fillStyle='#7a5236'; c.fillRect(x+w*.4,y+h*.5,w*.2,h*.5);
+  if(shake!=null){ c.save(); c.translate(x+w-6,y+10); c.rotate(shake); c.fillStyle='#ffc94d'; c.fillRect(0,0,34,20); c.fillStyle='#6b4b00'; c.font=`900 11px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText('가게',17,10); c.restore(); } }
+function tree(c,x,y,s,sway){ c.save(); c.translate(x,y); c.fillStyle='#8a5a33'; c.fillRect(-6*s,-50*s,12*s,50*s); c.rotate(sway); c.fillStyle='#3fae7f'; c.beginPath(); c.arc(0,-70*s,34*s,0,TAU); c.arc(-24*s,-52*s,24*s,0,TAU); c.arc(24*s,-52*s,24*s,0,TAU); c.fill(); c.fillStyle='rgba(255,255,255,.15)'; c.beginPath(); c.arc(-10*s,-82*s,14*s,0,TAU); c.fill(); c.restore(); }
+
+/* ════════════════ 장면 정의 ════════════════ */
+const SCN={};
+
+/* ── 1. 마을 (기상 관측실) ── */
+SCN.town={
+  title:'날씨 조절 마을', tip:'조절기 다섯 개를 마음대로 움직여 봐요. 비를 내렸다가 그치게 하면 무지개가 뜰지도 몰라요!',
+  init(o){ return { temp:.6, humid:.45, wind:.15, rain:0, cloud:.3, phone:false, phoneA:0, thermo:false, thermoA:0, flash:{}, bub:null, bubT:0, lastKey:'', peak:0, rainbow:0, ball:0, demo:!!o.demo }; },
+  T:s=>5+s.temp*30, H:s=>Math.round(20+s.humid*80), WS:s=>Math.round(s.wind*14), RM:s=>Math.round(s.rain*30), CL:s=>Math.round(Math.max(s.cloud,s.rain)*10),
+  tools(){ const s=SC, d=this; return [
+    { id:'temp', kind:'slider', ic:'🌡️', label:'기온', get:()=>s.temp, fmt:()=>`${Math.round(d.T(s))} ℃`, ends:['춥게','덥게'] },
+    { id:'humid', kind:'slider', ic:'💧', label:'습도', get:()=>s.humid, fmt:()=>`${d.H(s)} %`, ends:['건조','축축'] },
+    { id:'wind', kind:'slider', ic:'🌬️', label:'바람', get:()=>s.wind, fmt:()=>`${d.WS(s)} m/s`, ends:['약하게','세게'] },
+    { id:'rain', kind:'slider', ic:'🌧️', label:'비', get:()=>s.rain, fmt:()=>`${d.RM(s)} mm`, ends:['그침','많이'] },
+    { id:'cloud', kind:'slider', ic:'☁️', label:'구름', get:()=>s.cloud, fmt:()=>`${d.CL(s)} / 10`, ends:['맑게','흐리게'] },
+    { id:'phone', kind:'btn', stack:true, ic:'📱', label:s.phone?'앱\n닫기':'날씨 앱\n켜기', on:s.phone },
+    { id:'thermo', kind:'btn', stack:true, ic:'🔍', label:s.thermo?'확대\n닫기':'온도계\n확대', on:s.thermo } ]; },
+  use(id,v){ const s=SC;
+    if(['temp','humid','wind','rain','cloud'].includes(id)){ s[id]=v; s.flash[id]=1.2; if(id==='rain' && v>.3 && s.cloud<v) s.cloud=Math.min(1,v); if(id==='wind' && v>.7) sfx.whoosh(); return; }
+    if(id==='phone'){ s.phone=!s.phone; if(s.phone) s.thermo=false; sfx.tool(); }
+    if(id==='thermo'){ s.thermo=!s.thermo; if(s.thermo){ s.phone=false; s.temp=.6; s.flash.temp=1.2; } sfx.tool(); }
+  },
+  goals:{ temp:s=>Math.abs(s.temp-.6)>=.33, phone:s=>s.phone && s.phoneA>.95, thermo:s=>s.thermo && s.thermoA>.95, rain:s=>s.rain>=.6, wind:s=>s.wind>=.8, humid:s=>s.humid>=.75 },
+  msg(s){ return `기온 ${Math.round(this.T(s))} ℃ · 습도 ${this.H(s)} % · 풍속 ${this.WS(s)} m/s · 강수량 ${this.RM(s)} mm`; },
+  update(s,dt){
+    if(s.demo){ const t=s.t%26; s.temp=.55+.2*Math.sin(s.t*.25); s.wind=.2+.25*Math.sin(s.t*.4)**2;
+      const k= t<6?0 : t<11?(t-6)/5 : t<17?1 : t<19?1-(t-17)/2 : 0; s.cloud=.2+.7*k; s.rain= t>9&&t<17.5 ? Math.min(1,(t-9)/2)*.8*(t<16?1:(17.5-t)/1.5) : 0; s.humid=.4+.4*k; }
+    for(const k in s.flash) s.flash[k]=Math.max(0,s.flash[k]-dt);
+    s.phoneA=clamp(s.phoneA+(s.phone?dt*3:-dt*4),0,1); s.thermoA=clamp(s.thermoA+(s.thermo?dt*3:-dt*4),0,1);
+    s.peak=Math.max(s.peak,s.rain); if(s.rain<.05 && s.peak>.5){ s.rainbow=1; s.peak=0; } s.rainbow=Math.max(0,s.rainbow-dt/9);
+    const T=this.T(s); let key='';
+    if(s.wind>=.8) key='바람에 날아가겠어!'; else if(s.rain>=.5) key='우산 챙기길 잘했다!'; else if(s.humid>=.75) key='끈적끈적해…'; else if(T<=12) key='으, 추워!'; else if(T>=29) key='너무 더워~'; else if(s.rainbow>.5) key='와, 무지개다!';
+    if(key!==s.lastKey){ s.lastKey=key; if(key){ s.bub=key; s.bubT=2.8; } }
+    s.bubT=Math.max(0,s.bubT-dt);
+    s.ball = s.wind>.75 ? Math.min(1,s.ball+dt*.5) : Math.max(0,s.ball-dt*.3);
+  },
+  draw(c,s,t){
+    const T=this.T(s), dark=Math.max(s.cloud,s.rain);
+    skyG(c, mixC('#5fb1ee','#8a9dad',dark*.85), mixC('#d8f0ff','#cad4db',dark*.85), 330);
+    sunD(c,86,72,30,t,1-dark*.92);
+    if(s.rainbow>0){ c.save(); c.globalAlpha=s.rainbow*.8; c.lineWidth=10; ['#ff5a5a','#ffa94d','#ffe066','#69db7c','#4dabf7','#9775fa'].forEach((col,i)=>{ c.strokeStyle=col; c.beginPath(); c.arc(300,360,230-i*10,Math.PI*1.05,Math.PI*1.95); c.stroke(); }); c.restore(); }
+    /* 먼 언덕 */
+    c.fillStyle=mixC('#9fd8b4','#8fb3a0',dark); c.beginPath(); c.moveTo(0,300); c.quadraticCurveTo(160,250,330,292); c.quadraticCurveTo(470,262,IW,296); c.lineTo(IW,340); c.lineTo(0,340); c.fill();
+    /* 구름 */
+    const nC=1+Math.round(dark*7), sp=8+s.wind*90;
+    for(let i=0;i<nC;i++){ const x=((i*151+t*sp)%(IW+220))-160, y=34+(i*47)%100, sc=.7+(i%3)*.22; puff(c,x,y,sc, s.rain>.3?mixC('#ffffff','#7d8b96',Math.min(1,s.rain*1.2)):'#ffffff', .95); }
+    /* 땅 */
+    c.fillStyle=mixC('#7fcf8f','#5f9f73',s.rain); c.fillRect(0,330,IW,IH-330);
+    c.fillStyle=mixC('#e9d9b8','#b9ab92',s.rain); c.beginPath(); c.moveTo(0,392); c.quadraticCurveTo(300,370,IW,396); c.lineTo(IW,418); c.quadraticCurveTo(300,392,0,414); c.fill();
+    if(s.rain>.3){ c.fillStyle='rgba(120,170,210,.55)'; for(const [x,w] of [[90,60],[330,80],[450,50]]){ c.beginPath(); c.ellipse(x,404,w*s.rain,6,0,0,TAU); c.fill(); } }
+    /* 집 · 간판 */
+    const sh = s.wind>.6 ? Math.sin(t*14)*.25*s.wind : 0;
+    house(c,26,258,104,78,'#ffe9c7','#e8684a', sh); house(c,150,272,84,64,'#dff0ff','#4f7fb3');
+    /* 비닐하우스 */
+    c.save(); c.translate(360,336); const flap = s.wind>.7 ? Math.sin(t*18)*6*s.wind : 0;
+    c.fillStyle='rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(0,-62,60,-64+flap*.3); c.quadraticCurveTo(120,-62,120,0); c.fill(); c.strokeStyle='rgba(120,150,170,.8)'; c.lineWidth=2; for(let i=1;i<5;i++){ c.beginPath(); c.moveTo(i*24,0); c.quadraticCurveTo(i*24,-60+flap,i*24,-62); c.stroke(); }
+    c.fillStyle='#5fbf6a'; for(let i=0;i<5;i++){ c.beginPath(); c.arc(14+i*23,-8,7,0,TAU); c.fill(); } c.restore();
+    if(s.wind>.8){ label(c,420,256,'⚠ 비닐하우스가 흔들려요',{ s:12, col:'#c2401f' }); }
+    /* 나무 */
+    const sway=Math.sin(t*(2+s.wind*7))*s.wind*.28;
+    tree(c,258,338,.9,sway); tree(c,506,340,.75,sway*1.1);
+    /* 바람 자루 */
+    c.strokeStyle='#44576a'; c.lineWidth=3; c.beginPath(); c.moveTo(556,340); c.lineTo(556,262); c.stroke();
+    c.save(); c.translate(556,266); c.rotate(-Math.PI/2+ (Math.PI/2)*(.15+s.wind*.85) + Math.sin(t*9)*.06*s.wind); for(let i=0;i<4;i++){ c.fillStyle=i%2?'#fff':'#ff7a59'; c.fillRect(0,-6+i*.6,1,1); c.beginPath(); c.moveTo(i*12,-7+i*1.2); c.lineTo(i*12+12,-6+i*1.5); c.lineTo(i*12+12,6-i*1.5); c.lineTo(i*12,7-i*1.2); c.fill(); } c.restore();
+    /* 빨랫줄 */
+    c.strokeStyle='#6d7e8c'; c.lineWidth=2; c.beginPath(); c.moveTo(286,318); c.quadraticCurveTo(320,326,354,318); c.stroke();
+    for(let i=0;i<3;i++){ const x=294+i*20, fl=Math.sin(t*6+i)*s.wind*6; c.fillStyle=['#ff9ec4','#7fd3ff','#ffd36e'][i]; c.save(); c.translate(x,322); c.rotate(fl*.03); c.fillRect(-7,0,14,18); c.restore(); if(s.humid>.72){ const dy=((t*40+i*13)%26); drop(c,x,342+dy,2.2,.9-dy/30); } }
+    /* 사람들 */
+    const lean = s.wind>.75 ? -.16*s.wind : 0, umb=s.rain>.35, flip=s.wind>.85 && umb;
+    const kids=[[96,'#ff9ec4','#ff7a59'],[176,'#7fd3ff','#3e9ad8'],[250,'#ffd36e','#8d6fd8']];
+    kids.forEach(([x,hue,uc],i)=>kid(c,x,404,{ T, hue, lean, umb:umb?uc:null, umbFlip:flip, sweat:s.humid>.75||T>30, ice:i===1 && T>28 && !umb }));
+    /* 공 */
+    if(!umb){ const bx=300+s.ball*260, by=396-Math.abs(Math.sin(t*8))*s.ball*18; c.fillStyle='#fff'; c.beginPath(); c.arc(bx,by,9,0,TAU); c.fill(); c.fillStyle='#1f3347'; c.beginPath(); c.arc(bx,by,3.5,0,TAU); c.fill(); }
+    /* 비 */
+    if(s.rain>.02){ const n=Math.round(s.rain*(LITE()?70:170)); c.strokeStyle='rgba(210,230,250,.85)'; c.lineWidth=1.6; c.beginPath(); for(let i=0;i<n;i++){ const y=(i*97.3+t*540)%(IH+30)-20, x=(i*211.7+y*s.wind*.9)%IW; c.moveTo(x,y); c.lineTo(x-4-s.wind*10,y-14); } c.stroke(); }
+    /* 말풍선 */
+    if(s.bub) speech(c,176,292,s.bub,Math.min(1,s.bubT));
+    this.board(c,s,t);
+    if(s.phoneA>0) this.phoneD(c,s.phoneA);
+    if(s.thermoA>0) this.zoomD(c,s,s.thermoA);
+  },
+  board(c,s){
+    const x=500,y=12,w=170,h=236; c.fillStyle='rgba(255,255,255,.93)'; rr(c,x,y,w,h,14); c.fill(); c.strokeStyle='#cfe2ec'; c.lineWidth=2; c.stroke();
+    c.fillStyle='#1f3347'; c.font=`900 14px ${FONT}`; c.textAlign='left'; c.textBaseline='middle'; c.fillText('📟 관측 계기판',x+12,y+18);
+    const rows=[['temp','🌡️','기온',`${Math.round(this.T(s))} ℃`,s.temp],['humid','💧','습도',`${this.H(s)} %`,s.humid],['wind','🌬️','풍속',`${this.WS(s)} m/s`,s.wind],['rain','🌧️','강수량',`${this.RM(s)} mm`,s.rain],['cloud','☁️','구름의 양',`${this.CL(s)}`,Math.max(s.cloud,s.rain)]];
+    rows.forEach(([k,ic,nm,v,f],i)=>{ const yy=y+42+i*38, fl=s.flash[k]||0;
+      if(fl>0){ c.fillStyle=`rgba(255,201,77,${Math.min(.5,fl)})`; rr(c,x+6,yy-14,w-12,32,8); c.fill(); }
+      c.font=`16px ${FONT}`; c.fillText(ic,x+10,yy); c.fillStyle='#4d6478'; c.font=`800 13px ${FONT}`; c.fillText(nm,x+34,yy-4);
+      c.fillStyle='#1f3347'; c.font=`900 15px ${FONT}`; c.textAlign='right'; c.fillText(v,x+w-10,yy-4); c.textAlign='left';
+      c.fillStyle='#e3eef4'; rr(c,x+34,yy+7,w-46,5,3); c.fill(); c.fillStyle= k==='temp' ? (f<.3?'#3e9ad8':f>.75?'#ff5a3c':'#ff8a5b') : '#3e9ad8'; rr(c,x+34,yy+7,(w-46)*clamp(f,0,1),5,3); c.fill(); });
+  },
+  phoneD(c,a){
+    const w=330,h=356, x=(IW-w)/2-60, y=40+(1-easeOut(a))*400;
+    c.save(); c.globalAlpha=Math.min(1,a*1.5);
+    c.fillStyle='rgba(15,25,35,.35)'; c.fillRect(0,0,IW,IH);
+    c.fillStyle='#10161c'; rr(c,x,y,w,h,28); c.fill(); c.fillStyle='#1d252e'; rr(c,x+10,y+14,w-20,h-28,18); c.fill();
+    c.fillStyle='#fff'; c.font=`900 16px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText('☁ 날씨',x+w/2,y+34);
+    const cols=['09시','10시','11시','12시'], L=[['날짜','오늘','내일','모레','다음 주'],['시간',...cols],['날씨','🌧','⛈','🌧','🌥'],['기온','23 ℃','22 ℃','22 ℃','23 ℃'],['풍속','3 m/s','3 m/s','3 m/s','2 m/s'],['풍향','남서','남서','남서','서'],['습도','85 %','80 %','75 %','70 %']];
+    L.forEach((r,i)=>{ const yy=y+66+i*40; r.forEach((v,j)=>{ const xx=x+42+j*66; c.fillStyle= j===0?'#9fb3c4':(i===0&&j>1?'#6b7c8c':'#fff'); c.font=`${j===0?800:700} ${j===0?13:14}px ${FONT}`; c.fillText(v,xx,yy); }); });
+    c.restore();
+  },
+  zoomD(c,s,a){
+    c.save(); c.globalAlpha=Math.min(1,a*1.4);
+    c.fillStyle='rgba(255,255,255,.55)'; c.fillRect(0,0,IW,IH);
+    const x=390,y=40; c.fillStyle='#fff'; rr(c,x-70,y-10,140,300,20); c.fill(); c.strokeStyle='#cfe2ec'; c.lineWidth=3; c.stroke();
+    thermo(c,x-20,y+20,240,23,0,40,false); c.fillStyle='#1f3347'; c.font=`900 30px ${FONT}`; c.textAlign='left'; c.textBaseline='middle'; c.fillText('23.0',x+4,y+120); c.font=`800 18px ${FONT}`; c.fillText('℃',x+10,y+150);
+    for(let i=0;i<=8;i++){ c.fillStyle='#9fb6c4'; c.fillRect(x-6,y+30+i*26,8,2); }
+    speech(c,92,296,'아, 더워~',1); speech(c,262,296,'난 좀 쌀쌀한데?',1);
+    label(c,x,y+310,'같은 날씨, 온도계는 23.0 ℃',{ s:14 });
+    c.restore();
+  }
+};
+
+/* ── 2. 음료수 캔 ── */
+SCN.can={
+  title:'음료수 캔의 물방울', tip:'얼음물과 따뜻한 물에 번갈아 담가 보고, 부채질도 해 봐요. 물방울은 언제 생기나요?',
+  init(){ return { canT:24, formed:0, dip:0, dipTo:null, mode:'room', vap:newVap(LITE()?40:80,20,20,660,320), drops:[], puddle:0, fan:0, cap:'', capT:0 }; },
+  tools(){ return [ { id:'cold', kind:'btn', ic:'🧊', label:'얼음물에\n담갔다 꺼내기' }, { id:'warm', kind:'btn', ic:'♨️', label:'따뜻한 물에\n담갔다 꺼내기' }, { id:'fan', kind:'btn', ic:'🪭', label:'부채로\n바람 보내기' }, { id:'reset', kind:'btn', ic:'↺', label:'처음 상태로' } ]; },
+  use(id){ const s=SC; sfx.tool();
+    if(id==='reset'){ Object.assign(s,this.init()); return; }
+    if(id==='fan'){ s.fan=2.2; s.cap='부채 바람만 불어요. 캔의 온도는 그대로예요.'; s.capT=3; sfx.whoosh(); return; }
+    if(s.dipTo) return; s.dipTo=id; s.dip=0; },
+  goals:{ canDew:s=>s.formed>=24 && s.canT<12 },
+  msg(s){ return `🥫 캔 표면 ${Math.round(s.canT)} ℃ · 공기 24 ℃ · 맺힌 물방울 ${s.drops.length}개`; },
+  canX(s){ const k=s.dipTo ? Math.sin(Math.min(1,s.dip)*Math.PI) : 0; const tx = s.dipTo==='cold'?120: s.dipTo==='warm'?560:340; return { x:lerp(340,tx,k), y:lerp(150,190,k)+ (k>.85?(k-.85)*400:0) }; },
+  update(s,dt){
+    if(s.dipTo){ s.dip+=dt/1.6; if(s.dip>=.5 && !s.dipDone){ s.dipDone=true; if(s.dipTo==='cold'){ s.canT=4; s.drops=[]; s.formed=0; s.cap='차가워진 캔 표면을 살펴봐요.'; } else { s.canT=45; s.drops=[]; s.formed=0; s.cap='따뜻한 캔이에요. 물방울이 생기나요?'; } s.capT=3.5; sfx.drip(); }
+      if(s.dip>=1){ s.dipTo=null; s.dipDone=false; } }
+    s.canT += (24-s.canT)*dt*(s.canT<24?.006:.05);
+    s.capT=Math.max(0,s.capT-dt); s.fan=Math.max(0,s.fan-dt);
+    const P=this.canX(s), cx=P.x, cy=P.y, cw=110, ch=180;
+    const cold = !s.dipTo && s.canT<12;
+    for(const p of s.vap){ wander(p,dt,10,10,670,330,34); if(s.fan>0){ p.x+=160*dt; if(p.x>668){ p.x=12; } }
+      if(cold){ const dx=cx-p.x, dy=(cy+ch*.55)-p.y; if(Math.abs(dx)<260){ p.x+=Math.sign(dx)*22*dt; p.y+=Math.sign(dy)*10*dt; } }
+      if(!s.dipTo && s.canT<12 && p.x>cx-cw/2-5 && p.x<cx+cw/2+5 && p.y>cy+10 && p.y<cy+ch && Math.random()<dt*1.8){
+        const side = p.x<cx ? -1 : 1, fx = cx + side*rand(10,cw/2-4)*(Math.random()<.5?1:.6);
+        s.drops.push({ x:fx-cx, y:p.y-cy, r:1.2, v:0, slide:Math.random()<.35 }); s.formed++; p.x=rand(20,660); p.y=Math.random()<.5?15:320; if(s.drops.length%6===0) sfx.drip(); } }
+    for(const d of s.drops){ if(s.canT<12) d.r=Math.min(4.6,d.r+dt*.9); else d.r=Math.max(0,d.r-dt*.8); if(d.r>4.2 && d.slide){ d.v+=dt*8; d.y+=d.v*dt; if(d.y>ch-4){ d.y=ch-4; d.r=0; s.puddle=Math.min(1,s.puddle+.02); } } }
+    s.drops=s.drops.filter(d=>d.r>0.05);
+  },
+  draw(c,s,t){
+    labWall(c); benchD(c,340);
+    /* 그릇 */
+    const bowl=(x,col,ice,steam)=>{ c.fillStyle='rgba(255,255,255,.7)'; c.beginPath(); c.moveTo(x-80,300); c.lineTo(x+80,300); c.lineTo(x+64,352); c.lineTo(x-64,352); c.closePath(); c.fill(); c.fillStyle=col; c.beginPath(); c.moveTo(x-74,312); c.lineTo(x+74,312); c.lineTo(x+63,348); c.lineTo(x-63,348); c.closePath(); c.fill();
+      if(ice){ c.fillStyle='rgba(235,248,255,.95)'; for(const [dx,dy] of [[-40,306],[-8,302],[26,307],[48,304]]){ rr(c,x+dx-10,dy-10,20,18,4); c.fill(); } }
+      if(steam){ c.strokeStyle='rgba(255,255,255,.8)'; c.lineWidth=3; for(let i=0;i<3;i++){ const ph=(t*.8+i*.33)%1; c.globalAlpha=1-ph; c.beginPath(); c.moveTo(x-30+i*30,296-ph*40); c.quadraticCurveTo(x-20+i*30,286-ph*40,x-30+i*30,276-ph*40); c.stroke(); } c.globalAlpha=1; } };
+    bowl(120,'rgba(120,200,245,.75)',true,false); bowl(560,'rgba(255,170,120,.6)',false,true);
+    label(c,120,372,'🧊 얼음물',{ s:13 }); label(c,560,372,'♨️ 따뜻한 물',{ s:13 });
+    /* 수증기 */
+    for(const p of s.vap) vapD(c,p,.6);
+    if(s.fan>0){ c.strokeStyle='rgba(62,154,216,.35)'; c.lineWidth=3; for(let i=0;i<6;i++){ const y=60+i*45, x=((t*300+i*80)%700)-20; c.beginPath(); c.moveTo(x,y); c.lineTo(x+60,y); c.stroke(); } }
+    /* 캔 */
+    const P=this.canX(s), x=P.x, y=P.y, w=110, h=180;
+    c.save(); c.translate(x,y);
+    const g=c.createLinearGradient(-w/2,0,w/2,0); g.addColorStop(0,'#8aa2b3'); g.addColorStop(.35,'#eef4f8'); g.addColorStop(.6,'#c3d2dc'); g.addColorStop(1,'#7f97a8'); c.fillStyle=g; c.fillRect(-w/2,10,w,h-10);
+    c.fillStyle='#3fae9a'; c.fillRect(-w/2,60,w,70); c.fillStyle='#fff'; c.font=`900 17px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText('탄산음료',0,88); c.font=`800 11px ${FONT}`; c.fillText('○ ○ ○',0,110);
+    c.fillStyle='#b8c7d1'; c.beginPath(); c.ellipse(0,10,w/2,10,0,0,TAU); c.fill(); c.fillStyle='#8ea3b1'; c.beginPath(); c.ellipse(8,8,12,5,0,0,TAU); c.fill();
+    c.fillStyle='#9fb3c1'; c.beginPath(); c.ellipse(0,h,w/2,9,0,0,Math.PI); c.fill();
+    if(s.canT<12){ c.fillStyle=`rgba(230,245,255,${.35*(12-s.canT)/8})`; c.fillRect(-w/2,10,w,h-10); }
+    for(const d of s.drops) drop(c,d.x,d.y,d.r,.95);
+    c.restore();
+    if(s.puddle>0){ c.fillStyle=`rgba(120,190,245,${.5*s.puddle})`; c.beginPath(); c.ellipse(340,338,40+s.puddle*40,6,0,0,TAU); c.fill(); }
+    /* 온도 표시 */
+    if(!s.dipTo){ label(c,x+86,y+40,`캔 표면 ${Math.round(s.canT)} ℃`,{ s:13, col:s.canT<12?'#1d5e96':s.canT>30?'#c2401f':'#1f3347' }); }
+    label(c,70,26,'🌡️ 공기 24 ℃',{ s:13 }); label(c,590,26,'● 공기 중 수증기',{ s:12, col:'#3e9ad8' });
+    if(s.capT>0) label(c,340,410,s.cap,{ s:14, a:Math.min(1,s.capT) });
+  }
+};
+
+/* ── 3. 새벽 사과 (이슬) ── */
+SCN.apple={
+  title:'새벽의 사과', tip:'시간 조절기를 낮부터 새벽까지 천천히 돌려 봐요. 물방울은 언제 생기고 언제 사라지나요?',
+  init(){ const d=[]; for(let i=0;i<28;i++){ const a=rand(0,TAU), r=Math.sqrt(Math.random())*74; d.push({ x:330+Math.cos(a)*r, y:236+Math.sin(a)*r*.95, r:rand(2.4,4.8), k:Math.random() }); }
+    for(let i=0;i<22;i++) d.push({ x:20+i*30+rand(-6,6), y:rand(372,388), r:rand(2,3.5), k:Math.random(), g:1 });
+    return { time:0, dew:0, drops:d }; },
+  clock(tm){ const h=(14+tm*15)%24, hh=Math.floor(h), m=Math.round((h-hh)*6)*10; const ap=hh<12?'오전':'오후', h12=hh%12===0?12:hh%12; return `${hh<5||hh>=22?'':''}${ap} ${h12}시${m?` ${m%60}분`:''}`.replace('오전 12시','밤 12시'); },
+  airT(s){ return 26-s.time*12; }, appleT(s){ return 26-s.time*15; },
+  tools(){ const s=SC; return [ { id:'time', kind:'slider', wide:true, ic:'🕐', label:'시간', get:()=>s.time, fmt:()=>this.clock(s.time), ends:['낮 2시','새벽 5시'] }, { id:'reset', kind:'btn', ic:'☀️', label:'낮으로\n되돌리기' } ]; },
+  use(id,v){ const s=SC; if(id==='time'){ s.time=v; return; } if(id==='reset'){ s.time=0; sfx.tool(); } },
+  goals:{ dawn:s=>s.time>=.85 && s.dew>=.75 },
+  msg(s){ return `🕐 ${this.clock(s.time)} · 공기 ${Math.round(this.airT(s))} ℃ · 사과 표면 ${Math.round(this.appleT(s))} ℃`; },
+  update(s,dt){ const before=s.dew; if(s.time>.7) s.dew=Math.min(1,s.dew+dt*.5*(s.time-.6)/.4); else if(s.time<.5) s.dew=Math.max(0,s.dew-dt*.6); if(Math.floor(before*10)!==Math.floor(s.dew*10) && s.dew>before) sfx.drip(); },
+  draw(c,s,t){
+    const tm=s.time, day=clamp(1-tm*2.2,0,1), night=clamp((tm-.35)*3,0,1)*(1-clamp((tm-.9)*8,0,1)*.4), dawn=clamp((tm-.82)*6,0,1);
+    const top= tm<.4 ? mixC('#5fb1ee','#f08a5d',tm/.4) : tm<.8 ? mixC('#f08a5d','#14223a',Math.min(1,(tm-.4)/.25)) : mixC('#14223a','#6a5a9e',dawn);
+    const bot= tm<.4 ? mixC('#d8f0ff','#ffd29a',tm/.4) : tm<.8 ? mixC('#ffd29a','#2a3d5c',Math.min(1,(tm-.4)/.25)) : mixC('#2a3d5c','#ffb4a0',dawn);
+    skyG(c,top,bot); stars(c,night*.9,t);
+    sunD(c,90+tm*300,70+tm*240,28,t,day); moonD(c,560,70,24,night);
+    /* 가지와 잎 */
+    c.strokeStyle='#6b4a2e'; c.lineWidth=16; c.lineCap='round'; c.beginPath(); c.moveTo(-10,60); c.quadraticCurveTo(200,90,322,150); c.stroke();
+    c.fillStyle=mixC('#3fae7f','#1f5a45',night); for(const [x,y,a] of [[140,80,-.5],[220,96,.4],[270,118,-.3]]){ c.save(); c.translate(x,y); c.rotate(a); c.beginPath(); c.ellipse(0,0,34,14,0,0,TAU); c.fill(); c.restore(); }
+    /* 사과 */
+    const ag=c.createRadialGradient(300,206,20,330,236,90); ag.addColorStop(0,mixC('#ff7a6b','#9c3a36',night*.6)); ag.addColorStop(1,mixC('#d6312f','#6a1f1f',night*.6)); c.fillStyle=ag; c.beginPath(); c.arc(330,238,82,0,TAU); c.fill();
+    c.fillStyle='rgba(255,255,255,.25)'; c.beginPath(); c.ellipse(296,200,20,30,-.5,0,TAU); c.fill();
+    c.strokeStyle='#6b4a2e'; c.lineWidth=6; c.beginPath(); c.moveTo(330,160); c.lineTo(326,146); c.stroke();
+    /* 풀 */
+    c.fillStyle=mixC('#6cc58a','#244d3a',night); c.fillRect(0,380,IW,IH-380); c.strokeStyle=mixC('#4fae70','#1d4030',night); c.lineWidth=4;
+    for(let i=0;i<46;i++){ const x=i*15+5; c.beginPath(); c.moveTo(x,IH); c.quadraticCurveTo(x+4,400,x+(i%2?6:-4),372+(i%3)*6); c.stroke(); }
+    /* 이슬 */
+    for(const d of s.drops){ const a=clamp(s.dew*1.6-d.k*.6,0,1); if(a>0) drop(c,d.x,d.y,d.r*(.5+.5*a),a); }
+    label(c,100,28,`🕐 ${this.clock(tm)}`,{ s:15 });
+    label(c,560,410,`🌡️ 공기 ${Math.round(this.airT(s))} ℃`,{ s:13 }); label(c,456,238,`사과 표면 ${Math.round(this.appleT(s))} ℃`,{ s:13, col:this.appleT(s)<14?'#1d5e96':'#1f3347' });
+    if(s.dew>.6) label(c,330,346,'사과와 풀잎에 물방울이 맺혔어요',{ s:14 });
+  }
+};
+
+/* ── 4. 집기병 안개 실험 ── */
+SCN.jar={
+  title:'집기병 속 안개', tip:'향 연기를 넣은 것과 넣지 않은 것, 얼음 지퍼 백과 뜨거운 물 지퍼 백을 바꿔 가며 비교해 봐요.',
+  init(o){ const s={ smoke:0, stick:0, top:null, topT:22, fog:0, vap:[], fogP:[], smokeP:[], cap:'', capT:0 };
+    if(o.jarDone){ s.smoke=1; s.top='ice'; s.topT=8; for(let i=0;i<(LITE()?50:110);i++) s.fogP.push({ x:rand(-80,80), y:rand(-190,-20), r:rand(8,16), vx:rand(-6,6), vy:rand(-4,4) }); s.fog=1; }
+    return s; },
+  tools(){ return [ { id:'smoke', kind:'btn', ic:'🪔', label:'향 연기\n넣기' }, { id:'ice', kind:'btn', ic:'🧊', label:'얼음 지퍼 백\n올리기' }, { id:'hot', kind:'btn', ic:'♨️', label:'뜨거운 물\n지퍼 백 올리기' }, { id:'reset', kind:'btn', ic:'↺', label:'다시 하기' } ]; },
+  use(id){ const s=SC; sfx.tool();
+    if(id==='reset'){ Object.assign(s,this.init({})); return; }
+    if(id==='smoke'){ if(s.stick>0) return; s.stick=2.4; s.cap='향 연기를 넣었어요.'; s.capT=2.5; return; }
+    if(id==='ice'||id==='hot'){ s.top=id; s.cap= id==='ice'?'얼음 지퍼 백을 올렸어요. 집기병 윗부분을 봐요.':'뜨거운 물 지퍼 백을 올렸어요.'; s.capT=3; } },
+  goals:{ jarFog:s=>s.top==='ice' && s.fog>=.75 },
+  msg(s){ return `🌡️ 집기병 윗부분 ${Math.round(s.topT)} ℃ · 향 연기 ${s.smoke>0?'있음':'없음'} · 뿌연 정도 ${Math.round(s.fog*100)} %`; },
+  update(s,dt){
+    const target = s.top==='ice'?8 : s.top==='hot'?38 : 22; s.topT+= (target-s.topT)*dt*.8;
+    s.capT=Math.max(0,s.capT-dt);
+    if(s.stick>0){ s.stick-=dt; if(s.stick>.6 && Math.random()<dt*30) s.smokeP.push({ x:rand(-6,6), y:-60, vx:rand(-10,10), vy:rand(-40,-20), t:rand(4,7) }); if(s.stick<=0) s.smoke=1; }
+    for(const p of s.smokeP){ p.t-=dt; p.vx+=rand(-1,1)*60*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy*=.99; if(p.x<-86) p.vx=Math.abs(p.vx); if(p.x>86) p.vx=-Math.abs(p.vx); if(p.y<-200){ p.y=-200; p.vy=Math.abs(p.vy)*.3; } }
+    s.smokeP=s.smokeP.filter(p=>p.t>0);
+    const maxV=LITE()?30:60; if(s.vap.length<maxV && Math.random()<dt*18) s.vap.push({ x:rand(-80,80), y:-26, vx:rand(-8,8), vy:rand(-40,-20) });
+    const cold = s.topT<14, rate = (s.smoke>0?1:.3)*(cold?1:0);
+    for(const p of s.vap){ p.vx+=rand(-1,1)*50*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; if(p.x<-86) p.vx=Math.abs(p.vx); if(p.x>86) p.vx=-Math.abs(p.vx); if(p.y<-196){ p.y=-196; p.vy=Math.abs(p.vy); } if(p.y>-24){ p.y=-24; p.vy=-Math.abs(p.vy); }
+      if(rate>0 && p.y<-110 && Math.random()<dt*2.2*rate){ p.dead=true; s.fogP.push({ x:p.x, y:p.y, r:rand(6,14), vx:rand(-6,6), vy:rand(-4,4) }); } }
+    s.vap=s.vap.filter(p=>!p.dead);
+    const maxF=LITE()?50:110; if(s.fogP.length>maxF) s.fogP.splice(0,s.fogP.length-maxF);
+    if(s.top==='hot') s.fogP.splice(0,Math.ceil(s.fogP.length*dt*.8));
+    for(const f of s.fogP){ f.x+=f.vx*dt; f.y+=f.vy*dt+ (f.y<-60?3*dt:0); if(f.x<-80||f.x>80) f.vx*=-1; if(f.y<-190) f.vy=Math.abs(f.vy); if(f.y>-30) f.vy=-Math.abs(f.vy); }
+    s.fog=clamp(s.fogP.length/(maxF*.7),0,1);
+  },
+  draw(c,s,t){
+    labWall(c); benchD(c,380);
+    const cx=340, by=392;
+    c.save(); c.translate(cx,by);
+    /* 병 뒤쪽 */
+    c.fillStyle='rgba(220,238,248,.35)'; rr(c,-100,-230,200,230,24); c.fill();
+    /* 물 */
+    c.fillStyle='rgba(140,200,240,.55)'; rr(c,-96,-30,192,28,10); c.fill();
+    for(const p of s.vap) vapD(c,p,.7);
+    for(const p of s.smokeP){ c.globalAlpha=clamp(p.t/5,0,.5); c.fillStyle='#9aa3ab'; c.beginPath(); c.arc(p.x,p.y,6+ (7-p.t)*1.5,0,TAU); c.fill(); } c.globalAlpha=1;
+    for(const f of s.fogP){ c.globalAlpha=.32; c.fillStyle='#fff'; c.beginPath(); c.arc(f.x,f.y,f.r,0,TAU); c.fill(); } c.globalAlpha=1;
+    if(s.fog>0){ c.fillStyle=`rgba(255,255,255,${s.fog*.35})`; rr(c,-96,-226,192,196,20); c.fill(); }
+    /* 병 테두리 · 반사 */
+    c.strokeStyle='rgba(120,160,185,.9)'; c.lineWidth=4; rr(c,-100,-230,200,230,24); c.stroke();
+    c.fillStyle='rgba(255,255,255,.45)'; rr(c,-82,-210,12,170,6); c.fill();
+    c.fillStyle='rgba(200,225,240,.8)'; rr(c,-70,-246,140,20,8); c.fill(); c.strokeStyle='rgba(120,160,185,.9)'; c.lineWidth=3; c.stroke();
+    /* 향 */
+    if(s.stick>0){ c.strokeStyle='#8a5a33'; c.lineWidth=4; c.beginPath(); c.moveTo(20,-300); c.lineTo(0,-60); c.stroke(); c.fillStyle='#ff7a3c'; c.beginPath(); c.arc(0,-60,4,0,TAU); c.fill(); }
+    /* 지퍼 백 */
+    if(s.top){ const ice=s.top==='ice'; c.fillStyle= ice?'rgba(225,244,255,.9)':'rgba(255,215,190,.9)'; rr(c,-86,-292,172,52,14); c.fill(); c.strokeStyle= ice?'#7fb8dd':'#e39a74'; c.lineWidth=3; c.stroke(); c.fillStyle= ice?'#7fb8dd':'#e39a74'; c.fillRect(-86,-286,172,5);
+      if(ice){ c.fillStyle='#fff'; for(let i=0;i<5;i++){ rr(c,-66+i*28,-270,20,18,4); c.fill(); } } else { c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=3; for(let i=0;i<3;i++){ const ph=(t*.7+i*.33)%1; c.globalAlpha=1-ph; c.beginPath(); c.moveTo(-40+i*40,-296-ph*30); c.quadraticCurveTo(-30+i*40,-306-ph*30,-40+i*40,-316-ph*30); c.stroke(); } c.globalAlpha=1; } }
+    /* 온도계 */
+    thermo(c,122,-230,120,s.topT,0,40,false); label(c,152,-248,`윗부분 ${Math.round(s.topT)} ℃`,{ s:13, col:s.topT<14?'#1d5e96':s.topT>30?'#c2401f':'#1f3347' });
+    c.restore();
+    label(c,340,414,'미지근한 물이 담긴 집기병',{ s:13 });
+    if(s.capT>0) label(c,340,26,s.cap,{ s:14, a:Math.min(1,s.capT) });
+    else if(s.fog>.6) label(c,340,26,'집기병 안이 뿌옇게 흐려졌어요',{ s:14 });
+  }
+};
+
+/* ── 5. 이슬과 안개 (정지 장면) ── */
+SCN.dewfog={
+  title:'이른 아침 들판', tip:'풀잎에 맺힌 것과 들판에 떠 있는 것을 비교해 봐요.',
+  init(){ return {}; }, tools(){ return []; }, use(){}, goals:{}, msg(){ return '🌅 이른 아침 · 기온 9 ℃'; }, update(){},
+  draw(c,s,t){
+    skyG(c,'#b9c9e6','#ffe0c7'); sunD(c,560,250,26,t,.8);
+    c.fillStyle='#a7b7c9'; c.beginPath(); c.moveTo(0,220); c.lineTo(120,150); c.lineTo(230,215); c.lineTo(350,140); c.lineTo(480,220); c.lineTo(IW,170); c.lineTo(IW,300); c.lineTo(0,300); c.fill();
+    c.fillStyle='#8fbf8f'; c.fillRect(0,270,IW,IH-270);
+    /* 안개 */
+    for(let i=0;i<14;i++){ const x=((i*83+t*10)%(IW+160))-80, y=280+(i%3)*14; c.globalAlpha=.55; c.fillStyle='#fff'; c.beginPath(); c.ellipse(x,y,90,20,0,0,TAU); c.fill(); } c.globalAlpha=1;
+    c.fillStyle='rgba(255,255,255,.35)'; c.fillRect(0,262,IW,60);
+    /* 잎 */
+    c.save(); c.translate(150,380); c.rotate(-.35); c.fillStyle='#3fae7f'; c.beginPath(); c.ellipse(0,0,120,46,0,0,TAU); c.fill(); c.strokeStyle='#2c8a62'; c.lineWidth=4; c.beginPath(); c.moveTo(-110,0); c.lineTo(110,0); c.stroke(); c.restore();
+    for(const [x,y,r] of [[90,392,7],[140,372,9],[190,352,6],[120,405,5],[210,370,8],[168,398,6]]) drop(c,x,y,r,1);
+    c.strokeStyle='#ff7a59'; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(210,360); c.lineTo(300,330); c.stroke(); c.beginPath(); c.moveTo(470,292); c.lineTo(520,240); c.stroke(); c.setLineDash([]);
+    tag(c,314,324,'㉠'); tag(c,530,228,'㉡');
+    label(c,340,26,'🌅 맑은 날 이른 아침의 들판',{ s:14 });
+  }
+};
+
+/* ── 6. 안개와 구름 (공기 덩어리) ── */
+SCN.parcel={
+  title:'산과 공기 덩어리', tip:'밤이 되게 하면 땅 가까이에서, 공기 덩어리를 올려 보내면 높은 곳에서 무엇이 생기는지 비교해 봐요.',
+  init(){ return { night:0, nightOn:false, fogA:0, go:false, py:0, cloudA:0, vap:newVap(10,-18,-18,18,18) }; },
+  tools(){ const s=SC; return [ { id:'night', kind:'btn', ic:'🌙', label:s.nightOn?'낮이\n되게 하기':'밤이 되게 하기\n(땅 식히기)', on:s.nightOn }, { id:'up', kind:'btn', ic:'⬆️', label:'공기 덩어리\n올려 보내기' }, { id:'reset', kind:'btn', ic:'↺', label:'처음으로' } ]; },
+  use(id){ const s=SC; sfx.tool(); if(id==='reset'){ Object.assign(s,this.init()); return; } if(id==='night'){ s.nightOn=!s.nightOn; return; } if(id==='up'){ s.go=true; s.py=0; sfx.whoosh(); } },
+  goals:{ parcel:s=>s.fogA>=.95 && s.cloudA>=.95 },
+  pT(s){ return Math.round(24-s.py*20); },
+  msg(s){ return `🌡️ 땅 가까이 ${s.nightOn?'10':'24'} ℃ · 공기 덩어리 ${this.pT(s)} ℃ · 높이 ${Math.round(s.py*2000)} m`; },
+  update(s,dt){ s.night=clamp(s.night+(s.nightOn?dt:-dt)*.8,0,1); s.fogA=clamp(s.fogA+(s.nightOn && s.night>.6?dt*.6:-dt*.8),0,1);
+    if(s.go){ s.py=Math.min(1,s.py+dt/4); if(s.py>=1) s.go=false; } if(s.py>.72) s.cloudA=Math.min(1,s.cloudA+dt*.7);
+    for(const p of s.vap) wander(p,dt,-18,-18,18,18,30); },
+  draw(c,s,t){
+    skyG(c,mixC('#5fb1ee','#1b2a45',s.night),mixC('#d8f0ff','#3b4d6e',s.night)); stars(c,s.night,t); sunD(c,90,60,24,t,1-s.night); moonD(c,100,60,20,s.night);
+    /* 높이 눈금 */
+    c.fillStyle='rgba(255,255,255,.85)'; rr(c,10,24,58,350,10); c.fill(); c.fillStyle='#1f3347'; c.font=`800 11px ${FONT}`; c.textAlign='center'; c.textBaseline='middle';
+    for(let i=0;i<=4;i++){ const y=360-i*74; c.fillText(`${i*500}m`,39,y); c.fillStyle='#9fb6c4'; c.fillRect(56,y,8,2); c.fillStyle='#1f3347'; }
+    c.font=`900 12px ${FONT}`; c.fillText('높이',39,38);
+    /* 산 */
+    c.fillStyle=mixC('#6fb58a','#2f5a48',s.night); c.beginPath(); c.moveTo(250,400); c.lineTo(470,120); c.lineTo(IW,330); c.lineTo(IW,IH); c.lineTo(250,IH); c.fill();
+    c.fillStyle='#fff'; c.beginPath(); c.moveTo(470,120); c.lineTo(440,158); c.lineTo(470,150); c.lineTo(500,160); c.fill();
+    c.fillStyle=mixC('#8fcf8f','#35604c',s.night); c.fillRect(70,380,IW-70,IH-380);
+    house(c,120,352,50,34,'#ffe9c7','#e8684a'); house(c,190,356,44,30,'#dff0ff','#4f7fb3');
+    /* 안개 */
+    if(s.fogA>0){ for(let i=0;i<10;i++){ const x=80+((i*70+t*8)%320), y=372+(i%2)*10; c.globalAlpha=.6*s.fogA; c.fillStyle='#fff'; c.beginPath(); c.ellipse(x,y,70,16,0,0,TAU); c.fill(); } c.globalAlpha=1; if(s.fogA>.6) label(c,190,330,'안개 — 지표면 가까이',{ s:14, a:s.fogA }); }
+    /* 공기 덩어리 */
+    const px=lerp(200,480,easeInOut(s.py)), py=lerp(360,96,easeInOut(s.py)), col= mixC('#ffb48a','#8cc8ff',s.py);
+    if(s.go || (s.py>0 && s.py<1) || (s.py===0)){ const a = s.py>.85 ? (1-s.py)/.15 : 1; c.globalAlpha=.55*a; c.fillStyle=col; c.beginPath(); c.arc(px,py,34,0,TAU); c.fill(); c.globalAlpha=a; c.strokeStyle='#fff'; c.lineWidth=2; c.setLineDash([4,4]); c.beginPath(); c.arc(px,py,34,0,TAU); c.stroke(); c.setLineDash([]);
+      for(const p of s.vap){ if(s.py>.72){ drop(c,px+p.x,py+p.y,2.6,a); } else vapD(c,{ x:px+p.x, y:py+p.y },.9*a); }
+      label(c,px,py-48,`${this.pT(s)} ℃`,{ s:13, a }); c.globalAlpha=1; }
+    /* 구름 */
+    if(s.cloudA>0){ puff(c,430,86,.95*s.cloudA+.1,'#ffffff',s.cloudA); puff(c,470,70,.7*s.cloudA+.1,'#f4f8fb',s.cloudA); if(s.cloudA>.6) label(c,470,34,'구름 — 하늘 높은 곳',{ s:14, a:s.cloudA }); }
+    label(c,560,400,'↑ 높이 올라갈수록 기온이 낮아져요',{ s:12 });
+  }
+};
+
+/* ── 7. 공기 기둥 저울 (고기압 · 저기압) ── */
+SCN.columns={
+  title:'공기 기둥 저울', tip:'한쪽은 차갑게, 한쪽은 따뜻하게 해 봐요. 반대로도 해 보고, 둘 다 같게도 해 봐요.',
+  mk(n){ const a=[]; for(let i=0;i<n;i++) a.push({ x:rand(-50,50), y:rand(-180,-10), vx:rand(-1,1), vy:rand(-1,1) }); return a; },
+  init(){ return { L:'room', R:'room', pL:this.mk(34), pR:this.mk(34), tilt:0, calm:0 }; },
+  tools(){ const s=SC; return [ { id:'Lc', kind:'btn', ic:'🧊', label:'왼쪽 공기\n차갑게', on:s.L==='cold' }, { id:'Lw', kind:'btn', ic:'💡', label:'왼쪽 공기\n따뜻하게', on:s.L==='warm' }, { id:'Rc', kind:'btn', ic:'🧊', label:'오른쪽 공기\n차갑게', on:s.R==='cold' }, { id:'Rw', kind:'btn', ic:'💡', label:'오른쪽 공기\n따뜻하게', on:s.R==='warm' }, { id:'reset', kind:'btn', ic:'↺', label:'처음으로' } ]; },
+  use(id){ const s=SC; sfx.tool(); if(id==='reset'){ Object.assign(s,this.init()); return; } const side=id[0], v=id[1]==='c'?'cold':'warm'; s[side]= s[side]===v ? 'room' : v; s.calm=0; },
+  goals:{ columns:s=>((s.L==='cold'&&s.R==='warm')||(s.L==='warm'&&s.R==='cold')) && s.calm>1.2 },
+  want(m){ return m==='cold'?50: m==='warm'?20:34; }, spd(m){ return m==='cold'?28: m==='warm'?120:65; },
+  press(n){ return 1000+(n-34)*3; },
+  msg(s){ return `왼쪽 기압 ${this.press(s.pL.length)} · 오른쪽 기압 ${this.press(s.pR.length)} (상대적인 값)`; },
+  update(s,dt){ s.calm+=dt;
+    for(const [k,m] of [['pL',s.L],['pR',s.R]]){ const a=s[k], w=this.want(m), sp=this.spd(m);
+      if(a.length<w && Math.random()<dt*8) a.push({ x:rand(-40,40), y:-196, vx:rand(-1,1), vy:1 });
+      if(a.length>w && Math.random()<dt*8){ const p=a.find(p=>!p.out); if(p){ p.out=true; p.vy=-2; } }
+      for(const p of a){ const n=Math.hypot(p.vx,p.vy)||1; p.x+=p.vx/n*sp*dt; p.y+=p.vy/n*sp*dt + (m==='cold'?12*dt:0);
+        if(p.out){ if(p.y<-240) p.gone=true; continue; }
+        if(p.x<-54){p.x=-54;p.vx=Math.abs(p.vx);} if(p.x>54){p.x=54;p.vx=-Math.abs(p.vx);} if(p.y>-8){p.y=-8;p.vy=-Math.abs(p.vy);} if(p.y<-190){p.y=-190;p.vy=Math.abs(p.vy);} p.vx+=rand(-.3,.3); p.vy+=rand(-.3,.3); }
+      s[k]=a.filter(p=>!p.gone); }
+    const target=clamp((s.pL.filter(p=>!p.out).length-s.pR.filter(p=>!p.out).length)*.006,-.16,.16); s.tilt+=(target-s.tilt)*dt*2; },
+  draw(c,s,t){
+    labWall(c); benchD(c,410);
+    const cx=340, cy=318, bl=230, a=s.tilt;
+    c.fillStyle='#8aa0b0'; c.beginPath(); c.moveTo(cx-30,410); c.lineTo(cx+30,410); c.lineTo(cx,cy+6); c.fill();
+    c.save(); c.translate(cx,cy); c.rotate(a); c.fillStyle='#5d7486'; rr(c,-bl-20,-6,bl*2+40,12,6); c.fill();
+    for(const [side,k,m] of [[-1,'pL',s.L],[1,'pR',s.R]]){
+      c.save(); c.translate(side*bl,-6); c.rotate(-a);
+      c.fillStyle='rgba(225,240,250,.45)'; c.fillRect(-60,-196,120,196);
+      if(m==='cold'){ c.fillStyle='rgba(140,200,245,.25)'; c.fillRect(-60,-196,120,196); }
+      if(m==='warm'){ c.fillStyle='rgba(255,170,120,.2)'; c.fillRect(-60,-196,120,196); }
+      for(const p of s[k]){ c.fillStyle= m==='cold'?'#3e9ad8': m==='warm'?'#ff7a59':'#6b8aa0'; c.beginPath(); c.arc(p.x,p.y,4,0,TAU); c.fill(); }
+      c.strokeStyle='rgba(120,160,185,.9)'; c.lineWidth=3; c.beginPath(); c.moveTo(-60,-196); c.lineTo(-60,0); c.lineTo(60,0); c.lineTo(60,-196); c.stroke();
+      c.fillStyle='rgba(255,255,255,.4)'; c.fillRect(-50,-186,8,170);
+      if(m==='cold'){ c.fillStyle='#dff2ff'; rr(c,-64,-60,128,26,8); c.fill(); c.fillStyle='#7fb8dd'; c.font=`900 13px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText('🧊 얼음 띠',0,-47); }
+      if(m==='warm'){ c.fillStyle='rgba(255,220,120,.35)'; c.beginPath(); c.moveTo(70,-230); c.lineTo(-70,-60); c.lineTo(70,-60); c.fill(); c.font=`26px ${FONT}`; c.textAlign='center'; c.fillText('💡',74,-232); }
+      c.restore(); }
+    c.restore();
+    /* 기압계 */
+    const gauge=(x,n,name)=>{ const v=clamp((this.press(n)-1000)/60,-1,1); c.fillStyle='#fff'; c.beginPath(); c.arc(x,48,32,Math.PI,TAU); c.fill(); c.strokeStyle='#cfe2ec'; c.lineWidth=3; c.stroke(); c.strokeStyle='#e3eef4'; c.lineWidth=6; c.beginPath(); c.arc(x,48,24,Math.PI,TAU); c.stroke();
+      const ang=Math.PI*1.5+v*1.2; c.strokeStyle='#ff5a3c'; c.lineWidth=3; c.beginPath(); c.moveTo(x,48); c.lineTo(x+Math.cos(ang)*24,48+Math.sin(ang)*24); c.stroke(); c.fillStyle='#1f3347'; c.beginPath(); c.arc(x,48,4,0,TAU); c.fill();
+      label(c,x,68,name,{ s:12 }); };
+    const nL=s.pL.filter(p=>!p.out).length, nR=s.pR.filter(p=>!p.out).length;
+    gauge(cx-bl,nL,'왼쪽 기압계'); gauge(cx+bl,nR,'오른쪽 기압계');
+    if(Math.abs(nL-nR)>=12){ const hi= nL>nR ? cx-bl : cx+bl, lo = nL>nR ? cx+bl : cx-bl; label(c,hi,96,'▲ 기압이 높아요',{ s:13, col:'#1d5e96' }); label(c,lo,96,'▼ 기압이 낮아요',{ s:13, col:'#c2401f' }); }
+    label(c,cx,420,'같은 부피의 공기 · 무거운 쪽으로 저울이 기울어요',{ s:12 });
+  }
+};
+
+/* ── 8. 기상 위성 ── */
+SCN.sat={
+  title:'기상 위성 사진', tip:'위성 사진을 찍고, 구름이 어떻게 움직이는지 살펴봐요.',
+  init(){ return { shot:false, flash:0, view:0 }; },
+  tools(){ return [ { id:'shot', kind:'btn', ic:'🛰️', label:'위성 사진\n찍기' }, { id:'space', kind:'btn', ic:'🌏', label:'우주에서\n보기' } ]; },
+  use(id){ const s=SC; if(id==='shot'){ s.shot=true; s.flash=1; sfx.shutter(); } else { s.shot=false; sfx.tool(); } },
+  goals:{ sat:s=>s.shot && s.view>=1 },
+  msg(s){ return s.shot?'🛰️ 기상 위성이 높은 곳에서 찍은 사진':'🌏 지구 위를 도는 기상 위성'; },
+  update(s,dt){ s.flash=Math.max(0,s.flash-dt*1.6); s.view=clamp(s.view+(s.shot?dt*1.5:-dt*2),0,1); },
+  land(c){ c.fillStyle='#6f8a55'; c.beginPath(); c.moveTo(0,0); c.lineTo(420,0); c.lineTo(400,40); c.lineTo(350,70); c.lineTo(330,110); c.lineTo(300,118); c.lineTo(292,150); c.lineTo(318,190); c.lineTo(336,236); c.lineTo(330,290); c.lineTo(312,330); c.lineTo(276,352); c.lineTo(250,340); c.lineTo(236,300); c.lineTo(250,262); c.lineTo(232,226); c.lineTo(250,180); c.lineTo(226,140); c.lineTo(180,130); c.lineTo(120,150); c.lineTo(60,130); c.lineTo(0,150); c.closePath(); c.fill();
+    c.fillStyle='#7f9a63'; c.beginPath(); c.ellipse(270,396,26,10,0,0,TAU); c.fill(); },
+  draw(c,s,t){
+    /* 우주 */
+    skyG(c,'#050b1a','#0d1f3a'); stars(c,1,t);
+    c.fillStyle='#2a6fb0'; c.beginPath(); c.arc(340,900,640,0,TAU); c.fill(); c.fillStyle='rgba(255,255,255,.5)'; for(let i=0;i<6;i++){ c.beginPath(); c.ellipse(120+i*100+Math.sin(t*.2+i)*10,300+(i%2)*20,50,12,.2,0,TAU); c.fill(); }
+    const sx=340+Math.cos(t*.4)*180, sy=120+Math.sin(t*.4)*30;
+    c.save(); c.translate(sx,sy); c.fillStyle='#d9e3ea'; rr(c,-16,-12,32,24,4); c.fill(); c.fillStyle='#3e6fb0'; c.fillRect(-60,-8,38,16); c.fillRect(22,-8,38,16); c.strokeStyle='#9fb6c4'; c.lineWidth=2; c.beginPath(); c.moveTo(0,12); c.lineTo(0,22); c.stroke(); c.restore();
+    label(c,340,26,'🛰️ 기상 위성은 아주 높은 곳에서 지구를 내려다봐요',{ s:13 });
+    if(s.view>0){
+      c.save(); c.globalAlpha=s.view; c.fillStyle='#fff'; rr(c,60,40,560,370,12); c.fill();
+      c.save(); rr(c,72,52,536,346,8); c.clip(); c.translate(72,52);
+      c.fillStyle='#1b4f7a'; c.fillRect(0,0,536,346); this.land(c);
+      /* 구름 (흰 부분) */
+      for(let i=0;i<(LITE()?10:18);i++){ const x=((i*67+t*9)%640)-60, y=40+((i*113)%260), r=26+(i%4)*10; c.globalAlpha=s.view*.82; c.fillStyle='#f4f7fa'; c.beginPath(); c.ellipse(x,y,r*1.6,r*.8,-.3,0,TAU); c.fill(); c.beginPath(); c.ellipse(x+30,y-8,r,r*.6,-.3,0,TAU); c.fill(); }
+      c.globalAlpha=s.view; c.fillStyle='rgba(255,255,255,.9)'; c.font=`900 16px ${FONT}`; c.textAlign='center'; c.fillText('동해',440,200);
+      c.restore();
+      label(c,540,396,'[그림으로 나타낸 기상 위성 사진]',{ s:11 }); c.restore(); }
+    if(s.flash>0){ c.fillStyle=`rgba(255,255,255,${s.flash})`; c.fillRect(0,0,IW,IH); }
+  }
+};
+
+/* ── 9. 고기압·저기압 도장 지도 ── */
+SCN.hl={
+  title:'기압 도장 지도', tip:'H와 L 도장을 여러 곳에 바꿔 찍어 보며 하늘이 어떻게 달라지는지 봐요.',
+  spots:[{ id:'a', x:190, y:230 },{ id:'b', x:490, y:230 }],
+  init(){ return { H:null, L:null, pick:null, aH:0, aL:0 }; },
+  tools(){ const s=SC; return [ { id:'H', kind:'btn', ic:'🔵', label:'H 고기압\n도장', on:s.pick==='H' }, { id:'L', kind:'btn', ic:'🔴', label:'L 저기압\n도장', on:s.pick==='L' }, { id:'reset', kind:'btn', ic:'↺', label:'도장 지우기' } ]; },
+  use(id){ const s=SC; sfx.tool(); if(id==='reset'){ Object.assign(s,this.init()); return; } s.pick = s.pick===id ? null : id; },
+  tap(x,y){ const s=SC; if(!s.pick) return false; for(const p of this.spots){ if(Math.hypot(x-p.x,y-p.y)<80){ const other=s.pick==='H'?'L':'H'; if(s[other]===p.id) s[other]=null; s[s.pick]=p.id; s['a'+s.pick]=0; sfx.stamp(); s.pick=null; renderTools(); return true; } } return false; },
+  goals:{ hl:s=>s.H && s.L && s.aH>=1 && s.aL>=1 },
+  msg(s){ return s.pick ? `👆 지도에서 도장을 찍을 곳(점선 동그라미)을 눌러요` : `H(고기압) ${s.H?'찍음':'아직'} · L(저기압) ${s.L?'찍음':'아직'}`; },
+  update(s,dt){ s.aH=Math.min(1,s.aH+dt*.8); s.aL=Math.min(1,s.aL+dt*.8); },
+  weather(c,x,y,kind,a,t){
+    if(kind==='H'){ c.globalAlpha=a; const g=c.createRadialGradient(x,y-40,10,x,y-40,150); g.addColorStop(0,'rgba(140,210,255,.8)'); g.addColorStop(1,'rgba(140,210,255,0)'); c.fillStyle=g; c.beginPath(); c.arc(x,y-40,150,0,TAU); c.fill(); sunD(c,x+50,y-110,20,t,a);
+      for(let i=0;i<3;i++){ const yy=y-120+((t*30+i*30)%80); arrow(c,x-60+i*40,yy-20,x-60+i*40,yy+10,'#3e9ad8',3,a*.8); } label(c,x,y+70,'대체로 맑아요 ☀️',{ s:14, a }); }
+    else { c.globalAlpha=a; puff(c,x-70,y-110,.9,'#8a98a4',a); puff(c,x-10,y-124,1,'#7d8b96',a);
+      c.strokeStyle='rgba(120,170,220,.9)'; c.lineWidth=2; c.beginPath(); for(let i=0;i<22;i++){ const xx=x-80+(i*9)%150, yy=y-90+((t*160+i*37)%90); c.moveTo(xx,yy); c.lineTo(xx-3,yy+10); } c.stroke();
+      for(let i=0;i<3;i++){ const yy=y-40-((t*30+i*30)%80); arrow(c,x+70+(i-1)*26,yy+10,x+70+(i-1)*26,yy-20,'#ff7a59',3,a*.8); } label(c,x,y+70,'흐리거나 비가 와요 🌧️',{ s:14, a }); }
+    c.globalAlpha=1; },
+  draw(c,s,t){
+    skyG(c,'#cfe8f7','#e8f4ea'); c.fillStyle='#bfe0c3'; c.beginPath(); c.moveTo(40,420); c.bezierCurveTo(60,300,200,280,260,320); c.bezierCurveTo(330,360,380,260,470,280); c.bezierCurveTo(600,300,650,380,640,420); c.closePath(); c.fill();
+    for(const p of this.spots){ const who = s.H===p.id?'H': s.L===p.id?'L':null;
+      if(who) this.weather(c,p.x,p.y,who,who==='H'?s.aH:s.aL,t);
+      if(!who){ c.strokeStyle= s.pick?'#ff7a59':'#8aa0b0'; c.lineWidth=3; c.setLineDash([8,6]); c.beginPath(); c.arc(p.x,p.y,48+(s.pick?Math.sin(t*6)*4:0),0,TAU); c.stroke(); c.setLineDash([]); label(c,p.x,p.y,'도장 찍을 곳',{ s:12 }); }
+      else { const col= who==='H'?'#2f7fd0':'#e04a3a'; c.fillStyle='#fff'; c.beginPath(); c.arc(p.x,p.y,34,0,TAU); c.fill(); c.strokeStyle=col; c.lineWidth=5; c.stroke(); c.fillStyle=col; c.font=`900 38px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText(who,p.x,p.y+2); } }
+    label(c,340,26,'🗺️ 날씨 지도',{ s:14 });
+  }
+};
+
+/* ── 10. 관측 자료 지도 ── */
+SCN.table={
+  title:'두 지역의 관측 자료', tip:'관측 결과 보기를 눌러 두 지역의 하늘을 확인해요.',
+  init(){ return { shown:false, a:0 }; },
+  tools(){ return [ { id:'show', kind:'btn', ic:'📡', label:'관측 결과\n보기' } ]; },
+  use(){ const s=SC; if(!s.shown){ s.shown=true; sfx.stamp(); } },
+  goals:{ table:s=>s.shown && s.a>=1 },
+  msg(s){ return s.shown?'📡 관측 결과를 지도에 나타냈어요':'📊 연구 노트의 관측 자료를 읽어 봐요'; },
+  update(s,dt){ if(s.shown) s.a=Math.min(1,s.a+dt*.8); },
+  draw(c,s,t){
+    SCN.hl.draw.call(SCN.hl,c,{ H:s.shown?'a':null, L:s.shown?'b':null, pick:null, aH:s.a, aL:s.a },t);
+    if(!s.shown){ c.fillStyle='rgba(150,165,178,.35)'; c.fillRect(0,0,IW,IH); for(const p of SCN.hl.spots){ c.fillStyle='#fff'; c.beginPath(); c.arc(p.x,p.y,40,0,TAU); c.fill(); c.fillStyle='#8aa0b0'; c.font=`900 40px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText('?',p.x,p.y+2); } }
+    tag(c,SCN.hl.spots[0].x-60,SCN.hl.spots[0].y-50,'㉠','#1f3347'); tag(c,SCN.hl.spots[1].x-60,SCN.hl.spots[1].y-50,'㉡','#1f3347');
+  }
+};
+
+/* ── 11. 모래와 따뜻한 물 상자 (공기의 이동) ── */
+SCN.box={
+  title:'향 연기 상자', tip:'그릇과 향 연기를 놓고 뚜껑을 열어 봐요. 향 연기는 어느 쪽에서 어느 쪽으로 움직이나요?',
+  init(o){ const s={ sand:false, water:false, incense:false, lid:true, lidA:0, lamp:false, sandT:20, waterT:40, smk:[], flowT:0, revT:0, ready:!!o.boxReady, free:!!o.free };
+    if(o.boxReady){ s.sand=s.water=s.incense=true; s.lid=false; s.lidA=1; } return s; },
+  tools(){ const s=SC; if(s.ready && !s.free) return [ { id:'lamp', kind:'btn', ic:'💡', label:'전등으로\n모래 데우기', on:s.lamp } ];
+    const L=[ { id:'sand', kind:'btn', ic:'🏖️', label:'모래 그릇\n놓기', on:s.sand }, { id:'water', kind:'btn', ic:'♨️', label:'따뜻한 물\n그릇 놓기', on:s.water }, { id:'incense', kind:'btn', ic:'🪔', label:'향 연기\n넣기', on:s.incense }, { id:'lid', kind:'btn', ic:'📦', label:s.lid?'뚜껑 열기':'뚜껑 닫기', on:!s.lid } ];
+    if(s.free){ L.push({ id:'lamp', kind:'btn', ic:'💡', label:'전등으로\n모래 데우기', on:s.lamp }, { id:'reset', kind:'btn', ic:'↺', label:'처음으로' }); } return L; },
+  use(id){ const s=SC; sfx.tool(); if(id==='reset'){ Object.assign(s,this.init({ free:s.free })); return; }
+    if(id==='lid'){ s.lid=!s.lid; return; } if(id==='lamp'){ s.lamp=!s.lamp; return; } s[id]=true; },
+  goals:{ box:s=>s.sand && s.water && s.incense && !s.lid && s.flowT>2.2, lamp:s=>s.lamp && s.revT>1.8 },
+  flow(s,x,y){
+    if(!(s.sand && s.water) || s.lidA<.9) return [rand(-8,8), y>60?-14:0];
+    const dT=s.sandT-s.waterT, st=clamp(Math.abs(dT)/15,0,1), hotX= dT>0?190:490, coldX= dT>0?490:190, dir=Math.sign(hotX-coldX);
+    let vx=0, vy=0;
+    if(y>250){ vx=dir*70*st; vy=-4; } else if(y<120){ vx=-dir*55*st; vy=4; }
+    if(Math.abs(x-hotX)<70){ vy-=60*st; vx*=.4; } if(Math.abs(x-coldX)<70){ vy+=45*st; vx*=.4; }
+    return [vx,vy]; },
+  msg(s){ return `🏖️ 모래 ${s.sand?Math.round(s.sandT)+' ℃':'-'} · ♨️ 따뜻한 물 ${s.water?Math.round(s.waterT)+' ℃':'-'} · 뚜껑 ${s.lid?'닫힘':'열림'}`; },
+  update(s,dt){
+    s.lidA=clamp(s.lidA+(s.lid?-dt:dt)*1.5,0,1);
+    s.sandT += ((s.lamp?55:20)-s.sandT)*dt*.5;
+    if(s.incense && Math.random()<dt*(LITE()?14:30)) s.smk.push({ x:340+rand(-4,4), y:352, t:rand(5,8) });
+    for(const p of s.smk){ const [vx,vy]=this.flow(s,p.x,p.y); p.x+=(vx+rand(-10,10))*dt; p.y+=(vy+rand(-6,6))*dt; p.t-=dt; if(p.y<52){ p.y=52; } if(p.y>370) p.y=370; if(p.x<96){ p.x=96; } if(p.x>584) p.x=584; }
+    s.smk=s.smk.filter(p=>p.t>0);
+    const moving = s.sand && s.water && s.incense && s.lidA>.9; s.flowT = moving ? s.flowT+dt : 0;
+    s.revT = moving && s.sandT>s.waterT+5 ? s.revT+dt : 0;
+  },
+  draw(c,s,t){
+    labWall(c); benchD(c,400);
+    /* 상자 */
+    c.fillStyle='#10161c'; c.fillRect(90,40,500,340);
+    c.strokeStyle='rgba(180,210,230,.9)'; c.lineWidth=4; c.strokeRect(90,40,500,340);
+    for(const p of s.smk){ c.globalAlpha=clamp(p.t/6,0,.55); c.fillStyle='#d9dee2'; c.beginPath(); c.arc(p.x,p.y,5+(8-p.t)*1.2,0,TAU); c.fill(); } c.globalAlpha=1;
+    /* 그릇 */
+    const bowlD=(x,fill,txt,T,col)=>{ c.fillStyle='rgba(255,255,255,.2)'; rr(c,x-70,318,140,56,10); c.fill(); if(fill){ c.fillStyle=fill; rr(c,x-64,330,128,40,8); c.fill(); } c.strokeStyle='rgba(255,255,255,.6)'; c.lineWidth=2; rr(c,x-70,318,140,56,10); c.stroke();
+      if(txt){ label(c,x,300,`${txt} ${Math.round(T)} ℃`,{ s:13, col }); } };
+    bowlD(190, s.sand?'#e3c98f':null, s.sand?'🏖️ 모래':'', s.sandT, s.sandT>s.waterT?'#c2401f':'#1d5e96');
+    if(s.sand){ c.fillStyle='rgba(180,150,90,.8)'; for(let i=0;i<24;i++) c.fillRect(132+(i*37)%116,334+(i*13)%30,2,2); }
+    bowlD(490, s.water?'rgba(255,170,120,.7)':null, s.water?'♨️ 따뜻한 물':'', s.waterT, s.waterT>s.sandT?'#c2401f':'#1d5e96');
+    if(s.water){ c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=2; for(let i=0;i<3;i++){ const ph=(t*.6+i*.33)%1; c.globalAlpha=(1-ph)*.6; c.beginPath(); c.moveTo(460+i*30,316-ph*30); c.quadraticCurveTo(470+i*30,306-ph*30,460+i*30,296-ph*30); c.stroke(); } c.globalAlpha=1; }
+    c.fillStyle='rgba(255,255,255,.25)'; rr(c,316,344,48,30,8); c.fill(); if(s.incense){ c.strokeStyle='#8a5a33'; c.lineWidth=3; c.beginPath(); c.moveTo(340,370); c.lineTo(340,350); c.stroke(); c.fillStyle='#ff7a3c'; c.beginPath(); c.arc(340,350,3,0,TAU); c.fill(); }
+    if(s.lamp){ c.fillStyle='rgba(255,220,120,.25)'; c.beginPath(); c.moveTo(150,60); c.lineTo(110,318); c.lineTo(270,318); c.lineTo(230,60); c.fill(); c.font=`30px ${FONT}`; c.textAlign='center'; c.fillText('💡',190,80); }
+    /* 뚜껑 */
+    const lx=90+s.lidA*420; c.fillStyle='rgba(200,225,240,.9)'; c.fillRect(lx,26,500,14); c.strokeStyle='#7fa3ba'; c.lineWidth=2; c.strokeRect(lx,26,500,14);
+    label(c,340,410,'뒷면이 검은색인 투명한 상자',{ s:12 });
+  }
+};
+
+/* ── 12. 바닷가 (해풍 · 육풍) ── */
+SCN.coast={
+  title:'바닷가의 낮과 밤', tip:'낮과 밤을 여러 번 바꿔 보며 깃발, 굴뚝 연기, 돛단배, 바람 화살표를 살펴봐요.',
+  init(o){ return { night:false, n:0, toggles:0, since:0, hide:!!o.hideInd, streak:[], boat:0 }; },
+  tools(){ const s=SC; return [ { id:'dn', kind:'btn', ic:s.night?'☀️':'🌙', label:s.night?'낮으로\n바꾸기':'밤으로\n바꾸기' } ]; },
+  use(){ const s=SC; s.night=!s.night; s.toggles++; s.since=0; sfx.tool(); sfx.whoosh(); },
+  goals:{ daynight:s=>s.toggles>=1 && s.since>=1.6 && !s.hide, night:s=>s.night && s.n>=.95 && s.since>=1.2 },
+  temps(s){ const n=s.n; return { land:lerp(30,18,n), sea:lerp(24,22,n) }; },
+  msg(s){ const T=this.temps(s); return s.hide ? '🤔 바람의 방향을 예상해 봐요' : `${s.night?'🌙 밤':'☀️ 낮'} · 육지 ${Math.round(T.land)} ℃ · 바다 ${Math.round(T.sea)} ℃ · ${s.n<.5?'해풍: 바다 → 육지':'육풍: 육지 → 바다'}`; },
+  reveal(s){ s.hide=false; },
+  update(s,dt){ s.n=clamp(s.n+(s.night?dt:-dt)*.9,0,1); s.since+=dt;
+    const dir = s.hide ? 0 : (s.n<.5 ? -1 : 1), str = s.hide?0:Math.abs(s.n-.5)*2;
+    s.boat = clamp(s.boat + dir*str*dt*14, -40, 60);
+    if(!s.hide && s.streak.length<(LITE()?12:26) && Math.random()<dt*14) s.streak.push({ x: dir<0? rand(360,680): rand(0,320), y:rand(250,320), t:0 });
+    for(const p of s.streak){ p.x+=dir*str*120*dt; p.t+=dt; } s.streak=s.streak.filter(p=>p.t<2.4 && p.x>-40 && p.x<IW+40); },
+  draw(c,s,t){
+    const n=s.n; skyG(c,mixC('#5fb1ee','#101c34',n),mixC('#d8f0ff','#2a3d5c',n),330); stars(c,n,t); sunD(c,110,70,28,t,1-n); moonD(c,560,66,22,n);
+    /* 바다 */
+    c.fillStyle=mixC('#3e9ad8','#16324f',n); c.fillRect(330,300,IW-330,IH-300);
+    c.strokeStyle='rgba(255,255,255,.4)'; c.lineWidth=2; for(let i=0;i<8;i++){ const y=320+i*14; c.beginPath(); for(let x=340;x<IW;x+=20) c.lineTo(x,y+Math.sin(x*.05+t*2+i)*3); c.stroke(); }
+    /* 땅 */
+    c.fillStyle=mixC('#8fcf8f','#2f5a48',n); c.beginPath(); c.moveTo(0,300); c.lineTo(300,300); c.quadraticCurveTo(340,330,360,IH); c.lineTo(0,IH); c.fill();
+    c.fillStyle=mixC('#f1dfb0','#6e6450',n); c.beginPath(); c.moveTo(250,300); c.quadraticCurveTo(320,300,350,330); c.lineTo(372,IH); c.lineTo(300,IH); c.quadraticCurveTo(290,360,250,300); c.fill();
+    house(c,40,256,80,48,'#ffe9c7','#e8684a'); house(c,140,262,70,42,'#dff0ff','#4f7fb3');
+    const dir = s.hide ? 0 : (n<.5 ? -1 : 1), str = s.hide?0:Math.abs(n-.5)*2;
+    /* 굴뚝 연기 */
+    c.fillStyle='#8a6a55'; c.fillRect(90,212,12,30);
+    for(let i=0;i<6;i++){ const ph=(t*.4+i/6)%1; c.globalAlpha=(1-ph)*.6; c.fillStyle='#e8eef2'; c.beginPath(); c.arc(96+dir*str*ph*90, 206-ph*70, 6+ph*10,0,TAU); c.fill(); } c.globalAlpha=1;
+    /* 깃발 */
+    c.strokeStyle='#44576a'; c.lineWidth=3; c.beginPath(); c.moveTo(270,300); c.lineTo(270,220); c.stroke();
+    c.fillStyle='#ff7a59'; c.save(); c.translate(270,224); if(str<.1){ c.beginPath(); c.moveTo(0,0); c.lineTo(8,34); c.lineTo(0,34); c.fill(); } else { c.scale(dir,1); c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(22,Math.sin(t*9)*4,44,4); c.lineTo(44,24); c.quadraticCurveTo(22,20+Math.sin(t*9+1)*4,0,26); c.fill(); } c.restore();
+    /* 돛단배 */
+    const bx=520+s.boat, by=324+Math.sin(t*2)*3; c.fillStyle='#8a5a33'; c.beginPath(); c.moveTo(bx-30,by); c.lineTo(bx+30,by); c.lineTo(bx+20,by+12); c.lineTo(bx-20,by+12); c.fill(); c.strokeStyle='#44576a'; c.lineWidth=2; c.beginPath(); c.moveTo(bx,by); c.lineTo(bx,by-50); c.stroke();
+    c.fillStyle='#fff'; c.beginPath(); c.moveTo(bx,by-48); c.quadraticCurveTo(bx+dir*str*26+(str<.1?14:0),by-26,bx,by-4); c.fill();
+    label(c,160,410,'육지',{ s:14 }); label(c,520,410,'바다',{ s:14 });
+    if(!s.hide){
+      const T=this.temps(s); thermo(c,160,110,90,T.land,10,35); thermo(c,520,110,90,T.sea,10,35);
+      const Hx = n<.5 ? 520 : 160, Lx = n<.5 ? 160 : 520;
+      for(const [x,k,col] of [[Hx,'H','#2f7fd0'],[Lx,'L','#e04a3a']]){ c.fillStyle='#fff'; c.beginPath(); c.arc(x+56,150,20,0,TAU); c.fill(); c.strokeStyle=col; c.lineWidth=4; c.stroke(); c.fillStyle=col; c.font=`900 22px ${FONT}`; c.textAlign='center'; c.textBaseline='middle'; c.fillText(k,x+56,151); }
+      for(const p of s.streak){ c.globalAlpha=Math.min(1,p.t*2)*Math.min(1,(2.4-p.t)); c.strokeStyle='#ffffff'; c.lineWidth=3; c.beginPath(); c.moveTo(p.x,p.y); c.lineTo(p.x-dir*28,p.y); c.stroke(); } c.globalAlpha=1;
+      if(str>.3){ arrow(c, n<.5?470:210, 196, n<.5?210:470, 196, '#ffc94d', 6, str); label(c,340,168, n<.5?'해풍 (바다 → 육지)':'육풍 (육지 → 바다)',{ s:15, col:'#6b4b00', bg:'rgba(255,243,201,.95)' }); }
+    } else label(c,340,210,'🤔 바람은 어느 쪽으로 불까요?',{ s:15 });
+  }
+};
+
+/* ════════════════ 장면 관리 ════════════════ */
+function setScene(id, setup){ SC=Object.assign(SCN[id].init(setup||{}), { id, t:0 }); if(typeof renderTools==='function' && SCREEN==='play') renderTools(); }
+const Scenes={
+  goal(key){ const d=SCN[SC.id]; return !!(d.goals[key] && d.goals[key](SC)); },
+  title(id){ return SCN[id].title; },
+  freeTip(id){ return `🧪 ${esc(SCN[id].title)} — ${esc(SCN[id].tip)}`; },
+  update(dt){ if(!SC) return; SC.t+=dt; SCN[SC.id].update(SC,dt); },
+  onSolved(){ if(SC && SCN[SC.id].reveal) SCN[SC.id].reveal(SC); },
+  tap(x,y){ const d=SCN[SC.id]; if(d.tap && toolsOn()) return d.tap(x-IX,y-IY); return false; }
+};
+function toolsOn(){
+  if(SCREEN!=='play' || PAUSED) return false;
+  if(MODE==='free') return true;
+  if(!G || !G.cur) return false; const q=G.cur.q, ph=G.phase;
+  if(ph==='act' || ph==='after' || ph==='fb' || ph==='fbwait') return true;
+  if(ph==='ask') return !q.act || q.act.when==='before';
+  return false;
+}
+let lastMsg='';
+function renderTools(){
+  if(!SC) return; const box=$('tools'); box.innerHTML=''; const d=SCN[SC.id], list=d.tools(), on=toolsOn();
+  if(!list.length){ box.innerHTML='<div style="font:700 15px var(--font);color:#7b93a3;padding:14px 4px">이 실험은 상자 속 모습을 잘 살펴보고 답을 골라요. 👀</div>'; }
+  let stack=null;
+  for(const tl of list){
+    let el;
+    if(tl.kind==='slider'){
+      el=document.createElement('div'); el.className='sld'; if(tl.wide){ el.style.width='300px'; }
+      el.innerHTML=`<div class="t">${tl.ic} ${esc(tl.label)}</div><div class="v"></div><input type="range" min="0" max="100" step="1"><div class="ends"><span>${esc(tl.ends[0])}</span><span>${esc(tl.ends[1])}</span></div>`;
+      const inp=el.querySelector('input'), v=el.querySelector('.v'); if(tl.wide){ inp.style.width='270px'; el.querySelector('.ends').style.width='270px'; }
+      inp.value=Math.round(tl.get()*100); v.textContent=tl.fmt(); inp.disabled=!on;
+      inp.oninput=()=>{ d.use(tl.id, inp.value/100); v.textContent=tl.fmt(); sfx.tick(); };
+      el._sync=()=>{ inp.value=Math.round(tl.get()*100); v.textContent=tl.fmt(); };
+    } else {
+      el=document.createElement('button'); el.className='tool'+(tl.on?' on':''); el.disabled=!on;
+      el.innerHTML=`<span class="ic">${tl.ic}</span><span>${esc(tl.label).replace(/\n/g,'<br>')}</span>`;
+      el.onclick=()=>{ if(!toolsOn()) return; Sound.ensure(); d.use(tl.id); renderTools(); };
+    }
+    if(tl.kind==='slider' && SC.id==='town' && MODE==='quiz' && G && G.phase==='act' && G.cur.q.act.goal===tl.id) el.classList.add('glow');
+    if(tl.stack){ if(!stack){ stack=document.createElement('div'); stack.style.cssText='display:flex;flex-direction:column;gap:8px'; box.appendChild(stack); } el.style.minWidth='0'; el.style.width='122px'; el.style.height='57px'; el.style.fontSize='14px'; el.style.padding='6px 8px'; stack.appendChild(el); }
+    else box.appendChild(el);
+  }
+  if(list.length && list.length<=4 && MODE==='quiz' && on){ const tip=document.createElement('div'); tip.style.cssText='flex-basis:100%;font:700 14px/1.45 var(--font);color:#5f7a8c;padding:2px 4px'; tip.textContent='👀 '+d.tip; box.appendChild(tip); }
+  lastMsg=''; syncTrayMsg();
+}
+function syncTools(){ $('tools').querySelectorAll('.sld').forEach(e=>{ if(e._sync) e._sync(); }); }
+function syncTrayMsg(){ if(!SC) return; const m=SCN[SC.id].msg(SC); if(m!==lastMsg){ lastMsg=m; $('trayMsg').textContent=m; } }
+
+/* ════════════════ 방 배경 · 유리 상자 ════════════════ */
+function bgCanvas(){
+  if(BG) return BG;
+  const cv=document.createElement('canvas'); cv.width=Math.round(VW*PR); cv.height=Math.round(VH*PR); const c=cv.getContext('2d'); c.scale(PR,PR);
+  const g=c.createLinearGradient(0,0,0,VH); g.addColorStop(0,'#e7f5f1'); g.addColorStop(1,'#cfe6e0'); c.fillStyle=g; c.fillRect(0,0,VW,VH);
+  c.fillStyle='rgba(31,51,71,.04)'; for(let x=0;x<VW;x+=48) c.fillRect(x,0,1,VH); for(let y=0;y<VH;y+=48) c.fillRect(0,y,VW,1);
+  /* 선반 · 플라스크 */
+  c.fillStyle='#b8cfd8'; c.fillRect(0,54,VW,5);
+  const flask=(x,y,col,h)=>{ c.fillStyle='rgba(255,255,255,.7)'; c.beginPath(); c.moveTo(x-6,y-h); c.lineTo(x+6,y-h); c.lineTo(x+6,y-h*.55); c.lineTo(x+18,y); c.lineTo(x-18,y); c.lineTo(x-6,y-h*.55); c.fill(); c.fillStyle=col; c.beginPath(); c.moveTo(x-12,y-10); c.lineTo(x+12,y-10); c.lineTo(x+18,y); c.lineTo(x-18,y); c.fill(); };
+  flask(1180,54,'#7fd3ff',40); flask(1220,54,'#ff9ec4',32); flask(740,54,'#ffd36e',36);
+  /* 바닥 받침대 */
+  c.fillStyle='#b9ccd6'; rr(c,BX-6,BY+BH-4,BW+12,14,7); c.fill();
+  BG=cv; return cv;
+}
+function drawBoxFrame(c,t){
+  /* 유리 반사 */
+  c.save(); rr(c,IX,IY,IW,IH,10); c.clip();
+  c.fillStyle='rgba(255,255,255,.10)'; c.beginPath(); c.moveTo(IX+60,IY); c.lineTo(IX+150,IY); c.lineTo(IX+40,IY+IH); c.lineTo(IX-50,IY+IH); c.fill();
+  c.fillStyle='rgba(255,255,255,.06)'; c.beginPath(); c.moveTo(IX+180,IY); c.lineTo(IX+210,IY); c.lineTo(IX+100,IY+IH); c.lineTo(IX+70,IY+IH); c.fill();
+  const g=c.createLinearGradient(0,IY,0,IY+30); g.addColorStop(0,'rgba(255,255,255,.35)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(IX,IY,IW,30);
+  c.restore();
+  /* 금속 테 */
+  const mg=c.createLinearGradient(BX,BY,BX,BY+BH); mg.addColorStop(0,'#e9f0f4'); mg.addColorStop(.5,'#b7c7d1'); mg.addColorStop(1,'#8fa3b1');
+  c.strokeStyle=mg; c.lineWidth=12; rr(c,BX+6,BY+6,BW-12,BH-12,16); c.stroke();
+  c.strokeStyle='rgba(31,51,71,.35)'; c.lineWidth=1.5; rr(c,IX,IY,IW,IH,10); c.stroke();
+  for(const [x,y] of [[BX+14,BY+14],[BX+BW-14,BY+14],[BX+14,BY+BH-14],[BX+BW-14,BY+BH-14]]){ c.fillStyle='#7f95a4'; c.beginPath(); c.arc(x,y,4,0,TAU); c.fill(); }
+  /* 이름표 */
+  const nm=`날씨 상자 · ${SC?SCN[SC.id].title:''}`; c.font=`900 13px ${FONT}`; const nw=c.measureText(nm).width+28; c.fillStyle='#1f3347'; rr(c,BX+BW/2-nw/2,BY+BH-16,nw,26,8); c.fill(); c.fillStyle='#ffd36e'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(nm,BX+BW/2,BY+BH-3);
+}
+function drawBoxParts(c,dt){ for(const p of Box.parts){ p.t-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=260*dt; c.globalAlpha=clamp(p.t*1.5,0,1); c.fillStyle=p.c; c.save(); c.translate(p.x,p.y); c.rotate(p.t*6); c.fillRect(-p.s/2,-p.s/2,p.s,p.s); c.restore(); } c.globalAlpha=1; Box.parts=Box.parts.filter(p=>p.t>0); }
+
+/* ════════════════ 뭉게 박사 얼굴 · 등급 배지 ════════════════ */
+function drawFace(happy){
+  const cv=$('face'), g=cv.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,116,116); g.scale(2,2);
+  g.fillStyle='#fff'; g.strokeStyle='#9cc9ee'; g.lineWidth=2;
+  g.beginPath(); g.arc(18,34,12,0,TAU); g.arc(29,24,15,0,TAU); g.arc(42,32,12,0,TAU); g.arc(30,40,13,0,TAU); g.fill(); g.stroke();
+  g.fillStyle='#fff'; g.beginPath(); g.arc(18,34,11,0,TAU); g.arc(29,24,14,0,TAU); g.arc(42,32,11,0,TAU); g.arc(30,40,12,0,TAU); g.fill();
+  g.strokeStyle='#1f3347'; g.lineWidth=2; g.fillStyle='rgba(127,211,255,.35)'; for(const x of [23,36]){ g.beginPath(); g.arc(x,30,5.5,0,TAU); g.fill(); g.stroke(); } g.beginPath(); g.moveTo(28.5,30); g.lineTo(30.5,30); g.stroke();
+  g.fillStyle='#1f3347'; g.beginPath(); g.arc(23,31,1.8,0,TAU); g.arc(36,31,1.8,0,TAU); g.fill();
+  g.beginPath(); if(happy){ g.arc(29.5,38,4,.1*Math.PI,.9*Math.PI); } else { g.moveTo(26,40); g.quadraticCurveTo(29.5,37,33,40); } g.stroke();
+  g.fillStyle='#ff9ec4'; g.globalAlpha=.6; g.beginPath(); g.arc(17,37,2.5,0,TAU); g.arc(42,37,2.5,0,TAU); g.fill(); g.globalAlpha=1;
+  g.fillStyle='#3e9ad8'; g.beginPath(); g.moveTo(22,52); g.lineTo(30,48); g.lineTo(38,52); g.lineTo(30,56); g.fill();
+}
+function drawBadge(acc, r){
+  const cv=$('badgeCv'), g=cv.getContext('2d'); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,440,440); g.scale(2,2);
+  const cx=110, cy=110;
+  g.fillStyle='rgba(255,255,255,.12)'; g.beginPath(); g.arc(cx,cy,100,0,TAU); g.fill();
+  g.strokeStyle='rgba(255,255,255,.18)'; g.lineWidth=14; g.beginPath(); g.arc(cx,cy,86,0,TAU); g.stroke();
+  const gr=g.createLinearGradient(20,20,200,200); gr.addColorStop(0,'#7fd3ff'); gr.addColorStop(.5,'#b99cff'); gr.addColorStop(1,'#ffd36e');
+  g.strokeStyle=gr; g.lineCap='round'; g.beginPath(); g.arc(cx,cy,86,-Math.PI/2,-Math.PI/2+TAU*acc/100); g.stroke();
+  g.fillStyle='#fff'; g.font=`64px ${FONT}`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(r.icon,cx,cy-12);
+  g.fillStyle='#fff'; g.font=`900 26px ${FONT}`; g.fillText(`${acc}%`,cx,cy+46); g.font=`700 11px ${FONT}`; g.fillStyle='rgba(255,255,255,.8)'; g.fillText('한 번에 맞힌 비율',cx,cy+68);
+}
+
+/* ════════════════ 그리기 · 갱신 루프 ════════════════ */
+let lastT=0, syncT=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min(.05, lastT?(now-lastT)/1000:0); lastT=now; const t=now/1000;
+  update(dt);
+  const c=CX; c.setTransform(PR,0,0,PR,0,0);
+  c.drawImage(bgCanvas(),0,0,VW,VH);
+  c.save();
+  if(Box.shake>0 && !save.lite) c.translate(rand(-1,1)*Box.shake*8, rand(-1,1)*Box.shake*8);
+  c.save(); rr(c,IX,IY,IW,IH,10); c.clip(); c.translate(IX,IY);
+  if(SC) SCN[SC.id].draw(c,SC,SC.t);
+  drawBoxParts(c,dt);
+  c.restore();
+  drawBoxFrame(c,t);
+  c.restore();
+}
+function update(dt){
+  Box.shake=Math.max(0,Box.shake-dt);
+  if(PAUSED) return;
+  Scenes.update(dt);
+  syncT+=dt; if(syncT>.15 && SCREEN==='play'){ syncT=0; syncTrayMsg(); if(SC && SC.id==='town' && SC.demo) syncTools(); }
+  if(SCREEN!=='play' || MODE!=='quiz' || !G || !G.cur) return;
+  const c=G.cur;
+  if(G.phase==='act' || G.phase==='ask'){ c.secs+=dt; G.st.secs+=dt; }
+  else if(G.phase==='after' || G.phase==='fb') G.st.secs+=dt;
+  if(c.locked>0){ c.locked-=dt; const l=$('lockT'); if(c.locked<=0){ c.locked=0; if(l) l.remove(); renderAnswers(); syncSubmit(); } else if(l) l.textContent=`${Math.ceil(c.locked)}초 뒤에 다시 골라요`; }
+  checkGoal(dt);
+}
+
+/* ════════════════ 조작 ════════════════ */
+function togglePause(){
+  if(SCREEN!=='play') return;
+  if(!PAUSED){ PAUSED=true; Speech.stop(); $('scrPause').classList.remove('hidden'); syncPauseBtns(); sfx.click(); }
+  else { PAUSED=false; $('scrPause').classList.add('hidden'); sfx.click(); }
+  renderTools();
+}
+function syncPauseBtns(){ $('bPauseSound').textContent=save.sfx?'🔊 효과음 켜짐':'🔇 효과음 꺼짐'; $('optLite2').checked=save.lite; }
+function readAloud(){
+  if(SCREEN!=='play') return;
+  let txt;
+  if(MODE==='free') txt=`${Scenes.title(SC.id)}. ${SCN[SC.id].tip}`;
+  else { const q=G.cur.q; txt=q.q+' '+(q.ctx?q.ctx.join(' '):'')+' ';
+    if(G.phase==='act') txt=q.act.text.replace(/<[^>]+>/g,'')+' '+txt;
+    if(q.type==='one') txt+=LAYOUT[q.no].map((oi,k)=>`${k+1}번, ${q.opts[oi]}`).join(' ');
+    if(q.type==='ox') txt+=q.items.join(' ');
+    if(q.type==='assign') txt+='보기: '+BANK[q.no].join(', ');
+    G.st.reads++; }
+  if(!Speech.say(txt)) toast('이 브라우저는 읽어 주기를 지원하지 않아요');
+}
+window.addEventListener('keydown', e=>{
+  if(e.target && e.target.tagName==='INPUT' && e.target.type!=='range') return;
+  Sound.ensure();
+  if(e.code==='Escape' || e.code==='KeyP'){ e.preventDefault(); if(!$('scrHow').classList.contains('hidden')){ $('bHowOk').click(); return; } if(SCREEN==='play') togglePause(); return; }
+  if(SCREEN!=='play' || PAUSED) return;
+  if(!$('scrCh').classList.contains('hidden')){ if(e.code==='Enter'||e.code==='Space'){ e.preventDefault(); const b=$('bChNext')||$('bChReport'); if(b) b.click(); } return; }
+  if(e.code==='KeyR'){ readAloud(); return; }
+  if(MODE!=='quiz' || !G || !G.cur) return;
+  if(e.code==='Enter' || (e.code==='Space' && e.target.type!=='range')){ e.preventDefault(); if(G.phase==='fb') goNext(); else submit(); return; }
+  const m=e.code.match(/^(Digit|Numpad)([1-9])$/); if(!m || !canAnswer()) return;
+  const k=+m[2]-1, q=G.cur.q;
+  if(q.type==='one'){ const oi=LAYOUT[q.no][k]; if(oi!==undefined) pickOpt(oi); }
+  else if(q.type==='ox'){ if(k<q.items.length){ const v=G.cur.sel[k]; pickOX(k, v==='O'?'X':'O'); } }
+  else { const w=BANK[q.no][k]; if(w) pickWord(w); }
+});
+window.addEventListener('pointerdown', ()=>Sound.ensure(), true);
+window.addEventListener('blur', ()=>{ if(SCREEN==='play' && !PAUSED) togglePause(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ Speech.stop(); if(SCREEN==='play' && !PAUSED) togglePause(); } });
+document.addEventListener('contextmenu', e=>e.preventDefault());
+CV.addEventListener('pointerdown', e=>{
+  const r=CV.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*VW, y=(e.clientY-r.top)/r.height*VH;
+  if(SCREEN==='play' && SC && x>IX && x<IX+IW && y>IY && y<IY+IH) Scenes.tap(x,y);
+});
+
+/* ════════════════ 시작 ════════════════ */
+$('nick').value=save.nick||''; $('nick').addEventListener('input', e=>{ save.nick=e.target.value; writeSave(); });
+function syncOpts(){ $('optSfx').checked=save.sfx; $('optLite').checked=save.lite; $('optLite2').checked=save.lite; }
+syncOpts();
+$('optSfx').onchange=e=>{ save.sfx=e.target.checked; writeSave(); updateTopSafe(); };
+$('optLite').onchange=e=>{ save.lite=e.target.checked; writeSave(); PR=0; fit(); syncOpts(); };
+$('optLite2').onchange=e=>{ save.lite=e.target.checked; writeSave(); PR=0; fit(); syncOpts(); };
+function updateTopSafe(){ if(SCREEN==='play') updateTop(); }
+function openHow(after){ $('scrHow').classList.remove('hidden'); $('bHowOk').onclick=()=>{ sfx.click(); $('scrHow').classList.add('hidden'); if(after) after(); }; }
+$('bStart').onclick=()=>{ Sound.ensure(); sfx.click(); if(!save.seenHow){ save.seenHow=true; writeSave(); openHow(()=>showScreen('map')); } else showScreen('map'); };
+$('bHow').onclick=()=>{ sfx.click(); openHow(); };
+$('bMapBack').onclick=()=>{ sfx.click(); showScreen('title'); };
+$('bMapReport').onclick=()=>{ sfx.click(); showFinal(); };
+$('bSubmit').onclick=()=>submit();
+$('bRead').onclick=()=>readAloud();
+$('bSound').onclick=()=>{ save.sfx=!save.sfx; writeSave(); updateTop(); syncOpts(); if(save.sfx) sfx.click(); };
+$('bPause').onclick=()=>togglePause();
+$('bResume').onclick=()=>togglePause();
+$('bPauseSound').onclick=()=>{ save.sfx=!save.sfx; writeSave(); syncPauseBtns(); updateTop(); syncOpts(); };
+$('bPauseHow').onclick=()=>{ $('scrPause').classList.add('hidden'); openHow(()=>$('scrPause').classList.remove('hidden')); };
+$('bQuit').onclick=()=>{ sfx.click(); showScreen('map'); };
+document.querySelectorAll('.tabs [data-t]').forEach(b=>b.onclick=()=>{ sfx.click(); setTab(b.dataset.t); });
+$('bAgain').onclick=()=>{ sfx.click(); RUN=[null,null,null,null]; startChapter(0); };
+$('bFinalMap').onclick=()=>{ sfx.click(); showScreen('map'); };
+$('bFinalTitle').onclick=()=>{ sfx.click(); showScreen('title'); };
+drawFace(true);
+fit(); showScreen('title'); requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>
