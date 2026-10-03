@@ -134,7 +134,13 @@ button:disabled{ cursor:default; }
 #tBest{ position:absolute; left:16px; top:20px; padding:6px 12px; border-radius:14px; background:rgba(40,24,12,.6); font:900 14px var(--font); color:#ffe08a; }
 #tBest:empty{ display:none; }
 #settings{ position:absolute; right:16px; top:66px; width:230px; padding:14px 16px; border-radius:16px; background:var(--glass); box-shadow:inset 0 0 0 1.5px rgba(232,184,74,.55); display:flex; flex-direction:column; gap:10px; font:800 15px var(--font); animation:pop .2s; }
-#settings label,.opts label{ display:flex; gap:8px; align-items:center; cursor:pointer; } #settings input,.opts input{ width:20px; height:20px; accent-color:#e89a1c; }
+#settings label,.opts label{ position:relative; display:flex; gap:8px; align-items:center; cursor:pointer; }
+/* 켜고 끄는 놋쇠 스위치 (웹 기본 체크박스 대신) */
+#settings input,.opts input{ position:absolute; left:0; top:50%; width:1px; height:1px; margin:0; opacity:0; }
+.tg{ position:relative; flex:none; width:46px; height:26px; border-radius:13px; background:#4a3a2a; box-shadow:inset 0 2px 5px rgba(0,0,0,.5), 0 0 0 2px rgba(232,184,74,.5); transition:background .15s; }
+.tg::after{ content:''; position:absolute; left:3px; top:3px; width:20px; height:20px; border-radius:50%; background:radial-gradient(circle at 40% 35%,#fffbe8,#d8c8a8); box-shadow:0 2px 3px rgba(0,0,0,.45); transition:left .15s; }
+input:checked + .tg{ background:linear-gradient(#ffc93a,#e89a1c); } input:checked + .tg::after{ left:23px; }
+input:focus-visible + .tg{ outline:3px solid #7fd0ff; outline-offset:2px; }
 
 /* 하는 법 */
 .how{ width:1140px; }
@@ -219,7 +225,7 @@ button:disabled{ cursor:default; }
   <div id="scrTitle" class="screen">
     <div id="tBest"></div>
     <div id="tGear"><button class="ibtn" id="bGarage" title="차량 기지">🚂</button><button class="ibtn" id="bHow" title="하는 법">📘</button><button class="ibtn" id="bGear" title="설정">⚙️</button></div>
-    <div id="settings" class="hidden"><label><input type="checkbox" id="optSfx"> 🔊 효과음</label><label><input type="checkbox" id="optLite"> 🐢 효과 줄이기</label></div>
+    <div id="settings" class="hidden"><label><input type="checkbox" id="optSfx"><i class="tg"></i> 🔊 효과음</label><label><input type="checkbox" id="optLite"><i class="tg"></i> 🐢 효과 줄이기</label></div>
     <div id="logo"><span class="t0">3학년 2학기 수학 · 4. 분수</span><br><div class="sign"><div class="t1">분수 급행열차</div></div><div class="t2">나누고, 싣고, 태우고 — 분수로 기차를 출발시켜요!</div></div>
     <div id="badge"><div class="ph">🎫</div><div><div class="bt">기관사 승무증 · DRIVER</div><input id="nick" maxlength="12" placeholder="기관사 이름을 적어요"></div></div>
     <div id="tBtns"><button class="gbtn" id="bStart">🚂 운행 시작<small>Enter</small></button></div>
@@ -245,7 +251,7 @@ button:disabled{ cursor:default; }
   <div id="scrPause" class="screen dim hidden">
     <div class="panel pausep"><h2>⏸ 잠깐 쉬어요</h2>
       <button class="gbtn" id="bResume">▶ 계속하기</button><button class="gbtn wood" id="bPauseHow">📘 기관사 수첩</button><button class="gbtn wood" id="bQuit">🏠 처음으로</button>
-      <div class="opts"><label><input type="checkbox" id="optSfx2"> 🔊 효과음</label><label><input type="checkbox" id="optLite2"> 🐢 효과 줄이기</label></div></div>
+      <div class="opts"><label><input type="checkbox" id="optSfx2"><i class="tg"></i> 🔊 효과음</label><label><input type="checkbox" id="optLite2"><i class="tg"></i> 🐢 효과 줄이기</label></div></div>
   </div>
   <div id="scrFinal" class="screen hidden">
     <div class="final">
