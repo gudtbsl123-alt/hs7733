@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>분수 철도 섬 3D 시안</title>
+<style>
+/* 글꼴: Bagel Fat One, Jua — SIL Open Font License 1.1 (쓰는 글자만 골라 넣음) · 3D: three.js r162 (MIT License) */
+@font-face{font-family:"Bagel";src:url(data:font/woff2;base64,__BAGEL__) format("woff2");font-display:block}
+@font-face{font-family:"Jua";src:url(data:font/woff2;base64,__JUA__) format("woff2");font-display:block}
+html,body{margin:0;height:100%;background:#1d3a52;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform:translate(-50%,-50%);transform-origin:50% 50%}
+#gl,#hud{position:absolute;left:0;top:0;width:1280px;height:720px;display:block}
+#nogl{display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#fff6e0;font:28px Jua,sans-serif;background:#2b4686;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="gl"></canvas><canvas id="hud"></canvas><div id="nogl">이 컴퓨터에서는 3D 그래픽을 쓸 수 없어요.<br>2D 화면으로 바꿔 보여 주도록 만들 수 있어요.</div></div>
+<script>
+/* three.js r162 — MIT License, Copyright 2010-2024 three.js authors. 이 게임이 쓰는 부분만 묶어 압축했다(build_3d.sh). */
+__THREE__
+</script>
+<script>
+/* 글꼴용 */ void "이 컴퓨터에서는 3D 그래픽을 쓸 수 없어요. 2D 화면으로 바꿔 보여 주도록 만들 수 있어요.";
+__GAME__
+</script>
+</body>
+</html>
