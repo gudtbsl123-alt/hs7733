@@ -4800,7 +4800,7 @@ function drawHand(g, x, y) { g.save(); g.translate(x, y); g.rotate(-0.4);
 /* 18번: 궤도 위 가·나·다·라 자리 표시 / 20번: 햇빛 화살 */
 function drawOrbitMarks(g, t) {
   const q = S.q; if (S.scene !== 'play' || !q) return;
-  if (q.type === 'tilt') [['가', 3], ['나', 6], ['다', 9], ['라', 12]].forEach(([n, m]) => { const p = project(earthPos(m, tmpV).multiplyScalar(1.3)); p.y += 34; g.save(); g.fillStyle = 'rgba(14,36,34,.9)'; g.beginPath(); circ(g, p.x, p.y - 34, 16); g.fill(); g.strokeStyle = '#ffd24a'; g.lineWidth = 2.5; g.stroke(); g.restore(); txt(g, n, p.x, p.y - 27, { size: 18, font: 'DoHyeon', align: 'center', fill: '#ffd24a' }); });
+  if (q.type === 'tilt') [['가', 3], ['나', 6], ['다', 9], ['라', 12]].forEach(([n, m]) => { const p = project(earthPos(m, tmpV).multiplyScalar(1 + 1.25 / ORBIT_R)); p.y += 20; g.save(); g.fillStyle = 'rgba(14,36,34,.9)'; g.beginPath(); circ(g, p.x, p.y - 34, 16); g.fill(); g.strokeStyle = '#ffd24a'; g.lineWidth = 2.5; g.stroke(); g.restore(); txt(g, n, p.x, p.y - 27, { size: 18, font: 'DoHyeon', align: 'center', fill: '#ffd24a' }); });
   if (q.sunArrows) { const s = project(tmpV.set(0, 0, 0)), e = project(earthGroup.position); for (let i = -1; i <= 1; i++) { const off = i * 34, ax = s.x + (e.x - s.x) * 0.3, ay = s.y + (e.y - s.y) * 0.3 + off, bx = s.x + (e.x - s.x) * 0.7, by = s.y + (e.y - s.y) * 0.7 + off, ang = Math.atan2(by - ay, bx - ax), sh = ((t * 40) % 20);
     g.save(); g.strokeStyle = 'rgba(255,220,140,.85)'; g.lineWidth = 7; g.beginPath(); g.moveTo(ax + Math.cos(ang) * sh, ay + Math.sin(ang) * sh); g.lineTo(bx, by); g.stroke(); g.fillStyle = 'rgba(255,220,140,.95)'; g.beginPath(); g.moveTo(bx + Math.cos(ang) * 16, by + Math.sin(ang) * 16); g.lineTo(bx + Math.cos(ang + 2.4) * 14, by + Math.sin(ang + 2.4) * 14); g.lineTo(bx + Math.cos(ang - 2.4) * 14, by + Math.sin(ang - 2.4) * 14); g.closePath(); g.fill(); g.restore(); } }
 }
@@ -4936,7 +4936,7 @@ const QUESTIONS = [
     switches: [['높아', '낮아'], ['많기', '적기']], answer: [1, 1],
     hint: (c) => c[0] !== 1 ? '지구를 12월로 옮겨 관측소의 남중 고도를 보세요. 여름보다 높나요, 낮나요?' : '남중 고도가 낮으면 햇빛이 비스듬히 넓게 퍼져요. 에너지 계기판을 보세요.',
     explain: '겨울에는 태양의 남중 고도가 낮아 일정한 면적의 지표면이 받는 태양 에너지양이 적어서 추워요.' },
-  { stage: 2, src: '학습지 18번', type: 'tilt', goal: '표와 같은 자전축 상태',
+  { stage: 2, src: '학습지 18번', type: 'tilt', hideLabels: true, lockMonth: 1, goal: '표와 같은 자전축 상태',
     text: '전등 둘레로 지구본을 공전시키며 가~라 자리에서 그림자 길이를 쟀어요. 결과가 가 1.4 cm, 나 0.8 cm, 다 1.4 cm, 라 3.5 cm였어요. 각도계로 이때의 자전축 상태를 맞추고 송신해 주세요.',
     answer: TILT,
     hint: (tl) => tl < 0.5 ? '자전축을 수직으로 두면 네 자리 그림자 길이가 모두 같아요. 표처럼 자리마다 다르려면 어떻게 해야 할까요?' : '각도계 바늘을 다시 확인해 보세요.',
@@ -5000,14 +5000,14 @@ function choiceText(q) {
   if (q.type === 'tilt') return S.tilt < 0.5 ? '자전축이 수직일 때' : '자전축이 기울어졌을 때';
   if (q.type === 'pick') return q.fig === 'photos' ? S.sel + ' (해가 ' + ((S.hot.find((h) => h.label === S.sel) || {}).high ? '높은' : '낮은') + ' 사진)' : S.sel;
   if (q.type === 'cart') return (q.labels ? q.labels[S.sel] + ' ' : '') + (q.graph ? GRAPHS[q.options[S.sel]] + ' 그래프' : q.options[S.sel]);
-  if (q.type === 'toggle') return q.rows ? q.rows.map((r, i) => r.slice(0, 3) + ' ' + q.switches[i][S.sw[i]]).join(', ') : S.sw.map((v, i) => '㉠㉡㉢'[i] + ' ' + q.switches[i][v]).join(', ');
+  if (q.type === 'toggle') return q.rows ? q.rows.map((r, i) => r.split(' ')[0] + ' ' + q.switches[i][S.sw[i]]).join(', ') : S.sw.map((v, i) => '㉠㉡㉢'[i] + ' ' + q.switches[i][v]).join(', ');
   return '';
 }
 function answerText(q) {
   if (q.answerText) return q.answerText;
   if (q.type === 'pick') return q.fig === 'photos' ? '해가 하늘 높이 떠 있는 사진' : q.answer;
   if (q.type === 'cart') return (q.labels ? q.labels[q.answer] + ' ' : '') + (q.graph ? GRAPHS[q.options[q.answer]] + ' 그래프' : q.options[q.answer]);
-  if (q.type === 'toggle') return q.rows ? q.rows.map((r, i) => r.slice(0, 3) + ' ' + q.switches[i][q.answer[i]]).join(', ') : q.answer.map((v, i) => '㉠㉡㉢'[i] + ' ' + q.switches[i][v]).join(', ');
+  if (q.type === 'toggle') return q.rows ? q.rows.map((r, i) => r.split(' ')[0] + ' ' + q.switches[i][q.answer[i]]).join(', ') : q.answer.map((v, i) => '㉠㉡㉢'[i] + ' ' + q.switches[i][v]).join(', ');
   return '';
 }
 function needInput() { const q = S.q; if (q.type === 'pick' || q.type === 'cart') return S.sel === null ? (q.type === 'pick' ? '관측 화면에서 답을 하나 눌러 고른 뒤 송신해요.' : '카트리지를 하나 눌러 꽂은 뒤 송신해요.') : null; if (q.type === 'toggle') return S.sw.some((v) => v < 0) ? '스위치를 모두 젖힌 뒤 송신해요.' : null; return null; }
