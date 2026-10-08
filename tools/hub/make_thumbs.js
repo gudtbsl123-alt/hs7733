@@ -59,8 +59,10 @@ const PREP = {
     }, g.id);
   },
   start: async page => { await page.click('#btnStart'); await page.waitForTimeout(1500); },
+  /* 3D 게임: 소프트웨어 렌더는 느리므로 게임 안 시간이 충분히 흐를 때까지(타이틀 로고가 다 떨어질 때까지) 기다린다 */
+  gametime: async page => { await page.waitForFunction(() => window.GAME && GAME.T > 4, null, { timeout: 120000 }); },
 };
-const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 50: 'coaster', 11: 'coaster', 51: 'start' };
+const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 50: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime' };
 /* 선생님이 고른 화면이 따로 있는 게임은 그 그림을 줄여 쓴다 */
 const FROM_IMAGE = { 40: 'screenshots/07_후반_고조선시대_플레이화면.png' };
 
@@ -93,7 +95,9 @@ const toWebp = async b64 => {
 (async () => {
   if (!todo.length) { console.log('새로 찍을 게임이 없어요.'); return; }
   const preinstalled = '/opt/pw-browsers/chromium';
-  const browser = await chromium.launch(fs.existsSync(preinstalled) ? { executablePath: preinstalled } : {});
+  /* 3D(three.js) 게임도 찍히도록 소프트웨어 WebGL을 켠다 */
+  const glArgs = ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'];
+  const browser = await chromium.launch(fs.existsSync(preinstalled) ? { executablePath: preinstalled, args: glArgs } : { args: glArgs });
   const conv = await browser.newPage();
   for (const g of todo) {
     const file = files.get(decodeURIComponent(g.url).replace(/^\.\//, '').normalize('NFC'));
