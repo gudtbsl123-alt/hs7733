@@ -1500,7 +1500,7 @@ SCN.columns={
         if(p.out){ if(p.y<-240) p.gone=true; continue; }
         if(p.x<-54){p.x=-54;p.vx=Math.abs(p.vx);} if(p.x>54){p.x=54;p.vx=-Math.abs(p.vx);} if(p.y>-8){p.y=-8;p.vy=-Math.abs(p.vy);} if(p.y<-190){p.y=-190;p.vy=Math.abs(p.vy);} p.vx+=rand(-.3,.3); p.vy+=rand(-.3,.3); }
       s[k]=a.filter(p=>!p.gone); }
-    const target=clamp((s.pL.filter(p=>!p.out).length-s.pR.filter(p=>!p.out).length)*.006,-.16,.16); s.tilt+=(target-s.tilt)*dt*2; },
+    /* 공기 알갱이가 많은(무거운) 쪽이 내려가야 한다. 캔버스는 각도가 +이면 오른쪽 끝이 내려가므로 (오른쪽 - 왼쪽) */ const target=clamp((s.pR.filter(p=>!p.out).length-s.pL.filter(p=>!p.out).length)*.006,-.16,.16); s.tilt+=(target-s.tilt)*dt*2; },
   draw(c,s,t){
     labWall(c); benchD(c,410);
     const cx=340, cy=318, bl=230, a=s.tilt;
