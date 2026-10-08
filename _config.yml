@@ -1,0 +1,5 @@
+# GitHub Pages(Jekyll) 설정
+# release/ 폴더(정답표·answers.json·게시판 소개글·게시판 사진)는 사이트 주소로 열리지 않게 올리지 않는다.
+# 파일은 저장소에 그대로 남아 있다(선생님은 대화창으로 받거나 GitHub 저장소에서 본다).
+exclude:
+  - release
