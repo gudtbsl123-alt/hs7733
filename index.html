@@ -117,46 +117,87 @@ h2{margin:0;font-family:var(--font-display);font-size:38px;font-weight:800;lette
 #clear{position:absolute;right:10px;top:50%;width:28px;height:28px;padding:0;border:none;border-radius:8px;
   background:var(--paper);box-shadow:inset 0 0 0 2px var(--ink);font-size:12px;font-weight:700;cursor:pointer;display:none;
   transform:translateY(-50%)}
-.chips{display:flex;flex-wrap:wrap;gap:10px}
-.chip{display:inline-flex;align-items:center;white-space:nowrap;border:none;border-radius:100px;
+.chips{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:none;border-radius:100px;
   background:var(--paper);color:var(--ink);cursor:pointer;
   box-shadow:inset 0 0 0 2px var(--ink), 3px 3px 0 0 var(--ink);
-  transition:transform 140ms var(--ease), box-shadow 140ms var(--ease), background 140ms}
+  transition:transform 140ms var(--ease), box-shadow 140ms var(--ease), background 140ms, opacity 140ms}
 .chip:hover{transform:translate(-1px,-1px);box-shadow:inset 0 0 0 2px var(--ink), 5px 5px 0 0 var(--ink)}
 .chip.on{background:var(--ink);color:var(--paper);box-shadow:inset 0 0 0 2px var(--ink);transform:translate(3px,3px)}
-.chips.grade .chip{padding:10px 19px;font-size:14px;font-weight:700}
-.chips.subject .chip{padding:8px 16px;font-size:13px;font-weight:600}
+.chip .c{min-width:22px;padding:0 7px;border-radius:100px;background:var(--lime-tint);color:var(--ink);
+  box-shadow:inset 0 0 0 1.5px var(--ink);font-size:11px;font-weight:800;line-height:19px;text-align:center}
+.chip.on .c{background:var(--paper)}
+.chip:disabled{opacity:.35;cursor:default;transform:none;box-shadow:inset 0 0 0 2px var(--ink)}
+.chip:focus-visible,.share:focus-visible,.term-more:focus-visible,.term-fold:focus-visible,.pick:focus-visible{outline:3px solid var(--blue-500);outline-offset:2px}
+.chips.grade .chip{padding:9px 12px 9px 18px;font-size:14px;font-weight:700}
+.chips.subject .chip{padding:7px 10px 7px 15px;font-size:13px;font-weight:600}
+.chips .sep{width:2px;height:26px;margin:0 4px;background:var(--ink);opacity:.22;border-radius:2px}
 
 /* ── sections + cards ── */
 #results{display:flex;flex-direction:column;gap:52px}
-.section-head{position:sticky;top:56px;z-index:40;margin:0 0 20px;padding:12px 0 10px;
+.section-head{position:sticky;top:56px;z-index:40;margin:0 0 18px;padding:12px 0 10px;
   background:var(--paper-lime);display:flex;align-items:center;gap:12px;
-  box-shadow:inset 0 -2px 0 0 var(--ink)}
+  box-shadow:inset 0 -2px 0 0 var(--ink), 16px 0 0 0 var(--paper-lime)}   /* 오른쪽 카드 그림자가 제목 옆으로 비치지 않게 */
 .section-head h3{margin:0;font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.02em}
 .section-head .n{padding:4px 11px;border-radius:100px;background:var(--mutagen);
   box-shadow:inset 0 0 0 2px var(--ink);font-size:12px;font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:26px;align-items:stretch}
+/* 학년 안의 학기 묶음: 지금 학기는 펼치고, 다른 학기는 단추 하나로 접어 둔다 */
+.term{display:flex;flex-direction:column;gap:14px}
+.term + .term{margin-top:30px}
+.term-head{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800}
+.term-head .now{padding:3px 10px;border-radius:100px;background:var(--ink);color:var(--paper);font-size:11px;font-weight:800}
+.term-fold{margin-left:auto;border:none;background:none;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;padding:4px 6px;border-radius:8px}
+.term-fold:hover{background:var(--lime-tint)}
+.term-more{align-self:flex-start;display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border:none;border-radius:12px;
+  background:var(--paper);color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;
+  box-shadow:inset 0 0 0 2px var(--ink), 4px 4px 0 0 var(--ink);transition:transform 140ms var(--ease), box-shadow 140ms var(--ease)}
+.term-more:hover{transform:translate(-1px,-1px);box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--ink)}
+.term-more .c{min-width:24px;padding:0 7px;border-radius:100px;background:var(--mutagen);box-shadow:inset 0 0 0 1.5px var(--ink);
+  font-size:12px;font-weight:800;line-height:20px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 20px;align-items:stretch}
+@media (max-width:1099px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:759px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 14px}}
 
 .card{position:relative;background:var(--paper);border-radius:12px;overflow:hidden;
   display:flex;flex-direction:column;cursor:pointer;
-  box-shadow:inset 0 0 0 2px var(--ink), 8px 8px 0 0 var(--ink);
+  box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--ink);
   transition:transform 180ms var(--ease), box-shadow 180ms var(--ease)}
-.card:hover{transform:translate(-3px,-3px);box-shadow:inset 0 0 0 2px var(--ink), 13px 13px 0 0 var(--ink)}
+.card:hover{transform:translate(-2px,-2px);box-shadow:inset 0 0 0 2px var(--ink), 9px 9px 0 0 var(--ink)}
 .card:active{transform:translate(3px,3px);box-shadow:inset 0 0 0 2px var(--ink), 0 0 0 0 var(--ink)}
-.thumb{position:relative;aspect-ratio:16/10;display:grid;place-items:center;overflow:hidden;
-  background:var(--grey-100);box-shadow:inset 0 -2px 0 0 var(--ink)}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb .glyph{font-size:54px;line-height:1;transition:transform 220ms var(--spring)}
-.card:hover .thumb .glyph{transform:scale(1.08) rotate(-4deg)}
-.card-body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:9px;flex:1}
-.card-meta{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
-.card h4{margin:0;font-size:20px;font-weight:700;line-height:1.25;letter-spacing:-.015em;word-break:keep-all}
-.card-genre{margin:0;font-size:14px;font-weight:600;line-height:1.4;color:var(--ink-soft)}
-.card-foot{margin-top:auto;padding-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.card-go{font-size:14px;font-weight:800}
-.share{border:none;border-radius:8px;background:var(--paper);color:var(--ink);font-size:11px;font-weight:700;
-  padding:6px 11px;cursor:pointer;box-shadow:inset 0 0 0 2px var(--ink)}
+.card:focus-within{outline:3px solid var(--blue-500);outline-offset:3px}
+.thumb{position:relative;aspect-ratio:16/9;display:grid;place-items:center;overflow:hidden;background:var(--grey-100)}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform 260ms var(--ease)}
+.card:hover .thumb img{transform:scale(1.04)}
+.thumb::after{content:"";position:absolute;inset:0;box-shadow:inset 0 -2px 0 0 var(--ink), inset 0 0 0 2px var(--ink);pointer-events:none;border-radius:12px 12px 0 0}
+.thumb .glyph{font-size:44px;line-height:1}
+.badge{position:absolute;left:10px;top:10px;z-index:1;padding:3px 10px;border-radius:100px;background:var(--paper);
+  box-shadow:inset 0 0 0 2px var(--ink), 2px 2px 0 0 var(--ink);font-size:12px;font-weight:800}
+.card-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:5px;flex:1}
+.card-meta{font-size:11.5px;font-weight:700;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card h4{margin:0;font-size:17px;font-weight:800;line-height:1.3;letter-spacing:-.015em;word-break:keep-all;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-link{color:inherit;font:inherit;text-align:left;background:none;border:none;padding:0;margin:0;cursor:pointer}
+.card-link::after{content:"";position:absolute;inset:0;z-index:1}      /* 카드 어디를 눌러도 열린다 */
+.card-link:focus{outline:none}
+.card-genre{margin:0;font-size:13px;font-weight:600;line-height:1.35;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-foot{margin-top:auto;padding-top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-go{font-size:13px;font-weight:800}
+.share{position:relative;z-index:2;display:inline-flex;align-items:center;gap:5px;border:none;border-radius:8px;background:var(--paper);color:var(--ink);
+  font-size:11.5px;font-weight:700;padding:5px 9px;cursor:pointer;box-shadow:inset 0 0 0 2px var(--ink)}
+.share svg{width:13px;height:13px;flex:none}
 .share:hover{background:var(--ink);color:var(--paper)}
+.card.series{box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--paper), 6px 6px 0 2px var(--ink), 11px 11px 0 2px var(--ink)}
+.card.series:hover{box-shadow:inset 0 0 0 2px var(--ink), 8px 8px 0 0 var(--paper), 8px 8px 0 2px var(--ink), 14px 14px 0 2px var(--ink)}
+@media (max-width:759px){
+  .card{box-shadow:inset 0 0 0 2px var(--ink), 4px 4px 0 0 var(--ink)}
+  .card-body{padding:10px 11px 11px;gap:4px}
+  .card h4{font-size:15px}
+  .card-meta{font-size:10.5px}
+  .card-genre{font-size:12px}
+  .card-go{font-size:12px}
+  .share{padding:5px 7px}
+  .share .t{display:none}
+}
 
 #empty{display:none;background:var(--paper);border-radius:12px;
   box-shadow:inset 0 0 0 2px var(--ink), 8px 8px 0 0 var(--ink);
@@ -164,9 +205,36 @@ h2{margin:0;font-family:var(--font-display);font-size:38px;font-weight:800;lette
 #empty p:first-child{margin:0;font-family:var(--font-display);font-size:28px;font-weight:800}
 #empty p:last-child{margin:0;font-size:15px;font-weight:500;color:var(--ink-soft)}
 
-footer{padding:40px 24px 76px;box-shadow:inset 0 2px 0 0 var(--ink)}
-.foot-in{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:baseline}
-.foot-in p{margin:0;font-size:12px;font-weight:600;line-height:1.4;color:var(--ink-soft)}
+/* ── footer: 수업에서 쓰는 법 · 이 사이트는 · 만든 사람 ── */
+footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0 var(--ink)}
+.foot-in{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.foot-col{padding:20px 22px 22px;border-radius:14px;box-shadow:inset 0 0 0 2px var(--ink), 5px 5px 0 0 var(--ink)}
+.fc1{background:var(--lime-tint)}
+.fc2{background:rgb(255,236,170)}
+.fc3{background:rgb(234,228,255)}
+.foot-col h3{margin:0 0 10px;font-family:var(--font-display);font-size:18px;font-weight:800;letter-spacing:-.01em}
+.foot-col ol,.foot-col ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;
+  font-size:14px;font-weight:600;line-height:1.5;word-break:keep-all}
+.foot-bottom{max-width:1200px;margin:22px auto 0;font-size:12px;font-weight:600;color:var(--ink-soft)}
+@media (max-width:860px){.foot-in{grid-template-columns:1fr}}
+
+/* ── 시리즈 편 고르기 창 ── */
+#picker{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.45)}
+#picker.open{display:flex}
+.picker-box{width:100%;max-width:760px;max-height:88vh;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:24px;border-radius:16px;
+  background:var(--paper);box-shadow:inset 0 0 0 2px var(--ink), 10px 10px 0 0 var(--ink)}
+.picker-head{display:flex;align-items:center;gap:12px}
+.picker-head h2{flex:1;font-size:26px}
+.picker-sub{margin:0 0 6px;font-size:14px;font-weight:600;color:var(--ink-soft)}
+.picker-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.picker-box{padding:18px}}
+.pick{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:0 0 10px;border:none;border-radius:10px;overflow:hidden;cursor:pointer;
+  background:var(--paper);color:var(--ink);text-align:left;box-shadow:inset 0 0 0 2px var(--ink), 4px 4px 0 0 var(--ink);
+  transition:transform 140ms var(--ease), box-shadow 140ms var(--ease)}
+.pick:hover{transform:translate(-1px,-1px);box-shadow:inset 0 0 0 2px var(--ink), 6px 6px 0 0 var(--ink)}
+.pick img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;border-bottom:2px solid var(--ink);background:var(--magenta)}
+.pick-t{padding:0 10px;font-size:15px;font-weight:800}
+.pick-s{padding:0 10px;font-size:11.5px;font-weight:600;color:var(--ink-soft);min-height:15px}
 
 /* ── overlays ── */
 /* 게임 실행 화면: 위쪽 막대에 단추를 모아 게임 화면(멈춤·소리 단추)을 가리지 않는다 */
@@ -342,7 +410,7 @@ footer{padding:40px 24px 76px;box-shadow:inset 0 2px 0 0 var(--ink)}
 
     <div class="controls">
       <div class="search-wrap" data-anim="rise">
-        <input type="search" id="search" placeholder="단원·주제로 검색 (예: 분수 곱셈, 날씨, 지역문제)" autocomplete="off" enterkeyhint="search" aria-label="게임 검색" />
+        <input type="search" id="search" placeholder="단원·주제로 검색 (예: 분수 곱셈, 고조선, 2단원)" autocomplete="off" enterkeyhint="search" aria-label="게임 검색" />
         <button type="button" id="clear" aria-label="검색어 지우기">✕</button>
       </div>
       <div class="chips grade" id="gradeTabs"></div>
@@ -359,10 +427,46 @@ footer{padding:40px 24px 76px;box-shadow:inset 0 2px 0 0 var(--ink)}
 
 <footer>
   <div class="foot-in">
-    <p>에듀테크 게임 저장소 · 교과서 단원에 맞춰 만든 초등 수업용 웹게임 모음</p>
-    <p id="footCount"></p>
+    <section class="foot-col fc1">
+      <h3>수업에서 쓰는 법</h3>
+      <ol>
+        <li>카드의 <b>링크 복사</b> → 학급 채팅방·클래스룸에 붙이면 학생이 바로 열어요.</li>
+        <li>교실 TV에서는 게임 위쪽 <b>전체 화면</b>을 눌러요.</li>
+        <li>컴퓨터가 느리면 게임 안의 <b>저사양(가벼운 화면) 모드</b>를 켜요.</li>
+        <li>인터넷이 불안하면 <b>내려받기</b>로 HTML 파일을 나눠 줘요. 옛 게임 몇 개는 인터넷이 있어야 제대로 보여요.</li>
+      </ol>
+    </section>
+    <section class="foot-col fc2">
+      <h3>이 사이트는</h3>
+      <ul>
+        <li>설치·회원가입·로그인·광고 없이 무료예요.</li>
+        <li>학생 이름과 기록은 그 기기 안에만 저장돼요. 어디로도 보내지 않아요.</li>
+        <li>PC·태블릿·휴대폰 브라우저에서 바로 열려요. 타자 게임은 키보드가 필요해요.</li>
+        <li>교과서 단원 복습용이라 출판사와 상관없이 쓸 수 있어요.</li>
+      </ul>
+    </section>
+    <section class="foot-col fc3">
+      <h3>만든 사람 · 문의</h3>
+      <ul>
+        <li>인천장도초등학교 김형순</li>
+        <li>오류 제보와 게임 요청은 인디스쿨 게시글 댓글로 남겨 주세요.</li>
+        <li>사이트 글꼴: Archivo · Inter (SIL Open Font License)</li>
+      </ul>
+    </section>
   </div>
+  <p class="foot-bottom">에듀테크 게임 저장소 · 게임 <span id="footCount">65</span>개 · 마지막 업데이트 <span id="footDate"></span></p>
 </footer>
+
+<div id="picker" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+  <div class="picker-box">
+    <div class="picker-head">
+      <h2 id="pickerTitle"></h2>
+      <button type="button" class="lb lb-close" id="pickerClose"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg><span class="t">닫기</span></button>
+    </div>
+    <p class="picker-sub">하고 싶은 편을 골라요. 편마다 문제가 달라요.</p>
+    <div class="picker-grid" id="pickerGrid"></div>
+  </div>
+</div>
 
 <div id="launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <div class="lbar">
@@ -425,81 +529,86 @@ footer{padding:40px 24px 76px;box-shadow:inset 0 2px 0 0 var(--ink)}
 
 <script>
 /* 게임 목록: 한 줄에 게임 하나. 새 게임은 학년 → 학기 → 과목 → 제목 순서 자리에 넣고 version을 1 올린다(docs/게임제작_참고.md 4장). */
-const FALLBACK = { version: 63, games: [
-  {"id":1,"icon":"🎢","title":"3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)","url":"./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html"},
-  {"id":34,"icon":"🧪","title":"3학년 1학기 수학 분수와 소수(마법 물약 제조소)","url":"./3학년 1학기 수학 분수와 소수(마법 물약 제조소).html"},
-  {"id":2,"icon":"🔢","title":"3학년 1학기 수학 분수와 소수(에듀런)","url":"./3학년 1학기 수학 분수와 소수(에듀런).html"},
-  {"id":67,"icon":"🎤","title":"3학년 2학기 과학 소리의 성질(울림 밴드 월드 투어)","url":"./3학년 2학기 과학 소리의 성질(울림 밴드 월드 투어).html"},
-  {"id":60,"icon":"📺","title":"3학년 2학기 국어 정확하게 글을 써요(어린이 방송국 시뮬레이션)","url":"./3학년 2학기 국어 정확하게 글을 써요(어린이 방송국 시뮬레이션).html"},
-  {"id":55,"icon":"🌈","title":"3학년 2학기 사회 다양한 문화에 대한 이해와 존중(무지개 골목)","url":"./3학년 2학기 사회 다양한 문화에 대한 이해와 존중(무지개 골목).html"},
-  {"id":49,"icon":"🎢","title":"3학년 2학기 수학 나눗셈(수학 코스터 타이쿤)","url":"./3학년 2학기 수학 나눗셈 코스터 타이쿤.html"},
-  {"id":64,"icon":"🚂","title":"3학년 2학기 수학 분수(분수 급행열차)","url":"./3학년 2학기 수학 분수(분수 급행열차).html"},
-  {"id":63,"icon":"🥌","title":"3학년 2학기 수학 분수(분수 컬링)","url":"./3학년 2학기 수학 분수(분수 컬링).html"},
-  {"id":52,"icon":"⭕","title":"3학년 2학기 수학 원(동그라미 왕국 수비대)","url":"./3학년 2학기 수학 원(동그라미 왕국 수비대).html"},
-  {"id":36,"icon":"🌍","title":"4학년 1학기 사회 교류하며 발전하는 우리 지역","url":"./4학년 1학기 사회 교류하며 발전하는 우리 지역.html"},
-  {"id":26,"icon":"🛒","title":"4학년 1학기 사회 합리적 소비(디펜스)","url":"./4학년 1학기 사회 합리적 소비(디펜스).html"},
+const FALLBACK = { version: 64, games: [
+  {"id":1,"icon":"🎢","title":"3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤)","url":"./3학년 1학기 수학 길이와 시간(수학 코스터 타이쿤).html","unit":5,"tags":["덧셈","뺄셈","올림"]},
+  {"id":34,"icon":"🧪","title":"3학년 1학기 수학 분수와 소수(마법 물약 제조소)","url":"./3학년 1학기 수학 분수와 소수(마법 물약 제조소).html","tags":["분모","분자","단위분수"]},
+  {"id":2,"icon":"🔢","title":"3학년 1학기 수학 분수와 소수(에듀런)","url":"./3학년 1학기 수학 분수와 소수(에듀런).html","tags":["분모","분자"]},
+  {"id":67,"icon":"🎤","title":"3학년 2학기 과학 소리의 성질(울림 밴드 월드 투어)","url":"./3학년 2학기 과학 소리의 성질(울림 밴드 월드 투어).html","unit":3,"tags":["공기","떨림","세기","높낮이","소음","기체"]},
+  {"id":60,"icon":"📺","title":"3학년 2학기 국어 정확하게 글을 써요(어린이 방송국 시뮬레이션)","url":"./3학년 2학기 국어 정확하게 글을 써요(어린이 방송국 시뮬레이션).html","unit":3,"tags":["자료","출처","뉴스","한글","이야기","훈민정음","낱말","높임"]},
+  {"id":55,"icon":"🌈","title":"3학년 2학기 사회 다양한 문화에 대한 이해와 존중(무지개 골목)","url":"./3학년 2학기 사회 다양한 문화에 대한 이해와 존중(무지개 골목).html","unit":1,"tags":["편견","가족","차별","축제","고령화","다문화"]},
+  {"id":49,"icon":"🎢","title":"3학년 2학기 수학 나눗셈(수학 코스터 타이쿤)","url":"./3학년 2학기 수학 나눗셈 코스터 타이쿤.html","unit":2,"tags":["몫","나머지","분수"]},
+  {"id":64,"icon":"🚂","title":"3학년 2학기 수학 분수(분수 급행열차)","url":"./3학년 2학기 수학 분수(분수 급행열차).html","unit":4,"tags":["분자","가분수","분모","진분수","대분수","몫"]},
+  {"id":63,"icon":"🥌","title":"3학년 2학기 수학 분수(분수 컬링)","url":"./3학년 2학기 수학 분수(분수 컬링).html","unit":4,"tags":["대분수","분모","가분수","진분수","분자"]},
+  {"id":52,"icon":"⭕","title":"3학년 2학기 수학 원(동그라미 왕국 수비대)","url":"./3학년 2학기 수학 원(동그라미 왕국 수비대).html","unit":3,"tags":["지름","반지름","컴퍼스","길이","사각형","정사각형","각도","다각형","원의 중심"]},
+  {"id":36,"icon":"🌍","title":"4학년 1학기 사회 교류하며 발전하는 우리 지역","url":"./4학년 1학기 사회 교류하며 발전하는 우리 지역.html","game":"대한민국 교류 대작전","tags":["생산","소비"]},
+  {"id":26,"icon":"🛒","title":"4학년 1학기 사회 합리적 소비(디펜스)","url":"./4학년 1학기 사회 합리적 소비(디펜스).html","tags":["생산"]},
   {"id":24,"icon":"🔐","title":"4학년 1학기 수학 규칙과 관계(암호해독)","url":"./4학년 1학기 수학 규칙과 관계(암호해독).html"},
-  {"id":68,"icon":"🎈","title":"4학년 2학기 과학 여러 가지 기체(열기구 우편 비행)","url":"./4학년 2학기 과학 여러 가지 기체(열기구 우편 비행).html"},
-  {"id":61,"icon":"💬","title":"4학년 2학기 국어 우리말 우리글(천지인 메신저)","url":"./4학년 2학기 국어 우리말 우리글(천지인 메신저).html"},
-  {"id":69,"icon":"🏘️","title":"4학년 2학기 사회 지역문제를 해결하고 지역을 알리는 노력(골목 민원 해결단)","url":"./4학년 2학기 사회 지역문제를 해결하고 지역을 알리는 노력(골목 민원 해결단).html"},
-  {"id":41,"icon":"🧁","title":"4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)","url":"./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html"},
-  {"id":65,"icon":"🎪","title":"4학년 2학기 수학 사각형(빛줄기 서커스)","url":"./4학년 2학기 수학 사각형(빛줄기 서커스).html"},
-  {"id":3,"icon":"🧪","title":"5학년 1학기 과학 용해 용액 단어","url":"./5학년 1학기 과학 용해 용액 단어.html"},
-  {"id":39,"icon":"📖","title":"5학년 1학기 국어 비유적표현 마법연구소","url":"./5학년 1학기 국어 비유적표현 마법연구소.html"},
-  {"id":4,"icon":"☁️","title":"5학년 1학기 사회 기후(탱크)","url":"./5학년 1학기 사회 기후(탱크).html"},
-  {"id":5,"icon":"🏯","title":"5학년 1학기 사회 인구(조선 마을 대모험)","url":"./5학년 1학기 사회 인구(조선 마을 대모험).html"},
-  {"id":28,"icon":"⚔️","title":"5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌)","url":"./5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌).html"},
-  {"id":7,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스)","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스).html"},
-  {"id":6,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2.html"},
+  {"id":68,"icon":"🎈","title":"4학년 2학기 과학 여러 가지 기체(열기구 우편 비행)","url":"./4학년 2학기 과학 여러 가지 기체(열기구 우편 비행).html","tags":["공기","부피","압력","온도","무게","산소"]},
+  {"id":61,"icon":"💬","title":"4학년 2학기 국어 우리말 우리글(천지인 메신저)","url":"./4학년 2학기 국어 우리말 우리글(천지인 메신저).html","unit":2,"tags":["한글","모음","질문","자료","자음","출처","이야기","낱말","훈민정음"]},
+  {"id":69,"icon":"🏘️","title":"4학년 2학기 사회 지역문제를 해결하고 지역을 알리는 노력(골목 민원 해결단)","url":"./4학년 2학기 사회 지역문제를 해결하고 지역을 알리는 노력(골목 민원 해결단).html","unit":2,"tags":["축제","자랑거리","생산","공공기관","제안서","홍보","청자","백지도"]},
+  {"id":41,"icon":"🧁","title":"4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리)","url":"./4학년 2학기 수학 분수의 덧셈과 뺄셈(분수 베이커리).html","unit":1,"tags":["분모","분자","대분수"]},
+  {"id":65,"icon":"🎪","title":"4학년 2학기 수학 사각형(빛줄기 서커스)","url":"./4학년 2학기 수학 사각형(빛줄기 서커스).html","unit":4,"tags":["평행","길이","수직","마름모","직각","사다리꼴","평행사변형","정사각형"]},
+  {"id":3,"icon":"🧪","title":"5학년 1학기 과학 용해 용액 단어","url":"./5학년 1학기 과학 용해 용액 단어.html","name":"용해와 용액 낱말","game":"용해 & 용액 단어 마스터","tags":["용질","용매","온도","결정","진하기","혼합물"]},
+  {"id":39,"icon":"📖","title":"5학년 1학기 국어 비유적표현 마법연구소","url":"./5학년 1학기 국어 비유적표현 마법연구소.html","name":"비유적 표현","game":"비유의 마법 연구소","unit":6},
+  {"id":4,"icon":"☁️","title":"5학년 1학기 사회 기후(탱크)","url":"./5학년 1학기 사회 기후(탱크).html","tags":["인구","도시","강수량","기온","열대","경제"]},
+  {"id":5,"icon":"🏯","title":"5학년 1학기 사회 인구(조선 마을 대모험)","url":"./5학년 1학기 사회 인구(조선 마을 대모험).html","net":1,"tags":["도시","공공기관"]},
+  {"id":28,"icon":"⚔️","title":"5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌)","url":"./5학년 1학기 수학 다각형의 둘레와 넓이(서바이벌).html","tags":["사각형","직사각형","대각선","삼각형","길이","마름모","정사각형","평행사변형"]},
+  {"id":7,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스)","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스).html","game":"우주 디펜스 · 슬라이더로 조준","tags":["분모","통분","약분","분자","공약수","약수"]},
+  {"id":6,"icon":"🚀","title":"5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2","url":"./5학년 1학기 수학 분수 크기 비교(우주 디펜스) 2.html","name":"분수 크기 비교","game":"우주 디펜스 2 · 마우스·터치로 조준","tags":["분모","통분","약분","분자","공약수","약수"]},
   {"id":8,"icon":"🧩","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(수학의 나라).html"},
-  {"id":22,"icon":"⚽","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥).html"},
-  {"id":9,"icon":"🍄","title":"5학년 1학기 수학 약분 통분 기약분수(마리오)","url":"./5학년 1학기 수학 약분 통분 기약분수(마리오).html"},
-  {"id":59,"icon":"🔬","title":"5학년 2학기 과학 날씨와 우리 생활(날씨 상자 실험실)","url":"./5학년 2학기 과학 날씨와 우리 생활(날씨 상자 실험실).html"},
-  {"id":54,"icon":"🏝️","title":"5학년 2학기 국어 올바른 문장으로 글을 써요(말이 되는 섬)","url":"./5학년 2학기 국어 올바른 문장으로 글을 써요(말이 되는 섬).html"},
-  {"id":40,"icon":"🧱","title":"5학년 2학기 사회 1단원 복습 문제풀이(테트리스 퀴즈)","url":"./5학년 2학기 사회 1단원 복습 문제풀이(테트리스 퀴즈).html","thumb":"./screenshots/07_후반_고조선시대_플레이화면.png"},
-  {"id":58,"icon":"🖨️","title":"5학년 2학기 사회 고려 사회와 사람들의 생활 모습(고려 활자 인쇄소)","url":"./5학년 2학기 사회 고려 사회와 사람들의 생활 모습(고려 활자 인쇄소).html"},
-  {"id":48,"icon":"🎢","title":"5학년 2학기 수학 분수의 곱셈(분수 코스터 타이쿤)","url":"./5학년 2학기 수학 분수의 곱셈(분수 코스터 타이쿤).html"},
-  {"id":45,"icon":"🌱","title":"5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)","url":"./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html"},
-  {"id":43,"icon":"📦","title":"5학년 2학기 수학 수의 범위와 어림하기(택배 물류센터)","url":"./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html"},
-  {"id":18,"icon":"🎨","title":"5학년 창체 캐치 1","url":"./catch1.html"},
-  {"id":19,"icon":"🎨","title":"5학년 창체 캐치 2","url":"./catch2.html"},
-  {"id":20,"icon":"🎨","title":"5학년 창체 캐치 3","url":"./catch3.html"},
-  {"id":21,"icon":"🎨","title":"5학년 창체 캐치 4","url":"./catch4.html"},
-  {"id":25,"icon":"🎨","title":"5학년 창체 캐치 5","url":"./catch5.html"},
-  {"id":27,"icon":"🎨","title":"5학년 창체 캐치 6","url":"./catch6.html"},
-  {"id":38,"icon":"🎨","title":"5학년 창체 캐치 8","url":"./catch8.html"},
-  {"id":47,"icon":"🎨","title":"5학년 창체 캐치 9","url":"./catch9.html"},
-  {"id":57,"icon":"🎨","title":"5학년 창체 캐치 10","url":"./catch10.html"},
-  {"id":35,"icon":"🎨","title":"5학년 창체 캐치 마인드 7","url":"./캐치 마인드 7.html"},
-  {"id":37,"icon":"🌗","title":"6학년 1학기 과학 지구의 운동","url":"./6학년 1학기 과학 지구의 운동.HTML"},
-  {"id":10,"icon":"🏛️","title":"6학년 1학기 사회 민주주의(젭스타일)","url":"./6학년 1학기 사회 민주주의(젭스타일).html"},
-  {"id":11,"icon":"🎢","title":"6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤)","url":"./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤).html"},
-  {"id":12,"icon":"🌍","title":"6학년 1학기 사회 지구 탐구 대모험","url":"./6학년 1학기 사회 지구 탐구 대모험.html"},
-  {"id":13,"icon":"🔢","title":"6학년 1학기 수학 비와 비율(마리오)","url":"./6학년 1학기 수학 비와 비율(마리오).html"},
-  {"id":14,"icon":"⚔️","title":"6학년 1학기 수학 비와비율(서바이벌)","url":"./6학년 1학기 수학 비와비율(서바이벌).html"},
-  {"id":15,"icon":"📊","title":"6학년 1학기 수학 여러 가지 그래프(에듀런)","url":"./6학년 1학기 수학 여러 가지 그래프(에듀런).html"},
-  {"id":16,"icon":"🏃","title":"6학년 1학기 수학 여러가지 그래프 선수학습(추격전)","url":"./6학년 1학기 수학 여러가지 그래프 선수학습(추격전).html"},
-  {"id":17,"icon":"📦","title":"6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런)","url":"./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html"},
-  {"id":66,"icon":"🛰️","title":"6학년 2학기 과학 계절의 변화(지구 궤도 관제사)","url":"./6학년 2학기 과학 계절의 변화(지구 궤도 관제사).html"},
-  {"id":62,"icon":"🎙️","title":"6학년 2학기 국어 궁금한 점을 해결해요(인터뷰 카드 배틀)","url":"./6학년 2학기 국어 궁금한 점을 해결해요(인터뷰 카드 배틀).html"},
-  {"id":51,"icon":"🌍","title":"6학년 2학기 사회 세계의 기후(기후 벨트 지구본)","url":"./6학년 2학기 사회 세계의 기후(기후 벨트 지구본).html"},
-  {"id":53,"icon":"🍪","title":"6학년 2학기 사회 시장경제와 국가 간 거래(달려라 경제 쿠키)","url":"./6학년 2학기 사회 시장경제와 국가 간 거래(달려라 경제 쿠키).html"},
-  {"id":50,"icon":"🎢","title":"6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)","url":"./6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤).html"},
-  {"id":32,"icon":"🕹️","title":"창체 미니 게임 천국 2탄","url":"./미니 게임 천국 2탄.html"},
-  {"id":33,"icon":"🕹️","title":"창체 미니 게임 천국 3탄","url":"./미니 게임 천국 3탄.html"},
-  {"id":31,"icon":"🕹️","title":"창체 미니게임천국 1탄","url":"./미니게임천국 1탄.html"},
-  {"id":30,"icon":"💣","title":"창체 초성 단어 폭탄돌리기","url":"./초성 단어 폭탄돌리기.html"},
-  {"id":56,"icon":"🛡️","title":"창체 타자 서바이벌(낱말 방어선)","url":"./창체 타자 서바이벌(낱말 방어선).html"},
-  {"id":23,"icon":"⌨️","title":"창체 타자 연습","url":"./타자 연습.html"}
+  {"id":22,"icon":"⚽","title":"5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥)","url":"./5학년 1학기 수학 분수의 덧셈과 뺄셈(축구 패널티킥).html","tags":["통분","분모","공배수","배수","최소공배수","약분"]},
+  {"id":9,"icon":"🍄","title":"5학년 1학기 수학 약분 통분 기약분수(마리오)","url":"./5학년 1학기 수학 약분 통분 기약분수(마리오).html","tags":["분모","공약수","약수","최대공약수","배수","최소공배수","공배수"]},
+  {"id":59,"icon":"🔬","title":"5학년 2학기 과학 날씨와 우리 생활(날씨 상자 실험실)","url":"./5학년 2학기 과학 날씨와 우리 생활(날씨 상자 실험실).html","unit":2,"tags":["기압","공기","고기압","구름","바람","저기압","온도","습도","기상"]},
+  {"id":54,"icon":"🏝️","title":"5학년 2학기 국어 올바른 문장으로 글을 써요(말이 되는 섬)","url":"./5학년 2학기 국어 올바른 문장으로 글을 써요(말이 되는 섬).html","unit":2,"tags":["호응","서술어","주어","낱말","높임","의견"]},
+  {"id":40,"icon":"🧱","title":"5학년 2학기 사회 1단원 복습 문제풀이(테트리스 퀴즈)","url":"./5학년 2학기 사회 1단원 복습 문제풀이(테트리스 퀴즈).html","unit":1,"tags":["고려","조선","고조선","백제","신라","삼국","가야","발해"]},
+  {"id":58,"icon":"🖨️","title":"5학년 2학기 사회 고려 사회와 사람들의 생활 모습(고려 활자 인쇄소)","url":"./5학년 2학기 사회 고려 사회와 사람들의 생활 모습(고려 활자 인쇄소).html","unit":1,"tags":["금속활자","삼국","고구려","팔만대장경","청자","백제","신라","발해"]},
+  {"id":48,"icon":"🎢","title":"5학년 2학기 수학 분수의 곱셈(분수 코스터 타이쿤)","url":"./5학년 2학기 수학 분수의 곱셈(분수 코스터 타이쿤).html","unit":2,"tags":["약분","대분수","분자","가분수","분모","사각형"]},
+  {"id":45,"icon":"🌱","title":"5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기)","url":"./5학년 2학기 수학 분수의 곱셈(텃밭 가꾸기).html","unit":2,"tags":["약분","대분수","분모","분자","가분수","진분수","기약분수"]},
+  {"id":43,"icon":"📦","title":"5학년 2학기 수학 수의 범위와 어림하기(택배 물류센터)","url":"./5학년 2학기 수학 1단원 수의범위와어림하기(택배물류센터).html","unit":1,"tags":["올림","무게","반올림","이하","버림","초과","이상","소수"]},
+  {"id":18,"icon":"🎨","title":"5학년 창체 캐치 1","url":"./catch1.html","series":"그림 넌센스 퀴즈","ep":1,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":19,"icon":"🎨","title":"5학년 창체 캐치 2","url":"./catch2.html","series":"그림 넌센스 퀴즈","ep":2,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":20,"icon":"🎨","title":"5학년 창체 캐치 3","url":"./catch3.html","series":"그림 넌센스 퀴즈","ep":3,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":21,"icon":"🎨","title":"5학년 창체 캐치 4","url":"./catch4.html","game":"1.5배 확대판","series":"그림 넌센스 퀴즈","ep":4,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":25,"icon":"🎨","title":"5학년 창체 캐치 5","url":"./catch5.html","game":"황금폭발판","series":"그림 넌센스 퀴즈","ep":5,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":27,"icon":"🎨","title":"5학년 창체 캐치 6","url":"./catch6.html","game":"황금폭발판","series":"그림 넌센스 퀴즈","ep":6,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":38,"icon":"🎨","title":"5학년 창체 캐치 8","url":"./catch8.html","game":"보스전·업적","series":"그림 넌센스 퀴즈","ep":8,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":47,"icon":"🎨","title":"5학년 창체 캐치 9","url":"./catch9.html","game":"황금폭발판","series":"그림 넌센스 퀴즈","ep":9,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":57,"icon":"🎨","title":"5학년 창체 캐치 10","url":"./catch10.html","game":"보스전·업적","series":"그림 넌센스 퀴즈","ep":10,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":35,"icon":"🎨","title":"5학년 창체 캐치 마인드 7","url":"./캐치 마인드 7.html","game":"보스전·업적","series":"그림 넌센스 퀴즈","ep":7,"net":1,"tags":["넌센스","캐치","그림 퀴즈"]},
+  {"id":37,"icon":"🌗","title":"6학년 1학기 과학 지구의 운동","url":"./6학년 1학기 과학 지구의 운동.HTML","game":"우주 관제센터","unit":4,"tags":["태양","자전","별자리","계절","공전","자전축"]},
+  {"id":10,"icon":"🏛️","title":"6학년 1학기 사회 민주주의(젭스타일)","url":"./6학년 1학기 사회 민주주의(젭스타일).html","tags":["선거","국회","정부","법원","삼권분립","헌법"]},
+  {"id":11,"icon":"🎢","title":"6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤)","url":"./6학년 1학기 사회 세계 여러 국가의 위치와 영토 모습(사회 코스터 타이쿤).html","unit":2,"tags":["대륙","대양"]},
+  {"id":12,"icon":"🌍","title":"6학년 1학기 사회 지구 탐구 대모험","url":"./6학년 1학기 사회 지구 탐구 대모험.html","game":"조선 마을 지구 탐구 대모험","net":1,"tags":["대륙","위도","경도","세계지도","지구본"]},
+  {"id":13,"icon":"🔢","title":"6학년 1학기 수학 비와 비율(마리오)","url":"./6학년 1학기 수학 비와 비율(마리오).html","tags":["소수","분모","백분율","분수","약분","분자","기약분수"]},
+  {"id":14,"icon":"⚔️","title":"6학년 1학기 수학 비와비율(서바이벌)","url":"./6학년 1학기 수학 비와비율(서바이벌).html","tags":["백분율","분수","소수","분모"]},
+  {"id":15,"icon":"📊","title":"6학년 1학기 수학 여러 가지 그래프(에듀런)","url":"./6학년 1학기 수학 여러 가지 그래프(에듀런).html","net":1,"tags":["비율","원그래프","백분율","띠그래프","꺾은선그래프","막대그래프"]},
+  {"id":16,"icon":"🏃","title":"6학년 1학기 수학 여러가지 그래프 선수학습(추격전)","url":"./6학년 1학기 수학 여러가지 그래프 선수학습(추격전).html","tags":["비율","막대그래프","꺾은선그래프","띠그래프","원그래프","백분율","그림그래프"]},
+  {"id":17,"icon":"📦","title":"6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런)","url":"./6학년 1학기 수학 직육면체의 부피와 겉넓이(에듀런).html","tags":["정육면체"]},
+  {"id":66,"icon":"🛰️","title":"6학년 2학기 과학 계절의 변화(지구 궤도 관제사)","url":"./6학년 2학기 과학 계절의 변화(지구 궤도 관제사).html","unit":1,"tags":["태양","태양고도","그림자","남중고도","자전","자전축","기온","공전","낮의 길이"]},
+  {"id":62,"icon":"🎙️","title":"6학년 2학기 국어 궁금한 점을 해결해요(인터뷰 카드 배틀)","url":"./6학년 2학기 국어 궁금한 점을 해결해요(인터뷰 카드 배틀).html","unit":2,"tags":["면담","질문","자료","이야기","사실"]},
+  {"id":51,"icon":"🌍","title":"6학년 2학기 사회 세계의 기후(기후 벨트 지구본)","url":"./6학년 2학기 사회 세계의 기후(기후 벨트 지구본).html","unit":1,"tags":["위도","기온","냉대","고산","열대","건조","강수량","도시"]},
+  {"id":53,"icon":"🍪","title":"6학년 2학기 사회 시장경제와 국가 간 거래(달려라 경제 쿠키)","url":"./6학년 2학기 사회 시장경제와 국가 간 거래(달려라 경제 쿠키).html","unit":2,"tags":["생산","정부","소비"]},
+  {"id":50,"icon":"🎢","title":"6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤)","url":"./6학년 2학기 수학 소수의 나눗셈(수학 코스터 타이쿤).html","unit":2,"tags":["몫","올림","반올림","소수점"]},
+  {"id":32,"icon":"🕹️","title":"창체 미니 게임 천국 2탄","url":"./미니 게임 천국 2탄.html","game":"네온 에디션","tags":["폭탄"]},
+  {"id":33,"icon":"🕹️","title":"창체 미니 게임 천국 3탄","url":"./미니 게임 천국 3탄.html","game":"교실 미니 게임 모음"},
+  {"id":31,"icon":"🕹️","title":"창체 미니게임천국 1탄","url":"./미니게임천국 1탄.html","game":"교실 미니 게임 천국","tags":["폭탄"]},
+  {"id":30,"icon":"💣","title":"창체 초성 단어 폭탄돌리기","url":"./초성 단어 폭탄돌리기.html","game":"초성 폭탄 돌리기 PRO","tags":["끝말"]},
+  {"id":56,"icon":"🛡️","title":"창체 타자 서바이벌(낱말 방어선)","url":"./창체 타자 서바이벌(낱말 방어선).html","tags":["타자"]},
+  {"id":23,"icon":"⌨️","title":"창체 타자 연습","url":"./타자 연습.html","game":"타자 마스터: 스페이스 디펜더","tags":["타자"]}
 ] };
 const LS_KEY = 'edutech_games_v2';
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PLAY = '놀이·창체';
 const GRADE_TINT = { '3학년':'var(--mutagen)', '4학년':'var(--yellow)', '5학년':'var(--cornflower)',
-  '6학년':'var(--periwinkle)', '기타':'var(--grey-100)' };
+  '6학년':'var(--periwinkle)', [PLAY]:'var(--magenta)', '기타':'var(--grey-100)' };
+const GRADE_ORDER = ['3학년','4학년','5학년','6학년',PLAY,'기타'];
+/* 지금 학기: 3~8월은 1학기, 나머지는 2학기. 학년마다 지금 학기를 먼저 펼치고 다른 학기는 접어 둔다 */
+const NOW_TERM = (() => { const mo = new Date().getMonth() + 1; return mo >= 3 && mo <= 8 ? '1학기' : '2학기'; })();
 
 let games = FALLBACK.games;
 const baseVersion = FALLBACK.version;
-let grade = 'all', subject = 'all', q = '', shownCount = null, raf = 0;
+let grade = 'all', subject = 'all', term = 'all', q = '', shownCount = null, raf = 0;
+const openOther = new Set();                 // 다른 학기를 펼친 학년
 
 const $ = s => document.querySelector(s);
 const results = $('#results');
@@ -520,7 +629,12 @@ function subjectOf(t) {
   for (const s of ['국어','수학','사회','과학','창체']) if (t.includes(s)) return s;
   return '기타';
 }
-function gradeOf(t) { const m = t.match(/([3-6])학년/); return m ? m[1] + '학년' : '기타'; }
+/* 창체(놀이) 게임은 학년과 떼어 '놀이·창체' 칸에 모은다 */
+function gradeOf(t) {
+  if (subjectOf(t) === '창체') return PLAY;
+  const m = t.match(/([3-6])학년/); return m ? m[1] + '학년' : '기타';
+}
+function termOf(t) { const m = t.match(/([12])학기/); return m ? m[1] + '학기' : ''; }
 
 function parseTitle(full) {
   let rest = String(full).trim(), g = '', term = '', subj = '', m;
@@ -532,6 +646,11 @@ function parseTitle(full) {
   if (gm) { genre = gm[1].trim(); rest = rest.slice(0, gm.index).trim(); }
   return { grade: g, term, subject: subj || subjectOf(full), name: rest.trim() || String(full).trim(), genre };
 }
+/* 카드에 보이는 이름: name·game 칸이 있으면 그것을, 없으면 제목에서 읽는다 */
+function labelOf(g) {
+  const i = parseTitle(g.title);
+  return { name: g.name || i.name, game: g.game || i.genre, info: i };
+}
 
 let toastTimer = 0;
 function toast(msg) {
@@ -539,7 +658,7 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
 /* ── scroll reveal: stagger by position within its batch ── */
@@ -548,10 +667,10 @@ const io = 'IntersectionObserver' in window ? new IntersectionObserver(entries =
   entries.forEach(e => {
     if (!e.isIntersecting) return;
     io.unobserve(e.target);
-    if (!REDUCED) e.target.style.setProperty('--d', (i++ * 55) + 'ms');
+    if (!REDUCED) e.target.style.setProperty('--d', (i++ * 45) + 'ms');
     e.target.classList.add('in');
   });
-}, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 }) : null;
+}, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 }) : null;
 
 function watch(el) {
   if (REDUCED || !io) { el.classList.add('in'); return; }
@@ -588,133 +707,274 @@ function tweenCount(to) {
   };
   raf = requestAnimationFrame(step);
 }
+function filtersOn() { return !!(q.trim() || grade !== 'all' || subject !== 'all' || term !== 'all'); }
 function paintCount() {
-  const active = q.trim() || grade !== 'all' || subject !== 'all';
-  $('#countText').textContent = active
-    ? '전체 ' + games.length + '개 중 ' + (shownCount ?? 0) + '개 표시 중'
-    : '학년과 과목으로 좁혀서 찾아보세요';
+  $('#countText').textContent = filtersOn()
+    ? '전체 ' + games.length + '개 중 ' + (shownCount ?? 0) + '개'
+    : '학년·과목을 고르거나 단원 이름으로 찾아보세요';
 }
 
+/* ── 검색: 띄어쓰기로 나눈 낱말이 모두 들어 있으면 찾는다(띄어쓰기 무시) ──
+   제목 + 게임 이름 + 단원 번호 + 핵심어(tags)에서 찾고, 비슷한 말과 초성(ㅂㅅ → 분수)도 찾는다 */
+const squash = s => String(s).toLowerCase().replace(/\s+/g, '');
+const SYN = { 나누기:['나눗셈'], 곱하기:['곱셈'], 더하기:['덧셈'], 빼기:['뺄셈'], 퍼센트:['백분율'], '%':['백분율'],
+  동그라미:['원'], 네모:['사각형'], 세모:['삼각형'], 한글:['훈민정음','우리말'], 날씨:['기상','기압'],
+  역사:['고조선','삼국','고려','조선','유적','유물'], 지도:['지구본','위도','경도','백지도'], 돈:['경제','소비'], 캐치마인드:['넌센스'] };
+const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const choseong = s => [...s].map(ch => { const c = ch.charCodeAt(0) - 0xAC00; return c >= 0 && c < 11172 ? CHO[Math.floor(c / 588)] : ch; }).join('');
+const hayCache = new WeakMap();
+function hayOf(g) {
+  let h = hayCache.get(g);
+  if (!h) {
+    const text = squash([g.title, g.name, g.game, g.series, g.ep ? g.ep + '탄' : '', g.unit ? g.unit + '단원' : '', (g.tags || []).join(' ')].filter(Boolean).join(' '));
+    h = { text, cho: choseong(text) };
+    hayCache.set(g, h);
+  }
+  return h;
+}
+function queryTokens() { return q.trim().toLowerCase().split(/\s+/).filter(Boolean).map(squash); }
+function matchesQuery(g, tokens) {
+  if (!tokens.length) return true;
+  const h = hayOf(g);
+  return tokens.every(t => /^[ㄱ-ㅎ]+$/.test(t) ? h.cho.includes(t)
+    : h.text.includes(t) || (SYN[t] || []).some(s => h.text.includes(squash(s))));
+}
+function passes(g, f) {
+  return (f.grade === 'all' || gradeOf(g.title) === f.grade) &&
+    (f.subject === 'all' || subjectOf(g.title) === f.subject) &&
+    (f.term === 'all' || termOf(g.title) === f.term) &&
+    matchesQuery(g, f.tokens);
+}
+
+/* ── 칩: 지금 조건에서 몇 개가 나오는지 보여 주고, 0개가 되는 칩은 누를 수 없게 한다 ── */
 function chips(host, values, current, onPick) {
   host.innerHTML = '';
   values.forEach(v => {
+    if (v.sep) { const s = document.createElement('span'); s.className = 'sep'; s.setAttribute('aria-hidden', 'true'); host.appendChild(s); return; }
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'chip' + (current === v.value ? ' on' : '');
-    b.textContent = v.label;
+    b.setAttribute('aria-pressed', current === v.value ? 'true' : 'false');
+    const t = document.createElement('span'); t.textContent = v.label;
+    const c = document.createElement('span'); c.className = 'c'; c.textContent = v.count;
+    b.append(t, c);
+    if (!v.count && current !== v.value) b.disabled = true;
     b.onclick = () => onPick(v.value);
     host.appendChild(b);
   });
 }
-function renderChips() {
-  /* 게임이 하나도 없는 칩은 만들지 않는다(눌러도 0개가 되는 막다른 길 방지) */
-  const has = (fn, v) => games.some(g => fn(g.title) === v);
+function renderChips(tokens) {
+  const count = over => games.filter(g => passes(g, Object.assign({ grade, subject, term, tokens }, over))).length;
+  const present = (fn, v) => games.some(g => fn(g.title) === v);
   chips($('#gradeTabs'),
-    [['all','전체 학년'],['3학년','3학년'],['4학년','4학년'],['5학년','5학년'],['6학년','6학년'],['기타','기타']]
-      .filter(([value]) => value === 'all' || has(gradeOf, value)).map(([value,label]) => ({value,label})),
+    [['all','전체 학년'],['3학년','3학년'],['4학년','4학년'],['5학년','5학년'],['6학년','6학년'],[PLAY,PLAY],['기타','기타']]
+      .filter(([v]) => v === 'all' || present(gradeOf, v))
+      .map(([value, label]) => ({ value, label, count: count({ grade: value }) })),
     grade, v => { grade = v; render(); });
   chips($('#subjectTabs'),
-    [['all','전체 과목'],['국어','국어'],['수학','수학'],['사회','사회'],['과학','과학'],['창체','창체'],['기타','기타']]
-      .filter(([value]) => value === 'all' || has(subjectOf, value)).map(([value,label]) => ({value,label})),
-    subject, v => { subject = v; render(); });
+    [['all','전체 과목'],['국어','국어'],['수학','수학'],['사회','사회'],['과학','과학']]
+      .filter(([v]) => v === 'all' || present(subjectOf, v))
+      .map(([value, label]) => ({ value, label, count: count({ subject: value }) }))
+      .concat([{ sep: true }], ['1학기','2학기'].map(v => ({ value: v, label: v + (v === NOW_TERM ? ' · 지금' : ''), count: count({ term: v }) }))),
+    subject,
+    v => { if (v === '1학기' || v === '2학기') term = term === v ? 'all' : v; else subject = v; render(); });
+  /* 학기 칩은 과목 칩과 따로 켜지고 꺼진다 */
+  $('#subjectTabs').querySelectorAll('.chip').forEach(b => {
+    const label = b.firstChild.textContent;
+    if (label.startsWith('1학기') || label.startsWith('2학기')) {
+      const on = term === label.slice(0, 3);
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on) b.disabled = false;
+    } else if (label === '전체 과목') {
+      const on = subject === 'all'; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  });
 }
 
-/* 검색: 띄어쓰기로 나눈 낱말이 모두 들어 있으면 찾는다. 띄어쓰기는 무시한다('분수 곱셈' → '분수의 곱셈') */
-const squash = s => String(s).toLowerCase().replace(/\s+/g, '');
-function queryTokens() { return q.trim().toLowerCase().split(/\s+/).filter(Boolean).map(squash); }
-function matchesQuery(g, tokens) {
-  if (!tokens.length) return true;
-  const hay = squash(g.title);
-  return tokens.every(t => hay.includes(t));
+function copyLink(id) {
+  const link = location.origin + location.pathname + '#game=' + id;
+  const done = () => toast('링크를 복사했어요 · 학급 채팅방에 붙여 넣으세요');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => prompt('링크', link));
+  else prompt('링크', link);
+}
+const LINK_ICON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1.2-1.2a2.8 2.8 0 014 4L11 8.5M9 11.5l-1.2 1.2a2.8 2.8 0 01-4-4L5 7.5"/></svg>';
+
+function thumbBox(g, tint, glyphText) {
+  const thumb = document.createElement('div');
+  thumb.className = 'thumb';
+  thumb.style.background = tint;
+  const glyph = document.createElement('span');
+  glyph.className = 'glyph'; glyph.textContent = glyphText || '🎮';
+  thumb.appendChild(glyph);
+  const img = document.createElement('img');
+  img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
+  img.onerror = () => img.remove();                      // 썸네일이 없으면 이모지가 보인다
+  img.src = g.thumb || ('./thumbs/' + g.id + '.webp');
+  thumb.appendChild(img);
+  return thumb;
 }
 
+/* 카드: 제목 링크가 카드 전체를 덮어서 어디를 눌러도 열리고, Tab·Enter·새 탭 열기도 된다 */
 function buildCard(g) {
-  const i = parseTitle(g.title);
-  const meta = [i.grade && i.term ? i.grade + ' ' + i.term : i.grade, i.subject].filter(Boolean).join(' · ') || '기타';
-
+  const { name, game, info } = labelOf(g);
+  const sub = subjectOf(g.title);
+  const meta = sub === '창체' ? PLAY
+    : [info.grade && info.term ? info.grade + ' ' + info.term : info.grade, info.subject, g.unit ? g.unit + '단원' : ''].filter(Boolean).join(' · ');
   const card = document.createElement('article');
   card.className = 'card';
   card.dataset.anim = 'rise';
   card.dataset.gid = String(g.id);
-  card.onclick = () => openGame(g.id, true);
-
-  const thumb = document.createElement('div');
-  thumb.className = 'thumb';
-  thumb.style.background = GRADE_TINT[gradeOf(g.title)] || GRADE_TINT['기타'];
-  const glyph = document.createElement('span');
-  glyph.className = 'glyph';
-  glyph.textContent = g.icon || '🎮';
-  thumb.appendChild(glyph);
-  if (g.thumb) {
-    const img = document.createElement('img');
-    img.loading = 'lazy'; img.alt = ''; img.style.display = 'none';
-    img.onload = () => { img.style.display = 'block'; glyph.remove(); };
-    img.onerror = () => img.remove();
-    img.src = g.thumb;
-    thumb.appendChild(img);
-  }
-
   const body = document.createElement('div');
   body.className = 'card-body';
   const mt = document.createElement('span'); mt.className = 'card-meta'; mt.textContent = meta;
-  const h4 = document.createElement('h4'); h4.textContent = i.name;
-  const gen = document.createElement('p'); gen.className = 'card-genre'; gen.textContent = i.genre;
+  const h4 = document.createElement('h4');
+  const a = document.createElement('a');
+  a.className = 'card-link'; a.href = '#game=' + g.id; a.textContent = name;
+  a.onclick = e => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;   // 새 탭 열기는 그대로
+    e.preventDefault(); openGame(g.id, true);
+  };
+  h4.appendChild(a);
+  const gen = document.createElement('p'); gen.className = 'card-genre'; gen.textContent = game || ' ';
   const foot = document.createElement('div'); foot.className = 'card-foot';
   const go = document.createElement('span'); go.className = 'card-go'; go.textContent = '실행하기 ›';
   const share = document.createElement('button');
-  share.type = 'button'; share.className = 'share'; share.textContent = '링크 복사';
-  share.onclick = e => {
-    e.stopPropagation();
-    const link = location.origin + location.pathname + '#game=' + g.id;
-    const done = () => toast('링크를 복사했어요');
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => prompt('링크', link));
-    else prompt('링크', link);
-  };
+  share.type = 'button'; share.className = 'share'; share.setAttribute('aria-label', name + ' 링크 복사');
+  share.innerHTML = LINK_ICON + '<span class="t">링크 복사</span>';
+  share.onclick = e => { e.stopPropagation(); copyLink(g.id); };
   foot.append(go, share);
+  body.append(mt, h4, gen, foot);
+  card.append(thumbBox(g, GRADE_TINT[gradeOf(g.title)] || GRADE_TINT['기타'], g.icon), body);
+  return card;
+}
+
+/* 시리즈(캐치 1~10탄 등)는 카드 1장으로 묶고, 누르면 편을 고르는 창이 열린다 */
+function seriesEpisodes(name) { return games.filter(x => x.series === name).sort((a, b) => (a.ep || 0) - (b.ep || 0)); }
+function buildSeriesCard(name, shown) {
+  const all = seriesEpisodes(name), first = all[0];
+  const card = document.createElement('article');
+  card.className = 'card series';
+  card.dataset.anim = 'rise';
+  card.dataset.gid = 'series:' + name;
+  const thumb = thumbBox(first, GRADE_TINT[PLAY], first.icon);
+  const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = all.length + '편 모음';
+  thumb.appendChild(badge);
+  const body = document.createElement('div'); body.className = 'card-body';
+  const mt = document.createElement('span'); mt.className = 'card-meta'; mt.textContent = PLAY + ' · 시리즈';
+  const h4 = document.createElement('h4');
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'card-link'; b.textContent = name;
+  b.onclick = () => openPicker(name);
+  h4.appendChild(b);
+  const eps = all.map(x => x.ep).filter(Boolean);
+  const gen = document.createElement('p'); gen.className = 'card-genre';
+  gen.textContent = (eps.length ? Math.min(...eps) + '~' + Math.max(...eps) + '탄' : '') + (shown.length < all.length ? ' · 찾은 편 ' + shown.length + '개' : ' · 골라서 하기');
+  const foot = document.createElement('div'); foot.className = 'card-foot';
+  const go = document.createElement('span'); go.className = 'card-go'; go.textContent = '편 고르기 ›';
+  foot.append(go);
   body.append(mt, h4, gen, foot);
   card.append(thumb, body);
   return card;
 }
+function buildGrid(items) {
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  const seen = new Set();
+  items.forEach(g => {
+    if (g.series) {
+      if (seen.has(g.series)) return;
+      seen.add(g.series);
+      grid.appendChild(buildSeriesCard(g.series, items.filter(x => x.series === g.series)));
+    } else grid.appendChild(buildCard(g));
+  });
+  return grid;
+}
 
-const GRADE_ORDER = ['3학년','4학년','5학년','6학년','기타'];
+function openPicker(name) {
+  const host = $('#pickerGrid');
+  host.innerHTML = '';
+  $('#pickerTitle').textContent = name;
+  seriesEpisodes(name).forEach(g => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick';
+    const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy'; img.src = g.thumb || ('./thumbs/' + g.id + '.webp');
+    img.onerror = () => img.remove();
+    const t = document.createElement('span'); t.className = 'pick-t'; t.textContent = (g.ep ? g.ep + '탄' : labelOf(g).name);
+    const s = document.createElement('span'); s.className = 'pick-s'; s.textContent = g.game || ' ';
+    b.append(img, t, s);
+    b.onclick = () => { closePicker(); openGame(g.id, true); };
+    host.appendChild(b);
+  });
+  $('#picker').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const f = host.querySelector('.pick'); if (f) f.focus(); }, 30);
+}
+function closePicker() {
+  $('#picker').classList.remove('open');
+  if (!isOpen()) document.body.style.overflow = '';
+}
+$('#pickerClose').onclick = closePicker;
+$('#picker').addEventListener('click', e => { if (e.target.id === 'picker') closePicker(); });
+
+function termBlock(gr, tm, items, collapse) {
+  const wrap = document.createElement('div');
+  wrap.className = 'term';
+  const isOther = tm && tm !== NOW_TERM;
+  const open = !collapse || !isOther || openOther.has(gr);
+  if (tm) {
+    const head = document.createElement('div');
+    head.className = 'term-head';
+    const h = document.createElement('span'); h.textContent = tm;
+    head.appendChild(h);
+    if (tm === NOW_TERM) { const now = document.createElement('span'); now.className = 'now'; now.textContent = '지금 배우는 학기'; head.appendChild(now); }
+    if (collapse && isOther && open) {
+      const fold = document.createElement('button'); fold.type = 'button'; fold.className = 'term-fold'; fold.textContent = '접기 ▴';
+      fold.onclick = () => { openOther.delete(gr); render(); };
+      head.appendChild(fold);
+    }
+    if (open || !isOther) wrap.appendChild(head);
+  }
+  if (open) wrap.appendChild(buildGrid(items));
+  else {
+    const more = document.createElement('button');
+    more.type = 'button'; more.className = 'term-more';
+    more.innerHTML = '<span>' + tm + ' 게임 펼치기</span><span class="c">' + items.length + '</span><span aria-hidden="true">▾</span>';
+    more.onclick = () => { openOther.add(gr); render(); };
+    wrap.appendChild(more);
+  }
+  return wrap;
+}
 
 function render() {
   const snap = new Map();
   if (!REDUCED) results.querySelectorAll('.card').forEach(el => snap.set(el.dataset.gid, el.getBoundingClientRect()));
 
   const tokens = queryTokens();
-  const filtered = games.filter(g =>
-    (grade === 'all' || gradeOf(g.title) === grade) &&
-    (subject === 'all' || subjectOf(g.title) === subject) &&
-    matchesQuery(g, tokens)
-  );
+  const filtered = games.filter(g => passes(g, { grade, subject, term, tokens }));
+  const collapse = !tokens.length && term === 'all';
 
   results.innerHTML = '';
-  if (grade !== 'all') {
-    const gridEl = document.createElement('div');
-    gridEl.className = 'grid';
-    filtered.forEach(g => gridEl.appendChild(buildCard(g)));
-    results.appendChild(gridEl);
-  } else {
-    GRADE_ORDER.forEach(gr => {
-      const list = filtered.filter(g => gradeOf(g.title) === gr);
-      if (!list.length) return;
-      const sec = document.createElement('section');
-      const head = document.createElement('div');
-      head.className = 'section-head';
-      head.dataset.anim = 'slide';
-      const h3 = document.createElement('h3'); h3.textContent = gr;
-      const n = document.createElement('span'); n.className = 'n'; n.textContent = list.length + '개';
-      n.style.background = GRADE_TINT[gr] || GRADE_TINT['기타'];
-      const rule = document.createElement('span'); rule.className = 'rule';
-      head.append(h3, n, rule);
-      const gridEl = document.createElement('div');
-      gridEl.className = 'grid';
-      list.forEach(g => gridEl.appendChild(buildCard(g)));
-      sec.append(head, gridEl);
-      results.appendChild(sec);
+  (grade === 'all' ? GRADE_ORDER : [grade]).forEach(gr => {
+    const list = filtered.filter(g => gradeOf(g.title) === gr);
+    if (!list.length) return;
+    const sec = document.createElement('section');
+    sec.className = 'grade-sec';
+    const head = document.createElement('div');
+    head.className = 'section-head';
+    head.dataset.anim = 'slide';
+    const h3 = document.createElement('h3'); h3.textContent = gr;
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = list.length + '개';
+    n.style.background = GRADE_TINT[gr] || GRADE_TINT['기타'];
+    const rule = document.createElement('span'); rule.className = 'rule';
+    head.append(h3, n, rule);
+    sec.appendChild(head);
+    if (gr === PLAY || gr === '기타') sec.appendChild(buildGrid(list));
+    else [NOW_TERM, NOW_TERM === '1학기' ? '2학기' : '1학기', ''].forEach(tm => {
+      const items = list.filter(g => termOf(g.title) === tm);
+      if (items.length) sec.appendChild(termBlock(gr, tm, items, collapse));
     });
-  }
+    results.appendChild(sec);
+  });
 
   $('#empty').style.display = filtered.length ? 'none' : 'flex';
   $('#clear').style.display = q ? 'block' : 'none';
@@ -734,11 +994,11 @@ function render() {
     }
   });
 
-  renderChips();
+  renderChips(tokens);
   tweenCount(filtered.length);
   $('#heroBadge').textContent = games.length;
   $('#heroCount').textContent = '모두 ' + games.length + '개의 게임이 준비되어 있어요';
-  $('#footCount').textContent = '게임 ' + games.length + '개';
+  $('#footCount').textContent = games.length;
 }
 
 /* ── launch + hash routing ── */
@@ -766,6 +1026,8 @@ function openGame(id, pushHash) {
   $('#lbDown').href = url;
   $('#lbDown').setAttribute('download', fileNameOf(url));
   $('#lbNew').onclick = () => window.open(url, '_blank', 'noopener');
+  /* 옛 게임 몇 개는 인터넷에서 글꼴·도구를 불러온다. 내려받을 때 알려 준다 */
+  $('#lbDown').onclick = () => { if (g.net) toast('이 게임은 내려받아도 인터넷이 연결돼 있어야 제대로 보여요'); };
   /* 불러오는 동안 검은 화면 대신 안내를 띄우고, 8초가 넘으면 '새 창' 방법을 알려 준다 */
   const loader = $('#loader');
   loader.classList.add('show'); loader.classList.remove('slow');
@@ -829,18 +1091,20 @@ document.addEventListener('webkitfullscreenchange', paintFull);
 function syncHash() {
   if (location.hash === '#admin') { closeLaunch(false); openAdmin(); return; }
   const m = location.hash.match(/^#game=(.+)$/);
-  if (m) openGame(decodeURIComponent(m[1]), false);
+  if (m) { closePicker(); openGame(decodeURIComponent(m[1]), false); }
   else closeLaunch(false);
 }
 addEventListener('hashchange', syncHash);
 addEventListener('popstate', syncHash);
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || isFull()) return;
-  if (isOpen()) closeLaunch(true);
+  if ($('#picker').classList.contains('open')) closePicker();
+  else if (isOpen()) closeLaunch(true);
   else if ($('#admin').style.display === 'flex') closeAdmin();
 });
 
 $('#search').addEventListener('input', e => { q = e.target.value; render(); });
+if (innerWidth < 520) $('#search').placeholder = '단원·주제 검색 (예: 고조선, 2단원)';
 $('#clear').onclick = () => { q = ''; $('#search').value = ''; render(); $('#search').focus(); };
 
 /* ── admin: 공개 화면에는 단추가 없다. 주소 끝에 #admin을 붙이면 열린다(저장은 이 브라우저에만) ── */
@@ -903,6 +1167,9 @@ $('#resetLocal').onclick = () => {
 
 /* ── boot: 이 브라우저에서 관리자 창으로 고친 목록이 있고, 그 뒤로 저장소 목록이 바뀌지 않았으면 그것을 쓴다 ── */
 function boot() {
+  /* 마지막 업데이트 날짜: GitHub Pages가 알려 주는 파일 수정 날짜를 쓴다(따로 고칠 필요 없음) */
+  const d = new Date(document.lastModified);
+  if (!isNaN(d)) $('#footDate').textContent = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
   const local = loadLocal();
   if (local && Number(local.base || 0) >= baseVersion) games = local.games;
   render();
