@@ -60,9 +60,10 @@ const PREP = {
   },
   start: async page => { await page.click('#btnStart'); await page.waitForTimeout(1500); },
   /* 3D 게임: 소프트웨어 렌더는 느리므로 게임 안 시간이 충분히 흐를 때까지(타이틀 로고가 다 떨어질 때까지) 기다린다 */
+  logo: async page => { await page.waitForFunction(() => typeof LOGO_FX !== 'undefined' && LOGO_FX.on, null, { timeout: 30000 }).catch(() => {}); },   // 불꽃 글씨 시작 → WAIT 뒤 글씨가 다 모인 장면
   gametime: async page => { await page.waitForFunction(() => window.GAME && GAME.T > 4, null, { timeout: 120000 }); },
 };
-const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime' };   // 50(6-2 코스터 v3)은 첫 화면이 곧 공원 장면이라 준비 없이 찍는다
+const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime', 50: 'logo', 71: 'logo' };   // 50·71(코스터 v4.1 픽셀판 6-2·3-2)은 타이틀 불꽃 글씨가 시작될 때까지 기다린 뒤 찍는다
 /* 선생님이 고른 화면이 따로 있는 게임은 그 그림을 줄여 쓴다 */
 const FROM_IMAGE = { 40: 'screenshots/07_후반_고조선시대_플레이화면.png' };
 
