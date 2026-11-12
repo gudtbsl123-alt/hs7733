@@ -54,19 +54,19 @@ function drawRoomDone(c){const r=G.room,t=G.t,[bx,by]=bgDraw(c,L.paper);c.save()
   titleBlock(c,'도면 '+doneCount()+' / 30',ROOMS[r].topic,r);c.restore();c.save();c.translate(bx*.9,by*.9);trayBox(c);T(c,G.tt>1?'화면을 누르면 집 단면도로 돌아가요':'',TRAY.x+TRAY.w/2,TRAY.y+54,24,'SunB','#ffe9a8','center');mole(c,1056,712,.98,'happy',t,0);c.restore();foreDraw(c,bx,by);fxDraw(c)}
 function leaveRoomDone(){if(doneCount()>=30)goResult();else{G.scene='select';G.tt=0}}
 /* ── 결과 ── */
-const RBTN=[{x:820,y:622,w:200,h:76,label:'오답 노트'},{x:1040,y:622,w:200,h:76,label:'처음부터'}];
+const RBTN=[{x:1076,y:300,w:176,h:76,label:'오답 노트'},{x:1076,y:396,w:176,h:76,label:'처음부터'}];
 function fmtTime(s){s=Math.round(s);return Math.floor(s/60)+'분 '+String(s%60).padStart(2,'0')+'초'}
 function drawResult(c){const t=G.t,tt=G.tt,[bx,by]=bgDraw(c,L.paperMap),f=firstCount(),grade=f>=27?3:f>=21?2:1;c.save();c.translate(bx*.6,by*.6);houseLines(c,1);
   for(let i=0;i<4;i++){const p=(t*.2+i/4)%1;c.save();c.globalAlpha=(1-p)*.7;c.strokeStyle=WH;c.lineWidth=2;c.beginPath();c.arc(804+Math.sin(p*9)*10+p*26,128-p*30,5+p*10,0,7);c.stroke();c.restore()}
   [0,1,2,3,4].forEach((r,i)=>{const lv=clamp((tt-.3-i*.45)/.6);cellDraw(c,r,lv>=1?'free':'free',ease(lv),t);if(lv>=1){const cc=CELL[r];client(c,r,cc.x+MW/2+(r%2?30:-30),cc.y+MH-4,.46,'happy',t,Math.abs(Math.sin(t*6+r))*8)}});
   if(tt>2.6)bigText(c,'집 완성!',648,180,84,(tt-2.6)*2);
-  note(c,40,24,360,150,-.02,2);T(c,'완공 도면',22,24,20,'SunB','#2f66ad');c.strokeStyle='#2f66ad';c.lineWidth=2;c.beginPath();c.moveTo(18,39);c.lineTo(342,38);c.stroke();fitT(c,G.name+' 설계사',22,70,30,'SunB','#14295a',316);
+  note(c,870,24,360,150,.015,2);T(c,'완공 도면',22,24,20,'SunB','#2f66ad');c.strokeStyle='#2f66ad';c.lineWidth=2;c.beginPath();c.moveTo(18,39);c.lineTo(342,38);c.stroke();fitT(c,G.name+' 설계사',22,70,30,'SunB','#14295a',316);
   for(let i=0;i<3;i++){const on=i<grade&&tt>3+i*.3,s2=on?back(clamp((tt-3-i*.3)*3)):1;c.save();c.translate(60+i*56,116);c.scale(s2,s2);c.fillStyle=on?'#ffb23c':'rgba(20,41,90,.15)';c.strokeStyle='#14295a';c.lineWidth=2.5;c.beginPath();for(let k=0;k<10;k++){const a=k*Math.PI/5-Math.PI/2,rr2=k%2?10:23;c.lineTo(Math.cos(a)*rr2,Math.sin(a)*rr2)}c.closePath();c.fill();c.stroke();c.restore()}
   T(c,['','새내기 설계사','든든한 설계사','으뜸 설계사'][grade],222,118,24,'SunB','#14295a');c.restore();
-  c.restore();
+  RBTN.forEach((b,i)=>{panel(c,b.x,b.y,b.w,b.h,{fill:'#12346c',col:i?WH:'#ffd66b'});T(c,b.label,b.x+b.w/2,b.y+b.h/2+1,24,'SunB',i?WH:'#ffe9a8','center')});c.restore();
   // 아래 표제란 띠: 기록
-  c.save();c.translate(bx*.9,by*.9);panel(c,40,612,760,96,{fill:'#0f2f5e'});const cols=[['한 번에 그린 도면',f+' / 30'],['다시 고친 도면',(30-f)+'장'],['걸린 시간',fmtTime(G.time)],['최고 기록',Math.max(G.best,f)+' / 30']];cols.forEach(([a,b],i)=>{const x=60+i*190;if(i){c.strokeStyle='rgba(234,243,255,.4)';c.lineWidth=1.2;c.beginPath();c.moveTo(x-12,624);c.lineTo(x-12,696);c.stroke()}T(c,a,x,640,20,'SunB','#dbe8ff');T(c,b,x,678,28,'SunB','#ffd66b')});
-  RBTN.forEach((b,i)=>{panel(c,b.x,b.y,b.w,b.h,{fill:'#12346c',col:i?WH:'#ffd66b'});T(c,b.label,b.x+b.w/2,b.y+b.h/2+1,26,'SunB',i?WH:'#ffe9a8','center')});c.restore();
+  c.save();c.translate(bx*.9,by*.9);trayBox(c);const cols=[['한 번에 그림',f+' / 30'],['다시 고침',(30-f)+'장'],['걸린 시간',fmtTime(G.time)],['최고 기록',Math.max(G.best,f)+' / 30']];cols.forEach(([a,b],i)=>{const x=TRAY.x+18+i*138;if(i){c.strokeStyle='rgba(234,243,255,.4)';c.lineWidth=1.2;c.beginPath();c.moveTo(x-9,TRAY.y+14);c.lineTo(x-9,TRAY.y+92);c.stroke()}T(c,a,x,TRAY.y+34,20,'SunB','#dbe8ff');fitT2(c,b,x,TRAY.y+72,27,'SunB','#ffd66b',122)});
+  mole(c,1056,712,.98,'happy',t,0);c.restore();
   foreDraw(c,bx,by);fxDraw(c)}
 function resultDown(p){if(G.tt<1)return;if(inR(p,RBTN[0].x,RBTN[0].y,RBTN[0].w,RBTN[0].h)){openNote();sfx.pick()}else if(inR(p,RBTN[1].x,RBTN[1].y,RBTN[1].w,RBTN[1].h)){if(newAsk>0){G.done={};G.wrongs=[];G.time=0;save();newAsk=0;G.scene='select';G.tt=0}else{newAsk=3;RBTN[1].label='정말 다시?';sfx.tick()}}}
 /* ── 오답 노트(DOM) ── */
@@ -99,7 +99,7 @@ function update(dt){G.t+=dt;G.tt+=dt;if(newAsk>0){newAsk-=dt;if(newAsk<=0)RBTN[1
 function draw(){const c=g;c.setTransform(DPR,0,0,DPR,0,0);if(G.scene==='title')drawTitle(c);else if(G.scene==='select')drawSelect(c);else if(G.scene==='play'&&Q)drawPlay(c);else if(G.scene==='roomdone')drawRoomDone(c);else drawResult(c);
   nick.style.display=G.scene==='title'?'block':'none'}
 let last=0;function frame(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;if(!G.paused)update(dt);draw();requestAnimationFrame(frame)}
-(async()=>{for(const f of['SunB','SunM','Pen','Orbit','DoHyeon']){try{await document.fonts.load('30px '+f,'가1°A')}catch(e){}}buildLayers();G.sv=load();if(G.sv&&G.sv.name)nick.value=G.sv.name;if(TEST)G.tt=3;window.READY=true;requestAnimationFrame(frame)})();
+(async()=>{for(const f of['SunB','SunB','Pen','Orbit','DoHyeon']){try{await document.fonts.load('30px '+f,'가1°A')}catch(e){}}buildLayers();G.sv=load();if(G.sv&&G.sv.name)nick.value=G.sv.name;if(TEST)G.tt=3;window.READY=true;requestAnimationFrame(frame)})();
 /* 자동 점검 창구 (.claude/skills/game-verify) — 게임 진행에는 쓰지 않는다 */
 window.__test={version:1,stageSize:[W,H],
   ui:{stage:'#game',name:'#nick',start:{x:SW.x+SW.w/2,y:SW.y+SW.h/2},pause:'#bPause',resume:'#bResume',mute:'#bSound',rotate:'#rot',rotateOk:'#rotOk'},

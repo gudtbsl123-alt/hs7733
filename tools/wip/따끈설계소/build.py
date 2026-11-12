@@ -5,7 +5,7 @@ bible=open(S+'00_bible.txt').read()
 js=bible+'\n'.join(open(S+f).read() for f in order)
 html=open(S+'head.html').read()+js+'\n</script>\n</body>\n</html>\n'
 if len(sys.argv)>1 and sys.argv[1]=='dev':
-    for k,v in {'__SUNB__':'file:///tmp/hs7733-fonts/Sunflower-Bold.ttf','__SUNM__':'file:///tmp/hs7733-fonts/Sunflower-Medium.ttf','__PEN__':'file:///tmp/hs7733-fonts/NanumPenScript-Regular.ttf','__ORBIT__':'file:///home/user/hs7733/docs/fonts/Orbit-Regular.ttf','__DOHYEON__':'file:///home/user/hs7733/docs/fonts/DoHyeon-Regular.ttf'}.items():html=html.replace(k,v)
+    for k,v in {'__SUNB__':'file:///tmp/hs7733-fonts/Sunflower-Bold.ttf','__PEN__':'file:///tmp/hs7733-fonts/NanumPenScript-Regular.ttf','__ORBIT__':'file:///home/user/hs7733/docs/fonts/Orbit-Regular.ttf','__DOHYEON__':'file:///home/user/hs7733/docs/fonts/DoHyeon-Regular.ttf'}.items():html=html.replace('data:font/woff2;base64,'+k+') format("woff2")',v+')')
     open(D+'/dev.html','w').write(html)
 else:open(D+'/src.html','w').write(html)
 print(len(html))
