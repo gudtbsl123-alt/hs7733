@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>따끈 설계소 — 5학년 2학기 과학 3. 열과 우리 생활</title>
+<style>
+@font-face{font-family:SunB;src:url(__SUNB__)}
+@font-face{font-family:SunM;src:url(__SUNM__)}
+@font-face{font-family:Pen;src:url(__PEN__)}
+@font-face{font-family:Orbit;src:url(__ORBIT__)}
+@font-face{font-family:DoHyeon;src:url(__DOHYEON__)}
+html,body{margin:0;height:100%;background:#061a2b;overflow:hidden;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#game{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1280px;height:720px;font-size:16px;font-family:SunB,DoHyeon,sans-serif;overflow:hidden}
+#cv{width:100%;height:100%;display:block}
+.hot{position:absolute;width:3.4em;height:3.4em;border-radius:50%;background:transparent;border:0;padding:0;cursor:pointer}
+#bSound{left:91.6%;top:17.5%;transform:translate(-50%,-50%)}#bPause{left:95.5%;top:17.5%;transform:translate(-50%,-50%)}
+#nick{position:absolute;left:74%;top:11.6%;width:21.5em;height:1.9em;transform-origin:0 0;font:1.6em SunB,DoHyeon,sans-serif;color:#fff;background:transparent;border:0;outline:0;padding:0;caret-color:#ffd66b;user-select:text;-webkit-user-select:text;width:13.2em}
+#nick::placeholder{color:rgba(234,243,255,.5)}
+.ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,20,52,.82)}.ov.on{display:flex}
+.box{background:#0f2f5e;border:.14em solid #eaf3ff;outline:.07em solid rgba(234,243,255,.5);outline-offset:-.5em;color:#eaf3ff;padding:1.6em 2.2em;text-align:center;max-width:80%}
+.box h2{margin:0 0 .6em;font-size:2.1em;color:#ffd66b;font-weight:normal}.box p{margin:.2em 0 1em;font-size:1.4em;line-height:1.5}
+.pb{display:block;width:100%;margin:.5em 0 0;padding:.55em 1em;font:1.6em SunB,DoHyeon,sans-serif;color:#ffe9a8;background:#12346c;border:.1em solid #ffd66b;cursor:pointer}
+.pb.sub{color:#eaf3ff;border-color:#eaf3ff;font-size:1.35em}
+#note .box{width:78%;max-height:84%;display:flex;flex-direction:column;text-align:left;padding:1.2em 1.6em}
+#noteBody{overflow-y:auto;flex:1;margin:.4em 0 .8em;padding-right:.6em;user-select:text}
+#noteBody .row{border-top:.07em dashed rgba(234,243,255,.5);padding:.7em 0}#noteBody .q{font-size:1.5em;line-height:1.45}#noteBody .q b{color:#ffd66b;font-weight:normal;margin-right:.4em}
+#noteBody .a{font-size:1.4em;line-height:1.5;margin-top:.2em}#noteBody .e{font-size:1.3em;line-height:1.5;color:#bff3d8;margin-top:.2em}
+.my,.ok{display:inline-block;padding:0 .5em;margin-right:.4em;border:.07em solid}.my{color:#ffb3a0}.ok{color:#bff3d8}
+@media (hover:hover){.pb:hover{background:#1a4690}}
+</style></head><body>
+<div id="game"><canvas id="cv"></canvas>
+<button id="bSound" class="hot" aria-label="소리 켜고 끄기"></button><button id="bPause" class="hot" aria-label="멈춤"></button>
+<input id="nick" maxlength="8" placeholder="이름 쓰기" autocomplete="off" spellcheck="false">
+<div id="pauseBox" class="ov"><div class="box"><h2>잠깐 멈춤</h2><p>도면은 그대로 저장되어 있어요.</p><button id="bResume" class="pb">계속 그리기</button><button id="bHome" class="pb sub">집 단면도로 가기</button><button id="bLow" class="pb sub">가벼운 화면 켜기</button></div></div>
+<div id="note" class="ov"><div class="box"><h2>오답 노트</h2><div id="noteBody"></div><button id="noteClose" class="pb">닫기</button></div></div>
+<div id="rot" class="ov"><div class="box"><h2>화면을 가로로 돌려 주세요</h2><p>가로 화면에서 도면이 크게 보여요.</p><button id="rotOk" class="pb">이대로 할래요</button></div></div>
+</div>
+<script>
