@@ -1,13 +1,13 @@
 /* ── 상태·저장 ── */
 const TRAY={x:250,y:606,w:560,h:106},SW={x:846,y:604,w:128,h:110},NEXT={x:1092,y:318,w:160,h:84},KEY='ddakkeun_v1';
-const G={scene:'title',t:0,tt:0,name:'',done:{},wrongs:[],time:0,room:0,stars:[],puffs:[],pull:0,hop:0,paused:false,muted:false,best:0,zoom:0,toRoom:-1,quiet:false};
+const G={scene:'title',t:0,tt:0,name:'',done:{},wrongs:[],time:0,room:0,stars:[],puffs:[],pull:0,unl:null,lockSh:null,rfx:{},press:null,lvA:-.75,paused:false,muted:false,best:0,zoom:0,toRoom:-1,quiet:false};
 let Q=null;
 function save(){try{localStorage.setItem(KEY,JSON.stringify({name:G.name,done:G.done,wrongs:G.wrongs,time:G.time,best:G.best}))}catch(e){}}
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}}
 const doneCount=()=>Object.keys(G.done).length,firstCount=()=>Object.values(G.done).filter(d=>d.first).length,roomDone=r=>roomItems(r).filter(it=>G.done[it.no]).length;
 const curRoom=()=>{for(let r=0;r<5;r++)if(roomDone(r)<6)return r;return 5};
 const snow=[];for(let i=0;i<46;i++)snow.push({x:SR(1056,1280),y:SR(0,590),v:SR(14,34),r:SR(1.5,3.2),p:SR(0,6)});
-function star(x,y,n,cols){for(let i=0;i<n;i++){const a=SR(0,6.28),v=SR(120,420);G.stars.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-160,l:SR(.6,1.2),t:0,r:SR(5,11),c:cols[i%cols.length],sp:SR(-6,6),k:i%3})}}
+function star(x,y,n,cols){if(LOW)n=Math.ceil(n/2);for(let i=0;i<n;i++){const a=SR(0,6.28),v=SR(120,420);G.stars.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-160,l:SR(.6,1.2),t:0,r:SR(5,11),c:cols[i%cols.length],sp:SR(-6,6),k:i%3})}}
 function puff(x,y,n){for(let i=0;i<n;i++)G.puffs.push({x,y,vx:SR(-70,70),vy:SR(-60,10),t:0,l:SR(.3,.6),r:SR(4,9)})}
 const CONF=['#ffd23f','#ff8a5a','#ffffff','#7fe0d0'];
 /* ── 문항 열기·자리 잡기 ── */
@@ -18,15 +18,14 @@ function mkTok(kind,label,i,n){let w=60,h=70;if(kind==='word'){g.font='24px SunB
 function openItem(no){const it=ITEMS[no-1];Q={it,no,phase:'ask',tries:0,cool:0,pend:0,simT:0,okT:0,hintT:0,rv:0,born:G.t,toks:[],slots:[],perm:[],sel:-1,drag:-1,choice:-1,simOK:true,figR:null,words:[],rows:[]};G.room=it.room;G.scene='play';layout(Q)}
 function layout(Q){const it=Q.it,n=it.opts?it.opts.length:0,gp=10;
   if(it.kind==='pick'){Q.perm=[...Array(n).keys()];if(it.lay==='cards'||it.shuffle)shuf(Q.perm);let rects;
-    if(it.lay==='cards'){if(n===3)rects=[0,1,2].map(i=>({x:SHT.x+8,y:SHT.y+8+i*120,w:SHT.w-16,h:110}));
-      else if(n===4){const w=(SHT.w-16-gp)/2,h=(SHT.h-16-gp)/2;rects=[0,1,2,3].map(i=>({x:SHT.x+8+(i%2)*(w+gp),y:SHT.y+8+Math.floor(i/2)*(h+gp),w,h}))}
-      else{const w=(SHT.w-16-gp)/2,h=(SHT.h-16-2*gp)/3,cells=[0,1,2,3,4,5].map(i=>({x:SHT.x+8+(i%2)*(w+gp),y:SHT.y+8+Math.floor(i/2)*(h+gp),w,h}));Q.figR=cells[0];rects=cells.slice(1)}}
+    if(it.lay==='cards'){const T3=[[290,198,370,92],[650,262,350,92],[400,418,370,92]],T4=[[280,192,360,90],[660,214,346,90],[298,340,360,90],[652,392,350,90]],T5=[[276,188,356,84],[652,198,350,84],[296,300,350,84],[668,318,342,84],[470,444,356,84]],TF=[[648,186,356,84],[640,284,360,84],[276,358,350,84],[660,382,350,84],[456,470,356,74]];
+      const L5=it.fig?TF:n===3?T3:n===4?T4:T5;if(it.fig)Q.figR={x:282,y:194,w:330,h:150};rects=L5.slice(0,n).map(([x,y,w,h],i)=>({x,y,w,h,rot:[-.012,.01,-.006,.012,-.008][i]}))}
     else rects=FIGS[it.fig].slots(Q);
     rects.forEach((r,i)=>Q.slots.push({...r,opt:Q.perm[i],label:it.opts[Q.perm[i]],correct:Q.perm[i]===it.ans,tok:-1,shake:0}));Q.toks.push(mkTok('pin','핀',0,1))}
   else if(it.kind==='sort'){const order=shuf(it.tokens.slice());order.forEach((s,i)=>Q.toks.push(mkTok('word',s,i,order.length)));
-    if(it.lay==='blank'){g.font='30px SunB';const maxW=SHT.w-90,sp=11,bw=156,lines=[[]];let x=0;
+    if(it.lay==='blank'){g.font='28px SunB';const maxW=SHT.w-110,sp=10,bw=150,lines=[[]];let x=0;
       for(const w of it.text.split(' ')){const m=/^\{(\d)\}$/.exec(w),ww=m?bw:g.measureText(w).width;if(x+ww>maxW&&lines[lines.length-1].length){lines.push([]);x=0}lines[lines.length-1].push({s:w,ww,m:m?+m[1]:-1,x});x+=ww+sp}
-      const lh=66,y0=SHT.y+SHT.h/2-(lines.length-1)*lh/2;lines.forEach((ln,li)=>{const last=ln[ln.length-1],ox=SHT.x+(SHT.w-(last.x+last.ww))/2;ln.forEach(o=>{const X=ox+o.x,Y=y0+li*lh;if(o.m>=0)Q.slots[o.m]={x:X,y:Y-29,w:bw,h:58,need:it.ans[o.m],tok:-1,shake:0,label:'빈칸'};else Q.words.push({s:o.s,x:X,y:Y})})})}
+      const lh=64,bh=lines.length*lh+34;Q.blankBox={x:SHT.x+14,y:SHT.y+10,w:SHT.w-28,h:bh};const y0=SHT.y+10+17+lh/2;lines.forEach((ln,li)=>{const last=ln[ln.length-1],ox=SHT.x+(SHT.w-(last.x+last.ww))/2;ln.forEach(o=>{const X=ox+o.x,Y=y0+li*lh;if(o.m>=0)Q.slots[o.m]={x:X,y:Y-29,w:bw,h:58,need:it.ans[o.m],tok:-1,shake:0,label:'빈칸'};else Q.words.push({s:o.s,x:X,y:Y})})})}
     else if(it.lay==='rows'){g.font='26px SunB';it.rows.forEach((s,i)=>{const y=SHT.y+12+i*118;Q.rows.push({lines:wrap(g,s,470),x:SHT.x+64,y,h:106});Q.slots.push({x:SHT.x+SHT.w-212,y:y+24,w:178,h:58,need:it.ans[i],tok:-1,shake:0,label:s})})}
     else FIGS[it.fig].slots(Q).forEach((r,i)=>Q.slots.push({...r,need:it.ans[i],tok:-1,shake:0,label:it.slots[i]}))}
   else{[{x:292,y:204,w:124,h:66},{x:292,y:454,w:124,h:66}].forEach((r,i)=>Q.slots.push({...r,label:it.opts[i],correct:i===it.ans,tok:-1,shake:0}));Q.toks.push(mkTok('part',it.part==='heater'?'난방기':'냉방기',0,1));Q.tTop=Q.tBot=it.part==='heater'?8:31}}
@@ -41,15 +40,18 @@ function choose(si){const s=Q.slots[si],k=Q.toks[0];Q.choice=si;k.slot=si;k.tx=s
 const filled=()=>Q.it.kind==='place'?Q.toks[0].slot>=0:Q.slots.every(s=>s.tok>=0);
 function evalAns(){const it=Q.it;if(it.kind==='pick')return Q.slots[Q.choice].correct;if(it.kind==='place')return Q.slots[Q.toks[0].slot].correct;return Q.slots.every(s=>s.tok>=0&&Q.toks[s.tok].label===s.need)}
 function myAnswer(){const it=Q.it;if(it.kind==='pick')return Q.slots[Q.choice].label;if(it.kind==='place')return Q.slots[Q.toks[0].slot].label;return Q.slots.map(s=>s.tok>=0?Q.toks[s.tok].label:'(빈칸)').join(' / ')}
-function pullLever(){if(!filled()){Q.toks.forEach(k=>{if(k.slot<0)k.wob=1});sfx.tick();return}Q.phase='sim';Q.simT=0;G.pull=1;Q.simOK=evalAns();Q.simDur=Q.it.lay==='room'?3.2:Q.it.lay==='two'?1.6:.7;sfx.lever()}
-function judge(ok){if(ok){Q.phase=Q.it.lay==='room'?'reveal':'ok';Q.okT=0;Q.rv=0;if(!G.done[Q.no])G.done[Q.no]={first:Q.tries===0};save();sfx.ok();G.hop=1;if(Q.it.lay!=='room')star(640,360,22,CONF)}
+function pullLever(){if(!filled()){Q.toks.forEach(k=>{if(k.slot<0)k.wob=1});sfx.tick();return}Q.phase='sim';Q.simT=0;G.pull=1;Q.simOK=evalAns();Q.simDur=Q.it.lay==='room'?3.2:Q.it.lay==='two'?1.6:.7;Q.fast=false;sfx.lever()}
+function judge(ok){if(ok){Q.phase=Q.it.lay==='room'?'reveal':'ok';Q.okT=0;Q.rv=0;if(!G.done[Q.no])G.done[Q.no]={first:Q.tries===0};save();sfx.ok(Math.max(0,roomDone(Q.it.room)-1));Q.spark=false;if(Q.it.lay!=='room'&&Q.tries===0){const s=Q.it.kind==='pick'?Q.slots[Q.choice]:Q.slots[Q.slots.length-1];star(s.cx!==undefined?s.cx:s.x+s.w/2,s.cy!==undefined?s.cy:s.y+s.h/2,14,CONF)}}
   else{Q.phase='hint';Q.tries++;Q.cool=1.6;Q.hintT=0;if(Q.tries===1&&!G.done[Q.no])G.wrongs.push({no:Q.no,my:myAnswer()});save();sfx.no();Q.slots.forEach((s,i)=>{if(s.tok>=0||i===Q.choice)s.shake=1})}}
-function clearTry(){Q.toks.forEach((k,i)=>goHome(i));Q.choice=-1;Q.sel=-1;Q.phase='ask';if(Q.it.lay==='room')Q.tTop=Q.tBot=Q.it.part==='heater'?8:31}
+function clearTry(){if(Q.toks.some(k=>k.slot>=0))sfx.back();Q.toks.forEach((k,i)=>goHome(i));Q.choice=-1;Q.sel=-1;Q.phase='ask';if(Q.it.lay==='room')Q.tTop=Q.tBot=Q.it.part==='heater'?8:31}
 function nextItem(skip){const r=G.room,nx=roomItems(r).find(it=>!G.done[it.no]);if(nx){openItem(nx.no);return}
-  if(skip){if(doneCount()>=30)goResult();else{G.scene='select';G.tt=0}return}G.scene='roomdone';G.tt=0;sfx.ok();star(640,300,40,CONF)}
+  if(skip){if(doneCount()>=30)goResult();else{G.scene='select';G.tt=0}return}G.scene='roomdone';G.tt=0;sfx.room();star(640,250,40,CONF)}
 function enterRoom(r){const nx=roomItems(r).find(it=>!G.done[it.no]);if(nx)openItem(nx.no)}
-function goResult(){G.scene='result';G.tt=0;const f=firstCount();if(f>G.best)G.best=f;save();if(!G.quiet)star(640,300,50,CONF)}
-function playDown(p){if(Q.phase==='ok'){if(Q.okT>.9&&inR(p,NEXT.x-10,NEXT.y-10,NEXT.w+20,NEXT.h+20)){sfx.pick();nextItem()}return}
+function goResult(){G.scene='result';G.tt=0;G.rfx={};const f=firstCount();if(f>G.best)G.best=f;save()}
+const nextAt=()=>Q.it.lay==='room'?.3:.5;
+function goNext(){if(Q.it.lay!=='room'&&Q.okT<.8){Q.ff=true;sfx.pick();return}sfx.pick();nextItem()}
+function playDown(p){if(Q.phase==='ok'){if(Q.okT>nextAt()&&!Q.ff&&inR(p,NEXT.x-10,NEXT.y-10,NEXT.w+20,NEXT.h+20))goNext();return}
+  if(Q.phase==='sim'&&Q.tries>0&&Q.simT>1){Q.fast=true;return}
   if(Q.phase!=='ask'||Q.cool>0||Q.pend>0||G.t-Q.born<.35)return;const pick=Q.it.kind==='pick';
   const ti=tokAt(p);if(ti>=0){const k=Q.toks[ti];Q.drag=ti;k.moved=false;k.ox=p.x-k.x;k.oy=p.y-k.y;k.px=p.x;k.py=p.y;sfx.pick();return}
   const si=slotAt(p,pick?0:8);if(si>=0){if(pick){choose(si);return}const s=Q.slots[si];if(Q.sel>=0){put(Q.sel,si);return}if(s.tok>=0){goHome(s.tok);sfx.back();return}const free=Q.toks.map((k,i)=>k.slot<0?i:-1).filter(i=>i>=0);if(Q.toks.length===1||free.length===1){put(free.length?free[0]:0,si)}return}
@@ -68,13 +70,13 @@ function updatePlay(dt){if(!Q)return;G.time+=dt;
   Q.toks.forEach((k,i)=>{if(Q.drag!==i){k.x=lerp(k.x,k.tx,1-Math.pow(.0005,dt));k.y=lerp(k.y,k.ty,1-Math.pow(.0005,dt))}k.wob=Math.max(0,k.wob-dt*3);k.sc=lerp(k.sc,Q.drag===i?1.12:1,1-Math.pow(.001,dt))});
   Q.slots.forEach(s=>{s.shake=Math.max(0,s.shake-dt*2)});if(Q.cool>0)Q.cool=Math.max(0,Q.cool-dt);
   if(Q.pend>0){Q.pend-=dt;if(Q.pend<=0){Q.pend=0;judge(evalAns())}}
-  if(Q.phase==='sim'){Q.simT+=dt;if(Q.it.lay==='room'){const p=ease(clamp(Q.simT/Q.simDur)),pb=clamp(p*1.5-.5),h=Q.it.part==='heater';
+  if(Q.phase==='sim'){Q.simT+=dt*(Q.fast?2:1);if(Q.it.lay==='room'){const p=ease(clamp(Q.simT/Q.simDur)),pb=clamp(p*1.5-.5),h=Q.it.part==='heater';
       if(h){Q.tTop=Q.simOK?8+13*clamp(p*1.25-.15):8+16*clamp(p*1.3-.2);Q.tBot=Q.simOK?8+12*pb:8+.6*p}else{Q.tBot=Q.simOK?31-6*clamp(p*1.25-.15):31-9*clamp(p*1.3-.2);Q.tTop=Q.simOK?31-5*pb:31-.6*p}}
     if(Q.simT>=Q.simDur+.3)judge(Q.simOK)}
   else if(Q.phase==='hint'){Q.hintT+=dt;if(Q.cool<=0&&Q.hintT>1.7)clearTry()}
-  else if(Q.phase==='reveal'){Q.rv+=dt/.9;if(Q.rv>=1){Q.rv=1;Q.phase='ok';Q.okT=0;star(640,360,26,CONF)}}
-  else if(Q.phase==='ok')Q.okT+=dt}
-function updateFx(dt){G.pull=Math.max(0,G.pull-dt*2.2);G.hop=Math.max(0,G.hop-dt*1.6);
+  else if(Q.phase==='reveal'){Q.rv+=dt/.9;if(Q.rv>=1){Q.rv=1;Q.phase='ok';Q.okT=0;if(Q.tries===0)star(640,360,18,CONF)}}
+  else if(Q.phase==='ok'){Q.okT+=dt*(Q.ff?4:1);if(Q.it.lay!=='room'&&!Q.spark&&Q.okT>=.25){Q.spark=true;const k=roomDone(Q.it.room)-1,[ox,oy]=objCenter(Q.it.room,k);star(ox,oy,8,['#ffd66b','#ffffff']);sfx.fill(k)}if(Q.ff&&Q.okT>=.8){Q.ff=false;nextItem()}}}
+function updateFx(dt){G.pull=Math.max(0,G.pull-dt*2.2);if(G.unl){G.unl.t+=dt;if(!G.unl.snd&&G.unl.t>=.3){G.unl.snd=true;sfx.unlock();const cc=CELL[curRoom()];if(cc)star(cc.x+MW/2,cc.y+MH/2,12,['#ffd66b','#ffffff'])}if(G.unl.t>=.8)G.unl=null}if(G.lockSh)G.lockSh.t+=dt;
   for(const s of snow){s.y+=s.v*dt;s.x+=Math.sin(G.t*1.3+s.p)*8*dt;if(s.y>592){s.y=-4;s.x=SR(1056,1280)}}
   G.stars=G.stars.filter(s=>(s.t+=dt)<s.l);for(const s of G.stars){s.vy+=520*dt;s.x+=s.vx*dt;s.y+=s.vy*dt}
   G.puffs=G.puffs.filter(s=>(s.t+=dt)<s.l);for(const s of G.puffs){s.x+=s.vx*dt;s.y+=s.vy*dt}}

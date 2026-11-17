@@ -83,18 +83,32 @@ const ROOMS=[
  {name:'공방',who:'또각이',home:'또각이네 공방',topic:'고체와 열',wall:'#dfe3ee',pat:'#cfd5e4',wain:'#b9a88f',wain2:'#a39078',F:F2},
  {name:'거실',who:'솜이 할머니',home:'솜이 할머니 댁 거실',topic:'액체·기체와 열',wall:'#f6dfc0',pat:'#efcfa6',wain:'#d9a877',wain2:'#c48f5e',F:F3},
  {name:'햇빛 방',who:'볕이',home:'볕이네 햇빛 방',topic:'열의 이동과 단열',wall:'#fff0c4',pat:'#f7e0a0',wain:'#f2b98a',wain2:'#e0a070',F:F4}];
+const OBJ=[
+ [[284,196,82,262],[410,212,200,112],[726,218,226,186],[398,370,332,160],[796,380,222,150],[250,500,780,60]],
+ [[284,200,196,100],[484,244,244,70],[280,370,190,155],[470,374,270,150],[752,220,142,152],[760,286,260,240]],
+ [[260,186,760,40],[288,228,290,160],[280,384,390,140],[696,240,232,74],[732,324,280,128],[694,446,326,90]],
+ [[430,188,110,152],[284,262,140,150],[524,206,272,214],[806,170,206,180],[628,420,310,140],[250,466,380,94]],
+ [[284,204,202,222],[494,204,202,222],[666,166,64,112],[736,230,280,190],[434,370,180,160],[250,450,780,110]]];
+function drawRoomAt(c,r,x,y,w,h,n,grow,lineImg){const sx=w/RW,sy=h/RH;c.drawImage(lineImg||L.rl[r],x,y,w,h);if(n>=6){c.drawImage(L.rr[r],x,y,w,h);return}
+  const R2=o=>[x+(o[0]-RX)*sx,y+(o[1]-RY)*sy,o[2]*sx,o[3]*sy];
+  if(n>0){c.save();c.beginPath();for(let i=0;i<n;i++){const q=R2(OBJ[r][i]);c.rect(q[0],q[1],q[2],q[3])}c.clip();c.drawImage(L.rr[r],x,y,w,h);c.restore()}
+  if(grow>0&&n<6){const q=R2(OBJ[r][n]),yy=q[1]+q[3]*(1-grow);c.save();c.beginPath();c.rect(q[0],yy,q[2],q[1]+q[3]-yy);c.clip();c.drawImage(L.rr[r],x,y,w,h);c.restore();
+    if(grow<1){const gl=c.createLinearGradient(0,yy-18*sy,0,yy+4);gl.addColorStop(0,'rgba(255,230,150,0)');gl.addColorStop(1,'rgba(255,240,190,.9)');c.fillStyle=gl;c.fillRect(q[0],yy-18*sy,q[2],18*sy+4);c.fillStyle='#fff';c.fillRect(q[0],yy-1.5,q[2],3)}
+    else{c.save();c.strokeStyle='rgba(255,214,107,'+(.9)+')';c.lineWidth=3;c.strokeRect(q[0],q[1],q[2],q[3]);c.restore()}}}
+const objCenter=(r,n)=>{const o=OBJ[r][Math.min(5,n)];return[o[0]+o[2]/2,o[1]+o[3]/2]};
 function roomReal(c,r){const R=ROOMS[r];c.save();c.beginPath();c.rect(RX,RY,RW,RH);c.clip();c.fillStyle=R.wall;c.fillRect(RX,RY,RW,RH);
   c.fillStyle=R.pat;for(let y=RY+14;y<430;y+=30)for(let x=RX+(Math.round((y-RY)/30)%2?16:0);x<RX+RW;x+=32){c.beginPath();c.moveTo(x,y-6);c.lineTo(x+5,y);c.lineTo(x,y+6);c.lineTo(x-5,y);c.fill()}
   c.fillStyle=R.wain;c.fillRect(RX,430,RW,90);c.fillStyle=R.wain2;for(let x=RX;x<RX+RW;x+=52)c.fillRect(x,436,3,84);c.fillStyle='#8a5a3c';c.fillRect(RX,426,RW,7);
   const fg=c.createLinearGradient(0,FY,0,RB);fg.addColorStop(0,'#c98a52');fg.addColorStop(1,'#a8693a');c.fillStyle=fg;c.fillRect(RX,FY,RW,40);c.fillStyle='rgba(70,30,60,.3)';for(let x=RX+20;x<RX+RW;x+=64){c.beginPath();c.moveTo(x,FY);c.lineTo(x-14,RB);c.lineTo(x-11,RB);c.lineTo(x+3,FY);c.fill()}
   c.fillStyle='rgba(255,240,200,.35)';c.fillRect(RX,FY,RW,3);c.fillStyle='#8a5a3c';c.fillRect(RX,FY-9,RW,9);
-  let lg2=c.createRadialGradient(RX+60,RY+20,20,RX+200,RY+120,620);lg2.addColorStop(0,'rgba(255,236,170,.5)');lg2.addColorStop(1,'rgba(255,236,170,0)');c.fillStyle=lg2;c.fillRect(RX,RY,RW,RH);
-  let sg=c.createLinearGradient(RX+RW-240,RY,RX+RW,RB);sg.addColorStop(0,'rgba(70,40,120,0)');sg.addColorStop(1,'rgba(70,40,120,.28)');c.fillStyle=sg;c.fillRect(RX,RY,RW,RH);
+  OBJ[r].forEach(o=>{if(o[1]+o[3]>=500&&o[2]<600){c.fillStyle='rgba(60,30,100,.26)';c.beginPath();el(c,o[0]+o[2]/2+8,Math.min(o[1]+o[3],FY+16),o[2]*.46,9);c.fill()}});
+  let lg2=c.createRadialGradient(RX+60,RY+20,20,RX+200,RY+120,620);lg2.addColorStop(0,'rgba(255,236,170,.62)');lg2.addColorStop(1,'rgba(255,236,170,0)');c.fillStyle=lg2;c.fillRect(RX,RY,RW,RH);
+  let sg=c.createLinearGradient(RX+RW-240,RY,RX+RW,RB);sg.addColorStop(0,'rgba(70,40,120,0)');sg.addColorStop(1,'rgba(70,40,120,.4)');c.fillStyle=sg;c.fillRect(RX,RY,RW,RH);
   R.F(c,'real');c.restore()}
 function roomLine(c,r,mode){if(mode==='line'){c.fillStyle='rgba(234,243,255,.035)';c.fillRect(RX,RY,RW,RH);for(let x=RX+30;x<RX+RW;x+=60)bl(c,[[x,FY],[x-16,RB]],{w:1,a:.35})}bl(c,[[RX,FY],[RX+RW,FY]],{w:1.5,dash:[9,6]});ROOMS[r].F(c,mode)}
 /* ── 의뢰인(양은 sheep 함수, 나머지는 여기) ── */
 const CL=[{fur:'#f4f1ea',muz:'#ffffff',cloth:'#4f8fd8',leg:'#3a4a7a',ear:'rabbit'},{fur:'#a8744c',muz:'#f1dcc8',cloth:'#fff6e8',leg:'#5a3e36',ear:'bear',hat:'chef'},{fur:'#8f9ab8',muz:'#eef2fb',cloth:'#f28a3c',leg:'#4a4460',ear:'cat',hat:'goggles'},null,{fur:'#f2cf8a',muz:'#fff3d6',cloth:'#4fae78',leg:'#6a4630',ear:'dog',hat:'straw'}];
-function client(c,r,x,y,s,ex,t,hop){if(r===3)return sheep(c,x,y,s,ex,t,hop);const K=CL[r];c.save();c.translate(x,y);c.fillStyle='rgba(30,20,70,.26)';c.beginPath();el(c,0,2,58*s,9*s);c.fill();
+function client(c,r,x,y,s,ex,t,hop){if(r===3)return sheep(c,x,y,s,ex,t,hop);const K=CL[r];c.save();c.translate(x,y);c.fillStyle='rgba(30,20,70,.42)';c.beginPath();el(c,4*s,3*s,64*s,11*s);c.fill();
   c.translate(0,-hop);c.scale(s,s*(1+Math.sin(t*2.2+r)*.014));
   cel(c,k=>rr(k,-34,-40,18,40,7),K.leg,{s:3,h:2});cel(c,k=>rr(k,16,-40,18,40,7),K.leg,{s:3,h:2});
   if(K.ear==='dog'||K.ear==='cat'){c.save();c.translate(44,-70);c.rotate(.5+Math.sin(t*3)*.12);cel(c,k=>rr(k,-7,-44,14,50,7),K.fur,{s:3,h:2});c.restore()}

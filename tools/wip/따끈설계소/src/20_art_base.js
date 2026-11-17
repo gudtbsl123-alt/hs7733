@@ -1,5 +1,5 @@
 /* ── 가구(선·실물 두 가지로 그린다) ── */
-function P(c,mode,shape,col,o){if(mode==='line'||mode==='lineT'){c.save();c.beginPath();shape(c);if(mode==='line'){c.fillStyle='#255a9f';c.fill()}c.fillStyle=mode==='line'?'rgba(234,243,255,.06)':'rgba(20,50,110,.16)';c.fill();c.strokeStyle=WH;c.lineWidth=2;c.lineJoin='round';c.stroke();c.restore()}else cel(c,shape,col,o)}
+function P(c,mode,shape,col,o){if(mode==='line'||mode==='lineT'){c.save();c.beginPath();shape(c);if(mode==='line'){c.fillStyle='#255a9f';c.fill()}c.fillStyle=mode==='line'?'rgba(234,243,255,.06)':'rgba(20,50,110,.16)';c.fill();c.strokeStyle=WH;c.lineWidth=2;c.lineJoin='round';c.stroke();c.restore()}else cel(c,shape,col,o||{s:9,h:6})}
 function F3(c,m){
   // 깔개
   P(c,m,k=>el(k,640,548,210,11),'#e9596a',{s:3,h:2});if(m==='real'){c.save();c.strokeStyle='#ffd9a8';c.lineWidth=2;c.setLineDash([8,7]);c.beginPath();el(c,640,547,186,7);c.stroke();c.restore()}
@@ -49,7 +49,7 @@ function radiator(c,m,x,y,sc,hot){c.save();c.translate(x,y);c.scale(sc,sc);const
     cel(c,k=>rr(k,-w/2+8,h/2-2,12,9,2),'#5a546e',{s:1,h:0,ow:2});cel(c,k=>rr(k,w/2-20,h/2-2,12,9,2),'#5a546e',{s:1,h:0,ow:2});cel(c,k=>k.arc(w/2+2,-h/2+14,7,0,7),'#ffd23f',{s:2,h:1,ow:2})}
   c.restore()}
 /* ── 캐릭터 ── */
-function sheep(c,x,y,s,ex,t,hop){c.save();c.translate(x,y);c.fillStyle='rgba(30,20,70,.26)';c.beginPath();el(c,0,2,64*s,9*s);c.fill();
+function sheep(c,x,y,s,ex,t,hop){c.save();c.translate(x,y);c.fillStyle='rgba(30,20,70,.42)';c.beginPath();el(c,4*s,3*s,70*s,11*s);c.fill();
   const br=1+Math.sin(t*2.2)*.014,shv=ex==='cold'?Math.sin(t*40)*1.5:0;c.translate(shv,-hop);c.scale(s,s*br);
   cel(c,k=>rr(k,-36,-40,18,40,7),'#4a4460',{s:3,h:2});cel(c,k=>rr(k,18,-40,18,40,7),'#4a4460',{s:3,h:2});
   cel(c,k=>blob(k,0,-88,62,50,11),ex==='cold'?'#e6eefc':'#fff6e8',{s:10,h:6});
