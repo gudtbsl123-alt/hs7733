@@ -56,7 +56,7 @@ function buildLayers(){let o,c;
   // 5 흐린 앞 도구(연필·컵·스탠드 갓)
   o=mk(W,H);c=o.g;
   c.save();c.translate(-150,770);c.rotate(-.36);cel(c,k=>rr(k,0,-26,300,52,6),'#ffcf3f',{s:9,h:6});cel(c,k=>rr(k,-46,-26,50,52,10),'#f28a9a',{s:6});cel(c,k=>rr(k,-6,-27,22,54,3),'#c9ccd8',{s:4});cel(c,k=>{k.moveTo(300,-26);k.lineTo(366,0);k.lineTo(300,26);k.closePath()},'#f1d2a4',{s:6});c.restore();
-  cel(c,k=>rr(k,1168,612,150,150,22),'#e9596a',{s:12,h:8});cel(c,k=>el(k,1243,614,75,20),'#5a2f2a',{s:4,h:0});
+  cel(c,k=>rr(k,1196,624,150,150,22),'#e9596a',{s:12,h:8});cel(c,k=>el(k,1271,626,75,20),'#5a2f2a',{s:4,h:0});
   c.save();c.translate(-6,-10);c.rotate(-.16);cel(c,k=>rr(k,60,-60,26,70,6),'#3a4466',{s:5,h:3});cel(c,k=>{k.moveTo(34,0);k.lineTo(112,0);k.lineTo(196,96);k.lineTo(-44,96);k.closePath()},'#1f8a80',{s:12,h:8});cel(c,k=>el(k,76,98,120,20),'#fff3b0',{s:3,h:0});c.fillStyle='#ffe08a';c.beginPath();el(c,76,100,70,10);c.fill();c.restore();const lgw=c.createRadialGradient(80,96,10,110,150,260);lgw.addColorStop(0,'rgba(255,232,150,.5)');lgw.addColorStop(1,'rgba(255,232,150,0)');c.fillStyle=lgw;c.fillRect(0,60,400,300);
   const b=mk(W/4,H/4);b.g.imageSmoothingEnabled=true;b.g.drawImage(o.c,0,0,W/4,H/4);const b2=mk(W,H);b2.g.imageSmoothingEnabled=true;b2.g.drawImage(b.c,0,0,W/4*DPR,H/4*DPR,0,0,W,H);b2.g.globalAlpha=.5;b2.g.drawImage(o.c,0,0,W,H);L.fore=LOW?o.c:b2.c;
   // 6 스탠드 빛·비네트

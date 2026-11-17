@@ -1,6 +1,6 @@
 /* ── 온도 색·흐름 띠 ── */
 const TC=['#17397c','#1f7fa8','#4cc0ae','#ffe9a8','#ffc98a','#f58f6c'],FC=['#2f7df0','#22b4d4','#ff8a2c','#e8452f'];
-const TM=document.createElement('canvas');TM.width=26;TM.height=13;const tg=TM.getContext('2d');
+const TM=document.createElement('canvas');TM.width=49;TM.height=24;const tg=TM.getContext('2d');
 const fcol=h=>{const x=clamp(h)*(FC.length-1),i=Math.min(FC.length-2,Math.floor(x));return mix(FC[i],FC[i+1],x-i)};
 function tcol(h){const x=clamp(h)*(TC.length-1),i=Math.min(TC.length-2,Math.floor(x));return mix(TC[i],TC[i+1],x-i)}
 function mkPath(x0,x1,y0,y1,r){const P=[],seg=(ax,ay,bx,by,n)=>{for(let i=0;i<n;i++)P.push([lerp(ax,bx,i/n),lerp(ay,by,i/n)])},arc=(cx,cy,a0,a1,n)=>{for(let i=0;i<n;i++){const a=lerp(a0,a1,i/n);P.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r])}};

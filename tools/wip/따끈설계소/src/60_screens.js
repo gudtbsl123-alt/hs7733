@@ -39,8 +39,7 @@ function startGame(nm){const name=(nm||'').trim().slice(0,8)||(G.sv&&G.sv.name)|
 function drawSelect(c){const t=G.t,[bx,by]=bgDraw(c,L.paperMap),cur=curRoom();c.save();c.translate(bx*.6,by*.6);
   const z=G.zoom>0&&G.toRoom>=0?ease(clamp(G.zoom)):0;if(z>0){const cc=CELL[G.toRoom],s=1+z*1.6,ox=cc.x+MW/2,oy=cc.y+MH/2;c.translate(640+(ox-640)*(1-z)*0-ox*s+ (ox*(1-z)+640*z),360-oy*s+(oy*(1-z)+360*z));c.scale(s,s)}
   houseLines(c,1);for(let i=0;i<4;i++){const p=(t*.2+i/4)%1;c.save();c.globalAlpha=(1-p)*.7;c.strokeStyle=WH;c.lineWidth=2;c.beginPath();c.arc(804+Math.sin(p*9)*10+p*26,128-p*30,5+p*10,0,7);c.stroke();c.restore()}
-  for(let r=0;r<5;r++)cellDraw(c,r,roomDone(r)>=6?'done':r===cur?'cur':r<cur?'done':'lock',roomDone(r)/6,t);
-  if(cur<5&&z===0)client(c,cur,CELL[cur].x+MW/2,CELL[cur].y+MH-4,.5,'idle',t,Math.abs(Math.sin(t*3))*6);
+  for(let r=0;r<5;r++){cellDraw(c,r,roomDone(r)>=6?'done':r===cur?'cur':r<cur?'done':'lock',roomDone(r)/6,t);if(r===cur&&z===0)client(c,cur,CELL[cur].x+MW*.3,CELL[cur].y+MH-4,.46,'idle',t,Math.abs(Math.sin(t*3))*6)}
   c.restore();if(z===0){c.save();c.translate(bx*.6,by*.6);note(c,256,16,530,128,-.012,2);T(c,G.name+' 설계사님께',22,22,20,'SunB','#2f66ad');c.strokeStyle='#2f66ad';c.lineWidth=2;c.beginPath();c.moveTo(18,37);c.lineTo(512,36);c.stroke();
     fitT(c,cur<5?'반짝이는 방을 눌러 도면을 그려 주세요.':'집이 모두 완성되었어요!',22,66,28,'SunB','#14295a',486);fitT(c,cur<5?('이번 의뢰: '+ROOMS[cur].home):'',22,102,28,'SunB','#14295a',486);c.restore();
     titleBlock(c,'도면 '+doneCount()+' / 30','방 '+Math.min(cur+1,5)+' / 5',cur);c.restore()}
