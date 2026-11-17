@@ -20,14 +20,14 @@ function layout(Q){const it=Q.it,n=it.opts?it.opts.length:0,gp=10;
   if(it.kind==='pick'){Q.perm=[...Array(n).keys()];if(it.lay==='cards'||it.shuffle)shuf(Q.perm);let rects;
     if(it.lay==='cards'){const T3=[[290,198,370,92],[650,262,350,92],[400,418,370,92]],T4=[[280,192,360,90],[660,214,346,90],[298,340,360,90],[652,392,350,90]],T5=[[276,188,356,84],[652,198,350,84],[296,300,350,84],[668,318,342,84],[470,444,356,84]],TF=[[648,186,356,84],[640,284,360,84],[276,358,350,84],[660,382,350,84],[456,470,356,74]];
       const L5=it.fig?TF:n===3?T3:n===4?T4:T5;if(it.fig)Q.figR={x:282,y:194,w:330,h:150};rects=L5.slice(0,n).map(([x,y,w,h],i)=>({x,y,w,h,rot:[-.012,.01,-.006,.012,-.008][i]}))}
-    else rects=FIGS[it.fig].slots(Q);
+    else{Q.fsl=FIGS[it.fig].slots(Q);rects=Q.fsl.map(fsRect)}
     rects.forEach((r,i)=>Q.slots.push({...r,opt:Q.perm[i],label:it.opts[Q.perm[i]],correct:Q.perm[i]===it.ans,tok:-1,shake:0}));Q.toks.push(mkTok('pin','핀',0,1))}
   else if(it.kind==='sort'){const order=shuf(it.tokens.slice());order.forEach((s,i)=>Q.toks.push(mkTok('word',s,i,order.length)));
     if(it.lay==='blank'){g.font='28px SunB';const maxW=SHT.w-110,sp=10,bw=150,lines=[[]];let x=0;
       for(const w of it.text.split(' ')){const m=/^\{(\d)\}$/.exec(w),ww=m?bw:g.measureText(w).width;if(x+ww>maxW&&lines[lines.length-1].length){lines.push([]);x=0}lines[lines.length-1].push({s:w,ww,m:m?+m[1]:-1,x});x+=ww+sp}
       const lh=64,bh=lines.length*lh+34;Q.blankBox={x:SHT.x+14,y:SHT.y+10,w:SHT.w-28,h:bh};const y0=SHT.y+10+17+lh/2;lines.forEach((ln,li)=>{const last=ln[ln.length-1],ox=SHT.x+(SHT.w-(last.x+last.ww))/2;ln.forEach(o=>{const X=ox+o.x,Y=y0+li*lh;if(o.m>=0)Q.slots[o.m]={x:X,y:Y-29,w:bw,h:58,need:it.ans[o.m],tok:-1,shake:0,label:'빈칸'};else Q.words.push({s:o.s,x:X,y:Y})})})}
     else if(it.lay==='rows'){g.font='26px SunB';it.rows.forEach((s,i)=>{const y=SHT.y+12+i*118;Q.rows.push({lines:wrap(g,s,470),x:SHT.x+64,y,h:106});Q.slots.push({x:SHT.x+SHT.w-212,y:y+24,w:178,h:58,need:it.ans[i],tok:-1,shake:0,label:s})})}
-    else FIGS[it.fig].slots(Q).forEach((r,i)=>Q.slots.push({...r,need:it.ans[i],tok:-1,shake:0,label:it.slots[i]}))}
+    else{Q.fsl=FIGS[it.fig].slots(Q);Q.fsl.map(fsRect).forEach((r,i)=>Q.slots.push({...r,need:it.ans[i],tok:-1,shake:0,label:it.slots[i]}))}}
   else{[{x:292,y:204,w:124,h:66},{x:292,y:454,w:124,h:66}].forEach((r,i)=>Q.slots.push({...r,label:it.opts[i],correct:i===it.ans,tok:-1,shake:0}));Q.toks.push(mkTok('part',it.part==='heater'?'난방기':'냉방기',0,1));Q.tTop=Q.tBot=it.part==='heater'?8:31}}
 /* ── 조작 ── */
 function pos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
@@ -40,7 +40,7 @@ function choose(si){const s=Q.slots[si],k=Q.toks[0];Q.choice=si;k.slot=si;k.tx=s
 const filled=()=>Q.it.kind==='place'?Q.toks[0].slot>=0:Q.slots.every(s=>s.tok>=0);
 function evalAns(){const it=Q.it;if(it.kind==='pick')return Q.slots[Q.choice].correct;if(it.kind==='place')return Q.slots[Q.toks[0].slot].correct;return Q.slots.every(s=>s.tok>=0&&Q.toks[s.tok].label===s.need)}
 function myAnswer(){const it=Q.it;if(it.kind==='pick')return Q.slots[Q.choice].label;if(it.kind==='place')return Q.slots[Q.toks[0].slot].label;return Q.slots.map(s=>s.tok>=0?Q.toks[s.tok].label:'(빈칸)').join(' / ')}
-function pullLever(){if(!filled()){Q.toks.forEach(k=>{if(k.slot<0)k.wob=1});sfx.tick();return}Q.phase='sim';Q.simT=0;G.pull=1;Q.simOK=evalAns();Q.simDur=Q.it.lay==='room'?3.2:Q.it.lay==='two'?1.6:.7;Q.fast=false;sfx.lever()}
+function pullLever(){if(!filled()){Q.toks.forEach(k=>{if(k.slot<0)k.wob=1});sfx.tick();return}Q.phase='sim';Q.simT=0;G.pull=1;Q.simOK=evalAns();Q.simDur=Q.it.lay==='room'?3.2:Q.it.lay==='two'?(Q.simOK?1.6:.6):.7;Q.fast=false;sfx.lever()}
 function judge(ok){if(ok){Q.phase=Q.it.lay==='room'?'reveal':'ok';Q.okT=0;Q.rv=0;if(!G.done[Q.no])G.done[Q.no]={first:Q.tries===0};save();sfx.ok(Math.max(0,roomDone(Q.it.room)-1));Q.spark=false;if(Q.it.lay!=='room'&&Q.tries===0){const s=Q.it.kind==='pick'?Q.slots[Q.choice]:Q.slots[Q.slots.length-1];star(s.cx!==undefined?s.cx:s.x+s.w/2,s.cy!==undefined?s.cy:s.y+s.h/2,14,CONF)}}
   else{Q.phase='hint';Q.tries++;Q.cool=1.6;Q.hintT=0;if(Q.tries===1&&!G.done[Q.no])G.wrongs.push({no:Q.no,my:myAnswer()});save();sfx.no();Q.slots.forEach((s,i)=>{if(s.tok>=0||i===Q.choice)s.shake=1})}}
 function clearTry(){if(Q.toks.some(k=>k.slot>=0))sfx.back();Q.toks.forEach((k,i)=>goHome(i));Q.choice=-1;Q.sel=-1;Q.phase='ask';if(Q.it.lay==='room')Q.tTop=Q.tBot=Q.it.part==='heater'?8:31}

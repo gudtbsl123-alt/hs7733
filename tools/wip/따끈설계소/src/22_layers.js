@@ -1,5 +1,5 @@
 /* ── 미리 그려 두는 층 ── */
-let L={rl:[],rr:[]};
+let L={rl:[],rr:[],ro:[]};
 function grain(c,w,h,n,al){for(let i=0;i<n;i++){c.fillStyle=S()<.5?`rgba(0,0,30,${al})`:`rgba(255,255,255,${al})`;c.fillRect(S()*w,S()*h,SR(1,2.5),SR(1,2.5))}}
 function mkPaper(play){let o,c;
   // 2 도면 종이
@@ -51,7 +51,7 @@ function buildLayers(){let o,c;
   c.strokeStyle='rgba(190,240,230,.22)';for(let x=0;x<W+40;x+=100){c.beginPath();c.moveTo(x,560);c.lineTo(x,H+40);c.stroke()}
   for(let x=20;x<W+40;x+=20){c.fillStyle='rgba(190,240,230,.35)';c.fillRect(x,H+12,1.5,x%100==0?12:6)}grain(c,W+40,H+40,2500,.03);L.desk=o.c;
   L.paper=mkPaper(true);L.paperMap=mkPaper(false);
-  for(let r=0;r<5;r++){o=mk(RW,RH);c=o.g;c.translate(-RX,-RY);roomLine(c,r,'line');L.rl[r]=o.c;o=mk(RW,RH);c=o.g;c.translate(-RX,-RY);roomReal(c,r);L.rr[r]=o.c}
+  for(let r=0;r<5;r++){o=mk(RW,RH);c=o.g;c.translate(-RX,-RY);roomLine(c,r,'line');L.rl[r]=o.c;o=mk(RW,RH);c=o.g;c.translate(-RX,-RY);roomReal(c,r);L.rr[r]=o.c;o=mk(RW,RH);c=o.g;c.translate(-RX,-RY);roomObjs(c,r);L.ro[r]=o.c}
   o=mk(RW,RH);c=o.g;c.translate(-RX,-RY);roomLine(c,3,'lineT');L.rlT=o.c;
   // 5 흐린 앞 도구(연필·컵·스탠드 갓)
   o=mk(W,H);c=o.g;

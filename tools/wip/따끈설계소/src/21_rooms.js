@@ -89,13 +89,14 @@ const OBJ=[
  [[260,186,760,40],[288,228,290,160],[280,384,390,140],[696,240,232,74],[732,324,280,128],[694,446,326,90]],
  [[430,188,110,152],[284,262,140,150],[524,206,272,214],[806,170,206,180],[628,420,310,140],[250,466,380,94]],
  [[284,204,202,222],[494,204,202,222],[666,166,64,112],[736,230,280,190],[434,370,180,160],[250,450,780,110]]];
-function drawRoomAt(c,r,x,y,w,h,n,grow,lineImg){const sx=w/RW,sy=h/RH;c.drawImage(lineImg||L.rl[r],x,y,w,h);if(n>=6){c.drawImage(L.rr[r],x,y,w,h);return}
+function drawRoomAt(c,r,x,y,w,h,n,grow,lineImg,ba){if(ba===undefined)ba=1;const sx=w/RW,sy=h/RH;c.drawImage(lineImg||L.rl[r],x,y,w,h);if(n>=6){c.drawImage(L.rr[r],x,y,w,h);return}
   const R2=o=>[x+(o[0]-RX)*sx,y+(o[1]-RY)*sy,o[2]*sx,o[3]*sy];
-  if(n>0){c.save();c.beginPath();for(let i=0;i<n;i++){const q=R2(OBJ[r][i]);c.rect(q[0],q[1],q[2],q[3])}c.clip();c.drawImage(L.rr[r],x,y,w,h);c.restore()}
-  if(grow>0&&n<6){const q=R2(OBJ[r][n]),yy=q[1]+q[3]*(1-grow);c.save();c.beginPath();c.rect(q[0],yy,q[2],q[1]+q[3]-yy);c.clip();c.drawImage(L.rr[r],x,y,w,h);c.restore();
+  if(n>0){c.save();c.beginPath();for(let i=0;i<n;i++){const q=R2(OBJ[r][i]);c.rect(q[0],q[1],q[2],q[3])}c.clip();c.drawImage(L.ro[r],x,y,w,h);c.restore()}
+  if(grow>0&&n<6){const q=R2(OBJ[r][n]),yy=q[1]+q[3]*(1-grow);c.save();c.beginPath();c.rect(q[0],yy,q[2],q[1]+q[3]-yy);c.clip();c.drawImage(L.ro[r],x,y,w,h);c.restore();
     if(grow<1){const gl=c.createLinearGradient(0,yy-18*sy,0,yy+4);gl.addColorStop(0,'rgba(255,230,150,0)');gl.addColorStop(1,'rgba(255,240,190,.9)');c.fillStyle=gl;c.fillRect(q[0],yy-18*sy,q[2],18*sy+4);c.fillStyle='#fff';c.fillRect(q[0],yy-1.5,q[2],3)}
-    else{c.save();c.strokeStyle='rgba(255,214,107,'+(.9)+')';c.lineWidth=3;c.strokeRect(q[0],q[1],q[2],q[3]);c.restore()}}}
+    else if(ba>0){c.save();c.strokeStyle='rgba(255,214,107,'+(.9*ba)+')';c.lineWidth=3;c.setLineDash([10,7]);c.strokeRect(q[0],q[1],q[2],q[3]);c.restore()}}}
 const objCenter=(r,n)=>{const o=OBJ[r][Math.min(5,n)];return[o[0]+o[2]/2,o[1]+o[3]/2]};
+function roomObjs(c,r){c.save();c.beginPath();c.rect(RX,RY,RW,RH);c.clip();OBJ[r].forEach(o=>{if(o[1]+o[3]>=500&&o[2]<600){c.fillStyle='rgba(10,20,60,.32)';c.beginPath();el(c,o[0]+o[2]/2+8,Math.min(o[1]+o[3],FY+16),o[2]*.46,9);c.fill()}});ROOMS[r].F(c,'real');c.restore()}
 function roomReal(c,r){const R=ROOMS[r];c.save();c.beginPath();c.rect(RX,RY,RW,RH);c.clip();c.fillStyle=R.wall;c.fillRect(RX,RY,RW,RH);
   c.fillStyle=R.pat;for(let y=RY+14;y<430;y+=30)for(let x=RX+(Math.round((y-RY)/30)%2?16:0);x<RX+RW;x+=32){c.beginPath();c.moveTo(x,y-6);c.lineTo(x+5,y);c.lineTo(x,y+6);c.lineTo(x-5,y);c.fill()}
   c.fillStyle=R.wain;c.fillRect(RX,430,RW,90);c.fillStyle=R.wain2;for(let x=RX;x<RX+RW;x+=52)c.fillRect(x,436,3,84);c.fillStyle='#8a5a3c';c.fillRect(RX,426,RW,7);
