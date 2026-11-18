@@ -18,7 +18,7 @@ function cellDraw(c,r,st,lvl,t,bs){const{x,y}=CELL[r];c.save();c.globalAlpha=st=
 function legend(c,x,y){panel(c,x,y,282,214);T(c,'범례',x+16,y+22,22,'SunB','#ffd66b');c.strokeStyle=WH;c.lineWidth=1.2;c.beginPath();c.moveTo(x+10,y+40);c.lineTo(x+272,y+40);c.stroke();
   const rows=['전도','대류','복사','단열'];rows.forEach((s,i)=>{const yy=y+68+i*40,ix=x+28;T(c,s,x+130,yy+1,22,'SunB',WH);
     if(i===0){c.fillStyle=CU;c.fillRect(ix-12,yy-6,80,12);arrowHead(c,ix+76,yy,0,8,'#ffd66b');bl(c,[[ix-6,yy],[ix+64,yy]],{w:2,col:'#ffd66b',over:0})}
-    if(i===1){c.save();c.strokeStyle='#ff8a5a';c.lineWidth=3;c.beginPath();c.ellipse(ix+30,yy,34,12,0,Math.PI,Math.PI*2);c.stroke();c.strokeStyle='#7fc4ff';c.beginPath();c.ellipse(ix+30,yy,34,12,0,0,Math.PI);c.stroke();arrowHead(c,ix+64,yy+2,Math.PI/2,7,'#ff8a5a');arrowHead(c,ix-4,yy-2,-Math.PI/2,7,'#7fc4ff');c.restore()}
+    if(i===1){c.save();c.strokeStyle='#ff8a5a';c.lineWidth=3;c.beginPath();c.ellipse(ix+30,yy,34,12,0,Math.PI,Math.PI*2);c.stroke();c.strokeStyle='#7fc4ff';c.beginPath();c.ellipse(ix+30,yy,34,12,0,0,Math.PI);c.stroke();arrowHead(c,ix+64,yy+2,Math.PI/2,7,'#7fc4ff');arrowHead(c,ix-4,yy-2,-Math.PI/2,7,'#ff8a5a');c.restore()}
     if(i===2){c.save();c.strokeStyle='#ffe27a';c.lineWidth=2.5;c.beginPath();for(let q=0;q<=20;q++)c.lineTo(ix-8+q*3.6,yy+Math.sin(q*1.3)*5);c.stroke();arrowHead(c,ix+66,yy,0,7,'#ffe27a');c.restore()}
     if(i===3){bl(c,[[ix-10,yy-12],[ix+70,yy-12],[ix+70,yy+12],[ix-10,yy+12],[ix-10,yy-12]],{w:1.5,over:0});zig(c,ix-8,yy-10,76,20,false)}})}
 function houseReal(c,a,t){if(a<=0)return;c.save();c.globalAlpha=a;
