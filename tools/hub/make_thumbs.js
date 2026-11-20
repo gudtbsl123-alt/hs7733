@@ -61,7 +61,7 @@ const PREP = {
   start: async page => { await page.click('#btnStart'); await page.waitForTimeout(1500); },
   /* 3D 게임: 소프트웨어 렌더는 느리므로 게임 안 시간이 충분히 흐를 때까지(타이틀 로고가 다 떨어질 때까지) 기다린다 */
   logo: async page => { await page.waitForFunction(() => typeof LOGO_FX !== 'undefined' && LOGO_FX.on, null, { timeout: 30000 }).catch(() => {}); },   // 불꽃 글씨 시작 → WAIT 뒤 글씨가 다 모인 장면
-  /* 세 땅 개척 섬: 영화식 오프닝이 끝나고 로고가 절벽에 새겨진 타이틀 장면 */
+  /* 우리 섬 개척단: 영화식 오프닝이 끝나고 로고가 절벽에 새겨진 타이틀 장면 */
   island: async page => { await page.waitForFunction(() => window.__test && __test.isReady(), null, { timeout: 120000 }); },
   gametime: async page => { await page.waitForFunction(() => window.GAME && GAME.T > 4, null, { timeout: 120000 }); },
 };
