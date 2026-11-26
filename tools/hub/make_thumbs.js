@@ -65,7 +65,7 @@ const PREP = {
   island: async page => { await page.waitForFunction(() => window.__test && __test.isReady(), null, { timeout: 120000 }); },
   gametime: async page => { await page.waitForFunction(() => window.GAME && GAME.T > 4, null, { timeout: 120000 }); },
 };
-const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime', 50: 'logo', 71: 'logo', 73: 'logo', 76: 'island' };   // 50·71(코스터 v4.1 픽셀판 6-2·3-2)은 타이틀 불꽃 글씨가 시작될 때까지 기다린 뒤 찍는다
+const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime', 50: 'logo', 71: 'logo', 73: 'logo', 76: 'island', 77: 'island' };   // 50·71(코스터 v4.1 픽셀판 6-2·3-2)은 타이틀 불꽃 글씨가 시작될 때까지 기다린 뒤 찍는다
 /* 선생님이 고른 화면이 따로 있는 게임은 그 그림을 줄여 쓴다 */
 const FROM_IMAGE = { 40: 'screenshots/07_후반_고조선시대_플레이화면.png' };
 
