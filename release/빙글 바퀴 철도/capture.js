@@ -46,7 +46,7 @@ const NICKNAME = '장도초 수학천재';
   await wrongStop(); await shot('후반_오답힌트');
   // 8 결과창: 30문항을 마친 기록으로 띄우기(깨운 장난감·별 사탕 포함)
   await page.evaluate(() => { const G = GAME.G; GAME.Q.forEach((q) => { G.rec[q.no] = { no: q.no, tries: q.no % 5 ? 0 : 1, wrong: q.no % 5 ? [] : ['?'], first: !!(q.no % 5), ok: true }; });
-    GAME.TOYS.forEach((t) => { if (t.no % 5) wakeToy(t, true); }); G.stars = 96; G.perfect = 19; G.playT = 21 * 60; GAME.SAVE().owner = '장도초 수학천재'; GAME.SAVE().done = [1, 1, 1, 1, 1]; goResult(); GAME.tickN(3.5); GAME.draw(); });
+    GAME.TOYS.forEach((t) => { if (t.no % 5) wakeToy(t, true); }); G.stars = 96; G.perfect = 19; GAME.SAVE().perfK = {}; for (let i = 0; i < 19; i++) GAME.SAVE().perfK[i * 1.7 | 0] = 1; G.playT = 21 * 60; GAME.SAVE().owner = '장도초 수학천재'; GAME.SAVE().done = [1, 1, 1, 1, 1]; goResult(); GAME.tickN(3.5); GAME.draw(); });
   await shot('결과창', 900);
 
   await browser.close();
