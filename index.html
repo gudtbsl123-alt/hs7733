@@ -446,27 +446,42 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
   .browse{padding:48px 20px 88px}
   .grid{gap:22px}
 }
-/* ── 전원 인트로(약 1.6초): 검은 화면 → 게임기 전원 불빛 → 화면이 켜짐 → 픽셀 등장 → 화면 속으로 확대되며 사이트가 열림 ── */
+/* ── 전원 인트로: 검은 화면의 꺼진 게임기 → 누르면(또는 아무 키) 딸깍 소리와 함께 전원 불빛 → 화면이 켜짐
+      → 픽셀 등장 + 띠리리링 → 화면 속으로 확대되며 사이트가 열림(누른 뒤 약 1.4초).
+      브라우저는 한 번 누르기 전에는 소리를 막으므로, 소리가 꼭 나게 하려고 '눌러서 켜기'로 시작한다 ── */
 #power{display:none}
 .powering #power{display:flex;position:fixed;inset:0;z-index:9999;background:var(--ink);
-  flex-direction:column;align-items:center;justify-content:center;gap:22px;cursor:pointer;
-  animation:pwOut .3s var(--ease) 1.38s forwards}
+  flex-direction:column;align-items:center;justify-content:center;gap:18px;cursor:pointer;outline:none;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .powering .nav,.powering .hero,.powering .hero *{animation-play-state:paused !important}
 .powering body{overflow:hidden}
+#power.on{animation:pwOut .3s var(--ease) 1.1s forwards}
 #power.skip{animation:pwOut .22s var(--ease) forwards !important}
-.pw-console{width:min(150px,30vw);transform-origin:50% 31.5%;
-  animation:pwIn .32s var(--spring) both, pwZoom .5s cubic-bezier(.55,0,.85,.3) 1.12s forwards}
+.pw-console{width:min(150px,30vw);transform-origin:50% 31.5%;animation:pwIn .4s var(--spring) both}
+#power.idle .pw-console{animation:pwIn .4s var(--spring) both, pwBreath 1.6s var(--ease) .4s infinite alternate}
+#power.on .pw-console{animation:pwPress .12s var(--ease), pwZoom .5s cubic-bezier(.55,0,.85,.3) .82s forwards}
 .pw-console svg{display:block;width:100%;height:auto;overflow:visible}
-.pw-led{fill:#333;animation:pwLed .01s linear .3s forwards}
-.pw-line{fill:#fff;transform-box:fill-box;transform-origin:center;transform:scaleX(0);
-  animation:pwLine .5s var(--ease) .36s forwards}
-.pw-glow{fill:var(--cornflower);transform-box:fill-box;transform-origin:center;transform:scaleY(0);
-  animation:pwGlow .2s var(--ease) .5s forwards}
-.pw-px{opacity:0;transform-box:fill-box;transform-origin:center;animation:pwPx .22s var(--spring) forwards}
+.pw-led{fill:#333}
+#power.on .pw-led{animation:pwLed .01s linear .03s forwards}
+.pw-line{fill:#fff;transform-box:fill-box;transform-origin:center;transform:scaleX(0)}
+#power.on .pw-line{animation:pwLine .5s var(--ease) .08s forwards}
+.pw-glow{fill:var(--cornflower);transform-box:fill-box;transform-origin:center;transform:scaleY(0)}
+#power.on .pw-glow{animation:pwGlow .2s var(--ease) .22s forwards}
+.pw-px{opacity:0;transform-box:fill-box;transform-origin:center}
+#power.on .pw-px{animation:pwPx .22s var(--spring) forwards}
 .pw-title{margin:0;color:var(--paper);font-family:var(--font-display);font-size:clamp(18px,3vw,26px);
-  letter-spacing:.02em;opacity:0;animation:fadeUp .3s var(--ease) .8s forwards, pwTitleOut .15s var(--ease) 1.08s forwards}
+  letter-spacing:.02em;animation:fadeUp .35s var(--ease) .15s both}
 .pw-title b{color:var(--mutagen);font-weight:inherit}
+#power.on .pw-title{animation:pwTitleOut .15s var(--ease) .75s both}
+.pw-press{margin:6px 0 0;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:100px;
+  background:var(--mutagen);color:var(--ink);font-size:15px;font-weight:700;
+  box-shadow:inset 0 0 0 2px var(--ink), 3px 3px 0 0 var(--paper);animation:pwBlink 1.1s steps(1,end) .5s infinite}
+.pw-press svg{width:16px;height:16px}
+#power.on .pw-press{animation:pwTitleOut .1s linear forwards}
 @keyframes pwIn{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+@keyframes pwBreath{0%{transform:translateY(0)}100%{transform:translateY(-6px)}}
+@keyframes pwPress{0%{transform:scale(1)}50%{transform:scale(.95)}100%{transform:scale(1)}}
+@keyframes pwBlink{0%,60%{opacity:1}61%,100%{opacity:.35}}
 @keyframes pwLed{to{fill:var(--mutagen)}}
 @keyframes pwLine{0%{transform:scaleX(0)}40%{transform:scaleX(1)}100%{transform:scaleX(1);opacity:0}}
 @keyframes pwGlow{0%{transform:scaleY(.06)}100%{transform:scaleY(1)}}
@@ -496,17 +511,17 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
 </head>
 <body>
 
-<div id="power" aria-hidden="true">
+<div id="power" class="idle" role="button" tabindex="0" aria-label="눌러서 전원 켜고 들어가기">
   <div class="pw-console">
     <svg viewBox="0 0 132 168">
       <rect x="4" y="4" width="124" height="160" rx="16" fill="#fff" stroke="#000" stroke-width="4"/>
       <rect x="18" y="18" width="96" height="70" rx="6" fill="#111" stroke="#000" stroke-width="4"/>
       <rect class="pw-glow" x="20" y="20" width="92" height="66" rx="4"/>
       <rect class="pw-line" x="20" y="51" width="92" height="4"/>
-      <rect class="pw-px" x="28" y="66" width="76" height="6" fill="#000" style="animation-delay:.66s"/>
-      <rect class="pw-px" x="34" y="34" width="10" height="10" fill="#d4ff5b" stroke="#000" stroke-width="2" style="animation-delay:.74s"/>
-      <rect class="pw-px" x="56" y="46" width="10" height="10" fill="#ffc700" stroke="#000" stroke-width="2" style="animation-delay:.82s"/>
-      <rect class="pw-px" x="82" y="30" width="10" height="10" fill="#ff90ff" stroke="#000" stroke-width="2" style="animation-delay:.9s"/>
+      <rect class="pw-px" x="28" y="66" width="76" height="6" fill="#000" style="animation-delay:.36s"/>
+      <rect class="pw-px" x="34" y="34" width="10" height="10" fill="#d4ff5b" stroke="#000" stroke-width="2" style="animation-delay:.44s"/>
+      <rect class="pw-px" x="56" y="46" width="10" height="10" fill="#ffc700" stroke="#000" stroke-width="2" style="animation-delay:.52s"/>
+      <rect class="pw-px" x="82" y="30" width="10" height="10" fill="#ff90ff" stroke="#000" stroke-width="2" style="animation-delay:.6s"/>
       <circle class="pw-led" cx="112" cy="100" r="4" stroke="#000" stroke-width="2"/>
       <rect x="24" y="112" width="14" height="38" rx="3"/>
       <rect x="12" y="124" width="38" height="14" rx="3"/>
@@ -516,7 +531,56 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
     </svg>
   </div>
   <p class="pw-title">에듀테크 <b>게임</b> 저장소</p>
+  <p class="pw-press"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 3v8"/><path d="M6.3 7.3a8 8 0 1 0 11.4 0"/></svg>눌러서 전원 켜기</p>
 </div>
+<script>
+/* 전원 인트로: 이 스크립트는 아래 큰 스크립트와 따로 돈다(혹시 아래에서 오류가 나도 인트로에 갇히지 않게) */
+(function () {
+  var root = document.documentElement, el = document.getElementById('power');
+  if (!root.classList.contains('powering') || !el) { if (el) el.remove(); return; }
+  window.__introWait = window.__introWait || [];
+  var state = 'idle', ac = null;
+  function end() {
+    if (state === 'done') return; state = 'done';
+    root.classList.remove('powering');
+    if (el.parentNode) el.parentNode.removeChild(el);
+    var w = window.__introWait.splice(0); for (var i = 0; i < w.length; i++) try { w[i](); } catch (e) {}
+  }
+  function tone(f, at, dur, vol, type) {
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(vol, at + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g); g.connect(ac.destination); o.start(at); o.stop(at + dur + 0.02);
+  }
+  function sound() {   /* 딸깍 + 도·미·솔·높은 도 */
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      ac = ac || new AC(); if (ac.state !== 'running') ac.resume();
+      var t = ac.currentTime + 0.01;
+      tone(140, t, 0.06, 0.12, 'triangle');
+      tone(523, t + 0.28, 0.12, 0.06); tone(659, t + 0.37, 0.12, 0.06); tone(784, t + 0.46, 0.12, 0.06);
+      tone(1047, t + 0.55, 0.42, 0.06); tone(1568, t + 0.55, 0.42, 0.025, 'triangle');
+    } catch (e) {}
+  }
+  function press(e) {
+    if (e && e.type === 'keydown' && (e.ctrlKey || e.metaKey || e.altKey)) return;
+    if (e && e.cancelable) e.preventDefault();
+    if (state === 'idle') {
+      state = 'on'; sound();                      /* 누른 그 순간에 소리를 내야 브라우저가 막지 않는다 */
+      el.classList.remove('idle'); el.classList.add('on');
+      el.addEventListener('animationend', function (ev) { if (ev.target === el) end(); });
+      setTimeout(end, 1700);                      /* 안전장치 */
+    } else if (state === 'on') {                  /* 켜지는 중에 한 번 더 누르면 바로 들어간다 */
+      state = 'skip'; el.classList.add('skip'); setTimeout(end, 230);
+    }
+  }
+  el.addEventListener('pointerdown', press);
+  document.addEventListener('keydown', function k(e) { if (state === 'done') { document.removeEventListener('keydown', k); return; } press(e); });
+  try { el.focus({ preventScroll: true }); } catch (e) {}
+})();
+</script>
 
 <div class="nav">
   <div class="nav-in">
@@ -1436,56 +1500,11 @@ $('#resetLocal').onclick = () => {
   location.reload();
 };
 
-/* ── 전원 인트로 끝내기 + 소리. 끝나면 첫 화면 등장 연출이 이어서 시작된다 ── */
-const introWait = [];
-function afterIntro(fn) { if (document.documentElement.classList.contains('powering')) introWait.push(fn); else fn(); }
-(function powerIntro() {
-  const root = document.documentElement, el = $('#power');
-  if (!root.classList.contains('powering') || !el) return;
-  let done = false, ac = null, played = false;
-  const end = () => {
-    if (done) return; done = true;
-    root.classList.remove('powering');
-    el.remove();
-    introWait.splice(0).forEach(fn => fn());
-  };
-  /* 전원 딸깍 + 켜지는 소리(도·미·솔·높은 도). 브라우저가 막으면 화면을 누르는 순간 난다 */
-  const tone = (f, at, dur, vol, type) => {
-    const o = ac.createOscillator(), g = ac.createGain();
-    o.type = type || 'square'; o.frequency.value = f;
-    g.gain.setValueAtTime(0.0001, at);
-    g.gain.exponentialRampToValueAtTime(vol, at + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-    o.connect(g); g.connect(ac.destination); o.start(at); o.stop(at + dur + 0.02);
-  };
-  const sound = (quick) => {
-    if (played || !ac) return; played = true;
-    const t = ac.currentTime + 0.02, s = quick ? 0 : 0.3;
-    tone(140, t + s, 0.06, 0.12, 'triangle');                        // 딸깍
-    [523, 659, 784].forEach((f, i) => tone(f, t + s + 0.28 + i * 0.09, 0.12, 0.06));
-    tone(1047, t + s + 0.55, 0.42, 0.06);
-    tone(1568, t + s + 0.55, 0.42, 0.025, 'triangle');
-  };
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) {
-      ac = new AC();
-      if (ac.state === 'running') sound(false);
-      else ac.resume().then(() => { if (!done && ac.state === 'running') sound(false); }).catch(() => {});
-    }
-  } catch (e) {}
-  /* 누르면(또는 아무 키) 바로 넘어간다 */
-  const skip = () => {
-    if (done) return;
-    if (ac && !played) { try { ac.resume().then(() => sound(true)); } catch (e) {} }
-    el.classList.add('skip');
-    setTimeout(end, 230);
-  };
-  el.addEventListener('pointerdown', skip);
-  addEventListener('keydown', skip, { once: true });
-  el.addEventListener('animationend', e => { if (e.target === el) end(); });
-  setTimeout(end, 1900);                                                // 안전장치
-})();
+/* ── 전원 인트로가 끝난 뒤에 할 일(인트로 자체는 #power 바로 아래 스크립트에 있다) ── */
+function afterIntro(fn) {
+  if (document.documentElement.classList.contains('powering')) (window.__introWait = window.__introWait || []).push(fn);
+  else fn();
+}
 
 /* ── 첫 화면 게임 수: 0부터 굴러 올라간다(처음 한 번) ── */
 let heroCounted = false, heroTarget = 0;
