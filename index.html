@@ -26,6 +26,14 @@
 <script>
 /* 다시 온 사람에게는 첫 화면 등장 연출을 짧게 한다 */
 try { if (localStorage.getItem('hub_seen')) document.documentElement.classList.add('quick'); localStorage.setItem('hub_seen', '1'); } catch (e) {}
+/* 전원 인트로: 이 탭에서 처음 열 때만(게임 갔다 돌아올 때는 안 나옴).
+   학교 PC는 Windows '애니메이션 효과'가 꺼져 있는 일이 많아 그 설정과 상관없이 보여 준다 */
+try {
+  if (!sessionStorage.getItem('hub_power')) {
+    document.documentElement.classList.add('powering');
+    sessionStorage.setItem('hub_power', '1');
+  }
+} catch (e) {}
 </script>
 <style>
 :root{
@@ -85,10 +93,10 @@ input::placeholder{color:var(--grey-muted)}
 .hero-in{position:relative;z-index:2;max-width:1200px;margin:0 auto;display:grid;
   grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center}
 .hero-text{display:flex;flex-direction:column;align-items:flex-start;gap:18px;min-width:0}
-.eyebrow{margin:0;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:100px;
+.eyebrow{margin:0;display:inline-flex;align-items:baseline;gap:6px;padding:7px 16px;border-radius:100px;
   background:var(--paper);box-shadow:inset 0 0 0 2px var(--ink), 3px 3px 0 0 var(--ink);
   font-size:13px;font-weight:700}
-.eyebrow b{font-family:var(--font-display);font-weight:800}
+.eyebrow b{font-family:var(--font-display);font-weight:800;line-height:1}
 h1{margin:0;display:flex;flex-wrap:wrap;gap:0 .28em;font-family:var(--font-display);font-size:clamp(40px,5.4vw,70px);
   font-weight:800;line-height:1.1;letter-spacing:-.01em;word-break:keep-all}
 h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--mutagen) 62%);padding:0 .05em}
@@ -438,9 +446,77 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
   .browse{padding:48px 20px 88px}
   .grid{gap:22px}
 }
+/* ── 전원 인트로(약 1.6초): 검은 화면 → 게임기 전원 불빛 → 화면이 켜짐 → 픽셀 등장 → 화면 속으로 확대되며 사이트가 열림 ── */
+#power{display:none}
+.powering #power{display:flex;position:fixed;inset:0;z-index:9999;background:var(--ink);
+  flex-direction:column;align-items:center;justify-content:center;gap:22px;cursor:pointer;
+  animation:pwOut .3s var(--ease) 1.38s forwards}
+.powering .nav,.powering .hero,.powering .hero *{animation-play-state:paused !important}
+.powering body{overflow:hidden}
+#power.skip{animation:pwOut .22s var(--ease) forwards !important}
+.pw-console{width:min(150px,30vw);transform-origin:50% 31.5%;
+  animation:pwIn .32s var(--spring) both, pwZoom .5s cubic-bezier(.55,0,.85,.3) 1.12s forwards}
+.pw-console svg{display:block;width:100%;height:auto;overflow:visible}
+.pw-led{fill:#333;animation:pwLed .01s linear .3s forwards}
+.pw-line{fill:#fff;transform-box:fill-box;transform-origin:center;transform:scaleX(0);
+  animation:pwLine .5s var(--ease) .36s forwards}
+.pw-glow{fill:var(--cornflower);transform-box:fill-box;transform-origin:center;transform:scaleY(0);
+  animation:pwGlow .2s var(--ease) .5s forwards}
+.pw-px{opacity:0;transform-box:fill-box;transform-origin:center;animation:pwPx .22s var(--spring) forwards}
+.pw-title{margin:0;color:var(--paper);font-family:var(--font-display);font-size:clamp(18px,3vw,26px);
+  letter-spacing:.02em;opacity:0;animation:fadeUp .3s var(--ease) .8s forwards, pwTitleOut .15s var(--ease) 1.08s forwards}
+.pw-title b{color:var(--mutagen);font-weight:inherit}
+@keyframes pwIn{0%{opacity:0;transform:scale(.82)}100%{opacity:1;transform:scale(1)}}
+@keyframes pwLed{to{fill:var(--mutagen)}}
+@keyframes pwLine{0%{transform:scaleX(0)}40%{transform:scaleX(1)}100%{transform:scaleX(1);opacity:0}}
+@keyframes pwGlow{0%{transform:scaleY(.06)}100%{transform:scaleY(1)}}
+@keyframes pwPx{0%{opacity:0;transform:scale(0)}100%{opacity:1;transform:scale(1)}}
+@keyframes pwZoom{0%{transform:scale(1)}100%{transform:scale(14)}}
+@keyframes pwTitleOut{to{opacity:0}}
+@keyframes pwOut{to{opacity:0;visibility:hidden}}
+
+/* ── 흐르는 과목 띠: 기본은 천천히 흐르고, 스크롤을 빨리 내릴수록 빨라진다(위로 올리면 거꾸로) ── */
+.ticker{position:relative;z-index:2;background:var(--ink);overflow:hidden}
+.ticker-band{padding:13px 0}
+.ticker-track{display:flex;width:max-content;will-change:transform}
+.ticker-item{display:inline-flex;align-items:center;gap:10px;padding:0 20px;white-space:nowrap;
+  font-family:var(--font-display);font-size:24px;font-weight:800;line-height:1.1}
+.ticker-item .n{font-size:15px;background:currentColor;border-radius:100px;padding:3px 9px}
+.ticker-item .n i{font-style:normal;color:var(--ink)}
+.ticker-item svg{width:14px;height:14px;flex:0 0 auto;margin-left:10px}
+@media (max-width:759px){.ticker-band{padding:10px 0}.ticker-item{font-size:19px;padding:0 14px}}
+
+/* ── 카드 기울기: 마우스(PC)에서만. 카드가 마우스 쪽으로 살짝 기운다 ── */
+@media (hover:hover) and (pointer:fine){
+  .card.tilt{transition:transform 90ms linear, box-shadow 180ms var(--ease) !important;
+    transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translate(-2px,-2px)}
+  .card.tilt:active{transform:perspective(800px) translate(3px,3px)}
+}
 </style>
 </head>
 <body>
+
+<div id="power" aria-hidden="true">
+  <div class="pw-console">
+    <svg viewBox="0 0 132 168">
+      <rect x="4" y="4" width="124" height="160" rx="16" fill="#fff" stroke="#000" stroke-width="4"/>
+      <rect x="18" y="18" width="96" height="70" rx="6" fill="#111" stroke="#000" stroke-width="4"/>
+      <rect class="pw-glow" x="20" y="20" width="92" height="66" rx="4"/>
+      <rect class="pw-line" x="20" y="51" width="92" height="4"/>
+      <rect class="pw-px" x="28" y="66" width="76" height="6" fill="#000" style="animation-delay:.66s"/>
+      <rect class="pw-px" x="34" y="34" width="10" height="10" fill="#d4ff5b" stroke="#000" stroke-width="2" style="animation-delay:.74s"/>
+      <rect class="pw-px" x="56" y="46" width="10" height="10" fill="#ffc700" stroke="#000" stroke-width="2" style="animation-delay:.82s"/>
+      <rect class="pw-px" x="82" y="30" width="10" height="10" fill="#ff90ff" stroke="#000" stroke-width="2" style="animation-delay:.9s"/>
+      <circle class="pw-led" cx="112" cy="100" r="4" stroke="#000" stroke-width="2"/>
+      <rect x="24" y="112" width="14" height="38" rx="3"/>
+      <rect x="12" y="124" width="38" height="14" rx="3"/>
+      <circle cx="96" cy="118" r="9"/>
+      <circle cx="78" cy="136" r="9"/>
+      <rect x="52" y="150" width="28" height="6" rx="3"/>
+    </svg>
+  </div>
+  <p class="pw-title">에듀테크 <b>게임</b> 저장소</p>
+</div>
 
 <div class="nav">
   <div class="nav-in">
@@ -455,7 +531,7 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
 <section class="hero" id="top">
   <div class="hero-in">
     <div class="hero-text">
-      <p class="eyebrow">초등 3~6학년 · 교과서 단원별 게임 <b><span id="heroBadge">65</span>개</b></p>
+      <p class="eyebrow">초등 · 교과서 단원별 게임 <b><span id="heroBadge">65</span>개</b></p>
       <h1><span class="word"><span>링크 하나로</span></span><span class="word"><span>바로 하는</span></span><span class="word"><span><em>수업 게임</em></span></span></h1>
       <p class="lede">설치·로그인·광고 없이 무료예요. PC·태블릿·휴대폰에서 바로 열려요.</p>
       <div class="hero-search">
@@ -494,6 +570,8 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
     </div>
   </div>
 </section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-band"><div class="ticker-track" id="tickerTrack"></div></div></div>
 
 <section class="fresh" id="fresh" aria-labelledby="freshTitle">
   <div class="fresh-in">
@@ -551,6 +629,7 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
       <ul>
         <li>인천장도초등학교 김형순</li>
         <li>서울오류초등학교 박진해</li>
+        <li>서울은평초등학교 이창훈</li>
         <li>오류 제보와 게임 요청은 인디스쿨 게시글 댓글로 남겨 주세요.</li>
         <li>사이트 글꼴: Archivo · Inter · Black Han Sans · Pretendard (모두 SIL Open Font License)</li>
       </ul>
@@ -1109,7 +1188,7 @@ function render() {
 
   renderChips(tokens);
   tweenCount(filtered.length);
-  $('#heroBadge').textContent = games.length;
+  heroCount(games.length);
   $('#footCount').textContent = games.length;
 }
 
@@ -1357,6 +1436,133 @@ $('#resetLocal').onclick = () => {
   location.reload();
 };
 
+/* ── 전원 인트로 끝내기 + 소리. 끝나면 첫 화면 등장 연출이 이어서 시작된다 ── */
+const introWait = [];
+function afterIntro(fn) { if (document.documentElement.classList.contains('powering')) introWait.push(fn); else fn(); }
+(function powerIntro() {
+  const root = document.documentElement, el = $('#power');
+  if (!root.classList.contains('powering') || !el) return;
+  let done = false, ac = null, played = false;
+  const end = () => {
+    if (done) return; done = true;
+    root.classList.remove('powering');
+    el.remove();
+    introWait.splice(0).forEach(fn => fn());
+  };
+  /* 전원 딸깍 + 켜지는 소리(도·미·솔·높은 도). 브라우저가 막으면 화면을 누르는 순간 난다 */
+  const tone = (f, at, dur, vol, type) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(vol, at + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g); g.connect(ac.destination); o.start(at); o.stop(at + dur + 0.02);
+  };
+  const sound = (quick) => {
+    if (played || !ac) return; played = true;
+    const t = ac.currentTime + 0.02, s = quick ? 0 : 0.3;
+    tone(140, t + s, 0.06, 0.12, 'triangle');                        // 딸깍
+    [523, 659, 784].forEach((f, i) => tone(f, t + s + 0.28 + i * 0.09, 0.12, 0.06));
+    tone(1047, t + s + 0.55, 0.42, 0.06);
+    tone(1568, t + s + 0.55, 0.42, 0.025, 'triangle');
+  };
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      ac = new AC();
+      if (ac.state === 'running') sound(false);
+      else ac.resume().then(() => { if (!done && ac.state === 'running') sound(false); }).catch(() => {});
+    }
+  } catch (e) {}
+  /* 누르면(또는 아무 키) 바로 넘어간다 */
+  const skip = () => {
+    if (done) return;
+    if (ac && !played) { try { ac.resume().then(() => sound(true)); } catch (e) {} }
+    el.classList.add('skip');
+    setTimeout(end, 230);
+  };
+  el.addEventListener('pointerdown', skip);
+  addEventListener('keydown', skip, { once: true });
+  el.addEventListener('animationend', e => { if (e.target === el) end(); });
+  setTimeout(end, 1900);                                                // 안전장치
+})();
+
+/* ── 첫 화면 게임 수: 0부터 굴러 올라간다(처음 한 번) ── */
+let heroCounted = false, heroTarget = 0;
+function heroCount(n) {
+  heroTarget = n;
+  const el = $('#heroBadge');
+  if (heroCounted) { if (!heroCounted || el.dataset.rolling !== '1') el.textContent = n; heroCounted = true; return; }
+  heroCounted = true;
+  el.textContent = '0';
+  afterIntro(() => setTimeout(() => {
+    el.dataset.rolling = '1';
+    let t0 = null;
+    const step = t => {
+      if (t0 === null) t0 = t;
+      const p = Math.min(1, (t - t0) / 1100);
+      el.textContent = Math.round(heroTarget * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step); else { el.dataset.rolling = ''; el.textContent = heroTarget; }
+    };
+    requestAnimationFrame(step);
+  }, document.documentElement.classList.contains('quick') ? 100 : 350));
+}
+
+/* ── 흐르는 과목 띠 ── */
+const TICKER_COLORS = { '국어':'var(--mutagen)', '수학':'var(--cornflower)', '사회':'var(--yellow)', '과학':'var(--teal-bar)', [PLAY]:'var(--magenta)' };
+function buildTicker() {
+  const track = $('#tickerTrack');
+  if (!track) return;
+  const star = c => '<svg viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="3" width="8" height="8" transform="rotate(45 7 7)" fill="' + c + '"/></svg>';
+  const items = Object.keys(TICKER_COLORS).map(sub => {
+    const n = sub === PLAY ? games.filter(g => gradeOf(g.title) === PLAY).length : games.filter(g => subjectOf(g.title) === sub).length;
+    return n ? '<span class="ticker-item" style="color:' + TICKER_COLORS[sub] + '">' + sub +
+      ' <span class="n"><i>' + n + '개</i></span>' + star('var(--paper)') + '</span>' : '';
+  }).join('');
+  if (!items) return;
+  let html = '';
+  for (let k = 0; k < 8; k++) html += items;                  // 넓은 화면도 빈틈없이 채운다
+  track.innerHTML = html;
+}
+(function runTicker() {
+  const track = $('#tickerTrack');
+  if (!track) return;
+  let x = 0, boost = 0, lastY = scrollY, last = null, on = true, rafId = 0;
+  const half = () => track.scrollWidth / 2;
+  addEventListener('scroll', () => { const y = scrollY; boost += (y - lastY) * 0.5; lastY = y; }, { passive: true });
+  const frame = t => {
+    const dt = last == null ? 16 : Math.min(50, t - last); last = t;
+    boost *= Math.pow(0.9, dt / 16);
+    const v = 0.045 * dt + boost * dt / 16 * 0.25;         // 기본 속도 + 스크롤 덤
+    x -= v;
+    const h = half();
+    if (h > 0) { while (x <= -h) x += h; while (x > 0) x -= h; }
+    track.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+    rafId = on ? requestAnimationFrame(frame) : 0;
+  };
+  /* 화면 밖에 있거나 다른 탭이면 멈춰 구형 PC를 아낀다 */
+  const start = () => { if (!rafId && on && !document.hidden) { last = null; rafId = requestAnimationFrame(frame); } };
+  if ('IntersectionObserver' in window) new IntersectionObserver(es => { on = es[0].isIntersecting; if (on) start(); }).observe(track);
+  document.addEventListener('visibilitychange', start);
+  start();
+})();
+
+/* ── 카드 기울기(PC 마우스에서만) ── */
+if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
+  let cur = null;
+  document.addEventListener('pointermove', e => {
+    const card = e.target.closest && e.target.closest('.card');
+    if (cur && cur !== card) { cur.classList.remove('tilt'); cur.style.removeProperty('--rx'); cur.style.removeProperty('--ry'); cur = null; }
+    if (!card || e.pointerType !== 'mouse' || !card.classList.contains('in')) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
+    card.style.setProperty('--ry', (px * 12).toFixed(2) + 'deg');
+    card.style.setProperty('--rx', (-py * 12).toFixed(2) + 'deg');
+    card.classList.add('tilt'); cur = card;
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { if (cur) { cur.classList.remove('tilt'); cur = null; } });
+}
+
 /* ── boot: 이 브라우저에서 관리자 창으로 고친 목록이 있고, 그 뒤로 저장소 목록이 바뀌지 않았으면 그것을 쓴다 ── */
 function boot() {
   /* 마지막 업데이트 날짜: GitHub Pages가 알려 주는 파일 수정 날짜를 쓴다(따로 고칠 필요 없음) */
@@ -1364,6 +1570,7 @@ function boot() {
   if (!isNaN(d)) $('#footDate').textContent = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
   const local = loadLocal();
   if (local && Number(local.base || 0) >= baseVersion) games = local.games;
+  buildTicker();
   renderFresh();
   render();
   syncHash();
