@@ -26,9 +26,10 @@
 <script>
 /* 다시 온 사람에게는 첫 화면 등장 연출을 짧게 한다 */
 try { if (localStorage.getItem('hub_seen')) document.documentElement.classList.add('quick'); localStorage.setItem('hub_seen', '1'); } catch (e) {}
-/* 전원 인트로: 이 탭에서 처음 열 때만(게임 갔다 돌아올 때는 안 나옴), 움직임 줄이기 설정이면 안 나옴 */
+/* 전원 인트로: 이 탭에서 처음 열 때만(게임 갔다 돌아올 때는 안 나옴).
+   학교 PC는 Windows '애니메이션 효과'가 꺼져 있는 일이 많아 그 설정과 상관없이 보여 준다 */
 try {
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('hub_power')) {
+  if (!sessionStorage.getItem('hub_power')) {
     document.documentElement.classList.add('powering');
     sessionStorage.setItem('hub_power', '1');
   }
@@ -475,16 +476,15 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
 @keyframes pwOut{to{opacity:0;visibility:hidden}}
 
 /* ── 흐르는 과목 띠: 기본은 천천히 흐르고, 스크롤을 빨리 내릴수록 빨라진다(위로 올리면 거꾸로) ── */
-.ticker{position:relative;z-index:2;background:var(--paper-lime);overflow:hidden;padding:20px 0 22px;
-  box-shadow:inset 0 -2px 0 0 var(--ink)}
-.ticker-band{background:var(--ink);margin:0 -60px;padding:12px 0;transform:rotate(-1.6deg)}
+.ticker{position:relative;z-index:2;background:var(--ink);overflow:hidden}
+.ticker-band{padding:13px 0}
 .ticker-track{display:flex;width:max-content;will-change:transform}
 .ticker-item{display:inline-flex;align-items:center;gap:10px;padding:0 20px;white-space:nowrap;
   font-family:var(--font-display);font-size:24px;font-weight:800;line-height:1.1}
 .ticker-item .n{font-size:15px;background:currentColor;border-radius:100px;padding:3px 9px}
 .ticker-item .n i{font-style:normal;color:var(--ink)}
 .ticker-item svg{width:14px;height:14px;flex:0 0 auto;margin-left:10px}
-@media (max-width:759px){.ticker{padding:14px 0 16px}.ticker-item{font-size:19px;padding:0 14px}}
+@media (max-width:759px){.ticker-band{padding:10px 0}.ticker-item{font-size:19px;padding:0 14px}}
 
 /* ── 카드 기울기: 마우스(PC)에서만. 카드가 마우스 쪽으로 살짝 기운다 ── */
 @media (hover:hover) and (pointer:fine){
@@ -492,7 +492,6 @@ footer{background:var(--paper);padding:48px 24px 40px;box-shadow:inset 0 2px 0 0
     transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translate(-2px,-2px)}
   .card.tilt:active{transform:perspective(800px) translate(3px,3px)}
 }
-@media (prefers-reduced-motion: reduce){ .card.tilt{transform:none !important} }
 </style>
 </head>
 <body>
@@ -1492,7 +1491,7 @@ let heroCounted = false, heroTarget = 0;
 function heroCount(n) {
   heroTarget = n;
   const el = $('#heroBadge');
-  if (heroCounted || REDUCED) { if (!heroCounted || el.dataset.rolling !== '1') el.textContent = n; heroCounted = true; return; }
+  if (heroCounted) { if (!heroCounted || el.dataset.rolling !== '1') el.textContent = n; heroCounted = true; return; }
   heroCounted = true;
   el.textContent = '0';
   afterIntro(() => setTimeout(() => {
@@ -1526,10 +1525,10 @@ function buildTicker() {
 }
 (function runTicker() {
   const track = $('#tickerTrack');
-  if (!track || REDUCED) return;
+  if (!track) return;
   let x = 0, boost = 0, lastY = scrollY, last = null, on = true, rafId = 0;
   const half = () => track.scrollWidth / 2;
-  addEventListener('scroll', () => { const y = scrollY; boost += (y - lastY) * 0.9; lastY = y; }, { passive: true });
+  addEventListener('scroll', () => { const y = scrollY; boost += (y - lastY) * 0.5; lastY = y; }, { passive: true });
   const frame = t => {
     const dt = last == null ? 16 : Math.min(50, t - last); last = t;
     boost *= Math.pow(0.9, dt / 16);
@@ -1548,7 +1547,7 @@ function buildTicker() {
 })();
 
 /* ── 카드 기울기(PC 마우스에서만) ── */
-if (!REDUCED && matchMedia('(hover:hover) and (pointer:fine)').matches) {
+if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
   let cur = null;
   document.addEventListener('pointermove', e => {
     const card = e.target.closest && e.target.closest('.card');
