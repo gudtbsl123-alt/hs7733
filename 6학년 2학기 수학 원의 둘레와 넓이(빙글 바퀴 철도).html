@@ -100,6 +100,11 @@ button{font-family:"Jua","DoH",sans-serif;cursor:pointer;-webkit-tap-highlight-c
 #owner{position:absolute;left:24px;bottom:22px;padding:10px 12px 10px 20px;border-radius:26px;font-size:21px;display:flex;align-items:center;gap:12px}
 #owner .cb{font-size:19px;padding:6px 16px 10px}
 #bGearT{position:absolute;right:22px;top:18px}
+#trainPick{position:absolute;left:22px;top:18px;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:30px}
+#trainPick .lb{min-width:230px;text-align:center;font-size:26px;color:#fff;text-shadow:-2px -2px 0 #2a2350,2px -2px 0 #2a2350,-2px 2px 0 #2a2350,2px 2px 0 #2a2350,0 3px 0 #2a2350}
+#trainPick .lb small{display:block;font-size:17px}
+#trainPick .cb{width:56px;height:56px;padding:0}
+#trainPick svg{width:30px;height:30px}
 #tLogoHint{position:absolute;left:0;right:0;bottom:140px;text-align:center;font-size:26px;color:#fff;pointer-events:none}
 /* ── 선반 ── */
 #shelfUI .bar{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);display:flex;gap:16px}
@@ -241,6 +246,7 @@ button{font-family:"Jua","DoH",sans-serif;cursor:pointer;-webkit-tap-highlight-c
     <div id="nameTip" class="jelly">기관차 옆 이름판에 이름을 써요</div>
     <button class="cb" id="bStart">출발!</button>
     <div id="owner" class="jelly hide"><span id="ownerT"></span><button class="cb lemon" id="bReset">새로 시작</button></div>
+    <div id="trainPick" class="jelly"><button class="cb round blue" id="bTrainPrev" aria-label="앞 기차"><svg viewBox="0 0 48 48"><path d="M32 8 L12 24 L32 40 Z" fill="#fff" stroke="#2a2350" stroke-width="4" stroke-linejoin="round"/></svg></button><div class="lb"><small>탈 기차 고르기</small><span id="trainName">빙글이 증기 기관차</span></div><button class="cb round blue" id="bTrainNext" aria-label="다음 기차"><svg viewBox="0 0 48 48"><path d="M16 8 L36 24 L16 40 Z" fill="#fff" stroke="#2a2350" stroke-width="4" stroke-linejoin="round"/></svg></button></div>
     <button class="cb round grape" id="bGearT" aria-label="설정"><svg viewBox="0 0 48 48"><path d="M24 6l4 1 1 5 4 2 4-3 3 3-3 4 2 4 5 1 1 4-1 4-5 1-2 4 3 4-3 3-4-3-4 2-1 5-4 1-4-1-1-5-4-2-4 3-3-3 3-4-2-4-5-1-1-4 1-4 5-1 2-4-3-4 3-3 4 3 4-2 1-5z" fill="#fff" stroke="#2a2350" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="24" r="7" fill="#8e5bff" stroke="#2a2350" stroke-width="3"/></svg></button>
   </div>
   <div id="shelfUI" class="layer hide">
@@ -5133,22 +5139,105 @@ function buildTrain() {
     const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: '#ffd23a', transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false })); gl.scale.set(4, 4, 1); pt.add(gl); pt.visible = false; T0.ptr = pt; }
   /* 승객 나무못 인형 */
   T0.pegs = [];
+  /* 증기 기관차 부품을 한 묶음으로(차종을 바꾸면 보이기만 바꾼다) */
+  { const sg = grp(0, 0, 0, body); [...body.children].forEach((o) => { if (o !== sg && o !== T0.decoG) sg.add(o); }); T0.steamG = sg; T0.faceS = T0.face; T0.FS = T0.F; T0.FS.eyeY = 0.98; T0.FS.browY = 1.46; }
+  T0.cars.forEach((c) => { const sg = grp(0, 0, 0, c.body); [...c.body.children].forEach((o) => { if (o !== sg && !c.seats.includes(o)) sg.add(o); }); c.steamG = sg; });
+  buildMetro(); T0.model = 0;
 }
 function buildWheels() {
   const T0 = TRAIN, g = T0.wheelG; while (g.children.length) g.remove(g.children[0]);
   T0.wheels = []; T0.rods = [];
   const R = 0.62 * T0.D / 20, ink = mat(PAL.ink, { r: 0.25 }), gold = mat(PAL.lemon), white = mat('#ffffff', { r: 0.15 });
   T0.R = R;
-  for (const z of [-1.3, -0.05, 1.2]) for (const sx of [-1, 1]) {
+  const metro = T0.model > 0, zs = metro ? [-1.75, -0.75, 0.75, 1.75] : [-1.3, -0.05, 1.2];
+  if (metro) for (const bz of [-1.25, 1.25]) for (const sx of [-1, 1]) mesh(rbox(0.22, 0.42, 2.1, 0.1, 2), mat('#3a3f4c', { r: 0.3 }), sx * 0.86, R + 0.05, bz, g);
+  for (const z of zs) for (const sx of [-1, 1]) {
     const w = grp(sx * 1.08, R, z, g); const tyre = mesh(pcyl(R, 0.3, 0.08, 28), ink, 0, 0, 0, w); tyre.rotation.z = PI / 2;
-    const rim = mesh(pcyl(R * 0.8, 0.34, 0.06, 28), TM.boiler, 0, 0, 0, w); rim.rotation.z = PI / 2;
+    const rim = mesh(pcyl(R * 0.8, 0.34, 0.06, 28), metro ? MM.line : TM.boiler, 0, 0, 0, w); rim.rotation.z = PI / 2;
     const hub = mesh(pcyl(R * 0.36, 0.4, 0.06, 16), gold, 0, 0, 0, w); hub.rotation.z = PI / 2;
     for (let k = 0; k < 3; k++) { const sp = mesh(rbox(0.1, R * 1.4, 0.13, 0.04, 2), white, sx * 0.17, 0, 0, w); sp.rotation.x = k * PI / 3; }
     mesh(sph(0.08, 8), white, sx * 0.17, R * 0.62, 0, w);
     T0.wheels.push(w);
   }
-  for (const sx of [-1, 1]) { const rod = mesh(rbox(0.1, 0.14, 2.7, 0.05, 2), gold, sx * 1.3, R, -0.05, g); T0.rods.push(rod); }
+  if (!metro) for (const sx of [-1, 1]) { const rod = mesh(rbox(0.1, 0.14, 2.7, 0.05, 2), gold, sx * 1.3, R, -0.05, g); T0.rods.push(rod); }
   T0.g.position.y = 0; T0.body.position.y = R - 0.62 + 0.0;
+}
+/* ══════════════ 전동차 4종(선생님이 고른 시안): 하얀 몸통 + 색 띠, 앞은 큰 유리창 — 장난감 광택 플라스틱으로 단순하게 ══════════════
+   상표·로고는 넣지 않고 색과 모양만 따른다. 앞 유리에 눈(표정 5종은 빙글이와 같음), 아래 전조등 두 개, 위 행선 표시(주황 글자) */
+const MODELS = [
+  { name: '빙글이 증기 기관차' },
+  { name: '남색 전동차', body: '#f3f5f8', mask: '#1f3a8a', line: '#e8323c', stripe: '#1f3a8a', stripe2: '#e8323c', no: '1024' },
+  { name: '초록 전동차', body: '#f6f7f6', mask: '#2b2f3a', line: '#22b24c', stripe: '#22b24c', stripe2: '#22b24c', no: '2207', swoosh: true },
+  { name: '주황 전동차', body: '#eef2ec', mask: '#1d1d22', line: '#ff7a1a', stripe: '#ff7a1a', stripe2: '#ffffff', no: '3048', side: '#dde7da' },
+  { name: '파랑 전동차', body: '#f1f3f6', mask: '#26262e', line: '#3a5fd8', stripe: '#3a5fd8', stripe2: '#8fb0ff', no: '4002' }];
+const MM = {};   /* 전동차 재질(차종을 바꾸면 색만 바꾼다) */
+function lcdTex(text) { return canvasTex(256, 64, (g) => { g.fillStyle = '#16120c'; g.fillRect(0, 0, 256, 64); g.font = FONT(44, 'Bagel'); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffb020'; g.shadowColor = '#ff8a00'; g.shadowBlur = 10; g.fillText(text, 128, 34); }); }
+function metroBody(par, len, lead) {
+  /* len: 몸통 길이, lead: 앞 운전실이 있는 첫 칸 */
+  const g = grp(0, 0, 0, par), glass = mat('#1e2a44', { r: 0.05, cc: 1 }), door = MM.door, roofM = MM.roof;
+  mesh(rbox(1.9, 0.4, len - 0.2, 0.15, 3), MM.under, 0, 0.82, 0, g);
+  mesh(rbox(2.12, 2.1, len, 0.34, 5), MM.body, 0, 1.98, 0, g);
+  mesh(rbox(1.95, 0.26, len - 0.3, 0.12, 3), roofM, 0, 3.12, 0, g);
+  for (const sx of [-1, 1]) {
+    mesh(rbox(0.04, 0.2, len - 0.5, 0.02, 2), MM.stripe, sx * 1.065, 1.42, 0, g); mesh(rbox(0.04, 0.07, len - 0.5, 0.02, 2), MM.stripe2, sx * 1.07, 1.6, 0, g);
+    mesh(rbox(0.03, 0.9, len - 0.6, 0.02, 2), MM.side, sx * 1.058, 2.3, 0, g);
+    const nW = Math.max(2, Math.round((len - 1.4) / 1.15)); for (let k = 0; k < nW; k++) { const z = -len / 2 + 0.9 + (k + 0.5) * (len - 1.8) / nW; mesh(rbox(0.05, 0.62, 0.62, 0.08, 2), glass, sx * 1.07, 2.42, z, g); }
+    for (const z of [-len * 0.28, len * 0.28]) { mesh(rbox(0.05, 1.5, 0.5, 0.06, 2), door, sx * 1.068, 2.0, z + (lead ? 0.25 : 0), g); mesh(rbox(0.06, 0.55, 0.36, 0.05, 2), glass, sx * 1.075, 2.45, z + (lead ? 0.25 : 0), g); } }
+  for (let k = 0; k < 2; k++) mesh(rbox(1.1, 0.32, 0.9, 0.12, 2), MM.roof2, 0, 3.38, -len * 0.22 + k * len * 0.44, g);
+  if (!lead) for (const sz of [-1, 1]) mesh(rbox(1.3, 1.9, 0.2, 0.2, 2), MM.under, 0, 1.95, sz * (len / 2 + 0.05), g);
+  return g;
+}
+function buildMetro() {
+  const T0 = TRAIN, ink = mat(PAL.ink, { r: 0.25 }), white = mat('#ffffff', { r: 0.15 }), black = mat('#1d1a33', { r: 0.2 });
+  for (const k of ['body', 'mask', 'line', 'stripe', 'stripe2', 'side', 'roof', 'roof2', 'door', 'under']) MM[k] = mat('#ffffff', { own: true, r: k === 'mask' ? 0.2 : 0.3 });
+  const m = grp(0, 0, 0, T0.body); T0.metroG = m;
+  metroBody(m, 4.5, true);
+  /* 앞 얼굴: 검은(또는 남색) 앞판 + 큰 유리창 + 아래 색 띠 + 전조등 + 위 행선 표시 */
+  const fz = -2.27, front = grp(0, 0, fz, m);
+  mesh(rbox(2.14, 2.2, 0.36, 0.34, 4), MM.mask, 0, 2.02, 0, front);
+  const ws = mesh(rbox(1.78, 1.02, 0.08, 0.16, 3), mat('#24324f', { r: 0.04, cc: 1 }), 0, 2.48, -0.17, front); ws.rotation.x = -0.12;
+  mesh(rbox(2.16, 0.16, 0.38, 0.06, 2), MM.line, 0, 1.6, -0.01, front);
+  const swoosh = mesh(rbox(2.2, 0.34, 0.42, 0.14, 3), MM.line, 0, 1.28, 0.02, front); T0.swoosh = swoosh;
+  mesh(rbox(1.9, 0.55, 0.34, 0.14, 3), MM.body, 0, 1.08, 0.04, front);
+  for (const sx of [-1, 1]) { mesh(rbox(0.42, 0.18, 0.06, 0.05, 2), mat('#fff6d8', { e: '#fff2b0', ei: 1.1 }), sx * 0.62, 1.36, -0.2, front); mesh(rbox(0.16, 0.12, 0.06, 0.04, 2), mat('#ff4040', { e: '#ff2020', ei: 0.6 }), sx * 0.88, 1.36, -0.2, front); }
+  T0.lcdTex = lcdTex('빙글역'); const lcd = mesh(new THREE.PlaneGeometry(1.0, 0.24), mat('#ffffff', { map: T0.lcdTex, r: 0.4, e: '#ffb020', ei: 0.25 }), 0, 2.86, -0.23, front); lcd.rotation.y = PI; lcd.castShadow = false;
+  T0.noTex = canvasTex(256, 64, () => {}); const nop = mesh(new THREE.PlaneGeometry(0.9, 0.22), mat('#ffffff', { map: T0.noTex, r: 0.4 }), 0, 1.1, -0.15, front); nop.rotation.y = PI; nop.castShadow = false;
+  mesh(rbox(1.2, 0.36, 0.5, 0.12, 2), MM.under, 0, 0.72, -0.15, front);
+  /* 눈(앞 유리 아래쪽)·눈썹·입 — 빙글이와 같은 표정 틀 */
+  const face = grp(0, 2.2, fz - 0.2, m); T0.faceM = face; const F = T0.FM = { eyes: [], pupils: [], shines: [], happy: [], brows: [] };
+  for (const sx of [-1, 1]) {
+    const e = mesh(sph(0.3, 20), white, sx * 0.42, 0.18, -0.02, face); e.scale.set(1, 1.05, 0.5); F.eyes.push(e);
+    const p = mesh(sph(0.16, 16), black, sx * 0.42, 0.16, -0.14, face); p.scale.set(1, 1, 0.5); F.pupils.push(p);
+    const s = mesh(sph(0.06, 8), white, sx * 0.42 + 0.07, 0.25, -0.2, face); F.shines.push(s);
+    const h = mesh(tor(0.19, 0.05, 8, 16, PI), white, sx * 0.42, 0.13, -0.12, face); h.visible = false; F.happy.push(h);
+    const b = mesh(rbox(0.36, 0.08, 0.06, 0.03, 2), white, sx * 0.42, 0.6, -0.05, face); F.brows.push(b);
+    mesh(sph(0.13, 12), mat('#ff9ab8', { r: 0.5 }), sx * 0.74, -0.06, -0.08, face).scale.set(1, 0.6, 0.3); }
+  F.smile = mesh(tor(0.22, 0.05, 8, 20, PI * 0.9), white, 0, -0.12, -0.12, face); F.smile.rotation.z = PI + PI * 0.05;
+  F.open = grp(0, -0.16, -0.12, face); { const mo = mesh(sph(0.26, 20, 10), mat('#7a1430', { r: 0.4 }), 0, 0, 0, F.open); mo.scale.set(1.1, 0.7, 0.4); } F.open.visible = false;
+  F.o = mesh(tor(0.1, 0.045, 8, 16), white, 0, -0.16, -0.12, face); F.o.visible = false;
+  F.flat = mesh(rbox(0.32, 0.06, 0.05, 0.03, 2), white, 0, -0.16, -0.12, face); F.flat.visible = false;
+  F.eyeY = 0.16; F.browY = 0.6;
+  /* 지붕 위 집전기(마름모 팔) */
+  const pg = grp(0, 3.25, 0.9, m); for (const sz of [-1, 1]) { const a = mesh(cyl(0.04, 0.04, 1.0, 6), ink, 0, 0.4, sz * 0.32, pg); a.rotation.x = sz * 0.7; } mesh(rbox(1.3, 0.06, 0.12, 0.03, 2), ink, 0, 0.78, 0, pg); mesh(rbox(0.5, 0.12, 0.5, 0.05, 2), ink, 0, 0.04, 0, pg);
+  /* 옆 이름판 */
+  for (const sx of [-1, 1]) { const pl = mesh(new THREE.PlaneGeometry(1.4, 0.44), mat('#ffffff', { map: plateTex, r: 0.3 }), sx * 1.075, 1.95, 0.85, m); pl.rotation.y = sx * PI / 2; pl.castShadow = false; }
+  /* 뒤 객차 두 량 */
+  T0.cars.forEach((c) => { c.metroG = grp(0, 0, 0, c.body); metroBody(c.metroG, 3.9, false); });
+  m.visible = false; T0.cars.forEach((c) => { c.metroG.visible = false; });
+}
+function setModel(k) {
+  const T0 = TRAIN, M0 = MODELS[k] ? k : 0; T0.model = M0; const D0 = MODELS[M0];
+  if (!T0.metroG) return;
+  const metro = M0 > 0; T0.metroG.visible = metro; T0.steamG.visible = !metro;
+  T0.cars.forEach((c) => { c.metroG.visible = metro; c.steamG.visible = !metro; });
+  T0.F = metro ? T0.FM : T0.FS; T0.face = metro ? T0.faceM : T0.faceS;
+  T0.chimney = metro ? V3(0, 4.1, 0.9) : V3(0, 3.75, -1.35);
+  if (T0.decoG) T0.decoG.position.set(0, metro ? 3.5 : 3.37, metro ? -0.4 : 1.2);
+  if (metro) { MM.body.color.set(D0.body); MM.mask.color.set(D0.mask); MM.line.color.set(D0.line); MM.stripe.color.set(D0.stripe); MM.stripe2.color.set(D0.stripe2);
+    MM.side.color.set(D0.side || D0.body); MM.roof.color.set('#d9dde4'); MM.roof2.color.set('#c4c9d2'); MM.door.color.set('#e2e6ec'); MM.under.color.set('#3a3f4c');
+    T0.swoosh.scale.set(1, D0.swoosh ? 1.6 : 1, 1); T0.swoosh.position.y = D0.swoosh ? 1.22 : 1.28;
+    const g = T0.noTex.userData.g; g.clearRect(0, 0, 256, 64); g.font = FONT(50, 'Bagel'); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#2a2350'; g.fillText(D0.no, 128, 34); T0.noTex.needsUpdate = true; }
+  buildWheels(); if (typeof portraitLayers === 'function') portraitLayers();
 }
 function applyPaint(i) { const P0 = PAINTS[i] || PAINTS[0]; TRAIN.paint = i; TM.boiler.color.set(P0.boiler); TM.cab.color.set(P0.cab); TM.roof.color.set(P0.roof); TM.chassis.color.set(P0.chassis); }
 /* 지붕 장식(가게): 0 없음 · 1 리본 · 2 기관사 모자 · 3 왕관. 운전실 지붕 위에 얹는다 */
@@ -5184,8 +5273,8 @@ function updateFace(dt) {
   T0.blinkT -= dt; let blink = 1; if (T0.blinkT < 0.14) blink = 0.1; if (T0.blinkT < 0) T0.blinkT = 0.8 + Math.random() * 1.2;
   const e = T0.expr, big = e === 'oops' || e === 'wow' ? 1.22 : e === 'focus' ? 0.92 : 1, happy = e === 'joy';
   F.eyes.forEach((m, k) => { m.visible = !happy; m.scale.set(big, 1.05 * big * (e === 'focus' ? 0.8 : 1) * blink, 0.6); F.pupils[k].visible = !happy && blink > 0.5; F.shines[k].visible = !happy && blink > 0.5; F.happy[k].visible = happy;
-    F.pupils[k].scale.setScalar(e === 'oops' ? 0.7 : 1).setZ(0.5); F.pupils[k].position.y = e === 'focus' ? 1.08 : 0.98; F.shines[k].position.y = F.pupils[k].position.y + 0.08;
-    F.brows[k].rotation.z = (k ? -1 : 1) * (e === 'focus' ? -0.35 : e === 'oops' ? 0.25 : 0); F.brows[k].position.y = e === 'oops' || e === 'wow' ? 1.58 : 1.46; });
+    F.pupils[k].scale.setScalar(e === 'oops' ? 0.7 : 1).setZ(0.5); F.pupils[k].position.y = (F.eyeY ?? 0.98) + (e === 'focus' ? 0.1 : 0); F.shines[k].position.y = F.pupils[k].position.y + 0.08;
+    F.brows[k].rotation.z = (k ? -1 : 1) * (e === 'focus' ? -0.35 : e === 'oops' ? 0.25 : 0); F.brows[k].position.y = (F.browY ?? 1.46) + (e === 'oops' || e === 'wow' ? 0.12 : 0); });
   F.smile.visible = e === 'idle'; F.open.visible = e === 'joy' || e === 'wow'; F.o.visible = e === 'oops'; F.flat.visible = e === 'focus';
 }
 /* 길 위의 자세: 몸통 기준점 s(앞쪽 끝)에서 차량마다 뒤로 */
@@ -5727,7 +5816,7 @@ let smokeI = 0;
 function smokeTint() { const k = SAVE.smoke || 0; smokeI++; if (!k) return null;
   if (k === 1) return smokeI % 2 ? '#ffb0d6' : '#9fd8ff'; if (k === 2) return smokeI % 3 ? '#fff0a0' : '#ffffff';
   return new THREE.Color().setHSL((smokeI * 0.13) % 1, 0.85, 0.72).getStyle(); }
-function chimneyPuff(p, v, ring, sz) { const tint = smokeTint(); puff(p, v, ring, sz, tint); if ((SAVE.smoke || 0) === 2 && smokeI % 3 === 0) burst(p, 3, 3, [PAL.lemon, '#ffffff'], 3, 0.5); }
+function chimneyPuff(p, v, ring, sz) { if (TRAIN.model) return; const tint = smokeTint(); puff(p, v, ring, sz, tint); if ((SAVE.smoke || 0) === 2 && smokeI % 3 === 0) burst(p, 3, 3, [PAL.lemon, '#ffffff'], 3, 0.5); }
 const PUFF_DEF = new THREE.Color('#efe6ff'), PUFF_DEF_E = new THREE.Color('#cfc6ee');
 function puff(p, v, ring, sz = 1, tint = null) { const P = PUFF[puffI++ % PUFF_N]; if (ring && !P.ring) return;
   if (!P.ring) { if (tint) { P.m.material.color.set(tint); P.m.material.emissive.set(tint).multiplyScalar(0.55); } else { P.m.material.color.copy(PUFF_DEF); P.m.material.emissive.copy(PUFF_DEF_E); } } P.m.position.copy(p); P.v.copy(v); P.life = 0; P.max = ring ? 1.2 : 0.65 + 0.4 * Math.random() * 0.5; P.m.visible = true; P.sz = sz; P.m.lookAt(camera.position); }
@@ -6204,7 +6293,7 @@ const TITLE = { t: 0, out: 0 };
 function enterTitle() {
   SCENE = 'title'; PAUSED = false; G.slow = 1; hideAll(); show(UI.title, true); show($('nameTip'), true);
   dropAllFans(); TRAIN.s = -13; TRAIN.v = 0; G.F = null; setLid(0); BOX.door.rotation.x = 0; TITLE.t = 0; TITLE.out = 0; NIGHT.target = 0; NIGHT.k = 0; applyNight();
-  $('nick').value = SAVE.name || ''; drawPlate(SAVE.name || '');
+  $('nick').value = SAVE.name || ''; drawPlate(SAVE.name || ''); syncTrainName();
   const prog = SAVE.done.filter(Boolean).length; const own = $('owner');
   if (SAVE.owner) { $('ownerT').textContent = `${SAVE.owner} 기관사의 기록 · ${prog}노선 완주 · 별 사탕 ${SAVE.stars || 0}`; show(own, true); } else show(own, false);
   CAM.mode = 'static'; CAM.tp.set(-216, 10, 108); CAM.tl.set(-199.5, 6.5, 140); CAM.tfov = 55; CAM.k = 2; camSnap();
@@ -6375,6 +6464,10 @@ function shelfTick(dt) {
 }
 function fadeTo(fn) { const f = $('fade'); f.style.opacity = 1; setTimeout(() => { fn(); f.style.opacity = 0; }, TEST ? 0 : 380); }
 tapBtn('bShop', () => openShop());
+/* 타이틀에서 탈 기차 고르기(빙글이 + 전동차 4종, 모두 공짜) */
+function pickTrain(d) { const n = MODELS.length, k = ((TRAIN.model || 0) + d + n) % n; SAVE.model = k; SAVE.owned = SAVE.owned || []; if (!SAVE.owned.includes('m' + k)) SAVE.owned.push('m' + k); setModel(k); persist(); syncTrainName(); sfx('tap'); setFace('wow', 1); }
+function syncTrainName() { const el = $('trainName'); if (el) el.textContent = MODELS[TRAIN.model || 0].name; }
+tapBtn('bTrainPrev', () => pickTrain(-1)); tapBtn('bTrainNext', () => pickTrain(1));
 tapBtn('bRecord', () => goResult());
 tapBtn('bTitle', () => enterTitle());
 
@@ -6409,22 +6502,25 @@ tapBtn('bResTitle', () => enterTitle());
 function esc(s) { return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]); }
 
 /* ══════════════ 장난감 가게: 칠 · 바퀴 · 지붕 장식 · 연기 · 기적 (다 사려면 세 판쯤) ══════════════ */
-const SHOP_TABS = [['paint', '칠'], ['wheel', '바퀴'], ['deco', '지붕 장식'], ['smoke', '연기'], ['horn', '기적 소리']];
-const SHOP = [...PAINTS.map((p, i) => ({ id: 'p' + i, cat: 'paint', name: p.name, cost: [0, 40, 40, 60, 60, 100][i], v: i })),
+const SHOP_TABS = [['model', '기차'], ['paint', '칠'], ['wheel', '바퀴'], ['deco', '지붕 장식'], ['smoke', '연기'], ['horn', '기적 소리']];
+const SHOP = [...MODELS.map((m, i) => ({ id: 'm' + i, cat: 'model', name: m.name, cost: 0, v: i })), ...PAINTS.map((p, i) => ({ id: 'p' + i, cat: 'paint', name: p.name, cost: [0, 40, 40, 60, 60, 100][i], v: i })),
   ...[[20, 0], [22, 60], [27, 100], [31, 200]].map(([d, c]) => ({ id: 'w' + d, cat: 'wheel', name: `바퀴 지름 ${d} cm`, cost: c, v: d })),
   ...[[0, 0], [1, 90], [2, 150], [3, 240]].map(([k, c]) => ({ id: 'd' + k, cat: 'deco', name: DECO_N[k], cost: c, v: k })),
   ...[['하얀 연기', 0], ['솜사탕 연기', 100], ['별가루 연기', 150], ['무지개 연기', 220]].map(([n, c], k) => ({ id: 's' + k, cat: 'smoke', name: n, cost: c, v: k })),
   ...[['빙글 기적', 0], ['뻐꾸기 기적', 60], ['오르골 기적', 100], ['나팔 기적', 140]].map(([n, c], k) => ({ id: 'h' + k, cat: 'horn', name: n, cost: c, v: k }))];
-const SHOP_KEY = { paint: 'paint', wheel: 'wheel', deco: 'deco', smoke: 'smoke', horn: 'horn' };
-let shopTab = 'paint';
+const SHOP_KEY = { model: 'model', paint: 'paint', wheel: 'wheel', deco: 'deco', smoke: 'smoke', horn: 'horn' };
+let shopTab = 'model';
 function shopUse(it) { const cur = SAVE[SHOP_KEY[it.cat]]; return (cur ?? (it.cat === 'wheel' ? 20 : 0)) === it.v; }
 function applyShop(it) { SAVE[SHOP_KEY[it.cat]] = it.v;
-  if (it.cat === 'paint') applyPaint(it.v); else if (it.cat === 'wheel') setWheelD(it.v); else if (it.cat === 'deco') setDeco(it.v);
+  /* 칠·연기는 증기 기관차 것이라, 전동차일 때 고르면 빙글이로 바꿔 보여 준다 */
+  if ((it.cat === 'paint' || it.cat === 'smoke') && TRAIN.model) { SAVE.model = 0; setModel(0); }
+  if (it.cat === 'model') { setModel(it.v); setFace('wow', 1.2); sfx('horn', SAVE.horn || 0); }
+  else if (it.cat === 'paint') applyPaint(it.v); else if (it.cat === 'wheel') setWheelD(it.v); else if (it.cat === 'deco') setDeco(it.v);
   else if (it.cat === 'smoke') { const cp = TRAIN.body.localToWorld(TRAIN.chimney.clone()); for (let i = 0; i < 4; i++) chimneyPuff(cp.clone().add(V3(0, i * 0.8, 0)), V3(0, 4 + i, 0), false, 1.2); }
   else if (it.cat === 'horn') setTimeout(() => sfx('horn', it.v), 120); }
 function openShop() {
   $('shopN').textContent = G.stars; const grid = $('shopGrid'); grid.innerHTML = '';
-  SAVE.owned = SAVE.owned || []; ['p0', 'w20', 'd0', 's0', 'h0'].forEach((id) => { if (!SAVE.owned.includes(id)) SAVE.owned.push(id); });
+  SAVE.owned = SAVE.owned || []; ['m0', 'm1', 'm2', 'm3', 'm4', 'p0', 'w20', 'd0', 's0', 'h0'].forEach((id) => { if (!SAVE.owned.includes(id)) SAVE.owned.push(id); });
   const tabs = $('shopTabs'); tabs.innerHTML = '';
   for (const [k, nm] of SHOP_TABS) { const its = SHOP.filter((it) => it.cat === k), own = its.filter((it) => SAVE.owned.includes(it.id)).length;
     const b = document.createElement('button'); b.className = 'tab' + (k === shopTab ? ' on' : ''); b.innerHTML = `${nm} <small>${own}/${its.length}</small>`;
@@ -6461,7 +6557,9 @@ function drawShopIcon(g, it) {
   if (im) { if (it.cat === 'wheel') { const k = 0.5 + it.v / 31 * 0.5; g.drawImage(im, 150 - 150 * k, 80 - 85 * k, 300 * k, 170 * k); g.font = FONT(26); g.fillStyle = '#2a2350'; g.fillText(`한 바퀴 ${+(it.v * 3.14).toFixed(2)} cm`, 150, 184); }
     else g.drawImage(im, 0, it.cat === 'deco' ? 6 : 12); return; }
   /* 3D를 못 쓰는 PC: 간단한 그림 */
-  if (it.cat === 'paint') { const P0 = PAINTS[it.v]; g.fillStyle = P0.boiler; rr(g, 40, 70, 150, 70, 34); g.fill(); g.fillStyle = P0.cab; rr(g, 170, 40, 80, 100, 14); g.fill(); g.fillStyle = P0.roof; rr(g, 160, 30, 100, 18, 9); g.fill(); g.fillStyle = '#fff4e2'; g.beginPath(); g.arc(46, 105, 34, 0, TAU); g.fill();
+  if (it.cat === 'model' && it.v > 0) { const D0 = MODELS[it.v]; g.fillStyle = D0.body; rr(g, 40, 40, 220, 110, 22); g.fill(); g.lineWidth = 4; g.strokeStyle = '#2a2350'; g.stroke(); g.fillStyle = D0.mask; rr(g, 40, 40, 70, 110, 22); g.fill(); g.fillStyle = '#24324f'; rr(g, 50, 52, 52, 40, 8); g.fill();
+    g.fillStyle = D0.stripe; g.fillRect(110, 104, 150, 12); g.fillStyle = D0.line; g.fillRect(44, 104, 66, 8); for (const x of [80, 200]) { g.fillStyle = '#2a2350'; g.beginPath(); g.arc(x, 156, 14, 0, TAU); g.fill(); } return; }
+  if (it.cat === 'paint' || it.cat === 'model') { const P0 = PAINTS[it.v]; g.fillStyle = P0.boiler; rr(g, 40, 70, 150, 70, 34); g.fill(); g.fillStyle = P0.cab; rr(g, 170, 40, 80, 100, 14); g.fill(); g.fillStyle = P0.roof; rr(g, 160, 30, 100, 18, 9); g.fill(); g.fillStyle = '#fff4e2'; g.beginPath(); g.arc(46, 105, 34, 0, TAU); g.fill();
     g.fillStyle = '#2a2350'; g.beginPath(); g.arc(36, 98, 6, 0, TAU); g.arc(58, 98, 6, 0, TAU); g.fill(); for (const x of [80, 140, 210]) { g.fillStyle = '#2a2350'; g.beginPath(); g.arc(x, 150, 22, 0, TAU); g.fill(); g.fillStyle = P0.boiler; g.beginPath(); g.arc(x, 150, 14, 0, TAU); g.fill(); } }
   else if (it.cat === 'wheel') { const R = it.v * 2.1; g.fillStyle = '#2a2350'; g.beginPath(); g.arc(150, 92, R, 0, TAU); g.fill(); g.fillStyle = '#ff3b5c'; g.beginPath(); g.arc(150, 92, R * 0.8, 0, TAU); g.fill(); g.fillStyle = '#ffd23a'; g.beginPath(); g.arc(150, 92, R * 0.36, 0, TAU); g.fill();
     g.font = FONT(26); g.fillStyle = '#2a2350'; g.fillText(`한 바퀴 ${+(it.v * 3.14).toFixed(2)} cm`, 150, 184); }
@@ -6542,8 +6640,9 @@ const SHOPIMG = {};
 function shopImg(it) {
   if (!renderer || NOGL) return null; if (SHOPIMG[it.id]) return SHOPIMG[it.id];
   let cv;
-  if (it.cat === 'paint') { const cur = SAVE.paint || 0; applyPaint(it.v); cv = bakeObj(TRAIN.g, 300, 170, PI * 0.72, '#eef6ff', 0.35); applyPaint(cur); }
-  else if (it.cat === 'deco') { const cur = TRAIN.deco || 0; setDeco(it.v); cv = bakeObj(TRAIN.g, 300, 170, PI * 0.72, '#eef6ff', 0.55); setDeco(cur); }
+  if (it.cat === 'model') { const cur = TRAIN.model || 0; setModel(it.v); cv = bakeObj(TRAIN.g, 300, 170, PI * 0.72, '#eef6ff', 0.35); setModel(cur); }
+  else if (it.cat === 'paint') { const cur = SAVE.paint || 0, cm = TRAIN.model || 0; if (cm) setModel(0); applyPaint(it.v); cv = bakeObj(TRAIN.g, 300, 170, PI * 0.72, '#eef6ff', 0.35); applyPaint(cur); if (cm) setModel(cm); }
+  else if (it.cat === 'deco') { const cur = TRAIN.deco || 0, cm = TRAIN.model || 0; if (cm) setModel(0); setDeco(it.v); cv = bakeObj(TRAIN.g, 300, 170, PI * 0.72, '#eef6ff', 0.55); setDeco(cur); if (cm) setModel(cm); }
   else { const w = TRAIN.wheels[0]; const wg = (w.g || w); cv = bakeObj(wg, 300, 170, PI / 2, '#eef6ff', 0.05); }
   if (cv) SHOPIMG[it.id] = cv; return cv;
 }
@@ -6655,7 +6754,7 @@ function tickN(sec) { const n = Math.max(1, Math.round(sec * 30)); for (let i = 
   buildEnv(); buildRoom(); buildRails(); buildProps(); buildTrain(); buildShelf(); placeToys(); buildSetpieceProps(); buildTrackside(); buildSideWindows(); buildWallArt(); buildCandies(); buildFx(); buildFairyLights(); buildDust();
   /* 예전 저장(바퀴 30·25 cm)은 새 가게의 31·27 cm로 옮긴다 */
   const WMAP = { 30: 31, 25: 27 }; if (WMAP[SAVE.wheel]) SAVE.wheel = WMAP[SAVE.wheel]; if (SAVE.owned) SAVE.owned = SAVE.owned.map((id) => id === 'w30' ? 'w31' : id === 'w25' ? 'w27' : id);
-  applyPaint(SAVE.paint || 0); if (SAVE.wheel && SAVE.wheel !== 20) setWheelD(SAVE.wheel); setDeco(SAVE.deco || 0);
+  applyPaint(SAVE.paint || 0); if (SAVE.wheel && SAVE.wheel !== 20) TRAIN.D = SAVE.wheel; setModel(SAVE.model || 0); setDeco(SAVE.deco || 0);
   portraitLayers();
   if (SAVE.toys) TOYS.forEach((t) => { if (SAVE.toys[t.no]) wakeToy(t, true); });
   G.stars = SAVE.stars || 0;
