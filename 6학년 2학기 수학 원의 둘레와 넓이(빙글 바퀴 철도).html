@@ -4703,14 +4703,16 @@ function buildProps() {
 /* 원주율 포스터: 1노선(원주율)을 마치면 식이 드러난다 — 그 전에는 답 단서가 되지 않게 질문만 */
 const POSTER = { tex: null, k: -1 };
 function drawPoster(g) {
-  const done = typeof SAVE !== 'undefined' && SAVE && SAVE.done && SAVE.done[0];
+  const done = posterOpen();
   g.fillStyle = '#fff7e0'; g.fillRect(0, 0, 512, 640); g.fillStyle = '#ff8a2a'; g.fillRect(0, 0, 512, 90); g.font = FONT(64, 'Bagel'); g.textAlign = 'center'; olText(g, '원주율', 256, 70, '#fff', '#2a2350', 10);
     g.lineWidth = 10; g.strokeStyle = '#2a2350'; g.beginPath(); g.arc(256, 300, 150, 0, TAU); g.stroke(); g.strokeStyle = '#ff3b5c'; g.beginPath(); g.moveTo(106, 300); g.lineTo(406, 300); g.stroke(); g.fillStyle = '#2a2350'; g.beginPath(); g.arc(256, 300, 10, 0, TAU); g.fill();
     g.font = FONT(44); g.fillStyle = '#e0244d'; g.fillText('지름', 256, 286); if (done) { g.font = FONT(56); g.fillStyle = '#2a2350'; g.fillText('원주 ÷ 지름', 256, 520); g.font = FONT(64, 'Bagel'); g.fillStyle = '#2f8cff'; g.fillText('= 3.14…', 256, 600); }
   else { g.font = FONT(52); g.fillStyle = '#2a2350'; g.fillText('원주는 지름의', 256, 516); g.font = FONT(64); g.fillStyle = '#2f8cff'; g.fillText('몇 배일까?', 256, 598); }
 }
 
-function refreshPoster() { const k = SAVE && SAVE.done && SAVE.done[0] ? 1 : 0; if (!POSTER.tex || POSTER.k === k) return; POSTER.k = k; drawPoster(POSTER.tex.userData.g); POSTER.tex.needsUpdate = true; }
+/* 1노선(원주율 문제)을 달리는 동안에는 이미 마친 기록이 있어도 늘 물음만 — 역 카메라에 포스터가 보여 답이 되지 않게 */
+function posterOpen() { const done = typeof SAVE !== 'undefined' && SAVE && SAVE.done && SAVE.done[0]; const inZ0 = typeof SCENE !== 'undefined' && SCENE === 'play' && typeof G !== 'undefined' && G.zone === 0; return !!done && !inZ0; }
+function refreshPoster() { const k = posterOpen() ? 1 : 0; if (!POSTER.tex || POSTER.k === k) return; POSTER.k = k; drawPoster(POSTER.tex.userData.g); POSTER.tex.needsUpdate = true; }
 
 /* ══════════════ 큰 장면 소품: 연필꽂이 나선 탑 · 블록 고리 받침 · 물컵 호수 · 용수철 대포 · 노선 마을 꾸미기 ══════════════ */
 function spSamples(kind) { const p = SETP.find((q) => q.kind === kind); return p ? TR.P.slice(p.i0, p.i1 + 1) : []; }
@@ -5001,6 +5003,7 @@ function updateDecor(t) {
   for (const d of DECOR.bob) d.o.position.y = d.y + Math.sin(t * d.sp) * d.a;
   for (const d of DECOR.spin) d.o.rotation.y += 0.016 * d.v;
   for (const f of DECOR.fn) f(t);
+  refreshPoster();
   if (DECOR.ripple) DECOR.ripple.forEach((r, i) => { const k = (t * 0.6 + i / 8) % 1; r.scale.setScalar(0.4 + k * 1.6); r.material.opacity = 0.6 * (1 - k); });
 }
 
@@ -5570,14 +5573,16 @@ function buildFan(j, st) {
   /* 승강장 앞(카메라 쪽) 바닥: 크기가 다른 소품 띠 — 빈 바닥을 채우고, 높이가 낮아 기차·정지선을 가리지 않음 */
   { const rnd = (k) => ((Math.sin(j.k * 91.7 + k * 12.9898) * 43758.5453) % 1 + 1) % 1; let k = 0;
     for (let u = -6; u <= F.uEnd + 6; u += 2.6 + rnd(k++) * 2.2) {
-      if (F.uk.some((uk) => Math.abs(uk - u) < 2.4)) continue;   /* 정지선 앞 바닥은 비워 둔다 */
-      const lat = -side * (4.6 + rnd(k++) * 4.5), p = fanPos(j, null, n, u, lat), gy = groundAt(p.x, p.z); if (Math.abs(gy - p.y) > 1.2) continue;
+      const lat = -side * (4.6 + rnd(k++) * 4.5);
+      /* 정지선 앞 바닥은 비워 둔다: 역 카메라가 비스듬히 보므로, 카메라 쪽으로 나온 소품은 옆 정지선 앞에 겹쳐 보일 수 있어 그만큼 더 비운다 */
+      if (F.uk.some((uk) => Math.abs(uk - u) < 2.4 || Math.abs(uk - (u - Math.abs(lat) * 0.33)) < 3.4 || Math.abs(uk - (u + Math.abs(lat) * 0.33)) < 3.4)) continue;
+      const p = fanPos(j, null, n, u, lat), gy = groundAt(p.x, p.z); if (Math.abs(gy - p.y) > 1.2) continue;
       const r = rnd(k++), c = TOYC[(k + j.k) % 6], g = grp(p.x, gy, p.z, F.g); g.rotation.y = rnd(k++) * TAU;
       if (r < 0.28) { mesh(sph(0.45, 10), mat(PAL.lemon, { e: '#ffbf00', ei: 0.3 }), 0, 0.45, 0, g); mesh(sph(0.32, 8), mat(TOYC[(k + 2) % 6]), 0.9, 0.32, 0.4, g); }
       else if (r < 0.5) { const b = mesh(rbox(1.5, 1.5, 1.5, 0.35, 3), mat(c), 0, 0.75, 0, g); if (rnd(k++) < 0.5) mesh(rbox(1.2, 1.2, 1.2, 0.3, 3), mat(TOYC[(k + 3) % 6]), 0.3, 2.1, 0.1, g); }
       else if (r < 0.7) { const cr = grp(0, 0.45, 0, g); const bd = mesh(cyl(0.45, 0.45, 4.2, 12), mat(c), 0, 0, 0, cr); bd.rotation.z = PI / 2; const tp = mesh(cone(0.45, 1.0, 12), mat(c), 2.6, 0, 0, cr); tp.rotation.z = -PI / 2; mesh(cyl(0.47, 0.47, 2.2, 12), mat('#ffffff', { r: 0.6 }), -0.4, 0, 0, cr).rotation.z = PI / 2; }
       else if (r < 0.85) { for (let q = 0; q < 3; q++) { const pg = makePeg(TOYC[(k + q) % 6], g); pg.position.set(q * 0.9 - 0.9, 0, (q % 2) * 0.6); pg.scale.setScalar(0.85); } }
-      else { mesh(pcyl(1.2, 0.4, 0.15, 18), mat('#ffffff', { r: 0.4 }), 0, 0.2, 0, g); mesh(cone(1.0, 2.2, 18), mat(c), 0, 1.5, 0, g); }
+      else { mesh(pcyl(1.2, 0.4, 0.15, 18), mat('#ffffff', { r: 0.4 }), 0, 0.2, 0, g); mesh(pcyl(0.9, 0.7, 0.3, 18), mat(c), 0, 0.75, 0, g); mesh(sph(0.35, 10), mat(PAL.lemon), 0, 1.25, 0, g); }  /* 뾰족한 원뿔은 특정 말뚝을 가리키듯 보여 낮은 팽이판으로 */
     } }
   /* 기다리는 승객(역 입구 승강장) */
   for (let k = 0; k < 3; k++) { const p = fanPos(j, null, n, -2.2 + k * 1.25, side * (2.6 + (k % 2) * 0.5)); const pg = makePeg(TOYC[(k + j.k) % 6], F.g); pg.position.set(p.x, p.y + 0.6, p.z); faceSide(pg, j, 0, side); pg.rotateY(PI); pg.userData.base = p.y + 0.6; F.pegs.push(pg); }
@@ -5602,8 +5607,9 @@ function lightFace(m) { if (!m.emissive) return; m.emissive = new THREE.Color('#
 const HIDDEN = [];
 function clearView(F, froms) {
   restoreView(); F.g.updateMatrixWorld(true); scene.updateMatrixWorld(); const rc = new THREE.Raycaster(); rc.camera = camera; const pts = [];
-  for (const fx of [-0.45, 0, 0.45]) for (const fy of [-0.45, 0, 0.45]) pts.push(F.boardG.localToWorld(V3(fx * BOARD_W, F.boardY + fy * F.boardH, 0.4)));
-  F.signs.forEach((sg) => { [-0.4, 0, 0.4].forEach((fx) => pts.push(sg.g.localToWorld(V3(fx * F.sw, PLATE_Y + SIGN_H / 2, 0.4)))); pts.push(sg.line.getWorldPosition(V3())); });
+  for (const fx of [-0.5, -0.45, 0, 0.45, 0.5]) for (const fy of [-0.5, -0.45, 0, 0.45, 0.5]) pts.push(F.boardG.localToWorld(V3(fx * BOARD_W, F.boardY + fy * F.boardH, 0.4)));
+  for (const sx of [-1, 1]) pts.push(F.boardG.localToWorld(V3(sx * (BOARD_W / 2 + 1.0), F.boardY + F.boardH / 2 + 1.1, 0)));  /* 판 모서리·이름표 띠·기둥 꼭대기 공 */
+  F.signs.forEach((sg) => { [-0.4, 0, 0.4].forEach((fx) => pts.push(sg.g.localToWorld(V3(fx * F.sw, PLATE_Y + SIGN_H / 2, 0.4)))); pts.push(sg.line.getWorldPosition(V3())); const t = poseAt(sg.s, newPose()).t; for (const d of [-2.4, 2.4]) pts.push(sg.line.getWorldPosition(V3()).addScaledVector(t, d)); });  /* 정지선 양 끝: 앞 소품이 특정 말뚝을 가리키듯 보이지 않게 */
   for (let u = -2; u <= F.uEnd + 2; u += 3) pts.push(fanPos(F.j, null, F.n, u, 0, 1.6));
   const skip = new Set(); F.g.traverse((o) => skip.add(o)); TRAIN.g.traverse((o) => skip.add(o)); TRAIN.cars.forEach((c) => c.g.traverse((o) => skip.add(o)));
   for (const from of [].concat(froms)) for (const w of pts) { const dir = V3().subVectors(w, from); const d = dir.length(); rc.set(from, dir.normalize()); rc.far = d - 0.5;
