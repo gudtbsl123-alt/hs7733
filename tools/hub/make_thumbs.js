@@ -63,9 +63,10 @@ const PREP = {
   logo: async page => { await page.waitForFunction(() => typeof LOGO_FX !== 'undefined' && LOGO_FX.on, null, { timeout: 30000 }).catch(() => {}); },   // 불꽃 글씨 시작 → WAIT 뒤 글씨가 다 모인 장면
   /* 우리 섬 개척단: 영화식 오프닝이 끝나고 로고가 절벽에 새겨진 타이틀 장면 */
   island: async page => { await page.waitForFunction(() => window.__test && __test.isReady(), null, { timeout: 120000 }); },
+  kart: async page => { await page.waitForFunction(() => window.GAME && GAME.SCENE === 'title', null, { timeout: 120000 }); await page.waitForTimeout(8000); },   // 태엽 카트: 불러오기 화면이 끝나고 타이틀 주행 장면이 돌 때까지
   gametime: async page => { await page.waitForFunction(() => window.GAME && GAME.T > 4, null, { timeout: 120000 }); },
 };
-const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime', 50: 'logo', 71: 'logo', 73: 'logo', 76: 'island', 77: 'island', 78: 'gametime' };   // 50·71(코스터 v4.1 픽셀판 6-2·3-2)은 타이틀 불꽃 글씨가 시작될 때까지 기다린 뒤 찍는다
+const PREP_BY_ID = { 1: 'coaster', 49: 'coaster', 48: 'coaster', 11: 'coaster', 51: 'start', 70: 'gametime', 50: 'logo', 71: 'logo', 73: 'logo', 76: 'island', 77: 'island', 78: 'gametime', 79: 'kart' };   // 50·71(코스터 v4.1 픽셀판 6-2·3-2)은 타이틀 불꽃 글씨가 시작될 때까지 기다린 뒤 찍는다
 /* 선생님이 고른 화면이 따로 있는 게임은 그 그림을 줄여 쓴다 */
 const FROM_IMAGE = { 40: 'screenshots/07_후반_고조선시대_플레이화면.png' };
 
