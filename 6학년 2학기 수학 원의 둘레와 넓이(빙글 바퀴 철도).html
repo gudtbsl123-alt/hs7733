@@ -4083,8 +4083,9 @@ void main() {
 /* 빙글 바퀴 철도 — 6학년 2학기 수학 5. 원의 둘레와 넓이 (30문항: 학습지 20 + 변형 10)
 
 스타일 카드 — 빙글 바퀴 철도
-  세계: 아이 방 전체가 장난감 철도. 바닥의 장난감 상자에서 출발해 놀이 매트 마을 → 블록 산(바닥) → 연필꽂이 나선 탑을 타고
-        책상 위 물컵 호수 → 피자 광장 → 용수철 대포로 날아 창가 밤 정원까지. 정답마다 역 옆 태엽 장난감이 깨어나 색과 움직임을 되찾는다
+  세계: 아이 방 전체가 장난감 철도. 바닥의 장난감 상자에서 출발해 놀이 매트 마을 → 블록 산(바닥)
+        → 바닥 오른쪽 물컵 호수 → 연필꽂이 나선 탑을 감아 책상 위 피자 광장 → 용수철 대포로 날아 창가 밤 정원까지.
+        (역과 역 사이는 아이가 직접 운전하는 구간이 10~20초가 되게 기둥마다 한두 역씩 고르게 둔다) 정답마다 역 옆 태엽 장난감이 깨어나 색과 움직임을 되찾는다
   계열·스타일: T 3D 툰 · T3 광택 장난감 3D (기준작: 마리오 카트의 플라스틱 광택, 블룬스 TD6의 원색 장난감)
   6축: ① 둥글고 말랑(모서리 둥근 블록·공·원기둥) ② T3 광택 플라스틱(클리어코트 반사 + 뒤 테두리빛, 외곽선 없음)
        ③ 고채도 원색(체리·하늘·레몬·민트) + 방의 따뜻한 나무·크림 ④ 한낮 창빛(오른쪽 뒤 큰 창) + 분홍 테두리빛, 5노선은 노을→밤 꼬마전구
@@ -4336,7 +4337,7 @@ function setMuted(m) { MUTED = m; PREF.muted = m; savePref(); if (MASTER) MASTER
 /* ══════════════ 선로 길: 거북이처럼 '곧게 · 돌기 · 오르기 · 고리 · 점프'를 이어 그린다 ══════════════
    방 좌표: 바닥 y=0, 뒤 벽 z=-160(창), 책상 윗면 y=DESK_Y, 창가 의자 윗면 y=BENCH_Y. 1칸 ≈ 2.5cm */
 const DESK = { x0: -12, x1: 218, z0: -159, z1: -36, y: 30 };
-const BENCH = { x0: -218, x1: -40, z0: -159, z1: -60, y: 42 };
+const BENCH = { x0: -226, x1: -24, z0: -159, z1: -42, y: 42 };
 const DS = 0.5;
 const FL_WAIT = 1, FL_JN = 2, FL_AIR = 4, FL_LOOP = 8, FL_HELIX = 16, FL_BRIDGE = 32, FL_CANNON = 64;
 const TR = { P: [], T: [], U: [], R: [], S: [], FL: [], ZN: [], L: 0, n: 0 };
@@ -4395,36 +4396,50 @@ function JOG(d, Rj = 14) { const a = Math.acos(1 - Math.abs(d) / (2 * Rj)) * 180
   Tn(-sg * a, Rj); Tn(sg * a, Rj); return (tx - bx) * f.x + (tz - bz) * f.z; }
 
 function buildPath() {
-  /* 방향: th=0 동(+x), +90° 남(+z, 앞), -90° 북(-z, 창 쪽). Tn(+)는 오른쪽, Tn(-)는 왼쪽으로 돈다 */
-  /* 1노선 놀이 매트 마을(바닥, 갈림길 8) — 장난감 상자 앞에서 북쪽으로 출발, 세로 줄 4개 */
+  /* 방향: th=0 동(+x), +90° 남(+z, 앞), -90° 북(-z, 창 쪽). Tn(+)는 오른쪽, Tn(-)는 왼쪽으로 돈다.
+     역 사이를 아이가 직접 운전하는 구간이 10~20초가 되게, 역은 기둥(곧은 길)마다 한두 개씩 고르게 둔다.
+     RUN(길이, [[자리, 넣을 것], …]): 곧은 길 하나 안의 정해진 자리에 역(J)·장면을 끼운다 */
+  const RUN = (len, items = []) => { const f = V3(Math.cos(th), 0, Math.sin(th)), x0 = tx, z0 = tz, pos = () => (tx - x0) * f.x + (tz - z0) * f.z;
+    for (const [o, fn] of items) { const d = o - pos(); if (d > 0.01) St(d); fn(); } const d = len - pos(); if (d > 0.01) St(d); };
+  /* 1노선 놀이 매트 마을(바닥, 역 8): 장난감 상자 앞에서 북쪽으로 출발, 세로 기둥 5개 */
   ZONE(0); tx = -200; ty = 0; tz = 140; th = -PI / 2; tpush(tx, ty, tz, 0);
-  St(16); J(); St(12); J(); St(12); LOOP(8, 3.6); TAG('z0loop', { camSign: -1 }); St(12); St(16 - JOG(3.6)); Tn(180, 13);
-  St(4); SCREW(32, 4.4); TAG('z0screw', { camSign: -1, title: '꽈배기 터널!', sub: '선로가 빙글 꼬여요' }); St(4); J(); St(12); J(); St(10); Tn(-180, 13);
-  St(10); J(); St(12); J(); St(8); HUMP(24, 4); TAG('z0pond', { title: '오리 연못 다리', sub: '연못 위를 건너요' }); St(8); Tn(180, 13);
-  St(40); J(); St(12); J(); St(10); Tn(-90, 13); St(10);
-  /* 2노선 블록 산(바닥, 갈림길 7 + 세로 고리) */
-  ZONE(1); Tn(-90, 13);
-  St(8); J(); St(12); J(); St(10); LOOP(9, 3.6); St(10); UBR(180, 13, 6); TAG('z1falls', { title: '폭포 고가 다리', sub: '폭포 연못 위로 돌아요' });
-  St(10); J(); St(12); J(); St(8); RTURN(-180, 13, 9); TAG('z1roll', { title: '블록 회전 유턴!', sub: '돌면서 빙그르르 뒤집혀요' });
-  St(8); J(); St(12); J(); St(12); J();
-  /* 연필꽂이 나선 탑을 감아 책상 높이로 → 다리를 건너 책상 위로 */
-  St(4); SP0('helix'); Tn(-720, 13, DESK.y, FL_HELIX, true); SP1();
-  St(24, 0, FL_BRIDGE); Tn(90, 12, 0, FL_BRIDGE);
-  /* 3노선 물컵 호수(책상, 갈림길 6 + 자 다리 점프) */
-  ZONE(2); St(8); J(); St(10); J(); St(10); St(10, 4); JUMP(26, 7, -4); St(10); J(); HUMP(20, 3); TAG('z2paint', { title: '물감 팔레트 다리', sub: '팔레트 물칸 위를 건너요' }); RTURN(-180, 13, 9); TAG('z2roll', { title: '분수 회전 유턴!', sub: '분수 둘레를 돌며 뒤집혀요' });
-  St(6); J(); St(10); J(); St(10); J(); St(10);
-  /* 4노선 피자 광장(책상, 갈림길 6) */
-  ZONE(3); St(12); HUMP(16, 3); TAG('z3juice', { title: '주스 강 다리', sub: '쏟은 주스 위를 건너요' }); St(2); RTURN(180, 13, 12); TAG('z3donut', { title: '도넛 회전 유턴!', sub: '도넛 구멍을 지나며 뒤집혀요' });
-  St(8); J(); St(10); J(); St(10); J(); St(10); UBR(-180, 13, 6); TAG('z3ice', { title: '아이스크림 고가', sub: '콘 둘레를 높이 돌아요' });
-  St(8); J(); St(10); J(); St(10); J(); St(16);
+  RUN(161, [[2, J], [44, () => { St(12); LOOP(8, 3.6); TAG('z0loop', { camSign: -1 }); St(12); JOG(3.6); }], [118, J]]); Tn(180, 13);
+  RUN(173, [[0, () => { St(4); SCREW(32, 4.4); TAG('z0screw', { camSign: -1, title: '꽈배기 터널!', sub: '선로가 빙글 꼬여요' }); St(4); }], [60, J]]); Tn(-180, 13);
+  RUN(173, [[0, J], [60, () => { HUMP(24, 4); TAG('z0pond', { title: '오리 연못 다리', sub: '연못 위를 건너요' }); }], [135, J]]); Tn(180, 13);
+  RUN(173, [[50, J]]); Tn(-180, 13);
+  RUN(173, [[0, J], [135, J]]);
+  /* 2노선 블록 산(바닥 가운데, 역 7 + 세로 고리) */
+  ZONE(1); Tn(180, 13);
+  RUN(173, [[70, J], [118, () => { St(12); LOOP(9, 3.6); St(12); JOG(3.6); }]]);
+  SP0('ubridge'); Tn(-90, 13, 4, FL_BRIDGE); St(26, 0, FL_BRIDGE); Tn(-90, 13, -4, FL_BRIDGE); SP1(); TAG('z1falls', { title: '폭포 고가 다리', sub: '폭포 연못 위를 건너요' });
+  RUN(167, [[0, J], [129, J]]); Tn(180, 13);
+  RUN(167, [[55, J]]); RTURN(-180, 13, 9); TAG('z1roll', { title: '블록 회전 유턴!', sub: '돌면서 빙그르르 뒤집혀요' });
+  RUN(167, [[0, J], [129, J]]); Tn(180, 13);
+  RUN(167, [[60, J], [112, () => ZONE(2)]]); Tn(-180, 13);
+  /* 3노선 물컵 호수(바닥 오른쪽, 역 6 + 물컵 점프) → 연필꽂이 나선 탑을 감아 책상 높이로 */
+  RUN(167, [[40, J], [92, () => { St(10, 4); JUMP(26, 7, -4); }]]); Tn(180, 13);
+  RUN(167, [[0, J], [128, J]]); RTURN(-180, 13, 9); TAG('z2roll', { title: '분수 회전 유턴!', sub: '분수 둘레를 돌며 뒤집혀요' });
+  RUN(167, [[60, J], [112, () => { HUMP(20, 3); TAG('z2paint', { title: '물감 팔레트 다리', sub: '팔레트 물칸 위를 건너요' }); }]]); Tn(180, 13);
+  RUN(167, [[60, J]]); Tn(-180, 13);
+  RUN(167, [[60, J]]);
+  SP0('helix'); Tn(720, 13, DESK.y, FL_HELIX, true); SP1();
+  St(21, 0, FL_BRIDGE); Tn(-90, 12, 0, FL_BRIDGE);
+  /* 4노선 피자 광장(책상 전체, 역 6): 앞줄에서 뒷줄로 다섯 줄 */
+  ZONE(3); RUN(174, [[5, () => { HUMP(16, 3); TAG('z3juice', { title: '주스 강 다리', sub: '쏟은 주스 위를 건너요' }); }], [40, J]]);
+  RTURN(180, 12, 12); TAG('z3donut', { title: '도넛 회전 유턴!', sub: '도넛 구멍을 지나며 뒤집혀요' });
+  RUN(164, [[0, J], [125, J]]); UBR(-180, 12, 6); TAG('z3ice', { title: '아이스크림 고가', sub: '콘 둘레를 높이 돌아요' });
+  RUN(164, [[50, J]]); Tn(180, 12);
+  RUN(164, [[50, J]]); Tn(-180, 12);
+  RUN(165.2, [[50, J]]);
   /* 용수철 대포로 창가 의자까지 날기 */
   SP0('cannonRun'); St(10); SP1();
   JUMP(60, 24, BENCH.y - DESK.y, FL_CANNON, 'cannon');
-  /* 5노선 밤의 창가(창가 의자, 갈림길 6) */
-  ZONE(4); St(6); J(); St(10); J(); St(4); St(5, 3); JUMP(16, 8, -3); TAG('z4bowl', { camSign: -1, title: '어항 점프!', sub: '물고기 위로 날아요' }); St(1); Tn(-180, 13);
-  St(6); J(); St(10); J(); St(10); St(10); RTURN(180, 13, 9); TAG('z4moon', { title: '달빛 회전 유턴!', sub: '달 둘레를 돌며 뒤집혀요' });
-  St(6); J(); St(10); J(); St(14);
-  MARK('finale'); St(16);
+  /* 5노선 밤의 창가(창가 의자, 역 6): 뒷줄에서 앞줄로 다섯 줄 */
+  ZONE(4); RUN(143.8, [[20, J], [70, () => { St(4); St(5, 3); JUMP(16, 8, -3); TAG('z4bowl', { camSign: -1, title: '어항 점프!', sub: '물고기 위로 날아요' }); St(1); }]]); Tn(-180, 10.75);
+  RUN(172, [[0, J], [133, J]]); Tn(180, 10.75);
+  RUN(172, [[60, J]]); Tn(-180, 10.75);
+  RUN(172, [[90, J]]); RTURN(180, 10.75, 9); TAG('z4moon', { title: '달빛 회전 유턴!', sub: '달 둘레를 돌며 뒤집혀요' });
+  RUN(165, [[90, J], [134, () => MARK('finale')]]);
 }
 function finishPath() {
   const P = TR.P, n = P.length; TR.n = n; TR.S[0] = 0;
@@ -4554,10 +4569,16 @@ function buildRoom() {
     for (let i = 0; i < 260; i++) { g.fillStyle = ['#fff', '#ffd23a', '#ff8fc7', '#ffffff'][i % 4]; g.beginPath(); g.arc(rnd() * 1024, rnd() * 1024, 4 + rnd() * 4, 0, TAU); g.fill(); }
     g.strokeStyle = '#ffffff'; g.lineWidth = 18; rr(g, 9, 9, 1006, 1006, 60); g.stroke(); g.strokeStyle = '#5bbd5e'; g.lineWidth = 8; rr(g, 26, 26, 972, 972, 50); g.stroke();
   });
+  /* 3노선 물컵 호수 깔개(바닥 오른쪽): 물결 무늬 하늘색 */
+  const lakeT = canvasTex(512, 1024, (g) => { g.fillStyle = '#bfe8ff'; g.fillRect(0, 0, 512, 1024); g.strokeStyle = '#9fd8ff'; g.lineWidth = 10; g.lineCap = 'round';
+    for (let y = 30; y < 1024; y += 48) { g.beginPath(); for (let x = 0; x <= 512; x += 16) g.lineTo(x, y + Math.sin(x / 40 + y) * 8); g.stroke(); }
+    g.fillStyle = '#ffffff'; for (let i = 0; i < 90; i++) { g.beginPath(); g.arc((i * 137) % 512, (i * 251) % 1024, 4, 0, TAU); g.fill(); }
+    g.strokeStyle = '#ffffff'; g.lineWidth = 16; rr(g, 8, 8, 496, 1008, 40); g.stroke(); g.strokeStyle = '#5cbcff'; g.lineWidth = 7; rr(g, 24, 24, 464, 976, 32); g.stroke(); });
+  const lake = mesh(new THREE.PlaneGeometry(136, 196), mat('#ffffff', { map: lakeT, r: 0.85, cc: 0, env: 0.25 }), 139, 0.04, 70); lake.rotation.x = -PI / 2; lake.castShadow = false;
   const rug = mesh(new THREE.PlaneGeometry(132, 196), mat('#ffffff', { map: rugT, r: 0.85, cc: 0, env: 0.25 }), -161, 0.04, 64); rug.rotation.x = -PI / 2; rug.castShadow = false;
   /* 2노선 퍼즐 매트(원색 타일, 무광) */
   const tileM = TOYC.map((c) => mat(new THREE.Color(c).lerp(new THREE.Color('#ffffff'), 0.35).getStyle(), { r: 0.8, cc: 0, env: 0.25 }));
-  for (let i = 0; i < 4; i++) for (let j = 0; j < 7; j++) { const t = mesh(rbox(24.5, 0.5, 24.5, 0.2, 2), tileM[(i + j * 2) % 6], -84 + i * 25, 0.25, -26 + j * 25); t.castShadow = false; }
+  for (let i = 0; i < 7; i++) for (let j = 0; j < 8; j++) { const t = mesh(rbox(24.5, 0.5, 24.5, 0.2, 2), tileM[(i + j * 2) % 6], -84 + i * 25, 0.25, -26 + j * 25); t.castShadow = false; }
   /* 벽: 크림 벽지(점무늬) + 아래 나무 걸레받이 */
   const wallT = canvasTex(256, 256, (g) => { g.fillStyle = '#7cc4f5'; g.fillRect(0, 0, 256, 256); g.fillStyle = '#a9dbff'; for (let y = 0; y < 256; y += 32) for (let x = (y / 32 % 2) * 16; x < 256; x += 32) { g.beginPath(); g.arc(x, y, 5, 0, TAU); g.fill(); } }, { rep: [16, 6] });
   const wallM = mat('#ffffff', { map: wallT, r: 0.9, cc: 0, env: 0.2 }), baseM = mat('#ffffff', { r: 0.5, cc: 0, env: 0.3 });
@@ -4638,14 +4659,14 @@ function block(x, y, z, s, c, par) { return mesh(rbox(s, s, s, s * 0.14, 4), mat
 function buildProps() {
   seed = 33;
   /* 블록 산(2노선 배경): 쌓인 원색 블록 무더기 */
-  const piles = [[30, 120, 7], [62, 96, 5], [36, 64, 6], [100, 130, 4], [20, 20, 5], [88, 40, 6], [130, 80, 5], [-110, 150, 3], [-60, -45, 4]];
+  const piles = [[220, 132, 3], [222, 160, 2], [40, -95, 4], [95, -75, 3], [120, -120, 3]];  /* 선로를 다시 깔며 오른쪽 가장자리와 책상 밑으로 옮김 */
   for (const [px, pz, n] of piles) { for (let k = 0; k < n; k++) for (let l = 0; l < n - k; l++) { const s = 7; if (rnd() < 0.2) continue; block(px + (l - (n - k) / 2) * s + (rnd() - 0.5), k * s, pz + (rnd() - 0.5) * 6, s * 0.96, TOYC[(k + l + n) % 6]); } }
-  for (const [x, z, h] of [[70, 150, 2], [118, 30, 3]]) { const c = grp(x, 0, z); for (let k = 0; k < h; k++) mesh(pcyl(5, 6, 1.4), mat(TOYC[k * 2 % 6]), 0, 3 + k * 6.2, 0, c); mesh(cone(6.2, 8, 24), mat(PAL.cherry), 0, h * 6.2 + 4, 0, c); }
+  for (const [x, z, h] of [[224, -8, 2]]) { const c = grp(x, 0, z); for (let k = 0; k < h; k++) mesh(pcyl(5, 6, 1.4), mat(TOYC[k * 2 % 6]), 0, 3 + k * 6.2, 0, c); mesh(cone(6.2, 8, 24), mat(PAL.cherry), 0, h * 6.2 + 4, 0, c); }
   /* 큰 공(줄무늬) */
   const ballT = canvasTex(256, 128, (g) => { const cs = ['#ff3b5c', '#fff', '#2f8cff', '#fff', '#ffd23a', '#fff', '#2ed3a0', '#fff']; cs.forEach((c, i) => { g.fillStyle = c; g.fillRect(i * 32, 0, 32, 128); }); });
-  const ball = mesh(sph(14, 32), mat('#ffffff', { map: ballT, r: 0.2 }), 170, 14, 120); ball.rotation.z = 0.4; DECOR.bob.push({ o: ball, a: 0.3, sp: 0.6, y: 14 });
+  const ball = mesh(sph(14, 32), mat('#ffffff', { map: ballT, r: 0.2 }), 60, 11, -110); ball.scale.setScalar(11 / 14); ball.rotation.z = 0.4; DECOR.bob.push({ o: ball, a: 0.3, sp: 0.6, y: 11 });
   /* 곰 인형(배경의 큰 캐릭터) */
-  const bear = grp(180, 0, 30); bear.rotation.y = -0.7; const fur = mat('#d99a5f', { r: 0.8, cc: 0.1 }), furL = mat('#f3c79a', { r: 0.8, cc: 0.1 });
+  const bear = grp(-222, 0, 163); bear.rotation.y = 0.5; bear.scale.setScalar(0.6); const fur = mat('#d99a5f', { r: 0.8, cc: 0.1 }), furL = mat('#f3c79a', { r: 0.8, cc: 0.1 });
   mesh(sph(18, 28), fur, 0, 16, 0, bear).scale.set(1, 1.05, 0.9); mesh(sph(14, 28), fur, 0, 42, 0, bear); mesh(sph(5, 16), fur, -10, 53, 0, bear); mesh(sph(5, 16), fur, 10, 53, 0, bear);
   mesh(sph(6, 16), furL, 0, 38, 11, bear).scale.set(1, 0.75, 0.7); mesh(sph(1.6, 10), mat(PAL.ink, { r: 0.2 }), 0, 40, 15, bear);
   for (const sx of [-5, 5]) mesh(sph(1.8, 10), mat(PAL.ink, { r: 0.15 }), sx, 45, 12, bear);
@@ -4655,14 +4676,14 @@ function buildProps() {
   const pencil = (x, z, ry, c, len = 60) => { const g = grp(x, DESK.y + 2.2, z); g.rotation.y = ry; const b = mesh(cyl(2.2, 2.2, len, 6), mat(c), 0, 0, 0, g); b.rotation.z = PI / 2;
     const tip = mesh(cone(2.2, 7, 6), mat('#f3d1a2', { r: 0.6 }), len / 2 + 3.5, 0, 0, g); tip.rotation.z = -PI / 2; const lead = mesh(cone(0.8, 2.6, 6), mat(PAL.ink), len / 2 + 6, 0, 0, g); lead.rotation.z = -PI / 2;
     const er = mesh(cyl(2.2, 2.2, 5, 12), mat('#ff9ab5'), -len / 2 - 2.5, 0, 0, g); er.rotation.z = PI / 2; const fe = mesh(cyl(2.35, 2.35, 3, 12), mat('#dcdce6', { r: 0.2 }), -len / 2 + 0.5, 0, 0, g); fe.rotation.z = PI / 2; return g; };
-  pencil(40, -150, 0.1, PAL.lemon); pencil(170, -40.5, -0.05, PAL.sky, 50); pencil(196, -150, 1.4, PAL.cherry, 44);
-  const books = [[150, -150, 46, 6, 34, '#2f8cff'], [150, -150, 42, 5, 30, '#ff8a2a'], [150, -150, 44, 6, 32, '#2ed3a0']];
+  pencil(60, -156.5, 0, PAL.lemon); pencil(170, -40.5, -0.05, PAL.sky, 50); pencil(212, -80, PI / 2, PAL.cherry, 44);
+  const books = [[198, -150, 34, 6, 24, '#2f8cff'], [198, -150, 30, 5, 21, '#ff8a2a'], [198, -150, 32, 6, 22, '#2ed3a0']];
   books.forEach(([x, z, w, h, d, c], k) => { mesh(rbox(w, h, d, 1, 3), mat(c, { r: 0.5 }), x + k * 2, DESK.y + h / 2 + k * 6, z + 4 + k, null).rotation.y = (k - 1) * 0.06; mesh(rbox(w - 2, h - 1.4, d - 0.6, 0.6, 2), mat('#fffaf0', { r: 0.8, cc: 0 }), x + k * 2 + 1.2, DESK.y + h / 2 + k * 6, z + 4 + k).rotation.y = (k - 1) * 0.06; });
   /* 책상 스탠드(배경 큰 실루엣) */
-  const lamp = grp(206, DESK.y, -148); mesh(pcyl(9, 2.5, 1), mat(PAL.grape), 0, 1.3, 0, lamp); const arm = mesh(cyl(1.1, 1.1, 46, 12), mat('#e6e6f0', { r: 0.2 }), 0, 24, 0, lamp); arm.rotation.z = 0.2;
+  const lamp = grp(208, DESK.y, -110); mesh(pcyl(9, 2.5, 1), mat(PAL.grape), 0, 1.3, 0, lamp); const arm = mesh(cyl(1.1, 1.1, 46, 12), mat('#e6e6f0', { r: 0.2 }), 0, 24, 0, lamp); arm.rotation.z = 0.2;
   const head = mesh(cone(10, 12, 24, 1), mat(PAL.grape), -9, 47, 8, lamp); head.rotation.x = -0.9; mesh(sph(3.4, 16), mat('#fff6c8', { e: '#fff2a8', ei: 1.4 }), -9, 43, 11, lamp);
   /* 창가: 화분 두 개 */
-  for (const [x, c] of [[-206, PAL.orange], [-50, PAL.sky]]) { const p = grp(x, BENCH.y, -152); mesh(cyl(6, 4.5, 9, 20), mat(c), 0, 4.5, 0, p); for (let k = 0; k < 7; k++) { const l = mesh(sph(3.4, 12), mat(k % 2 ? '#47c26a' : '#2fa858', { r: 0.4 }), Math.cos(k) * 3, 12 + (k % 3) * 3.5, Math.sin(k * 2) * 3, p); l.scale.set(0.7, 1.4, 0.7); l.rotation.z = Math.cos(k) * 0.5; } }
+  for (const [x, z, c] of [[-229, -35, PAL.orange], [-229, 95, PAL.sky]]) { const p = grp(x, 0, z); mesh(cyl(6, 4.5, 9, 20), mat(c), 0, 4.5, 0, p); for (let k = 0; k < 7; k++) { const l = mesh(sph(3.4, 12), mat(k % 2 ? '#47c26a' : '#2fa858', { r: 0.4 }), Math.cos(k) * 3, 12 + (k % 3) * 3.5, Math.sin(k * 2) * 3, p); l.scale.set(0.7, 1.4, 0.7); l.rotation.z = Math.cos(k) * 0.5; } }
   /* 앞 벽(타이틀 뒤 배경): 둥근 벽시계 · 원주율 포스터 · 깃발 줄 */
   const fz = ROOM.z1 - 0.6;
   const clockT = canvasTex(256, 256, (g) => { g.fillStyle = '#ffffff'; g.beginPath(); g.arc(128, 128, 120, 0, TAU); g.fill(); g.lineWidth = 16; g.strokeStyle = '#2f8cff'; g.stroke(); g.fillStyle = '#2a2350'; for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; g.beginPath(); g.arc(128 + Math.cos(a) * 92, 128 + Math.sin(a) * 92, k % 3 ? 5 : 9, 0, TAU); g.fill(); } g.lineCap = 'round'; g.lineWidth = 10; g.beginPath(); g.moveTo(128, 128); g.lineTo(128, 64); g.stroke(); g.strokeStyle = '#ff3b5c'; g.lineWidth = 7; g.beginPath(); g.moveTo(128, 128); g.lineTo(182, 150); g.stroke(); g.fillStyle = '#ffd23a'; g.beginPath(); g.arc(128, 128, 12, 0, TAU); g.fill(); });
@@ -4682,14 +4703,16 @@ function buildProps() {
 /* 원주율 포스터: 1노선(원주율)을 마치면 식이 드러난다 — 그 전에는 답 단서가 되지 않게 질문만 */
 const POSTER = { tex: null, k: -1 };
 function drawPoster(g) {
-  const done = typeof SAVE !== 'undefined' && SAVE && SAVE.done && SAVE.done[0];
+  const done = posterOpen();
   g.fillStyle = '#fff7e0'; g.fillRect(0, 0, 512, 640); g.fillStyle = '#ff8a2a'; g.fillRect(0, 0, 512, 90); g.font = FONT(64, 'Bagel'); g.textAlign = 'center'; olText(g, '원주율', 256, 70, '#fff', '#2a2350', 10);
     g.lineWidth = 10; g.strokeStyle = '#2a2350'; g.beginPath(); g.arc(256, 300, 150, 0, TAU); g.stroke(); g.strokeStyle = '#ff3b5c'; g.beginPath(); g.moveTo(106, 300); g.lineTo(406, 300); g.stroke(); g.fillStyle = '#2a2350'; g.beginPath(); g.arc(256, 300, 10, 0, TAU); g.fill();
     g.font = FONT(44); g.fillStyle = '#e0244d'; g.fillText('지름', 256, 286); if (done) { g.font = FONT(56); g.fillStyle = '#2a2350'; g.fillText('원주 ÷ 지름', 256, 520); g.font = FONT(64, 'Bagel'); g.fillStyle = '#2f8cff'; g.fillText('= 3.14…', 256, 600); }
   else { g.font = FONT(52); g.fillStyle = '#2a2350'; g.fillText('원주는 지름의', 256, 516); g.font = FONT(64); g.fillStyle = '#2f8cff'; g.fillText('몇 배일까?', 256, 598); }
 }
 
-function refreshPoster() { const k = SAVE && SAVE.done && SAVE.done[0] ? 1 : 0; if (!POSTER.tex || POSTER.k === k) return; POSTER.k = k; drawPoster(POSTER.tex.userData.g); POSTER.tex.needsUpdate = true; }
+/* 1노선(원주율 문제)을 달리는 동안에는 이미 마친 기록이 있어도 늘 물음만 — 역 카메라에 포스터가 보여 답이 되지 않게 */
+function posterOpen() { const done = typeof SAVE !== 'undefined' && SAVE && SAVE.done && SAVE.done[0]; const inZ0 = typeof SCENE !== 'undefined' && SCENE === 'play' && typeof G !== 'undefined' && G.zone === 0; return !!done && !inZ0; }
+function refreshPoster() { const k = posterOpen() ? 1 : 0; if (!POSTER.tex || POSTER.k === k) return; POSTER.k = k; drawPoster(POSTER.tex.userData.g); POSTER.tex.needsUpdate = true; }
 
 /* ══════════════ 큰 장면 소품: 연필꽂이 나선 탑 · 블록 고리 받침 · 물컵 호수 · 용수철 대포 · 노선 마을 꾸미기 ══════════════ */
 function spSamples(kind) { const p = SETP.find((q) => q.kind === kind); return p ? TR.P.slice(p.i0, p.i1 + 1) : []; }
@@ -4716,7 +4739,7 @@ function buildSetpieceProps() {
     const star = mesh(starGeo(), mat(PAL.lemon, { e: '#ffb400', ei: 0.4 }), L.c.x, L.c.y + L.R + 3.2, L.c.z); star.scale.setScalar(2.2); star.lookAt(L.c.x + L.lat.x * 50, L.c.y + L.R + 3.2, L.c.z + L.lat.z * 50); DECOR.spin.push({ o: star, v: 1.2 }); }
   /* 점프 아래 물컵 호수(유리 그릇 + 물 + 오리) */
   const J1 = SETP.find((p) => p.kind === 'jump' && !p.tag);
-  if (J1) { const m = TR.P[(J1.i0 + J1.i1) >> 1], gy = DESK.y;
+  if (J1) { const m = TR.P[(J1.i0 + J1.i1) >> 1], gy = groundAt(m.x, m.z);
     mesh(cyl(8.6, 7.8, 6, 40, 1), mat('#dff4ff', { r: 0.05, tr: 0.35, cc: 1 }), m.x, gy + 3, m.z).castShadow = false;
     const wt = mesh(cyl(8.1, 7.7, 4.6, 40, 1), mat('#3fb6ff', { r: 0.05, tr: 0.72, cc: 1 }), m.x, gy + 2.4, m.z); wt.castShadow = false;
     const duck = grp(m.x + 3, gy + 4.8, m.z + 2); mesh(sph(1.2, 16), mat(PAL.lemon), 0, 0, 0, duck).scale.set(1.3, 0.9, 1); mesh(sph(0.8, 16), mat(PAL.lemon), 0.9, 0.9, 0, duck); mesh(cone(0.35, 0.7, 10), mat(PAL.orange), 1.7, 0.8, 0, duck).rotation.z = -PI / 2; DECOR.bob.push({ o: duck, a: 0.25, sp: 2, y: gy + 4.8 });
@@ -4768,7 +4791,7 @@ function poolUnder(sp, halfL, halfW, y, water, rim) {
 /* 회전 U턴 꼭대기를 위에서 붙잡는 문(선로가 뒤집히는 곳) */
 function rollGantry(sp, col) {
   const ap = TR.P[(sp.i0 + sp.i1) >> 1], out = V3(ap.x - sp.c.x, 0, ap.z - sp.c.z).normalize(), gy = groundAt(ap.x, ap.z), top = ap.y + 1.4;
-  for (const k of [7.5, -7.5]) { const q = ap.clone().addScaledVector(out, k); mesh(pcyl(0.85, top - gy + 0.8, 0.3, 16), mat(col, { r: 0.3 }), q.x, gy + (top - gy + 0.8) / 2, q.z); mesh(sph(1.3, 16), mat(PAL.lemon), q.x, top + 1.0, q.z); }
+  for (const k of [7.5, -Math.min(7.5, (sp.R || 13) - 5)]) { const q = ap.clone().addScaledVector(out, k); mesh(pcyl(0.85, top - gy + 0.8, 0.3, 16), mat(col, { r: 0.3 }), q.x, gy + (top - gy + 0.8) / 2, q.z); mesh(sph(1.3, 16), mat(PAL.lemon), q.x, top + 1.0, q.z); }
   const bm = mesh(rbox(17, 1.1, 1.8, 0.4, 3), mat(PAL.ink, { r: 0.4 }), ap.x, top, ap.z); bm.rotation.y = -Math.atan2(out.z, out.x);
 }
 function sticker(text, w, h, bg, fg, size) { return canvasTex(w, h, (g) => { rr(g, 4, 4, w - 8, h - 8, h * 0.3); g.fillStyle = bg; g.fill(); g.lineWidth = 8; g.strokeStyle = PAL.ink; g.stroke(); g.font = FONT(size, 'Bagel'); g.textAlign = 'center'; g.textBaseline = 'middle'; olText(g, text, w / 2, h / 2 + 4, fg, PAL.ink, 9); }); }
@@ -4798,11 +4821,11 @@ function carousel(x, z) {
   BLOBS.push({ x, y: 0, z, r: 10 });
 }
 function blockCastle(x, y, z) {
-  const g = grp(x, y, z); const s = 4.4;
+  const g = grp(x, y, z); g.scale.setScalar(0.8); const s = 4.4;
   for (const [cx, cz] of [[-7, -7], [7, -7], [-7, 7], [7, 7]]) { mesh(pcyl(2.6, 13, 0.4, 20), mat(PAL.sky), cx, 6.5, cz, g); mesh(cone(3.4, 5, 20), mat(PAL.cherry), cx, 15.5, cz, g); const fl = mesh(new THREE.PlaneGeometry(2.4, 1.4), mat(PAL.lemon, { side: THREE.DoubleSide }), cx + 1.2, 19.6, cz, g); fl.castShadow = false; mesh(cyl(0.1, 0.1, 3, 6), mat('#ffffff'), cx, 19, cz, g); DECOR.fn.push((t) => { fl.rotation.y = Math.sin(t * 3 + cx) * 0.4; }); }
   for (const [w, d, cx, cz] of [[12, 2.4, 0, -7], [12, 2.4, 0, 7], [2.4, 12, -7, 0], [2.4, 12, 7, 0]]) { mesh(rbox(w, 8, d, 0.4, 3), mat(PAL.cream), cx, 4, cz, g); for (let k = -2; k <= 2; k++) mesh(rbox(1.6, 1.6, 1.6, 0.3, 2), mat(TOYC[(k + 4) % 6]), cx + (w > d ? k * 2.4 : 0), 8.8, cz + (w > d ? 0 : k * 2.4), g); }
   mesh(pcyl(3.6, 17, 0.4, 24), mat(PAL.grape), 0, 8.5, 0, g); mesh(cone(4.6, 7, 24), mat(PAL.lemon), 0, 20.5, 0, g); mesh(rbox(3.4, 4.8, 0.6, 1.2, 3), mat(PAL.ink), 0, 2.4, 8.3, g);
-  BLOBS.push({ x, y, z, r: 11 }); void s;
+  BLOBS.push({ x, y, z, r: 9 }); void s;
 }
 function spinGlobe(x, y, z) {
   const g = grp(x, y, z); mesh(pcyl(3.2, 1, 0.3, 28), mat(PAL.grape), 0, 0.5, 0, g); mesh(cyl(0.4, 0.5, 4, 10), mat(PAL.lemon), 0, 2.5, 0, g);
@@ -4843,8 +4866,8 @@ function buildRideProps() {
     const boat = grp(10, 1.0, hw * 0.45, g); mesh(rbox(3.4, 1, 1.6, 0.45, 3), mat(PAL.cherry), 0, 0, 0, boat); mesh(cyl(0.1, 0.1, 3.4, 6), mat('#ffffff'), 0, 2, 0, boat); const sail = mesh(cone(1.2, 2.8, 3), mat('#ffffff'), 0.5, 2.2, 0, boat); sail.scale.z = 0.15; DECOR.bob.push({ o: boat, a: 0.2, sp: 1.4, y: 1.0 });
     for (const ex of [-15.5, 15.5]) for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) mesh(cyl(0.12, 0.12, 3 + k, 6), mat('#2fa858'), ex + k * 0.5 * sd, 1.5 + k / 2, sd * (hw * 0.5 + k), g); }
   /* 1노선 관람차 · 회전목마 */
-  const fw = findFree(-110, -94, -44, -26, 0, 7, 1)[0]; if (fw) ferrisWheel(fw.x, fw.z, PI / 2);
-  const cr = findFree(-212, -128, -54, -30, 0, 9, 1)[0]; if (cr) carousel(cr.x, cr.z);
+  const fw = findFree(-212, -108, -20, 150, 0, 5, 1)[0]; if (fw) ferrisWheel(fw.x, fw.z, PI / 2);  /* 매트 기둥 사이(바퀴 판이 기둥과 나란히) */
+  const cr = findFree(214, 226, 40, 150, 0, 9, 1)[0]; if (cr) carousel(cr.x, cr.z);
   /* 2노선 폭포 고가 다리: U턴 안쪽 연못 + 꼭대기 너머 블록 절벽에서 쏟아지는 폭포 */
   const F1 = spTag('z1falls');
   if (F1) { const { c, dir } = uCenter(F1), side = V3(-dir.z, 0, dir.x), pc = c.clone().addScaledVector(dir, 8); pc.y = 0;
@@ -4852,7 +4875,7 @@ function buildRideProps() {
     const rim = mesh(pcyl(1, 0.6, 0.25, 40), mat('#7fe08a', { r: 0.35 }), 0, 0.3, 0, g); rim.scale.set(11.4, 1, 13.4); const w = mesh(pcyl(1, 0.4, 0.15, 40), mat('#3fb6ff', { r: 0.05, tr: 0.78, cc: 1 }), 0, 0.55, 0, g); w.scale.set(10, 1, 12); w.castShadow = false;
     for (let i = 0; i < 5; i++) { const rp = mesh(tor(1.5, 0.13, 6, 20), mat('#ffffff', { tr: 0.7, own: true }), 7 + (i % 2) * 1.5, 0.8, (i - 2) * 2.2, g); rp.rotation.x = PI / 2; rp.castShadow = false; DECOR.ripple = DECOR.ripple || []; DECOR.ripple.push(rp); }
     duckAt(g, -2, 1.1, 4, 1.4, 1.2);
-    const cl = grp(pc.x + dir.x * 12, 0, pc.z + dir.z * 12); cl.rotation.y = -Math.atan2(dir.z, dir.x);
+    const wd = Math.min(dir.z > 0.5 ? ROOM.z1 - pc.z : 99, dir.z < -0.5 ? pc.z - ROOM.z0 : 99, dir.x > 0.5 ? ROOM.x1 - pc.x : 99, dir.x < -0.5 ? pc.x - ROOM.x0 : 99), co = Math.min(12, wd - 4.8), cl = grp(pc.x + dir.x * co, 0, pc.z + dir.z * co); cl.rotation.y = -Math.atan2(dir.z, dir.x);
     for (let k = 0; k < 4; k++) for (let l = -1; l <= 1; l++) { if (k === 3 && l !== 0 && (l + k) % 2) continue; block(2 + (k % 2) * 0.6, k * 6.6, l * 6.8, 6.6, TOYC[(k * 2 + l + 6) % 6], cl); }
     const wt = canvasTex(64, 256, (c2) => { c2.fillStyle = '#5cc3ff'; c2.fillRect(0, 0, 64, 256); c2.fillStyle = 'rgba(255,255,255,.85)'; for (let i = 0; i < 22; i++) c2.fillRect((i * 23) % 60, (i * 47) % 250, 3 + (i % 3), 24 + (i % 4) * 10); }, { rep: [1, 2] });
     const fall = mesh(new THREE.PlaneGeometry(1, 1), mat('#ffffff', { map: wt, r: 0.1, tr: 0.88, cc: 0.8 }), -1.6, 12.5, 0, cl); fall.scale.set(1, 25, 1); fall.rotation.y = -PI / 2; fall.scale.x = 8; fall.castShadow = false;
@@ -4863,25 +4886,25 @@ function buildRideProps() {
   const R1 = spTag('z1roll');
   if (R1) { const c = R1.c; for (let k = 0; k < 4; k++) block(c.x, k * 4.8, c.z, 4.7, TOYC[(k + 2) % 6]); const st = mesh(starGeo(), mat(PAL.lemon, { e: '#ffb400', ei: 0.4 }), c.x, 22.5, c.z); st.scale.setScalar(2.2); DECOR.spin.push({ o: st, v: 1.6 }); rollGantry(R1, PAL.mint); BLOBS.push({ x: c.x, y: 0, z: c.z, r: 14 }); }
   /* 2노선 블록 성 */
-  const bc = findFree(-16, 12, 40, 150, 0, 10, 1)[0]; if (bc) blockCastle(bc.x, 0, bc.z);
+  const bc = findFree(214, 226, -10, 150, 0, 9, 1)[0]; if (bc) blockCastle(bc.x, 0, bc.z);
   /* 3노선 물감 팔레트 다리: 하얀 팔레트 + 물감 칸 + 가운데 물칸 + 붓 */
   const P2 = spTag('z2paint');
-  if (P2) { const a = TR.P[P2.i0], b = TR.P[P2.i1], m = V3((a.x + b.x) / 2, DESK.y, (a.z + b.z) / 2), f = V3(b.x - a.x, 0, b.z - a.z).normalize(); let hw = 8;
-    for (const T0 of TOYS) { const q = T0.g.position; if (Math.abs(q.y - DESK.y) > 4) continue; const dx = q.x - m.x, dz = q.z - m.z; if (Math.abs(dx * f.x + dz * f.z) < 15) hw = Math.min(hw, Math.abs(-dx * f.z + dz * f.x) - 5); } hw = Math.max(hw, 5);
-    const g = grp(m.x, DESK.y, m.z); g.rotation.y = -Math.atan2(f.z, f.x); mesh(rbox(26, 0.8, hw * 2, 1.2, 3), mat('#ffffff', { r: 0.3 }), 0, 0.4, 0, g);
+  if (P2) { const a = TR.P[P2.i0], b = TR.P[P2.i1], gy = groundAt((a.x + b.x) / 2, (a.z + b.z) / 2), m = V3((a.x + b.x) / 2, gy, (a.z + b.z) / 2), f = V3(b.x - a.x, 0, b.z - a.z).normalize(); let hw = 8;
+    for (const T0 of TOYS) { const q = T0.g.position; if (Math.abs(q.y - gy) > 4) continue; const dx = q.x - m.x, dz = q.z - m.z; if (Math.abs(dx * f.x + dz * f.z) < 15) hw = Math.min(hw, Math.abs(-dx * f.z + dz * f.x) - 5); } hw = Math.max(hw, 5);
+    const g = grp(m.x, gy, m.z); g.rotation.y = -Math.atan2(f.z, f.x); mesh(rbox(26, 0.8, hw * 2, 1.2, 3), mat('#ffffff', { r: 0.3 }), 0, 0.4, 0, g);
     const w = mesh(rbox(14, 0.3, Math.min(6, hw * 2 - 2), 1, 3), mat('#3fb6ff', { r: 0.05, tr: 0.8, cc: 1 }), 0, 0.9, 0, g); w.castShadow = false;
     const pc = [PAL.cherry, PAL.orange, PAL.lemon, PAL.mint, PAL.sky, PAL.grape]; pc.forEach((c, k) => { const x = -11 + (k % 3) * 1.7 + (k > 2 ? 18 : 0), zz = (k % 2 ? 1 : -1) * (hw - 1.8); mesh(pcyl(1.3, 0.3, 0.1, 18), mat(c, { r: 0.2 }), x, 0.9, zz, g); });
     for (const [bx, bz, br, bc2] of [[6, hw + 2.4, 0.3, PAL.cherry], [-8, -hw - 2.4, -0.4, PAL.sky]]) { const br2 = grp(bx, 0.6, bz, g); br2.rotation.y = br; const h = mesh(cyl(0.45, 0.45, 12, 10), mat(bc2), 0, 0, 0, br2); h.rotation.z = PI / 2; mesh(cyl(0.6, 0.5, 1.6, 10), mat('#dcdce6', { r: 0.2 }), 6.6, 0, 0, br2).rotation.z = PI / 2; mesh(cone(0.6, 2, 10), mat(PAL.ink), 8.2, 0, 0, br2).rotation.z = -PI / 2; }
-    BLOBS.push({ x: m.x, y: DESK.y, z: m.z, r: 15 }); }
+    BLOBS.push({ x: m.x, y: gy, z: m.z, r: 15 }); }
   /* 3노선 분수 회전 U턴: 가운데 분수 그릇 + 물줄기 */
   const R2 = spTag('z2roll');
-  if (R2) { const c = R2.c, g = grp(c.x, DESK.y, c.z); mesh(pcyl(4.8, 2, 0.6, 36), mat(PAL.sky, { r: 0.3 }), 0, 1, 0, g); const wd = mesh(pcyl(4.1, 0.3, 0.1, 36), mat('#8fdcff', { r: 0.05, tr: 0.85, cc: 1 }), 0, 2.05, 0, g); wd.castShadow = false;
+  if (R2) { const c = R2.c, gy = groundAt(c.x, c.z), g = grp(c.x, gy, c.z); mesh(pcyl(4.8, 2, 0.6, 36), mat(PAL.sky, { r: 0.3 }), 0, 1, 0, g); const wd = mesh(pcyl(4.1, 0.3, 0.1, 36), mat('#8fdcff', { r: 0.05, tr: 0.85, cc: 1 }), 0, 2.05, 0, g); wd.castShadow = false;
     mesh(pcyl(1.4, 4, 0.3, 20), mat('#ffffff'), 0, 3, 0, g); mesh(pcyl(2.6, 0.7, 0.2, 24), mat(PAL.sky), 0, 5.2, 0, g);
     const jet = mesh(cyl(0.35, 0.8, 1, 12), mat('#bfe8ff', { r: 0.05, tr: 0.75, cc: 1, own: true }), 0, 5.6, 0, g); jet.castShadow = false;
     const arcs = []; for (let k = 0; k < 6; k++) { const a = k / 6 * TAU, j = mesh(tor(1.5, 0.2, 6, 16, PI), mat('#bfe8ff', { r: 0.05, tr: 0.7, cc: 1 }), Math.cos(a) * 2.2, 5.4, Math.sin(a) * 2.6, g); j.rotation.y = -a; j.castShadow = false; arcs.push(j); }
     for (let i = 0; i < 3; i++) { const rp = mesh(tor(1.1, 0.12, 6, 20), mat('#ffffff', { tr: 0.7, own: true }), (i - 1) * 2, 2.3, (i % 2) * 2 - 1, g); rp.rotation.x = PI / 2; rp.castShadow = false; DECOR.ripple = DECOR.ripple || []; DECOR.ripple.push(rp); }
     DECOR.fn.push((t) => { const h = 6 + Math.sin(t * 2.3) * 1.6; jet.scale.y = h; jet.position.y = 5.6 + h / 2; arcs.forEach((j, k) => { j.scale.setScalar(0.9 + Math.sin(t * 3 + k) * 0.12); }); });
-    rollGantry(R2, PAL.cherry); BLOBS.push({ x: c.x, y: DESK.y, z: c.z, r: 14 }); }
+    rollGantry(R2, PAL.cherry); BLOBS.push({ x: c.x, y: gy, z: c.z, r: 14 }); }
   /* 3노선 지구본 · 4노선 케이크 탑(책상 빈자리) */
   const gl = findFree(DESK.x0 + 8, DESK.x1 - 8, -78, DESK.z1 - 6, DESK.y, 6, 1)[0]; if (gl) spinGlobe(gl.x, DESK.y, gl.z);
   const ck = findFree(DESK.x0 + 8, DESK.x1 - 8, DESK.z0 + 8, -96, DESK.y, 7, 1)[0]; if (ck) cakeTower(ck.x, DESK.y, ck.z);
@@ -4912,8 +4935,8 @@ function buildRideProps() {
   /* 5노선 달빛 회전 U턴: 가운데 초승달 + 별 막대 */
   const M4 = spTag('z4moon');
   if (M4) { const c = M4.c, g = grp(c.x, BENCH.y, c.z); mesh(pcyl(2.4, 0.8, 0.3, 24), mat(PAL.ink), 0, 0.4, 0, g); mesh(cyl(0.3, 0.3, 7, 8), mat('#ffffff'), 0, 4, 0, g);
-    const mm = mat('#ffe27a', { e: '#ffcc33', ei: 0, own: true }); const moon = mesh(tor(3.6, 1.5, 14, 40, PI * 1.2), mm, 0, 11, 0, g); moon.rotation.z = -PI * 0.1 + PI / 2; nightLights.push(moon);
-    for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + 0.3, r = 4.6 + (k % 2), h = 3 + (k % 3) * 1.6; mesh(cyl(0.12, 0.12, h, 6), mat('#ffffff'), Math.cos(a) * r, 0.8 + h / 2, Math.sin(a) * r, g); const st = mesh(starGeo(), mat(PAL.lemon, { e: '#ffcc33', ei: 0, own: true }), Math.cos(a) * r, 1.6 + h, Math.sin(a) * r, g); st.scale.setScalar(0.9); nightLights.push(st); DECOR.spin.push({ o: st, v: 1 + k * 0.2 }); }
+    const mm = mat('#ffe27a', { e: '#ffcc33', ei: 0, own: true }); const moon = mesh(tor(2.8, 1.2, 14, 40, PI * 1.2), mm, 0, 11, 0, g); moon.rotation.z = -PI * 0.1 + PI / 2; nightLights.push(moon);
+    for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + 0.3, r = 2.6 + (k % 2) * 0.6, h = 3 + (k % 3) * 1.6; mesh(cyl(0.12, 0.12, h, 6), mat('#ffffff'), Math.cos(a) * r, 0.8 + h / 2, Math.sin(a) * r, g); const st = mesh(starGeo(), mat(PAL.lemon, { e: '#ffcc33', ei: 0, own: true }), Math.cos(a) * r, 1.6 + h, Math.sin(a) * r, g); st.scale.setScalar(0.9); nightLights.push(st); DECOR.spin.push({ o: st, v: 1 + k * 0.2 }); }
     rollGantry(M4, PAL.grape); BLOBS.push({ x: c.x, y: BENCH.y, z: c.z, r: 14 }); }
   /* 5노선 장난감 로켓(창가 빈자리) */
   const rk = findFree(BENCH.x0 + 6, BENCH.x1 - 6, BENCH.z0 + 8, BENCH.z1 - 4, BENCH.y, 4.5, 1)[0]; if (rk) toyRocket(rk.x, BENCH.y, rk.z);
@@ -4932,7 +4955,7 @@ function buildTrackside() {
   im.castShadow = false; im.receiveShadow = true; scene.add(im);
   /* 물컵 호수: 3노선 첫 갈림길 옆 큰 유리컵 + 물결 */
   const z2 = JN.filter((j) => j.zone === 2);
-  z2.slice(0, 3).forEach((j, n) => { const c0 = TR.P[segAt(j.s0 + JF / 2)]; const sp = findFree(c0.x - 30, c0.x + 30, Math.max(DESK.z0 + 8, c0.z - 30), Math.min(DESK.z1 - 6, c0.z + 30), DESK.y, 5.5, 1)[0]; if (!sp) return;
+  z2.slice(0, 3).forEach((j, n) => { const c0 = TR.P[segAt(j.s0 + JF / 2)]; const sp = findFree(c0.x - 30, c0.x + 30, c0.z - 30, c0.z + 30, groundAt(c0.x, c0.z), 5.5, 1)[0]; if (!sp) return;
     mesh(cyl(5.6, 5.0, 9, 32), mat('#e6f6ff', { r: 0.05, tr: 0.35, cc: 1 }), sp.x, sp.y + 4.5, sp.z).castShadow = false;
     mesh(cyl(5.25, 4.85, 6.6, 32), mat('#1f9cf0', { r: 0.08, cc: 1 }), sp.x, sp.y + 3.3, sp.z); mesh(cyl(5.2, 5.2, 0.1, 32), mat('#8fdcff', { r: 0.05, cc: 1, e: '#3fb6ff', ei: 0.3 }), sp.x, sp.y + 6.62, sp.z); mesh(tor(5.6, 0.18, 8, 40), mat('#ffffff', { r: 0.1 }), sp.x, sp.y + 9, sp.z).rotation.x = PI / 2;
     for (let i = 0; i < 3; i++) { const rp = mesh(tor(1.4, 0.14, 6, 20), mat('#ffffff', { tr: 0.8, own: true }), sp.x, sp.y + 6.7, sp.z); rp.rotation.x = PI / 2; rp.castShadow = false; DECOR.ripple = DECOR.ripple || []; DECOR.ripple.push(rp); }
@@ -4980,6 +5003,7 @@ function updateDecor(t) {
   for (const d of DECOR.bob) d.o.position.y = d.y + Math.sin(t * d.sp) * d.a;
   for (const d of DECOR.spin) d.o.rotation.y += 0.016 * d.v;
   for (const f of DECOR.fn) f(t);
+  refreshPoster();
   if (DECOR.ripple) DECOR.ripple.forEach((r, i) => { const k = (t * 0.6 + i / 8) % 1; r.scale.setScalar(0.4 + k * 1.6); r.material.opacity = 0.6 * (1 - k); });
 }
 
@@ -5549,14 +5573,16 @@ function buildFan(j, st) {
   /* 승강장 앞(카메라 쪽) 바닥: 크기가 다른 소품 띠 — 빈 바닥을 채우고, 높이가 낮아 기차·정지선을 가리지 않음 */
   { const rnd = (k) => ((Math.sin(j.k * 91.7 + k * 12.9898) * 43758.5453) % 1 + 1) % 1; let k = 0;
     for (let u = -6; u <= F.uEnd + 6; u += 2.6 + rnd(k++) * 2.2) {
-      if (F.uk.some((uk) => Math.abs(uk - u) < 2.4)) continue;   /* 정지선 앞 바닥은 비워 둔다 */
-      const lat = -side * (4.6 + rnd(k++) * 4.5), p = fanPos(j, null, n, u, lat), gy = groundAt(p.x, p.z); if (Math.abs(gy - p.y) > 1.2) continue;
+      const lat = -side * (4.6 + rnd(k++) * 4.5);
+      /* 정지선 앞 바닥은 비워 둔다: 역 카메라가 비스듬히 보므로, 카메라 쪽으로 나온 소품은 옆 정지선 앞에 겹쳐 보일 수 있어 그만큼 더 비운다 */
+      if (F.uk.some((uk) => Math.abs(uk - u) < 2.4 || Math.abs(uk - (u - Math.abs(lat) * 0.33)) < 3.4 || Math.abs(uk - (u + Math.abs(lat) * 0.33)) < 3.4)) continue;
+      const p = fanPos(j, null, n, u, lat), gy = groundAt(p.x, p.z); if (Math.abs(gy - p.y) > 1.2) continue;
       const r = rnd(k++), c = TOYC[(k + j.k) % 6], g = grp(p.x, gy, p.z, F.g); g.rotation.y = rnd(k++) * TAU;
       if (r < 0.28) { mesh(sph(0.45, 10), mat(PAL.lemon, { e: '#ffbf00', ei: 0.3 }), 0, 0.45, 0, g); mesh(sph(0.32, 8), mat(TOYC[(k + 2) % 6]), 0.9, 0.32, 0.4, g); }
       else if (r < 0.5) { const b = mesh(rbox(1.5, 1.5, 1.5, 0.35, 3), mat(c), 0, 0.75, 0, g); if (rnd(k++) < 0.5) mesh(rbox(1.2, 1.2, 1.2, 0.3, 3), mat(TOYC[(k + 3) % 6]), 0.3, 2.1, 0.1, g); }
       else if (r < 0.7) { const cr = grp(0, 0.45, 0, g); const bd = mesh(cyl(0.45, 0.45, 4.2, 12), mat(c), 0, 0, 0, cr); bd.rotation.z = PI / 2; const tp = mesh(cone(0.45, 1.0, 12), mat(c), 2.6, 0, 0, cr); tp.rotation.z = -PI / 2; mesh(cyl(0.47, 0.47, 2.2, 12), mat('#ffffff', { r: 0.6 }), -0.4, 0, 0, cr).rotation.z = PI / 2; }
       else if (r < 0.85) { for (let q = 0; q < 3; q++) { const pg = makePeg(TOYC[(k + q) % 6], g); pg.position.set(q * 0.9 - 0.9, 0, (q % 2) * 0.6); pg.scale.setScalar(0.85); } }
-      else { mesh(pcyl(1.2, 0.4, 0.15, 18), mat('#ffffff', { r: 0.4 }), 0, 0.2, 0, g); mesh(cone(1.0, 2.2, 18), mat(c), 0, 1.5, 0, g); }
+      else { mesh(pcyl(1.2, 0.4, 0.15, 18), mat('#ffffff', { r: 0.4 }), 0, 0.2, 0, g); mesh(pcyl(0.9, 0.7, 0.3, 18), mat(c), 0, 0.75, 0, g); mesh(sph(0.35, 10), mat(PAL.lemon), 0, 1.25, 0, g); }  /* 뾰족한 원뿔은 특정 말뚝을 가리키듯 보여 낮은 팽이판으로 */
     } }
   /* 기다리는 승객(역 입구 승강장) */
   for (let k = 0; k < 3; k++) { const p = fanPos(j, null, n, -2.2 + k * 1.25, side * (2.6 + (k % 2) * 0.5)); const pg = makePeg(TOYC[(k + j.k) % 6], F.g); pg.position.set(p.x, p.y + 0.6, p.z); faceSide(pg, j, 0, side); pg.rotateY(PI); pg.userData.base = p.y + 0.6; F.pegs.push(pg); }
@@ -5581,8 +5607,9 @@ function lightFace(m) { if (!m.emissive) return; m.emissive = new THREE.Color('#
 const HIDDEN = [];
 function clearView(F, froms) {
   restoreView(); F.g.updateMatrixWorld(true); scene.updateMatrixWorld(); const rc = new THREE.Raycaster(); rc.camera = camera; const pts = [];
-  for (const fx of [-0.45, 0, 0.45]) for (const fy of [-0.45, 0, 0.45]) pts.push(F.boardG.localToWorld(V3(fx * BOARD_W, F.boardY + fy * F.boardH, 0.4)));
-  F.signs.forEach((sg) => { [-0.4, 0, 0.4].forEach((fx) => pts.push(sg.g.localToWorld(V3(fx * F.sw, PLATE_Y + SIGN_H / 2, 0.4)))); pts.push(sg.line.getWorldPosition(V3())); });
+  for (const fx of [-0.5, -0.45, 0, 0.45, 0.5]) for (const fy of [-0.5, -0.45, 0, 0.45, 0.5]) pts.push(F.boardG.localToWorld(V3(fx * BOARD_W, F.boardY + fy * F.boardH, 0.4)));
+  for (const sx of [-1, 1]) pts.push(F.boardG.localToWorld(V3(sx * (BOARD_W / 2 + 1.0), F.boardY + F.boardH / 2 + 1.1, 0)));  /* 판 모서리·이름표 띠·기둥 꼭대기 공 */
+  F.signs.forEach((sg) => { [-0.4, 0, 0.4].forEach((fx) => pts.push(sg.g.localToWorld(V3(fx * F.sw, PLATE_Y + SIGN_H / 2, 0.4)))); pts.push(sg.line.getWorldPosition(V3())); const t = poseAt(sg.s, newPose()).t; for (const d of [-2.4, 2.4]) pts.push(sg.line.getWorldPosition(V3()).addScaledVector(t, d)); });  /* 정지선 양 끝: 앞 소품이 특정 말뚝을 가리키듯 보이지 않게 */
   for (let u = -2; u <= F.uEnd + 2; u += 3) pts.push(fanPos(F.j, null, F.n, u, 0, 1.6));
   const skip = new Set(); F.g.traverse((o) => skip.add(o)); TRAIN.g.traverse((o) => skip.add(o)); TRAIN.cars.forEach((c) => c.g.traverse((o) => skip.add(o)));
   for (const from of [].concat(froms)) for (const w of pts) { const dir = V3().subVectors(w, from); const d = dir.length(); rc.set(from, dir.normalize()); rc.far = d - 0.5;
